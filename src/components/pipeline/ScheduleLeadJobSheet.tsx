@@ -37,7 +37,7 @@ export default function ScheduleLeadJobSheet({ lead, loading, onConfirm, onClose
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title="Schedule job"
       subtitle={`Create a job for ${lead.name}`}
       onClose={onClose}
@@ -52,7 +52,7 @@ export default function ScheduleLeadJobSheet({ lead, loading, onConfirm, onClose
         />
       }
     >
-      <div ref={formRef} className="page-form">
+      <div ref={formRef} className="premium-sheet__form">
         <FloatingField id="schedule-date" label="Date" filled={date.trim().length > 0}>
           <input
             id="schedule-date"
@@ -73,7 +73,7 @@ export default function ScheduleLeadJobSheet({ lead, loading, onConfirm, onClose
             placeholder=" "
           />
         </FloatingField>
-        <p className="pipeline-confirm-card__hint" style={{ margin: '4px 0 0' }}>
+        <p className="pipeline-confirm-card__hint">
           A client profile will be created if needed. You can edit revenue and location on the job screen.
         </p>
       </div>

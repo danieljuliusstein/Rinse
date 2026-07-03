@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
   SquaresFour,
   Briefcase,
@@ -27,7 +27,7 @@ const LEFT_TABS: NavItem[] = [
 
 const RIGHT_TABS: NavItem[] = [
   { href: '/clients', label: 'Clients', Icon: Users },
-  { href: '/reports', label: 'Money', Icon: ChartBar },
+  { href: '/reports', label: 'Business', Icon: ChartBar },
 ]
 
 function NavTab({ tab, active }: { tab: NavItem; active: boolean }) {
@@ -63,7 +63,6 @@ function NavTab({ tab, active }: { tab: NavItem; active: boolean }) {
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const router = useRouter()
   const navRef = useVisualViewportBottom<HTMLElement>()
   const { menuOpen, openMenu, closeMenu } = useQuickAction()
   const { isLoggedIn } = useAuth()
@@ -82,33 +81,36 @@ export default function BottomNav() {
     pathname.startsWith('/settings')
   ) return null
 
+  const leftTabs = isLoggedIn ? LEFT_TABS : LEFT_TABS.slice(0, 1)
+  const rightTabs = isLoggedIn ? RIGHT_TABS : []
+
   return (
     <nav ref={navRef} className="bottom-nav" aria-label="Main navigation">
-      {LEFT_TABS.map((tab) => (
+      {leftTabs.map((tab) => (
         <NavTab key={tab.href} tab={tab} active={isActive(tab.href)} />
       ))}
 
-      <div className="bottom-nav-fab" data-tour="fab">
-        <button
-          type="button"
-          className={`bottom-nav-fab-link${menuOpen ? ' bottom-nav-fab-link--open' : ''}`}
-          aria-label={menuOpen ? 'Close quick actions' : 'Quick actions'}
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-          onClick={() => {
-            if (!isLoggedIn) {
-              router.push('/auth')
-              return
-            }
-            if (menuOpen) closeMenu()
-            else openMenu()
-          }}
-        >
-          <Plus size={24} weight="bold" color="#071407" aria-hidden="true" />
-        </button>
-      </div>
+      {isLoggedIn ? (
+        <div className="bottom-nav-fab" data-tour="fab">
+          <button
+            type="button"
+            className={`bottom-nav-fab-link${menuOpen ? ' bottom-nav-fab-link--open' : ''}`}
+            aria-label={menuOpen ? 'Close quick actions' : 'Quick actions'}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            onClick={() => {
+              if (menuOpen) closeMenu()
+              else openMenu()
+            }}
+          >
+            <Plus size={24} weight="bold" color="#071407" aria-hidden="true" />
+          </button>
+        </div>
+      ) : (
+        <div className="bottom-nav-fab" aria-hidden="true" />
+      )}
 
-      {RIGHT_TABS.map((tab) => (
+      {rightTabs.map((tab) => (
         <NavTab key={tab.href} tab={tab} active={isActive(tab.href)} />
       ))}
     </nav>

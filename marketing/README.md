@@ -45,6 +45,18 @@ DEMO_CAPTURE_PASSWORD=
 DEMO_BUSINESS_NAME=Summit Mobile Detail
 ```
 
+## Demo account (marketing / video)
+
+Create a dedicated showcase org separate from your personal operator account:
+
+```bash
+npm run demo:setup
+```
+
+This creates **demo@rinsehq.com** on org slug **summit-detail** (password defaults to `SummitDemo2026!` — override with `DEMO_ACCOUNT_PASSWORD` in `.env.local`), then seeds every collection with stock photos.
+
+Sign in at [rinsehq.com/auth](https://rinsehq.com/auth) with that account before recording.
+
 ## Capture day checklist
 
 1. **Re-seed** so relative dates are fresh:

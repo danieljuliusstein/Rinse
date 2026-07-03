@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import PhotoGallery from '@/components/PhotoGallery'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
 import { getJob } from '@/lib/api'
 import type { JobWithRelations } from '@/lib/types'
 
@@ -16,11 +17,11 @@ export default function PhotosPage() {
   }, [id])
 
   if (job === undefined) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+    return <ScreenLoading />
   }
 
   if (!job) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Job not found</div>
+    return <ScreenMessage>Job not found</ScreenMessage>
   }
 
   return <PhotoGallery job={job} />

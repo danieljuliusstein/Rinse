@@ -368,6 +368,7 @@ const EQUIPMENT_SPECS = [
     supplier: 'Harbor Freight',
     status: 'active',
     notes: 'Bauer 20V — primary paint correction tool',
+    photoFile: '08-supply-bottles.jpg',
   },
   {
     key: 'vacuum',
@@ -377,6 +378,7 @@ const EQUIPMENT_SPECS = [
     supplier: 'Home Depot',
     status: 'active',
     notes: '6 gal wet/dry with HEPA filter',
+    photoFile: '08-supply-bottles.jpg',
   },
   {
     key: 'pressure',
@@ -386,6 +388,7 @@ const EQUIPMENT_SPECS = [
     supplier: 'Ryobi',
     status: 'active',
     notes: '1800 PSI electric — mobile setup',
+    photoFile: '08-supply-bottles.jpg',
   },
 ]
 
@@ -707,14 +710,15 @@ async function seedEquipment(headers, orgId) {
 
   for (const spec of EQUIPMENT_SPECS) {
     let row = existing.find((e) => matchDemoNote(e.notes, spec.key))
+    const { photoFile, ...fields } = spec
     const payload = {
       organization_id: orgId,
-      name: spec.name,
-      purchase_price: spec.purchase_price,
-      purchase_date: spec.purchase_date,
-      supplier: spec.supplier,
-      status: spec.status,
-      notes: demoNote(spec.key, spec.notes),
+      name: fields.name,
+      purchase_price: fields.purchase_price,
+      purchase_date: fields.purchase_date,
+      supplier: fields.supplier,
+      status: fields.status,
+      notes: demoNote(spec.key, fields.notes),
     }
     if (row) {
       await patchRecord(headers, 'equipment', row.id, payload)
@@ -723,6 +727,13 @@ async function seedEquipment(headers, orgId) {
       console.log(`  + equipment: ${spec.name}`)
     }
     ids[spec.key] = row.id
+
+    if (photoFile) {
+      const img = readStockFile(stockPhotosDir, photoFile)
+      if (img) {
+        await uploadFileField(headers, 'equipment', row.id, 'photo', img.buffer, img.filename)
+      }
+    }
   }
   return ids
 }

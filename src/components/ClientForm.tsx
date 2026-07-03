@@ -79,10 +79,10 @@ export default function ClientForm({ client }: Props) {
 
   return (
     <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', paddingTop: 16, paddingBottom: 20, gap: 12 }}>
+      <header className="job-form-header">
         <BackButton onClick={() => router.back()} />
-        <div style={{ fontSize: 18, fontWeight: 600 }}>{isEdit ? 'Edit client' : 'New client'}</div>
-      </div>
+        <div className="job-form-header__title">{isEdit ? 'Edit client' : 'New client'}</div>
+      </header>
 
       <div ref={formRef} className="page-form-card page-form">
         <div className="page-form__grid2">

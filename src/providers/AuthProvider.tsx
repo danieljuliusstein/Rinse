@@ -12,11 +12,19 @@ import {
 import { getCurrentOrganizationId } from '@/lib/tenant'
 import { getPocketBase } from '@/lib/pocketbase'
 import { isSubscriptionActive, type OrgSubscription } from '@/lib/subscription'
+import {
+  needsOnboarding,
+  onboardingStepUrl,
+  resolveOnboardingStep,
+} from '@/lib/onboarding'
 
 interface AuthContextValue {
   isLoggedIn: boolean
   isAuthenticated: boolean
   needsOnboarding: boolean
+  subscriptionLapsed: boolean
+  subscriptionLoading: boolean
+  refreshOnboardingGate: () => Promise<boolean>
   logout: () => void
 }
 
@@ -25,24 +33,10 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 function isPublicPath(pathname: string): boolean {
   return (
     pathname === '/auth' ||
+    pathname === '/welcome' ||
     pathname.startsWith('/portal') ||
     pathname.startsWith('/book/')
   )
-}
-
-function isBillingGracePath(pathname: string): boolean {
-  return (
-    pathname === '/settings/account' ||
-    pathname === '/settings/billing' ||
-    pathname === '/settings/access' ||
-    pathname === '/settings/support' ||
-    pathname === '/privacy' ||
-    pathname.startsWith('/settings/faq')
-  )
-}
-
-function isAdminPath(pathname: string): boolean {
-  return pathname === '/admin'
 }
 
 function isOnboardingPath(pathname: string): boolean {
@@ -73,28 +67,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   void authTick
 
   const isLoggedIn = mounted && isPocketBaseAuthenticated()
-  const [needsOnboarding, setNeedsOnboarding] = useState(false)
-  const [subscriptionBlocked, setSubscriptionBlocked] = useState(false)
+  const [needsOnboardingState, setNeedsOnboardingState] = useState(false)
+  const [subscriptionLapsed, setSubscriptionLapsed] = useState(false)
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true)
 
   const isPublicRoute = isPublicPath(pathname)
   const isOnboardingRoute = isOnboardingPath(pathname)
 
   useEffect(() => {
-    if (!mounted || !isLoggedIn || isOnboardingPath(pathname)) return
+    if (!mounted || !isLoggedIn) return
     let cancelled = false
     void (async () => {
       try {
-        const { loadSettingsFromPocketBase } = await import('@/lib/api/settings-pocketbase')
-        const settings = await loadSettingsFromPocketBase()
+        const { loadSettingsAsync } = await import('@/lib/settings')
+        const settings = await loadSettingsAsync()
         if (cancelled) return
-        if (settings && !settings.business_phone?.trim()) {
-          setNeedsOnboarding(true)
-          safeReplace(router, '/onboarding')
+        if (settings && needsOnboarding(settings)) {
+          setNeedsOnboardingState(true)
+          if (!isOnboardingPath(pathname) && !isPublicPath(pathname)) {
+            const step = resolveOnboardingStep(null, settings)
+            safeReplace(router, onboardingStepUrl(step))
+          }
         } else {
-          setNeedsOnboarding(false)
+          setNeedsOnboardingState(false)
         }
       } catch {
-        if (!cancelled) setNeedsOnboarding(false)
+        if (!cancelled) setNeedsOnboardingState(false)
       }
     })()
     return () => {
@@ -103,14 +101,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [mounted, isLoggedIn, pathname, router])
 
   useEffect(() => {
-    if (!mounted || !isLoggedIn || isPublicPath(pathname) || isOnboardingPath(pathname)) return
+    if (!mounted || !isLoggedIn || isPublicPath(pathname) || isOnboardingPath(pathname)) {
+      setSubscriptionLapsed(false)
+      setSubscriptionLoading(false)
+      return
+    }
     let cancelled = false
+    setSubscriptionLoading(true)
     void (async () => {
       try {
         const orgId = getCurrentOrganizationId()
         const pb = getPocketBase()
         if (!orgId || !pb?.authStore.isValid) {
-          if (!cancelled) setSubscriptionBlocked(false)
+          if (!cancelled) {
+            setSubscriptionLapsed(false)
+            setSubscriptionLoading(false)
+          }
           return
         }
         const org = await pb.collection('organizations').getOne(orgId)
@@ -121,19 +127,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription_status: String(org.subscription_status ?? 'none'),
           trial_ends_at: org.trial_ends_at ? String(org.trial_ends_at) : undefined,
         }
-        const blocked = !isSubscriptionActive(sub)
-        setSubscriptionBlocked(blocked)
-        if (blocked && !isBillingGracePath(pathname) && !isAdminPath(pathname)) {
-          safeReplace(router, '/settings/billing')
-        }
+        setSubscriptionLapsed(!isSubscriptionActive(sub))
       } catch {
-        if (!cancelled) setSubscriptionBlocked(false)
+        if (!cancelled) setSubscriptionLapsed(false)
+      } finally {
+        if (!cancelled) setSubscriptionLoading(false)
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [mounted, isLoggedIn, pathname, router])
+  }, [mounted, isLoggedIn, pathname])
 
   useEffect(() => {
     if (!ready || isPublicRoute || !isOnboardingRoute || isLoggedIn) return
@@ -160,12 +164,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready || !isLoggedIn || pathname !== '/auth') return
-    if (needsOnboarding) {
-      safeReplace(router, '/onboarding')
+    if (needsOnboardingState) {
+      safeReplace(router, onboardingStepUrl('business'))
       return
     }
     safeReplace(router, '/')
-  }, [ready, isLoggedIn, needsOnboarding, pathname, router])
+  }, [ready, isLoggedIn, needsOnboardingState, pathname, router])
+
+  const refreshOnboardingGate = useCallback(async (): Promise<boolean> => {
+    try {
+      const { loadSettingsAsync } = await import('@/lib/settings')
+      const settings = await loadSettingsAsync()
+      const stillNeeds = Boolean(settings && needsOnboarding(settings))
+      setNeedsOnboardingState(stillNeeds)
+      return !stillNeeds
+    } catch {
+      setNeedsOnboardingState(false)
+      return true
+    }
+  }, [])
 
   const logout = useCallback(() => {
     clearPocketBaseAuth()
@@ -178,19 +195,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const contextValue: AuthContextValue = {
     isLoggedIn,
     isAuthenticated: isLoggedIn,
-    needsOnboarding,
+    needsOnboarding: needsOnboardingState,
+    subscriptionLapsed,
+    subscriptionLoading,
+    refreshOnboardingGate,
     logout,
   }
 
   const showBlockingRedirect =
     !ready ||
     (isOnboardingRoute && !isLoggedIn) ||
-    (isLoggedIn && needsOnboarding && !isOnboardingRoute && !isPublicRoute) ||
-    (isLoggedIn &&
-      subscriptionBlocked &&
-      !isBillingGracePath(pathname) &&
-      !isAdminPath(pathname) &&
-      !isPublicRoute)
+    (isLoggedIn && needsOnboardingState && !isOnboardingRoute && !isPublicRoute)
 
   return (
     <AuthContext.Provider value={contextValue}>

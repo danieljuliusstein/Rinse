@@ -34,24 +34,25 @@
 .page-form .f-input,
 .page-form .f-select,
 .page-form .f-textarea {
-  background: #1a1a1a;
-  border: 1.5px solid #222;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   padding-right: 38px;
+  color: var(--text-primary);
 }
 
 .page-form .f-input.hv,
 .page-form .f-select.hv,
 .page-form .f-textarea.hv {
-  border-color: #1c3323;
-  background: #111;
+  border-color: var(--border-green);
+  background: var(--bg-green);
 }
 
 .page-form .f-input:focus,
 .page-form .f-select:focus,
 .page-form .f-textarea:focus {
   border-color: var(--green);
-  background: #0b1e10;
+  background: var(--bg-surface);
 }
 
 .page-form .f-field--filled .f-check {
@@ -104,7 +105,7 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #555;
+  color: var(--text-muted);
   pointer-events: none;
   z-index: 1;
 }
@@ -114,8 +115,8 @@
   box-sizing: border-box;
   height: 48px;
   padding: 0 14px 0 40px;
-  background: #1a1a1a;
-  border: 1.5px solid #222;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 14px;
@@ -126,11 +127,11 @@
 
 .premium-search__input:focus {
   border-color: var(--green);
-  background: #0b1e10;
+  background: var(--bg-surface);
 }
 
 .premium-search__input::placeholder {
-  color: #555;
+  color: var(--text-muted);
 }
 
 .search .premium-search__input,

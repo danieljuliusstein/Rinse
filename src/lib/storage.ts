@@ -398,6 +398,11 @@ export function saveData(data: AppData): void {
   localStorage.setItem(scopedStorageKey(STORAGE_KEY), JSON.stringify(data))
 }
 
+/** Replace local storage with demo seed data (local mode only). */
+export function loadSampleData(): void {
+  saveData(createSeedData())
+}
+
 export function newId(): string {
   return generateId()
 }

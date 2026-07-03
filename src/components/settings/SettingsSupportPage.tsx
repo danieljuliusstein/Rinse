@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CaretRight, EnvelopeSimple } from '@phosphor-icons/react'
+import { EnvelopeSimple } from '@phosphor-icons/react'
 import { getActiveBackend } from '@/lib/api'
 import { requestTourReplay, TOUR_REPLAY_EVENT } from '@/lib/product-tour'
 import {
@@ -15,9 +14,18 @@ import {
   getSupportEmail,
 } from '@/lib/support-config'
 import { loadOrganizationSlug } from '@/lib/tenant'
-import { Button } from '@/components/ui'
+import { Button, ListRow, SectionGroup } from '@/components/ui'
 import SettingsDetailShell from './SettingsDetailShell'
 import { useSettingsDraft } from './SettingsDraftProvider'
+
+const FAQ_LINKS = [
+  { href: '/settings/faq#pipeline', label: 'Lead pipeline' },
+  { href: '/settings/faq#online-payments', label: 'Online payments (Stripe)' },
+  { href: '/settings/faq#schedule', label: 'Booking schedule & time off' },
+  { href: '/settings/faq#auto-messages', label: 'Auto messages' },
+  { href: '/settings/faq', label: 'All FAQ' },
+  { href: '/privacy', label: 'Privacy policy' },
+] as const
 
 export default function SettingsSupportPage() {
   const router = useRouter()
@@ -94,42 +102,16 @@ export default function SettingsSupportPage() {
         ) : null}
       </section>
 
-      <div className="settings-panel settings-panel--flush">
-        <button type="button" className="settings-row-link" onClick={handleReplayTour}>
-          <span>Replay app tour</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </button>
-        <div className="settings-divider" />
-        <Link href="/settings/faq#pipeline" className="settings-row-link settings-row-link--plain">
-          <span>Lead pipeline</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </Link>
-        <div className="settings-divider" />
-        <Link href="/settings/faq#online-payments" className="settings-row-link settings-row-link--plain">
-          <span>Online payments (Stripe)</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </Link>
-        <div className="settings-divider" />
-        <Link href="/settings/faq#schedule" className="settings-row-link settings-row-link--plain">
-          <span>Booking schedule &amp; time off</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </Link>
-        <div className="settings-divider" />
-        <Link href="/settings/faq#auto-messages" className="settings-row-link settings-row-link--plain">
-          <span>Auto messages</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </Link>
-        <div className="settings-divider" />
-        <Link href="/settings/faq" className="settings-row-link settings-row-link--plain">
-          <span>All FAQ</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </Link>
-        <div className="settings-divider" />
-        <Link href="/privacy" className="settings-row-link settings-row-link--plain">
-          <span>Privacy policy</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </Link>
-      </div>
+      <SectionGroup title="Help topics">
+        <ListRow title="Replay app tour" onClick={handleReplayTour} />
+        {FAQ_LINKS.map((link) => (
+          <ListRow
+            key={link.href}
+            title={link.label}
+            onClick={() => router.push(link.href)}
+          />
+        ))}
+      </SectionGroup>
 
       <section className="card settings-support-bug">
         <h2 className="settings-support-bug__title">Report a bug</h2>

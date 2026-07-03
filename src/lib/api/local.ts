@@ -205,6 +205,10 @@ export function createJob(input: QuickJobData): Job {
     marketing_cost: input.marketing_cost ?? 0,
     equipment_depreciation: input.equipment_depreciation ?? 0,
     photo_count: 0,
+    recurrence_cadence: input.recurrence_cadence,
+    recurrence_anchor_date: input.recurrence_cadence
+      ? input.recurrence_anchor_date ?? input.date
+      : undefined,
     created: new Date().toISOString(),
     updated: new Date().toISOString(),
   }
@@ -275,6 +279,10 @@ export function updateJob(id: string, updates: JobEditData): Job | null {
     travel_cost: updates.travel_cost ?? current.travel_cost,
     marketing_cost: updates.marketing_cost ?? current.marketing_cost,
     equipment_depreciation: updates.equipment_depreciation ?? current.equipment_depreciation,
+    recurrence_cadence: updates.recurrence_cadence,
+    recurrence_anchor_date: updates.recurrence_cadence
+      ? updates.recurrence_anchor_date ?? current.recurrence_anchor_date ?? current.date
+      : undefined,
     expenses,
     updated: new Date().toISOString(),
   }

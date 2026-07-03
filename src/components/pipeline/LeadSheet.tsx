@@ -13,6 +13,7 @@ import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floa
 import { computeLeadFormProgress, isLeadFormSubmittable } from '@/lib/lead-form-progress'
 import { LEAD_SOURCES } from '@/lib/lead-sources'
 import { useActionToast } from '@/providers/ActionToastProvider'
+import { usePremiumGate } from '@/hooks/usePremiumGate'
 import type { Lead, LeadInput, LeadSource, Package, VehicleType } from '@/lib/types'
 
 const VEHICLE_PILLS: { value: VehicleType; label: string }[] = [
@@ -38,6 +39,7 @@ interface LeadSheetProps {
 
 export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadSheetProps) {
   const { handleWriteError } = useActionToast()
+  const { runGated: runNewLeadGated } = usePremiumGate('new_lead')
   const isEdit = Boolean(lead)
   const formRef = useRef<HTMLDivElement>(null)
   const packageRef = useRef<HTMLSelectElement>(null)
@@ -127,32 +129,50 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
       setError('Name is required')
       return
     }
-    setSaving(true)
-    setError(null)
-    try {
-      if (isEdit && lead) {
+    if (isEdit && lead) {
+      setSaving(true)
+      setError(null)
+      try {
         await updateLead(lead.id, input)
         onSaved?.()
         onClose()
-      } else {
-        await createLead({ ...input, stage: 'inquiry' })
-        setSaving(false)
-        setSaved(true)
-        window.setTimeout(() => {
-          onSaved?.()
-          onClose()
-        }, 1500)
-      }
-    } catch (err) {
-      if (handleWriteError(err)) {
+      } catch (err) {
+        if (handleWriteError(err)) {
+          setSaving(false)
+          setSaved(false)
+          return
+        }
+        setError(err instanceof Error ? err.message : 'Could not save lead')
         setSaving(false)
         setSaved(false)
-        return
       }
-      setError(err instanceof Error ? err.message : 'Could not save lead')
-      setSaving(false)
-      setSaved(false)
+      return
     }
+
+    runNewLeadGated(() => {
+      void (async () => {
+        setSaving(true)
+        setError(null)
+        try {
+          await createLead({ ...input, stage: 'inquiry' })
+          setSaving(false)
+          setSaved(true)
+          window.setTimeout(() => {
+            onSaved?.()
+            onClose()
+          }, 1500)
+        } catch (err) {
+          if (handleWriteError(err)) {
+            setSaving(false)
+            setSaved(false)
+            return
+          }
+          setError(err instanceof Error ? err.message : 'Could not save lead')
+          setSaving(false)
+          setSaved(false)
+        }
+      })()
+    })
   }
 
   const submitLabel = saved
@@ -165,7 +185,7 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={isEdit ? 'Edit lead' : 'New lead'}
       subtitle="Capture an inquiry before they are a client"
       onClose={onClose}
@@ -179,7 +199,7 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
         />
       }
     >
-      {error ? <div className="error-banner" style={{ marginBottom: 12 }}>{error}</div> : null}
+      {error ? <div className="error-banner premium-sheet__section">{error}</div> : null}
 
       {!isEdit ? <FormProgressBar progress={progress} /> : null}
 

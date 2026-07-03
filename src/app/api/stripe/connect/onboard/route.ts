@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { authenticateRequestUser } from '@/lib/server/request-auth'
 import {
-  appOriginFromRequest,
+  buildConnectRedirectUrl,
   ensureConnectAccount,
   refreshConnectStatus,
 } from '@/lib/server/stripe-connect'
-import { getStripe, isStripeConfigured } from '@/lib/server/stripe'
+import { isStripeConfigured } from '@/lib/server/stripe'
 
 export const runtime = 'nodejs'
 
@@ -27,11 +27,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const stripe = getStripe()
-    if (!stripe) {
-      return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 })
-    }
-
     const settings = await auth.pb.collection('app_settings').getFullList({
       filter: `organization_id = "${auth.organizationId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`,
       limit: 1,
@@ -43,21 +38,9 @@ export async function POST(request: Request) {
 
     const accountId = await ensureConnectAccount(auth.organizationId, connectEmail, businessName, auth.pb)
     const status = await refreshConnectStatus(auth.organizationId, auth.pb)
-    const origin = appOriginFromRequest(request)
-    const returnPath = '/settings/invoicing'
+    const url = await buildConnectRedirectUrl(accountId, request, status)
 
-    const link = await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: `${origin}${returnPath}?connect=refresh`,
-      return_url: `${origin}${returnPath}?connect=return`,
-      type: status.ready ? 'account_update' : 'account_onboarding',
-    })
-
-    if (!link.url) {
-      return NextResponse.json({ error: 'Could not start Stripe onboarding' }, { status: 500 })
-    }
-
-    return NextResponse.json({ url: link.url })
+    return NextResponse.json({ url })
   } catch (e) {
     console.error('[stripe/connect/onboard]', e)
     return NextResponse.json({ error: errorMessage(e) }, { status: 500 })

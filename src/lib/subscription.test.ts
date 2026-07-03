@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isSubscriptionActive, trialDaysLeft } from './subscription'
+import { resolveGate, resolveSubscriptionMode } from './subscription-gates'
 
 describe('subscription', () => {
   it('allows founding members', () => {
@@ -30,5 +31,15 @@ describe('subscription', () => {
         trial_ends_at: '2020-01-01',
       }),
     ).toBe(false)
+  })
+
+  it('aligns gate resolver with subscription active check', () => {
+    const lapsed = {
+      plan: 'starter',
+      founding_member: false,
+      subscription_status: 'canceled',
+    }
+    expect(resolveSubscriptionMode(lapsed, false)).toBe('lapsed')
+    expect(resolveGate(lapsed, false, 'send_invoice').blockAction).toBe(true)
   })
 })

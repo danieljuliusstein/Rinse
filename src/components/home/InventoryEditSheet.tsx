@@ -79,7 +79,7 @@ export default function InventoryEditSheet({
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={isNew ? `Add ${categoryLabel(category).toLowerCase()}` : name || 'Edit item'}
       subtitle={subtitle}
       onClose={onClose}

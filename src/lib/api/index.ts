@@ -25,6 +25,8 @@ import * as vehiclesLocal from './vehicles-local'
 import * as vehiclesPb from './vehicles-pocketbase'
 import * as damageLocal from './damage-docs-local'
 import * as damagePb from './damage-docs-pocketbase'
+import * as lineTemplatesLocal from './line-templates-local'
+import * as lineTemplatesPb from './line-templates-pocketbase'
 import * as pb from './pocketbase'
 import { clearQueue } from '../offline-queue'
 import {
@@ -390,6 +392,41 @@ export async function markInvoicePaid(invoiceId: string, method: string): Promis
     local: () => invLocal.markInvoicePaid(invoiceId, method),
     pocketbase: () => invPb.markInvoicePaid(invoiceId, method),
     buildQueue: () => ({ type: 'markInvoicePaid', params: { invoiceId, method } }),
+  })
+}
+
+export async function updateInvoice(
+  invoiceId: string,
+  patch: invLocal.InvoiceUpdate
+): Promise<Invoice> {
+  const resolved = await resolveBackend()
+  return executeWrite({
+    resolvedBackend: resolved,
+    local: () => invLocal.updateInvoice(invoiceId, patch),
+    pocketbase: () => invPb.updateInvoice(invoiceId, patch),
+    buildQueue: () => ({ type: 'updateInvoice', params: { invoiceId, patch } }),
+  })
+}
+
+export async function deleteInvoice(invoiceId: string): Promise<void> {
+  const resolved = await resolveBackend()
+  return executeWrite({
+    resolvedBackend: resolved,
+    local: () => {
+      invLocal.deleteInvoice(invoiceId)
+    },
+    pocketbase: () => invPb.deleteInvoice(invoiceId),
+    buildQueue: () => ({ type: 'deleteInvoice', params: { invoiceId } }),
+  })
+}
+
+export async function duplicateInvoice(invoiceId: string): Promise<Invoice> {
+  const resolved = await resolveBackend()
+  return executeWrite({
+    resolvedBackend: resolved,
+    local: () => invLocal.duplicateInvoice(invoiceId),
+    pocketbase: () => invPb.duplicateInvoice(invoiceId),
+    buildQueue: () => ({ type: 'duplicateInvoice', params: { invoiceId } }),
   })
 }
 
@@ -920,3 +957,25 @@ export async function deleteDamageDoc(id: string): Promise<boolean> {
 }
 
 export { dataUrlToFile } from './damage-docs-pocketbase'
+
+export async function getInvoiceLineTemplates() {
+  return (await resolveBackend()) === 'pocketbase'
+    ? lineTemplatesPb.getInvoiceLineTemplates()
+    : lineTemplatesLocal.getInvoiceLineTemplates()
+}
+
+export async function saveInvoiceLineTemplate(
+  input: Parameters<typeof lineTemplatesLocal.saveInvoiceLineTemplate>[0]
+) {
+  const resolved = await resolveBackend()
+  return resolved === 'pocketbase'
+    ? lineTemplatesPb.saveInvoiceLineTemplate(input)
+    : lineTemplatesLocal.saveInvoiceLineTemplate(input)
+}
+
+export async function deleteInvoiceLineTemplate(id: string) {
+  const resolved = await resolveBackend()
+  return resolved === 'pocketbase'
+    ? lineTemplatesPb.deleteInvoiceLineTemplate(id)
+    : lineTemplatesLocal.deleteInvoiceLineTemplate(id)
+}

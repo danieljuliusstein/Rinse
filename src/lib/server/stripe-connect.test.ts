@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { connectStatusFromAccount } from './stripe-connect'
+import { connectLinkStrategy, connectStatusFromAccount } from './stripe-connect'
 
 describe('connectStatusFromAccount', () => {
   it('marks ready when charges and details are submitted', () => {
@@ -19,5 +19,29 @@ describe('connectStatusFromAccount', () => {
       details_submitted: false,
     } as never)
     expect(status.ready).toBe(false)
+  })
+})
+
+describe('connectLinkStrategy', () => {
+  it('uses login link when connect is ready', () => {
+    expect(
+      connectLinkStrategy({
+        accountId: 'acct_test',
+        chargesEnabled: true,
+        detailsSubmitted: true,
+        ready: true,
+      }),
+    ).toBe('login')
+  })
+
+  it('uses onboarding link when connect is not ready', () => {
+    expect(
+      connectLinkStrategy({
+        accountId: 'acct_test',
+        chargesEnabled: false,
+        detailsSubmitted: true,
+        ready: false,
+      }),
+    ).toBe('onboarding')
   })
 })

@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import BackButton from '@/components/BackButton'
 import { FloatingField, SheetSubmitButton } from '@/components/forms'
+import VehicleColorSwatchPicker from '@/components/crm/VehicleColorSwatchPicker'
 import { createVehicle, updateVehicle } from '@/lib/api'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
 import type { Vehicle, VehicleInput, VehicleType } from '@/lib/types'
 import { VehicleTypeIcon, VehicleTypePicker } from '@/lib/vehicle-type-icons'
 import { normalizeVehicleColorHex, vehicleIconColorOnPaint } from '@/lib/vehicle-color'
-import VehicleColorSwatchPicker from '@/components/crm/VehicleColorSwatchPicker'
 
 interface Props {
   clientId: string
@@ -70,30 +70,26 @@ export default function VehicleForm({ clientId, vehicle }: Props) {
     }
   }
 
-  return (
-    <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', paddingTop: 16, paddingBottom: 20, gap: 12 }}>
-        <BackButton onClick={() => router.back()} />
-        <div style={{ fontSize: 18, fontWeight: 600 }}>{isEdit ? 'Edit vehicle' : 'Add vehicle'}</div>
-      </div>
+  const paintHex = normalizeVehicleColorHex(colorHex)
 
-      <div className="damage-docs">
-        <div className="vehicle-hero" style={{ marginBottom: 20 }}>
-          <div
-            className={`vehicle-hero__icon-wrap${normalizeVehicleColorHex(colorHex) ? ' vehicle-hero__icon-wrap--paint' : ''}`}
-            style={
-              normalizeVehicleColorHex(colorHex)
-                ? { background: normalizeVehicleColorHex(colorHex) }
-                : undefined
-            }
-          >
+  return (
+    <div className="screen page-content body">
+      <header className="job-form-header">
+        <BackButton onClick={() => router.back()} />
+        <div className="job-form-header__title">{isEdit ? 'Edit vehicle' : 'Add vehicle'}</div>
+      </header>
+
+      <div className="vehicle-hero job-form-section">
+        <div
+          className={`vehicle-hero__icon-wrap${paintHex ? ' vehicle-hero__icon-wrap--paint' : ''}`}
+          style={paintHex ? ({ '--vehicle-paint': paintHex } as CSSProperties) : undefined}
+        >
             <VehicleTypeIcon
               type={type}
               size={28}
               weight="duotone"
               color={vehicleIconColorOnPaint(colorHex)}
-            />
-          </div>
+          />
         </div>
       </div>
 
@@ -160,17 +156,17 @@ export default function VehicleForm({ clientId, vehicle }: Props) {
         </FloatingField>
 
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Color swatch</div>
+          <div className="form-field-label form-field-label--tight">Color swatch</div>
           <VehicleColorSwatchPicker value={colorHex} onChange={setColorHex} />
         </div>
 
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Type</div>
+          <div className="form-field-label">Type</div>
           <VehicleTypePicker value={type} onChange={setType} />
         </div>
       </div>
 
-      {error ? <div className="error-banner" style={{ marginBottom: 12 }}>{error}</div> : null}
+      {error ? <div className="error-banner job-form-section">{error}</div> : null}
 
       <div className="page-form-save">
         <SheetSubmitButton

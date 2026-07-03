@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import QuoteDetail from '@/components/QuoteDetail'
+import { ScreenLoading } from '@/components/ui'
 import { getQuote } from '@/lib/api'
 import type { QuoteWithRelations } from '@/lib/types'
 
@@ -16,7 +17,7 @@ export default function QuoteDetailPage() {
   }, [id])
 
   if (!quote) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+    return <ScreenLoading />
   }
 
   return <QuoteDetail quote={quote} />

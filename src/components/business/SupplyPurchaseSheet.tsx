@@ -316,7 +316,7 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={isEdit ? 'Edit supply purchase' : 'Buy supplies'}
       subtitle="Expense hits P&L this month and stock is added to inventory"
       ariaLabel="Buy supplies"
@@ -439,7 +439,7 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
           />
         </FloatingField>
 
-        {error ? <p className="inv-field-hint" style={{ color: '#fca5a5' }}>{error}</p> : null}
+        {error ? <p className="form-field-hint form-field-hint--error">{error}</p> : null}
       </div>
     </BottomSheet>
   )

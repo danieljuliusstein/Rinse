@@ -1,5 +1,6 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import type { LeadSourceRow } from '@/lib/lead-source-report'
 import { fmt } from '@/lib/calculations'
 
@@ -23,7 +24,7 @@ export default function ReportLeadSources({ rows }: ReportLeadSourcesProps) {
             <div className="report-lead-track">
               <div
                 className="report-lead-fill"
-                style={{ width: `${pct}%` }}
+                style={{ '--fill-size': `${pct}%` } as CSSProperties}
               />
             </div>
             <div className="report-lead-detail">

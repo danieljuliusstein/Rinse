@@ -26,7 +26,7 @@ export default function AddJobPhotoSheet({
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={`Add ${sectionLabel.toLowerCase()} photo`}
       subtitle="Capture progress or completion shots for this job"
       ariaLabel={`Add ${sectionLabel} photo`}

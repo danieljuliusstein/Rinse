@@ -23,7 +23,10 @@ import { fmt } from '@/lib/calculations'
 import { deriveInitials } from '@/lib/client-relationship-logic'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
 import { loadSettingsAsync } from '@/lib/settings'
-import type { ClientWithStats, Package, QuickJobData, Supply, SupplyUsage, VehicleType } from '@/lib/types'
+import { usePremiumGate } from '@/hooks/usePremiumGate'
+import { PillGroup } from '@/components/forms'
+import { RECURRENCE_CADENCE_OPTIONS } from '@/lib/recurrence'
+import type { ClientWithStats, Package, QuickJobData, RecurrenceCadence, Supply, SupplyUsage, VehicleType } from '@/lib/types'
 import { VEHICLE_TYPE_OPTIONS } from '@/lib/vehicle-type-icons'
 
 interface QuickAddJobProps {
@@ -51,6 +54,7 @@ export default function QuickAddJob({
 }: QuickAddJobProps) {
   const router = useRouter()
   const { handleWriteError } = useActionToast()
+  const { runGated: runCreateJobGated } = usePremiumGate('create_job')
   const formRef = useRef<HTMLDivElement>(null)
 
   const [clientSearch, setClientSearch] = useState('')
@@ -79,6 +83,7 @@ export default function QuickAddJob({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [travelRatePerMile, setTravelRatePerMile] = useState<number | undefined>()
+  const [recurrenceCadence, setRecurrenceCadence] = useState<RecurrenceCadence | 'none'>('none')
 
   useEffect(() => {
     void loadSettingsAsync().then((s) => setTravelRatePerMile(s.travel_rate_per_mile))
@@ -131,6 +136,8 @@ export default function QuickAddJob({
     marketing_cost: expenses.marketing_cost,
     equipment_depreciation: expenses.equipment_depreciation,
     supplies_used,
+    recurrence_cadence: recurrenceCadence === 'none' ? undefined : recurrenceCadence,
+    recurrence_anchor_date: recurrenceCadence === 'none' ? undefined : jobDate,
   })
 
   const performSave = async (supplies_used?: SupplyUsage[]) => {
@@ -160,15 +167,19 @@ export default function QuickAddJob({
       setSaveError('Enter revenue greater than zero.')
       return
     }
-    const appSettings = await loadSettingsAsync()
-    if (!appSettings.track_job_supplies) {
-      await performSave()
-      return
-    }
-    const supplies = await getSupplies()
-    setCatalogSupplies(supplies)
-    setPendingSupplies(null)
-    setSuppliesSheetOpen(true)
+    runCreateJobGated(() => {
+      void (async () => {
+        const appSettings = await loadSettingsAsync()
+        if (!appSettings.track_job_supplies) {
+          await performSave()
+          return
+        }
+        const supplies = await getSupplies()
+        setCatalogSupplies(supplies)
+        setPendingSupplies(null)
+        setSuppliesSheetOpen(true)
+      })()
+    })
   }
 
   const headerDate = formatHeaderDate(new Date())
@@ -325,7 +336,7 @@ export default function QuickAddJob({
             </div>
           )}
 
-          <div className="new-job-label" style={{ marginTop: 4 }}>
+          <div className="new-job-label new-job-label--tight">
             Vehicle type
           </div>
           <div className="new-job-vehicle-grid">
@@ -405,13 +416,22 @@ export default function QuickAddJob({
               />
             </FloatingField>
           </section>
+
+          <section id="nj-recurrence" className="new-job-section">
+            <PillGroup
+              label="Repeat"
+              value={recurrenceCadence}
+              options={RECURRENCE_CADENCE_OPTIONS}
+              onChange={setRecurrenceCadence}
+            />
+          </section>
         </div>
 
         {saveError && <p className="new-job-error" role="alert" aria-live="assertive">{saveError}</p>}
       </div>
 
       <footer className="new-job-footer">
-        <div style={{ flex: 1 }}>
+        <div className="new-job-footer__primary">
           <SheetSubmitButton
             label={saving ? 'Saving…' : 'Save job'}
             ready={isValid}

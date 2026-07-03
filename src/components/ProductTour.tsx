@@ -1,13 +1,17 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import TourWelcomeModal from '@/components/TourWelcomeModal'
 import { useAuth } from '@/providers/AuthProvider'
+import { clearTourNavigate, setTourNavigate, waitForRouteReady } from '@/lib/tour-nav'
 import {
+  TOUR_FINISHED_EVENT,
   TOUR_REPLAY_EVENT,
   destroyProductTour,
   dismissTourWelcome,
+  isTourActive,
+  isTourCompleted,
   shouldAutoStartTour,
   shouldShowTourWelcome,
   skipProductTour,
@@ -16,9 +20,30 @@ import {
 
 export default function ProductTour() {
   const pathname = usePathname()
+  const router = useRouter()
   const { needsOnboarding } = useAuth()
   const startingRef = useRef(false)
+  const suppressAutoStartRef = useRef(false)
   const [welcomeOpen, setWelcomeOpen] = useState(false)
+
+  useEffect(() => {
+    setTourNavigate(async (path: string) => {
+      router.push(path)
+      await waitForRouteReady(path)
+    })
+    return () => clearTourNavigate()
+  }, [router])
+
+  useEffect(() => {
+    const onFinished = () => {
+      suppressAutoStartRef.current = true
+      window.setTimeout(() => {
+        suppressAutoStartRef.current = false
+      }, 2500)
+    }
+    window.addEventListener(TOUR_FINISHED_EVENT, onFinished)
+    return () => window.removeEventListener(TOUR_FINISHED_EVENT, onFinished)
+  }, [])
 
   const runTour = useCallback(() => {
     if (startingRef.current) return
@@ -36,8 +61,29 @@ export default function ProductTour() {
   }, [])
 
   useEffect(() => {
+    const onReplay = () => {
+      if (needsOnboarding || startingRef.current || isTourCompleted()) return
+      if (pathname !== '/') {
+        router.push('/')
+        return
+      }
+      if (!shouldAutoStartTour()) return
+      if (shouldShowTourWelcome()) {
+        setWelcomeOpen(true)
+        return
+      }
+      runTour()
+    }
+
+    window.addEventListener(TOUR_REPLAY_EVENT, onReplay)
+    return () => window.removeEventListener(TOUR_REPLAY_EVENT, onReplay)
+  }, [pathname, needsOnboarding, router, runTour])
+
+  useEffect(() => {
     const tryStart = () => {
-      if (pathname !== '/' || needsOnboarding || startingRef.current || !shouldAutoStartTour()) return
+      if (suppressAutoStartRef.current) return
+      if (pathname !== '/' || needsOnboarding || startingRef.current || isTourCompleted()) return
+      if (!shouldAutoStartTour()) return
 
       if (shouldShowTourWelcome()) {
         setWelcomeOpen(true)
@@ -47,19 +93,26 @@ export default function ProductTour() {
       runTour()
     }
 
-    if (pathname !== '/' || needsOnboarding) {
+    if (needsOnboarding) {
       startingRef.current = false
       setWelcomeOpen(false)
       destroyProductTour()
       return
     }
 
+    if (pathname !== '/' && !isTourActive()) {
+      startingRef.current = false
+      setWelcomeOpen(false)
+      destroyProductTour()
+      return
+    }
+
+    if (pathname !== '/' || isTourActive()) return
+
     const timer = window.setTimeout(tryStart, 600)
-    window.addEventListener(TOUR_REPLAY_EVENT, tryStart)
 
     return () => {
       window.clearTimeout(timer)
-      window.removeEventListener(TOUR_REPLAY_EVENT, tryStart)
     }
   }, [pathname, needsOnboarding, runTour])
 

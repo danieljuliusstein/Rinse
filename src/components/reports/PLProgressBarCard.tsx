@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type { PLReport } from '@/lib/api/aggregates'
 import type { DateRangeKey } from '@/lib/api/reports'
 import { fmtSigned } from '@/lib/calculations'
@@ -86,10 +86,12 @@ function BarRow({ bar, revenue, animate, variant }: BarRowProps) {
       >
         <div
           className={`pl-bar-fill${bar.isLoss ? ' pl-bar-fill--loss' : ''}`}
-          style={{
-            width: animate ? (variant === 'revenue' ? '100%' : `${width}%`) : '0%',
-            backgroundColor: bar.color,
-          }}
+          style={
+            {
+              '--fill-size': animate ? (variant === 'revenue' ? '100%' : `${width}%`) : '0%',
+              '--bar-color': bar.color,
+            } as CSSProperties
+          }
         />
       </div>
       {variant === 'expense' && overflow > 0 && (

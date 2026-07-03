@@ -23,7 +23,7 @@ export default function ConfirmSheet({
 }: ConfirmSheetProps) {
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={title}
       onClose={onCancel}
       footer={

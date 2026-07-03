@@ -4,9 +4,19 @@ import ReportPdfDocument from '@/components/pdf/ReportPdfDocument'
 import type { PLReport } from '@/lib/api/aggregates'
 import type { DateRangeKey } from '@/lib/api/reports'
 import { resolveInvoiceLogoDataUri } from '@/lib/invoice-logo-server'
+import { authenticateRequestUser } from '@/lib/server/request-auth'
+import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 import { plProgressPeriodLabel } from '@/lib/reports-metrics'
 
 export async function POST(request: Request) {
+  const auth = await authenticateRequestUser(request)
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
+  if (premiumDenied) return premiumDenied
+
   try {
     const body = await request.json()
     const report = body.report as PLReport | undefined

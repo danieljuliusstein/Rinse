@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { Trash } from '@phosphor-icons/react'
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/body-scroll-lock'
+import { trapFocus } from '@/lib/focus-trap'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import type { JobPhoto, PhotoType } from '@/lib/types'
 
@@ -27,6 +28,7 @@ export default function JobPhotoLightbox({
 }: JobPhotoLightboxProps) {
   const confirm = useConfirm()
   const touchStartX = useRef<number | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const photo = photos[index]
   const pillClass = type === 'before' ? 'job-photos-lightbox__pill--before' : 'job-photos-lightbox__pill--after'
   const label = type === 'before' ? 'BEFORE' : 'AFTER'
@@ -40,6 +42,12 @@ export default function JobPhotoLightbox({
 
   useEffect(() => {
     lockBodyScroll()
+    let releaseFocus: (() => void) | undefined
+    const frame = window.requestAnimationFrame(() => {
+      if (dialogRef.current) {
+        releaseFocus = trapFocus(dialogRef.current, '.job-photos-lightbox__close')
+      }
+    })
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
       if (e.key === 'ArrowRight') go(1)
@@ -47,6 +55,8 @@ export default function JobPhotoLightbox({
     }
     window.addEventListener('keydown', onKey)
     return () => {
+      window.cancelAnimationFrame(frame)
+      releaseFocus?.()
       unlockBodyScroll()
       window.removeEventListener('keydown', onKey)
     }
@@ -72,7 +82,14 @@ export default function JobPhotoLightbox({
   }
 
   return (
-    <div className="job-photos-lightbox" role="dialog" aria-modal="true" onClick={onClose}>
+    <div
+      ref={dialogRef}
+      className="job-photos-lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${label} photo ${index + 1} of ${photos.length}`}
+      onClick={onClose}
+    >
       <div className="job-photos-lightbox__top">
         <span className={`job-photos-lightbox__pill ${pillClass}`}>{label}</span>
         <span className="job-photos-lightbox__counter">

@@ -58,14 +58,14 @@ describe('support-config', () => {
       userAgent: 'TestAgent/1.0',
       timestamp: '2026-06-25T12:00:00.000Z',
       orgSlug: 'atlas',
-      businessName: 'Atlas Detailing',
+      businessName: 'Rinse',
     })
     expect(text).toContain(APP_DISPLAY_NAME)
     expect(text).toContain(`Version: ${DEFAULT_APP_VERSION}`)
     expect(text).toContain('Backend: pocketbase')
     expect(text).toContain('Origin: https://app.example.com')
     expect(text).toContain('Org slug: atlas')
-    expect(text).toContain('Business: Atlas Detailing')
+    expect(text).toContain('Business: Rinse')
     expect(text).toContain('User agent: TestAgent/1.0')
   })
 

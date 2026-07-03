@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { DateRangeKey } from '@/lib/api/reports'
 import { fmtDetailed } from '@/lib/calculations'
 import { aggregateJobsRevenue, filterJobsByRange } from '@/lib/jobs-revenue'
@@ -48,7 +48,7 @@ export default function ReportRevenueByService({ jobs, range }: ReportRevenueByS
             <div className="report-revenue-track">
               <div
                 className="report-revenue-fill"
-                style={{ width: animate ? `${barPct}%` : '0%' }}
+                style={{ '--fill-size': animate ? `${barPct}%` : '0%' } as CSSProperties}
               />
             </div>
           </div>

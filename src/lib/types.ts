@@ -19,6 +19,7 @@ export type LeadSource =
 export type PhotoType = 'before' | 'after'
 export type OverheadCategory = 'vehicle' | 'insurance' | 'equipment' | 'software' | 'marketing' | 'other'
 export type BillingCycle = 'monthly' | 'annual' | 'one_time'
+export type RecurrenceCadence = 'weekly' | 'biweekly' | 'monthly'
 
 export interface ExpenseLine {
   category: 'supplies' | 'travel' | 'equipment' | 'marketing' | 'labor' | 'other'
@@ -233,6 +234,8 @@ export interface Job {
   photo_count: number
   photo_meta?: PhotoMeta[]
   invoice_id?: string
+  recurrence_cadence?: RecurrenceCadence
+  recurrence_anchor_date?: string
   created?: string
   updated?: string
 }
@@ -326,6 +329,21 @@ export interface Invoice {
   paid_at?: string
   terms?: string
   notes?: string
+  discount_amount?: number
+  tax_rate?: number
+  tax_amount?: number
+  po_number?: string
+  signature_url?: string
+  signed_at?: string
+  extra_line_items?: InvoiceLineTemplate[]
+}
+
+export interface InvoiceLineTemplate {
+  id: string
+  description: string
+  default_amount: number
+  category?: string
+  active?: boolean
 }
 
 export interface JobWithRelations extends Job {
@@ -349,6 +367,8 @@ export interface QuickJobData {
   marketing_cost?: number
   equipment_depreciation?: number
   supplies_used?: SupplyUsage[]
+  recurrence_cadence?: RecurrenceCadence
+  recurrence_anchor_date?: string
 }
 
 export interface DashboardKpis {
@@ -401,6 +421,8 @@ export interface JobEditData {
   travel_cost?: number
   marketing_cost?: number
   equipment_depreciation?: number
+  recurrence_cadence?: RecurrenceCadence
+  recurrence_anchor_date?: string
 }
 
 export interface SupplyInput {

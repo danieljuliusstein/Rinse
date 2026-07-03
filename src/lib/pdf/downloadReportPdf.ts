@@ -1,6 +1,8 @@
 import type { PLReport } from '@/lib/api/aggregates'
 import type { DateRangeKey } from '@/lib/api/reports'
 import { triggerDownload } from '@/lib/pdf/triggerDownload'
+import { handleApiResponsePremiumGate, PREMIUM_REQUIRED_MESSAGE } from '@/lib/premium-api'
+import { getAuthFetchHeaders } from '@/lib/pb-auth'
 
 export async function downloadReportPdf(
   report: PLReport,
@@ -10,11 +12,14 @@ export async function downloadReportPdf(
 ): Promise<void> {
   const res = await fetch('/api/pdf/report', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthFetchHeaders() },
     body: JSON.stringify({ report, range, businessName, logoUrl }),
   })
 
   if (!res.ok) {
+    if (await handleApiResponsePremiumGate(res)) {
+      throw new Error(PREMIUM_REQUIRED_MESSAGE)
+    }
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     throw new Error(data.error ?? 'PDF export failed')
   }

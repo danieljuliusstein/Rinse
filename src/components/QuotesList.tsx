@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { FileText, Plus } from '@phosphor-icons/react'
+import { EmptyState, ListRow, SectionGroup } from '@/components/ui'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
+import { getClient } from '@/lib/api'
 import type { QuoteWithRelations } from '@/lib/types'
 
 const FILTER_CHIPS: { key: 'all' | 'open' | 'accepted'; label: string }[] = [
@@ -12,40 +14,55 @@ const FILTER_CHIPS: { key: 'all' | 'open' | 'accepted'; label: string }[] = [
   { key: 'accepted', label: 'Accepted' },
 ]
 
-const statusBadge: Record<string, string> = {
-  draft: 'badge-draft',
-  sent: 'badge-pending',
-  accepted: 'badge-paid',
-  declined: 'badge-overdue',
-  expired: 'badge-overdue',
-}
-
-function statusLabel(status: string): string {
-  return status.charAt(0).toUpperCase() + status.slice(1)
+function quoteStatusForBadge(status: string): string {
+  if (status === 'accepted') return 'paid'
+  if (status === 'declined' || status === 'expired') return 'overdue'
+  if (status === 'sent') return 'sent'
+  return 'draft'
 }
 
 export default function QuotesList({ quotes }: { quotes: QuoteWithRelations[] }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const clientFilterId = searchParams.get('client')
   const [filter, setFilter] = useState<'all' | 'open' | 'accepted'>('all')
+  const [clientName, setClientName] = useState<string | null>(null)
 
-  const filtered = useMemo(() => {
-    if (filter === 'accepted') return quotes.filter((q) => q.status === 'accepted')
-    if (filter === 'open') return quotes.filter((q) => q.status === 'draft' || q.status === 'sent')
-    return quotes
-  }, [quotes, filter])
+  useEffect(() => {
+    if (!clientFilterId) {
+      setClientName(null)
+      return
+    }
+    void getClient(clientFilterId).then((c) => setClientName(c?.name ?? null))
+  }, [clientFilterId])
 
-  const openCount = useMemo(
-    () => quotes.filter((q) => q.status === 'draft' || q.status === 'sent').length,
-    [quotes]
+  const scopedQuotes = useMemo(
+    () => (clientFilterId ? quotes.filter((q) => q.client_id === clientFilterId) : quotes),
+    [quotes, clientFilterId]
   )
 
+  const filtered = useMemo(() => {
+    if (filter === 'accepted') return scopedQuotes.filter((q) => q.status === 'accepted')
+    if (filter === 'open') return scopedQuotes.filter((q) => q.status === 'draft' || q.status === 'sent')
+    return scopedQuotes
+  }, [scopedQuotes, filter])
+
+  const openCount = useMemo(
+    () => scopedQuotes.filter((q) => q.status === 'draft' || q.status === 'sent').length,
+    [scopedQuotes]
+  )
+
+  const newQuoteHref = clientFilterId
+    ? `/quotes/new?clientId=${clientFilterId}`
+    : '/quotes/new'
+
   return (
-    <div className="screen page-content body quotes-screen">
+    <div className="screen page-content body">
       <header className="page-header">
         <div>
-          <h1>Quotes</h1>
+          <h1>{clientName ? `${clientName} quotes` : 'Quotes'}</h1>
           <p>
-            {quotes.length} total
+            {scopedQuotes.length} total
             {openCount > 0 && <> · {openCount} open</>}
           </p>
         </div>
@@ -53,11 +70,22 @@ export default function QuotesList({ quotes }: { quotes: QuoteWithRelations[] })
           type="button"
           className="icon-btn green"
           aria-label="New quote"
-          onClick={() => router.push('/quotes/new')}
+          onClick={() => router.push(newQuoteHref)}
         >
           <Plus size={18} weight="bold" aria-hidden="true" />
         </button>
       </header>
+
+      {clientFilterId ? (
+        <button
+          type="button"
+          className="chip active"
+          style={{ marginBottom: 12 }}
+          onClick={() => router.push('/quotes')}
+        >
+          Showing one client · Clear
+        </button>
+      ) : null}
 
       <div className="chips" role="tablist" aria-label="Quote filters">
         {FILTER_CHIPS.map((chip) => (
@@ -75,39 +103,28 @@ export default function QuotesList({ quotes }: { quotes: QuoteWithRelations[] })
       </div>
 
       {filtered.length === 0 ? (
-        <div className="empty-state">
-          <FileText size={40} weight="duotone" aria-hidden="true" />
-          <p>{quotes.length === 0 ? 'No quotes yet' : 'No quotes match this filter'}</p>
-          <button type="button" className="empty-cta" onClick={() => router.push('/quotes/new')}>
-            Create a quote
-          </button>
-        </div>
+        <EmptyState
+          illustration="quotes"
+          title={scopedQuotes.length === 0 ? 'No quotes yet' : 'No quotes match this filter'}
+          description="Send a price estimate before booking the job."
+          actionLabel="Create a quote"
+          onAction={() => router.push(newQuoteHref)}
+        />
       ) : (
-        <div className="doc-list">
+        <SectionGroup title={clientName ? 'Quotes' : 'All quotes'}>
           {filtered.map((q) => (
-            <div
+            <ListRow
               key={q.id}
-              className="doc-list-row card-pressable"
+              icon={<FileText size={18} weight="duotone" />}
+              iconTone="blue"
+              title={q.quote_number}
+              subtitle={`${q.client?.name ?? 'Unknown'} · ${q.package?.name ?? '—'}`}
+              badgeStatus={quoteStatusForBadge(q.status)}
+              trailing={<CurrencyAmount value={q.subtotal} variant="revenue" className="ui-list-row__amount" />}
               onClick={() => router.push(`/quotes/${q.id}`)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && router.push(`/quotes/${q.id}`)}
-            >
-              <div className="doc-list-row__main">
-                <div className="doc-list-row__title">{q.quote_number}</div>
-                <div className="doc-list-row__meta">
-                  {q.client?.name ?? 'Unknown'} · {q.package?.name ?? '—'}
-                </div>
-                <span className={`badge ${statusBadge[q.status] ?? 'badge-draft'}`}>
-                  {statusLabel(q.status)}
-                </span>
-              </div>
-              <div className="doc-list-row__amount">
-                <CurrencyAmount value={q.subtotal} variant="revenue" className="doc-list-row__value" />
-              </div>
-            </div>
+            />
           ))}
-        </div>
+        </SectionGroup>
       )}
     </div>
   )

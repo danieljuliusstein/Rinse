@@ -50,11 +50,16 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   padding: 16px 20px 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding-bottom: 100px;
+}
+
+.new-job-body::-webkit-scrollbar {
+  display: none;
 }
 
 .new-job-section {
@@ -68,6 +73,10 @@
   color: var(--text-muted);
   text-transform: uppercase;
   margin-bottom: 8px;
+}
+
+.new-job-label--tight {
+  margin-top: 4px;
 }
 
 .new-job-optional {
@@ -517,6 +526,11 @@
   display: flex;
   gap: 10px;
   z-index: 90;
+}
+
+.new-job-footer__primary {
+  flex: 1;
+  min-width: 0;
 }
 
 .new-job-save-btn--muted {

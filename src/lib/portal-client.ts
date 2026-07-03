@@ -1,4 +1,6 @@
 import { getInternalApiSecret } from './export-data'
+import { handleApiResponsePremiumGate, PREMIUM_REQUIRED_MESSAGE } from './premium-api'
+import { getCurrentOrganizationId } from './tenant'
 
 export type PortalScope = 'job' | 'photos' | 'invoice' | 'quote' | 'full'
 
@@ -46,6 +48,9 @@ export async function createShareLink(input: {
   })
 
   if (!res.ok) {
+    if (await handleApiResponsePremiumGate(res)) {
+      throw new Error(PREMIUM_REQUIRED_MESSAGE)
+    }
     const err = await res.json().catch(() => ({}))
     const raw = (err as { error?: string }).error
     if (res.status === 401) {
@@ -79,10 +84,16 @@ export async function emailShareLink(input: {
       'Content-Type': 'application/json',
       ...(secret ? { 'x-api-secret': secret } : {}),
     },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      ...input,
+      organizationId: getCurrentOrganizationId(),
+    }),
   })
 
   if (!res.ok) {
+    if (await handleApiResponsePremiumGate(res)) {
+      throw new Error(PREMIUM_REQUIRED_MESSAGE)
+    }
     const err = await res.json().catch(() => ({}))
     throw new Error((err as { error?: string }).error ?? 'Failed to send email')
   }

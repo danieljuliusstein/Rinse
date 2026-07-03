@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CaretRight } from '@phosphor-icons/react'
 import {
   isPushEnabled,
   isPushSupported,
@@ -10,30 +9,23 @@ import {
   unsubscribeFromPush,
 } from '@/lib/push-client'
 import { requestTourReplay, TOUR_REPLAY_EVENT } from '@/lib/product-tour'
+import { usePwaInstall } from '@/hooks/usePwaInstall'
+import IosInstallSheet from '@/components/IosInstallSheet'
+import { ListRow, SectionGroup } from '@/components/ui'
+import { useTheme } from '@/providers/ThemeProvider'
+import { HOME_MODULES, isHomeModuleEnabled } from '@/lib/home-modules'
 import SettingsDetailShell from './SettingsDetailShell'
+import SettingsToggle from './SettingsToggle'
 import { useSettingsDraft } from './SettingsDraftProvider'
-
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => onChange(!on)}
-      className="settings-toggle"
-    >
-      <span className={`settings-toggle__track${on ? ' settings-toggle__track--on' : ''}`}>
-        <span className="settings-toggle__thumb" />
-      </span>
-    </button>
-  )
-}
 
 export default function SettingsPreferencesPage() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
   const { settings, ready, update } = useSettingsDraft()
   const [pushOn, setPushOn] = useState(false)
   const [pushMsg, setPushMsg] = useState<string | null>(null)
+  const [iosInstallOpen, setIosInstallOpen] = useState(false)
+  const { canInstall, isStandalone, isIosDevice, hasNativePrompt, install } = usePwaInstall()
 
   useEffect(() => {
     setPushOn(isPushEnabled())
@@ -67,6 +59,20 @@ export default function SettingsPreferencesPage() {
   return (
     <SettingsDetailShell title="App preferences">
       <div className="settings-panel settings-panel--flush">
+        <div className="settings-toggle-row">
+          <div>
+            <div className="settings-toggle-row__label">Dark mode</div>
+            <div className="settings-toggle-row__hint">
+              {theme === 'dark' ? 'Dark surfaces and green accents' : 'Light mode (default)'}
+            </div>
+          </div>
+          <SettingsToggle
+            on={theme === 'dark'}
+            onChange={(dark) => setTheme(dark ? 'dark' : 'light')}
+            label="Dark mode"
+          />
+        </div>
+        <div className="settings-divider" />
         {(
           [
             ['job_reminder', 'Job reminder (day before)'],
@@ -78,9 +84,10 @@ export default function SettingsPreferencesPage() {
         ).map(([key, label]) => (
           <div key={key} className="settings-toggle-row">
             <span className="settings-toggle-row__label">{label}</span>
-            <Toggle
+            <SettingsToggle
               on={settings.notifications[key]}
               onChange={(v) => update('notifications', { ...settings.notifications, [key]: v })}
+              label={label}
             />
           </div>
         ))}
@@ -92,11 +99,29 @@ export default function SettingsPreferencesPage() {
               Prompt to log product used when saving a job. Off by default.
             </div>
           </div>
-          <Toggle
+          <SettingsToggle
             on={settings.track_job_supplies === true}
             onChange={(v) => update('track_job_supplies', v)}
+            label="Track supplies on jobs"
           />
         </div>
+        <div className="settings-divider" />
+        <p className="settings-panel__lead settings-panel__lead--tight">Home screen modules</p>
+        {HOME_MODULES.map((mod) => (
+          <div key={mod.id} className="settings-toggle-row">
+            <div>
+              <div className="settings-toggle-row__label">{mod.label}</div>
+              <div className="settings-toggle-row__hint">{mod.description}</div>
+            </div>
+            <SettingsToggle
+              on={isHomeModuleEnabled(settings.home_modules, mod.id)}
+              onChange={(v) =>
+                update('home_modules', { ...settings.home_modules, [mod.id]: v })
+              }
+              label={mod.label}
+            />
+          </div>
+        ))}
         <div className="settings-divider" />
         <div className="settings-toggle-row">
           <div>
@@ -105,23 +130,32 @@ export default function SettingsPreferencesPage() {
               {isPushSupported() ? (pushOn ? 'Subscribed on this device' : 'Not subscribed') : 'Not supported on this device'}
             </div>
           </div>
-          <Toggle on={pushOn} onChange={() => void handlePushToggle()} />
+          <SettingsToggle on={pushOn} onChange={() => void handlePushToggle()} label="Push notifications" />
         </div>
         {pushMsg ? <p className="settings-msg">{pushMsg}</p> : null}
-        <div className="settings-divider" />
-        <button
-          type="button"
-          className="settings-row-link"
+      </div>
+
+      <SectionGroup title="Shortcuts">
+        {!isStandalone && canInstall ? (
+          <ListRow
+            title="Install app on this device"
+            onClick={() => {
+              if (isIosDevice && !hasNativePrompt) setIosInstallOpen(true)
+              else void install()
+            }}
+          />
+        ) : null}
+        <ListRow
+          title="Replay app tour"
           onClick={() => {
             requestTourReplay()
             router.push('/')
             window.dispatchEvent(new Event(TOUR_REPLAY_EVENT))
           }}
-        >
-          <span>Replay app tour</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </button>
-      </div>
+        />
+      </SectionGroup>
+
+      <IosInstallSheet open={iosInstallOpen} onOpenChange={setIosInstallOpen} />
     </SettingsDetailShell>
   )
 }

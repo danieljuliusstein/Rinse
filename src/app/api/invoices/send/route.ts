@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import { authenticateRequestUser } from '@/lib/server/request-auth'
 import { enforceRateLimit, RATE_LIMITS } from '@/lib/server/rate-limit'
 import { rejectOversizedBody } from '@/lib/server/request-body'
+import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
 
   const limited = enforceRateLimit(`invoice-send:${auth.userId}`, RATE_LIMITS.sendEmail)
   if (limited) return limited
+
+  const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
+  if (premiumDenied) return premiumDenied
 
   try {
     const body = await request.json()

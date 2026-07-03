@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { PLReport } from '@/lib/api/aggregates'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import { isLoss } from '@/lib/calculations'
@@ -42,7 +42,7 @@ export default function ReportComparisonChart({ report }: ReportComparisonChartP
           <div className="report-comparison-col-track" aria-hidden="true">
             <div
               className="report-comparison-col-fill report-comparison-col-fill--revenue"
-              style={{ height: animate ? `${revenueBar.widthPct}%` : '0%' }}
+              style={{ '--fill-size': animate ? `${revenueBar.widthPct}%` : '0%' } as CSSProperties}
             />
           </div>
           <span className="report-comparison-col-pct">{Math.round(revenueBar.widthPct)}% of peak</span>
@@ -59,7 +59,7 @@ export default function ReportComparisonChart({ report }: ReportComparisonChartP
           <div className="report-comparison-col-track" aria-hidden="true">
             <div
               className="report-comparison-col-fill report-comparison-col-fill--expense"
-              style={{ height: animate ? `${expenseBar.widthPct}%` : '0%' }}
+              style={{ '--fill-size': animate ? `${expenseBar.widthPct}%` : '0%' } as CSSProperties}
             />
           </div>
           <span className="report-comparison-col-pct">{Math.round(expenseBar.widthPct)}% of peak</span>

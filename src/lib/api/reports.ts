@@ -15,7 +15,7 @@ import { loadSettings } from '../settings'
 import { loadData } from '../storage'
 import type { Job } from '../types'
 
-export type DateRangeKey = 'this_week' | 'this_month' | 'last_month' | 'this_year'
+export type DateRangeKey = 'this_week' | 'this_month' | 'last_month' | 'this_year' | 'lifetime'
 export type { PLReport } from './aggregates'
 
 export interface PLReportBundle {
@@ -44,6 +44,33 @@ export function getPLReportBundleFromJobs(jobs: Job[], range: DateRangeKey): PLR
   return {
     current: computePLReportForDates(jobs, start, end, currentOverhead, currentBusiness),
     prior: computePLReportForDates(jobs, prior.start, prior.end, priorOverhead, priorBusiness),
+  }
+}
+
+export function getPLReportLifetimeBundle(jobs: Job[]): PLReportBundle {
+  const sorted = [...jobs].sort((a, b) => a.date.localeCompare(b.date))
+  const startIso = sorted[0]?.date ?? '2000-01-01'
+  const endIso = new Date().toISOString().slice(0, 10)
+  return getPLReportBundleForDates(jobs, startIso, endIso)
+}
+
+export function getPLReportBundleForDates(jobs: Job[], startIso: string, endIso: string): PLReportBundle {
+  const overheadItems = getOverheadExpenses()
+  const businessItems = getBusinessExpenses()
+  const start = new Date(`${startIso}T00:00:00`)
+  const end = new Date(`${endIso}T23:59:59`)
+  const spanMs = end.getTime() - start.getTime()
+  const priorEnd = new Date(start.getTime() - 1)
+  const priorStart = new Date(priorEnd.getTime() - spanMs)
+
+  const currentOverhead = overheadAmountForDates(overheadItems, start, end)
+  const priorOverhead = overheadAmountForDates(overheadItems, priorStart, priorEnd)
+  const currentBusiness = businessExpensesTotalForDates(businessItems, start, end)
+  const priorBusiness = businessExpensesTotalForDates(businessItems, priorStart, priorEnd)
+
+  return {
+    current: computePLReportForDates(jobs, start, end, currentOverhead, currentBusiness),
+    prior: computePLReportForDates(jobs, priorStart, priorEnd, priorOverhead, priorBusiness),
   }
 }
 

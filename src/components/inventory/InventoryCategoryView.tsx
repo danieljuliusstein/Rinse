@@ -24,6 +24,7 @@ import {
 } from '@/components/inventory/inventory-utils'
 import { filterInventoryByExpenseTracking } from '@/lib/inventory-expense-logic'
 import SwipeableRow from '@/components/SwipeableRow'
+import { ActionDock, Button, EmptyState, SectionGroup } from '@/components/ui'
 import { filterSuppliesByKind } from '@/lib/supplies-logic'
 import type { HomeInventoryItem } from '@/lib/home-inventory'
 import type { BusinessExpense, Equipment, Supply } from '@/lib/types'
@@ -45,6 +46,7 @@ interface InventoryCategoryViewProps {
   onDeleteSupply: (id: string) => void
   onDeleteEquipment: (id: string) => void
   onDeleteWishlist: (id: string) => void
+  onAddDockChange?: (visible: boolean) => void
 }
 
 function GroupBlock<T>({
@@ -55,7 +57,7 @@ function GroupBlock<T>({
 }: {
   label: string
   items: T[]
-  renderRow: (item: T, index: number) => ReactNode
+  renderRow: (item: T) => ReactNode
   defaultOpen?: boolean
 }) {
   const [collapsed, setCollapsed] = useState(!defaultOpen)
@@ -65,31 +67,37 @@ function GroupBlock<T>({
   if (items.length === 0) return null
 
   return (
-    <>
-      <button
-        type="button"
-        className={`inventory-group-header${collapsed ? ' inventory-group-header--collapsed' : ''}`}
-        onClick={() => setCollapsed((c) => !c)}
-      >
-        <p className="inventory-group-header__label">
-          {label} ({items.length})
-        </p>
-        <CaretDown className="inventory-group-header__chevron" size={14} weight="bold" />
-      </button>
-      <div className={collapsed ? 'inventory-group-content--collapsed' : undefined}>
-        {visible.map((item, index) => renderRow(item, index))}
-        {hiddenCount > 0 && (
-          <button
-            type="button"
-            className={`inventory-show-more${expanded ? ' inventory-show-more--expanded' : ''}`}
-            onClick={() => setExpanded((e) => !e)}
-          >
-            {expanded ? 'Show less' : `Show ${hiddenCount} more`}
-            <CaretDown className="inventory-show-more__icon" size={14} weight="bold" />
-          </button>
-        )}
-      </div>
-    </>
+    <SectionGroup
+      title={label}
+      meta={String(items.length)}
+      action={
+        <button
+          type="button"
+          className={`inventory-group-toggle${collapsed ? ' inventory-group-toggle--collapsed' : ''}`}
+          onClick={() => setCollapsed((c) => !c)}
+          aria-expanded={!collapsed}
+          aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${label}`}
+        >
+          <CaretDown size={14} weight="bold" aria-hidden="true" />
+        </button>
+      }
+    >
+      {collapsed ? null : (
+        <>
+          {visible.map((item) => renderRow(item))}
+          {hiddenCount > 0 ? (
+            <button
+              type="button"
+              className={`more-pill${expanded ? ' more-pill--expanded' : ''}`}
+              onClick={() => setExpanded((e) => !e)}
+            >
+              {expanded ? 'Show less' : `Show ${hiddenCount} more`}
+              <CaretDown size={14} weight="bold" aria-hidden="true" />
+            </button>
+          ) : null}
+        </>
+      )}
+    </SectionGroup>
   )
 }
 
@@ -139,6 +147,7 @@ export default function InventoryCategoryView({
   onDeleteSupply,
   onDeleteEquipment,
   onDeleteWishlist,
+  onAddDockChange,
 }: InventoryCategoryViewProps) {
   const section = SECTION_CONFIG.find((s) => s.key === sectionKey)!
   const [query, setQuery] = useState('')
@@ -184,10 +193,23 @@ export default function InventoryCategoryView({
   const isGrid = viewMode === 'grid'
   const filterChips = section.isEquipment ? EQUIPMENT_FILTER_CHIPS : SUPPLY_FILTER_CHIPS
   const showExpenseFilters = showSupplyFilters || showEquipmentFilters
+  const hasActiveFilters = query.trim() !== '' || chip !== 'all'
   const listIsEmpty =
     !section.isWishlist &&
     ((section.supplyKind && supplyItems.length === 0) ||
       (section.isEquipment && equipmentItems.length === 0))
+  const wishlistFilteredEmpty = section.isWishlist && wishlistItems.length === 0 && query.trim() !== ''
+  const wishlistTrueEmpty = section.isWishlist && wishlist.length === 0 && !query.trim()
+  const showAddDock = Boolean(
+    (section.supplyKind && !listIsEmpty) ||
+      (section.isEquipment && !listIsEmpty) ||
+      (section.isWishlist && !wishlistTrueEmpty && !wishlistFilteredEmpty)
+  )
+
+  useEffect(() => {
+    onAddDockChange?.(showAddDock)
+    return () => onAddDockChange?.(false)
+  }, [showAddDock, onAddDockChange])
 
   const supplyGrid = (
     <SupplyProductGrid
@@ -198,19 +220,40 @@ export default function InventoryCategoryView({
     />
   )
 
+  const renderSupplyRow = (item: Supply) => (
+    <div key={item.id} className="inventory-swipe-item">
+      <SwipeableRow
+        rowId={`supply-${item.id}`}
+        openRowId={swipedRowId}
+        onOpenChange={onSwipedRowChange}
+        onEdit={() => onOpenSupply(item)}
+        onDelete={() => onDeleteSupply(item.id)}
+        deleteConfirmMessage={`Delete "${item.name}" from inventory?`}
+      >
+        <SupplyInventoryRow
+          supply={item}
+          onPress={() => onOpenSupply(item)}
+          inExpenses={supplyExpenseIds.has(item.id)}
+        />
+      </SwipeableRow>
+    </div>
+  )
+
   return (
     <>
-      <div className="inventory-category-nav">
+      <header className="page-header page-header--compact inventory-category-header">
         <BackButton onClick={onBack} label="Back to inventory" />
-        <h2 className="inventory-category-nav__title">{section.title}</h2>
-        {showViewToggle && <ViewModeToggle mode={viewMode} onChange={setViewMode} />}
-      </div>
+        <div className="page-header__title-block">
+          <h1>{section.title}</h1>
+        </div>
+        {showViewToggle ? <ViewModeToggle mode={viewMode} onChange={setViewMode} /> : null}
+      </header>
 
-      <div className="inventory-search premium-search">
-        <MagnifyingGlass className="premium-search__icon inventory-search__icon" size={16} weight="bold" />
+      <div className="search premium-search inventory-search">
+        <MagnifyingGlass className="premium-search__icon" size={16} weight="bold" aria-hidden="true" />
         <input
           type="search"
-          className="premium-search__input inventory-search__input"
+          className="premium-search__input"
           placeholder={`Search ${section.title.toLowerCase()}…`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -218,162 +261,133 @@ export default function InventoryCategoryView({
         />
       </div>
 
-      {showExpenseFilters && (
-        <div className="inventory-filters">
+      {showExpenseFilters ? (
+        <div className="chips" role="tablist" aria-label={`${section.title} filters`}>
           {filterChips.map(({ id, label }) => (
             <button
               key={id}
               type="button"
-              className={`filter-chip${chip === id ? ' filter-chip--active' : ''}`}
+              role="tab"
+              aria-selected={chip === id}
+              className={`chip${chip === id ? ' active' : ''}`}
               onClick={() => setChip(id)}
             >
               {label}
             </button>
           ))}
         </div>
-      )}
+      ) : null}
 
-      {listIsEmpty && (
-        <div className="inventory-empty-filter">
-          {chip === 'not_in_expenses'
-            ? 'No items here — everything in this category is linked to expenses.'
-            : 'No items match your search or filters.'}
-        </div>
-      )}
+      {listIsEmpty ? (
+        <EmptyState
+          illustration="inventory"
+          title={
+            hasActiveFilters
+              ? chip === 'not_in_expenses'
+                ? 'All items linked'
+                : 'No matches'
+              : `No ${section.title.toLowerCase()} yet`
+          }
+          description={
+            hasActiveFilters
+              ? chip === 'not_in_expenses'
+                ? 'Everything in this category is linked to expenses.'
+                : 'No items match your search or filters.'
+              : `Add your first ${section.addLabel.toLowerCase()} to start tracking.`
+          }
+          actionLabel={hasActiveFilters ? undefined : `Add ${section.addLabel}`}
+          onAction={hasActiveFilters ? undefined : onAdd}
+        />
+      ) : null}
 
-      {section.isWishlist && (
-        <div className="inventory-card">
-          {wishlistItems.map((item, index) => (
-            <SwipeableRow
-              key={item.id}
-              rowId={`wishlist-${item.id}`}
-              openRowId={swipedRowId}
-              onOpenChange={onSwipedRowChange}
-              onEdit={() => onOpenWishlist(item)}
-              onDelete={() => onDeleteWishlist(item.id)}
-              deleteConfirmMessage={`Remove "${item.name}" from your wish list?`}
-              showDivider={index < wishlistItems.length - 1}
-            >
-              <WishlistInventoryRow item={item} onPress={() => onOpenWishlist(item)} />
-            </SwipeableRow>
-          ))}
-          <button type="button" className="inventory-add-row" onClick={onAdd}>
-            <Plus className="inventory-add-row__icon" size={16} weight="bold" />
-            Add {section.addLabel}
-          </button>
-        </div>
-      )}
+      {wishlistTrueEmpty ? (
+        <EmptyState
+          illustration="inventory"
+          title="Wish list is empty"
+          description="Track products you want to buy for your setup."
+          actionLabel={`Add ${section.addLabel}`}
+          onAction={onAdd}
+        />
+      ) : null}
 
-      {section.isEquipment && isGrid && !listIsEmpty && (
-        <>
-          <EquipmentProductGrid
-            items={equipmentItems}
-            onOpen={onOpenEquipment}
-            expenseMap={equipmentExpenseMap}
-          />
-          <button type="button" className="inventory-add-row inventory-add-row--standalone" onClick={onAdd}>
-            <Plus className="inventory-add-row__icon" size={16} weight="bold" />
-            Add {section.addLabel}
-          </button>
-        </>
-      )}
+      {wishlistFilteredEmpty ? (
+        <EmptyState
+          illustration="inventory"
+          title="No matches"
+          description="No wish list items match your search."
+        />
+      ) : null}
 
-      {section.isEquipment && !isGrid && !listIsEmpty && (
-        <div className="inventory-card">
-          {equipmentItems.map((item, index) => (
-            <SwipeableRow
-              key={item.id}
-              rowId={`equipment-${item.id}`}
-              openRowId={swipedRowId}
-              onOpenChange={onSwipedRowChange}
-              onEdit={() => onOpenEquipment(item)}
-              onDelete={() => onDeleteEquipment(item.id)}
-              deleteConfirmMessage={`Delete "${item.name}" from equipment?`}
-              showDivider={index < equipmentItems.length - 1}
-            >
-              <EquipmentInventoryRow
-                item={item}
-                onPress={() => onOpenEquipment(item)}
-                inExpenses={equipmentExpenseMap.has(item.id)}
-              />
-            </SwipeableRow>
-          ))}
-          <button type="button" className="inventory-add-row" onClick={onAdd}>
-            <Plus className="inventory-add-row__icon" size={16} weight="bold" />
-            Add {section.addLabel}
-          </button>
-        </div>
-      )}
-
-      {section.supplyKind && isGrid && !listIsEmpty && (
-        <>
-          {supplyGrid}
-          <button type="button" className="inventory-add-row inventory-add-row--standalone" onClick={onAdd}>
-            <Plus className="inventory-add-row__icon" size={16} weight="bold" />
-            Add {section.addLabel}
-          </button>
-        </>
-      )}
-
-      {section.supplyKind && !isGrid && !listIsEmpty && (
-        <div className="inventory-card">
-          <GroupBlock
-            label="Needs attention"
-            items={attention}
-            renderRow={(item, index) => (
+      {section.isWishlist && !wishlistTrueEmpty && !wishlistFilteredEmpty ? (
+        <SectionGroup title={section.title} meta={String(wishlistItems.length)}>
+          {wishlistItems.map((item) => (
+            <div key={item.id} className="inventory-swipe-item">
               <SwipeableRow
-                key={item.id}
-                rowId={`supply-${item.id}`}
+                rowId={`wishlist-${item.id}`}
                 openRowId={swipedRowId}
                 onOpenChange={onSwipedRowChange}
-                onEdit={() => onOpenSupply(item)}
-                onDelete={() => onDeleteSupply(item.id)}
-                deleteConfirmMessage={`Delete "${item.name}" from inventory?`}
-                showDivider={index < attention.length - 1 || stocked.length > 0}
+                onEdit={() => onOpenWishlist(item)}
+                onDelete={() => onDeleteWishlist(item.id)}
+                deleteConfirmMessage={`Remove "${item.name}" from your wish list?`}
               >
-                <SupplyInventoryRow
-                  supply={item}
-                  onPress={() => onOpenSupply(item)}
-                  inExpenses={supplyExpenseIds.has(item.id)}
-                />
+                <WishlistInventoryRow item={item} onPress={() => onOpenWishlist(item)} />
               </SwipeableRow>
-            )}
-          />
-          <GroupBlock
-            label="Stocked"
-            items={stocked}
-            renderRow={(item, index) => (
+            </div>
+          ))}
+        </SectionGroup>
+      ) : null}
+
+      {section.isEquipment && isGrid && !listIsEmpty ? (
+        <EquipmentProductGrid
+          items={equipmentItems}
+          onOpen={onOpenEquipment}
+          expenseMap={equipmentExpenseMap}
+        />
+      ) : null}
+
+      {section.isEquipment && !isGrid && !listIsEmpty ? (
+        <SectionGroup title={section.title} meta={String(equipmentItems.length)}>
+          {equipmentItems.map((item) => (
+            <div key={item.id} className="inventory-swipe-item">
               <SwipeableRow
-                key={item.id}
-                rowId={`supply-${item.id}`}
+                rowId={`equipment-${item.id}`}
                 openRowId={swipedRowId}
                 onOpenChange={onSwipedRowChange}
-                onEdit={() => onOpenSupply(item)}
-                onDelete={() => onDeleteSupply(item.id)}
-                deleteConfirmMessage={`Delete "${item.name}" from inventory?`}
-                showDivider={index < stocked.length - 1}
+                onEdit={() => onOpenEquipment(item)}
+                onDelete={() => onDeleteEquipment(item.id)}
+                deleteConfirmMessage={`Delete "${item.name}" from equipment?`}
               >
-                <SupplyInventoryRow
-                  supply={item}
-                  onPress={() => onOpenSupply(item)}
-                  inExpenses={supplyExpenseIds.has(item.id)}
+                <EquipmentInventoryRow
+                  item={item}
+                  onPress={() => onOpenEquipment(item)}
+                  inExpenses={equipmentExpenseMap.has(item.id)}
                 />
               </SwipeableRow>
-            )}
-          />
-          <button type="button" className="inventory-add-row" onClick={onAdd}>
-            <Plus className="inventory-add-row__icon" size={16} weight="bold" />
-            Add {section.addLabel}
-          </button>
-        </div>
-      )}
+            </div>
+          ))}
+        </SectionGroup>
+      ) : null}
 
-      {listIsEmpty && !section.isWishlist && (
-        <button type="button" className="inventory-add-row inventory-add-row--standalone" onClick={onAdd}>
-          <Plus className="inventory-add-row__icon" size={16} weight="bold" />
-          Add {section.addLabel}
-        </button>
-      )}
+      {section.supplyKind && isGrid && !listIsEmpty ? supplyGrid : null}
+
+      {section.supplyKind && !isGrid && !listIsEmpty ? (
+        <>
+          <GroupBlock label="Needs attention" items={attention} renderRow={renderSupplyRow} />
+          <GroupBlock label="Stocked" items={stocked} renderRow={renderSupplyRow} defaultOpen />
+        </>
+      ) : null}
+
+      {showAddDock ? (
+        <ActionDock aboveNav>
+          <Button
+            variant="primary"
+            className="ui-action-dock__btn ui-action-dock__btn--primary"
+            onClick={onAdd}
+          >
+            <Plus size={18} weight="bold" aria-hidden="true" /> Add {section.addLabel}
+          </Button>
+        </ActionDock>
+      ) : null}
     </>
   )
 }

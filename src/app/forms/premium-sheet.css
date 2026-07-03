@@ -102,7 +102,7 @@
 
 .premium-sheet__form .f-form-divider,
 .pipeline-sheet__form .f-form-divider {
-  background: #1a1a1a;
+  background: var(--border);
   margin: 6px 0;
 }
 
@@ -125,6 +125,13 @@
   gap: 10px;
 }
 
+.inv-computed-cost {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
 /* Field overrides inside premium sheets */
 .premium-sheet .f-input,
 .premium-sheet .f-select,
@@ -132,10 +139,11 @@
 .pipeline-sheet .f-input,
 .pipeline-sheet .f-select,
 .pipeline-sheet .f-textarea {
-  background: #1a1a1a;
-  border: 1.5px solid #222;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   padding-right: 38px;
+  color: var(--text-primary);
 }
 
 .premium-sheet .f-input.hv,
@@ -144,8 +152,8 @@
 .pipeline-sheet .f-input.hv,
 .pipeline-sheet .f-select.hv,
 .pipeline-sheet .f-textarea.hv {
-  border-color: #1c3323;
-  background: #111;
+  border-color: var(--border-green);
+  background: var(--bg-green);
 }
 
 .premium-sheet .f-input:focus,
@@ -155,7 +163,7 @@
 .pipeline-sheet .f-select:focus,
 .pipeline-sheet .f-textarea:focus {
   border-color: var(--green);
-  background: #0b1e10;
+  background: var(--bg-surface);
 }
 
 .premium-sheet .f-select,
@@ -228,9 +236,9 @@
 .pipeline-pill {
   padding: 8px 14px;
   border-radius: 999px;
-  background: #181818;
-  border: 1.5px solid #232323;
-  color: #555;
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -243,15 +251,15 @@
 
 .form-pill:hover,
 .pipeline-pill:hover {
-  border-color: #333;
-  color: #888;
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 .form-pill--on,
 .pipeline-pill--on {
-  background: #05200d;
+  background: var(--green-dim);
   border-color: var(--green);
-  color: var(--green);
+  color: var(--green-text);
 }
 
 .form-pill--pop,
@@ -268,17 +276,17 @@
   }
 }
 
-/* Submit button */
+/* Submit button — uses theme tokens (light + dark) */
 .sheet-submit,
 .pipeline-sheet__submit {
   width: 100%;
   padding: 15px;
-  border-radius: 14px;
-  background: #1c1c1c;
-  color: #444;
-  font-size: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface-active);
+  color: var(--text-muted);
+  font-size: 15px;
   font-weight: 700;
-  border: 1.5px solid #252525;
+  border: 0.5px solid var(--border);
   cursor: not-allowed;
   letter-spacing: 0.01em;
   position: relative;
@@ -293,15 +301,16 @@
 
 .sheet-submit--ready,
 .pipeline-sheet__submit--ready {
-  background: var(--green);
-  color: #052e0f;
-  border-color: var(--green);
+  background: var(--cta-gradient);
+  color: #071407;
+  border-color: transparent;
+  box-shadow: var(--cta-shadow);
   cursor: pointer;
 }
 
 .sheet-submit--ready:hover:not(:disabled),
 .pipeline-sheet__submit--ready:hover:not(:disabled) {
-  background: #1aad50;
+  filter: brightness(1.03);
 }
 
 .sheet-submit--ready:active:not(:disabled),
@@ -311,9 +320,9 @@
 
 .sheet-submit--done,
 .pipeline-sheet__submit--done {
-  background: #052e0f;
-  color: var(--green);
-  border-color: var(--green);
+  background: var(--bg-green);
+  color: var(--green-text);
+  border-color: var(--border-green);
   cursor: default;
 }
 
@@ -420,8 +429,8 @@
   gap: 14px;
   width: 100%;
   padding: 14px;
-  background: #1a1a1a;
-  border: 1.5px solid #222;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   text-align: left;
   cursor: pointer;
@@ -431,8 +440,8 @@
 }
 
 .photo-picker-row:hover {
-  border-color: #333;
-  background: #1e1e1e;
+  border-color: var(--border-strong);
+  background: var(--bg-surface-hover);
 }
 
 .photo-picker-row:active {
@@ -464,34 +473,7 @@
   margin-top: 2px;
 }
 
-/* Quick action menu — align with premium sheet */
-.quick-action-sheet {
-  background: #121212 !important;
-  border-top: 1px solid #1e1e1e !important;
-  backdrop-filter: blur(12px);
-}
-
-.quick-action-sheet-title {
-  font-size: 18px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.3px;
-  color: #f0f0f0 !important;
-}
-
-.quick-action-row {
-  background: #1a1a1a !important;
-  border: 1.5px solid #222 !important;
-  border-radius: 12px !important;
-}
-
-.quick-action-row:active {
-  border-color: #333 !important;
-}
-
-.quick-action-row-icon {
-  background: #05200d !important;
-  border: 1px solid rgba(34, 197, 94, 0.2) !important;
-}
+/* Quick action menu — theme-aligned (no dark overrides) */
 
 /* Destructive / action confirmations */
 .confirm-sheet__message {
@@ -520,8 +502,9 @@
 }
 
 .confirm-sheet__confirm--primary {
-  background: #4caf50;
-  color: #0a0a0a;
+  background: var(--cta-gradient);
+  color: #071407;
+  box-shadow: var(--cta-shadow);
 }
 
 .confirm-sheet__confirm--primary:active {

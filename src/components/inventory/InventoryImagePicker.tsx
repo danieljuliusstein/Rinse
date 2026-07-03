@@ -57,7 +57,7 @@ export default function InventoryImagePicker({
 
   return (
     <div className="inv-image-picker">
-      <p className="inv-field-label">{label.toUpperCase()}</p>
+      <p className="form-pill-block__label">{label}</p>
       <div className="inv-image-picker__row">
         <div className="inv-image-picker__preview">
           {displaySrc ? (

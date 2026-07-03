@@ -7,6 +7,7 @@ import AuthEmptyState from '@/components/AuthEmptyState'
 import BackButton from '@/components/BackButton'
 import PipelineLeadCard from '@/components/pipeline/PipelineLeadCard'
 import PipelineStepper from '@/components/pipeline/PipelineStepper'
+import { ActionDock, EmptyState, Button, ScreenLoading, SectionGroup } from '@/components/ui'
 import { useAuthEmptyState } from '@/hooks/useAuthEmptyState'
 import { useQuickAction } from '@/providers/QuickActionContext'
 import { getLeads } from '@/lib/api'
@@ -75,34 +76,38 @@ export default function PipelineScreen() {
 
   const isEmpty = (leads?.length ?? 0) === 0
   const activeLabel = LEAD_STAGES.find((s) => s.id === activeStage)?.label ?? activeStage
+  const stageCount = grouped[activeStage].length
 
   return (
-    <div className="screen page-content body pipeline-screen">
-      <header className="pipeline-header">
-        <div className="pipeline-header__back">
-          <BackButton onClick={() => router.push('/')} />
+    <div className={`screen page-content body${!isEmpty && !isLoggedOut ? ' screen--dock-nav' : ''}`}>
+      <header className="page-header page-header--compact pipeline-page-header">
+        <BackButton onClick={() => router.push('/')} />
+        <div className="page-header__title-block">
+          <div>
+            <h1>Lead pipeline</h1>
+            <p>
+              {!leads
+                ? 'Loading leads…'
+                : isLoggedOut
+                  ? 'Sign in to load your pipeline'
+                  : `${leads.length} lead${leads.length === 1 ? '' : 's'} · ${activeLabel}`}
+            </p>
+          </div>
         </div>
-        <h1 className="pipeline-title">Lead pipeline</h1>
-        <button
-          type="button"
-          className="pipeline-header__add"
-          aria-label="New lead"
-          onClick={() => (isLoggedOut ? router.push('/auth') : openLeadSheet())}
-        >
-          <Plus size={20} weight="bold" aria-hidden="true" />
-        </button>
       </header>
 
       {!isEmpty && leads ? (
-        <PipelineStepper
-          activeStage={activeStage}
-          stageCounts={{
-            inquiry: grouped.inquiry.length,
-            quoted: grouped.quoted.length,
-            booked: grouped.booked.length,
-          }}
-          onStageChange={setActiveStage}
-        />
+        <div data-coach="pipeline-stages">
+          <PipelineStepper
+            activeStage={activeStage}
+            stageCounts={{
+              inquiry: grouped.inquiry.length,
+              quoted: grouped.quoted.length,
+              booked: grouped.booked.length,
+            }}
+            onStageChange={setActiveStage}
+          />
+        </div>
       ) : null}
 
       {migrationNeeded ? (
@@ -114,7 +119,7 @@ export default function PipelineScreen() {
       {error ? <div className="error-banner">{error}</div> : null}
 
       {!leads ? (
-        <p className="pipeline-loading">Loading…</p>
+        <ScreenLoading inline />
       ) : isLoggedOut ? (
         <AuthEmptyState
           icon={<Car size={28} weight="duotone" />}
@@ -122,30 +127,24 @@ export default function PipelineScreen() {
           subtitle="Leads and inquiries load from your account after you sign in."
         />
       ) : isEmpty ? (
-        <div className="empty-card pipeline-empty-card">
-          <div className="empty-card__icon">
-            <Car size={24} weight="duotone" aria-hidden="true" />
-          </div>
-          <p className="empty-card__title">No leads yet</p>
-          <p className="empty-card__subtitle">
-            Add an inquiry or share your booking link to start filling your pipeline.
-          </p>
-          <button type="button" className="btn--new-lead" onClick={() => openLeadSheet()}>
-            New lead
-          </button>
-        </div>
+        <EmptyState
+          illustration="pipeline"
+          title="No leads yet"
+          description="Add an inquiry or share your booking link to start filling your pipeline."
+          actionLabel="New lead"
+          onAction={() => openLeadSheet()}
+        />
       ) : (
         <div key={activeStage} className="pipeline-stage-panel pipeline-stage-panel--animate">
-          <h2 className="pipeline-stage-panel__heading">
-            {activeLabel}
-            <span className="pipeline-stage-panel__count">{grouped[activeStage].length}</span>
-          </h2>
-          {grouped[activeStage].length === 0 ? (
-            <div className="pipeline-stage-panel__empty">
-              <p>No leads in {activeLabel.toLowerCase()}</p>
-            </div>
+          {stageCount === 0 ? (
+            <EmptyState
+              title={`No leads in ${activeLabel.toLowerCase()}`}
+              description="Move a lead here from another stage, or add a new inquiry."
+              actionLabel="New lead"
+              onAction={() => openLeadSheet()}
+            />
           ) : (
-            <div className="pipeline-stage-panel__list">
+            <SectionGroup title={activeLabel} meta={String(stageCount)}>
               {grouped[activeStage].map((lead) => (
                 <PipelineLeadCard
                   key={lead.id}
@@ -154,10 +153,23 @@ export default function PipelineScreen() {
                   onRefresh={handleRefresh}
                 />
               ))}
-            </div>
+            </SectionGroup>
           )}
         </div>
       )}
+
+      {!isEmpty && !isLoggedOut ? (
+        <ActionDock aboveNav>
+          <Button
+            variant="primary"
+            className="ui-action-dock__btn ui-action-dock__btn--primary"
+            data-coach="pipeline-add"
+            onClick={() => openLeadSheet()}
+          >
+            <Plus size={18} weight="bold" aria-hidden="true" /> New lead
+          </Button>
+        </ActionDock>
+      ) : null}
     </div>
   )
 }

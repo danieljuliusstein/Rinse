@@ -1,0 +1,191 @@
+/* ============================================
+   RINSE DESIGN TOKENS
+   Light-first (Invoice Fly–inspired iOS gray/white)
+   Dark via [data-theme="dark"] on <html>
+   ============================================ */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces — IF-style #F2F2F7 page, #FFFFFF cards */
+  --bg-base: #f2f2f7;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f9f9fb;
+  --bg-surface-active: #ebebf0;
+  --bg-muted: #f2f2f7;
+  --bg-elevated: #ffffff;
+  --surface-2: #f2f2f7;
+
+  /* app-ui aliases */
+  --bg: #f2f2f7;
+  --bg-card: #ffffff;
+  --bg-card-2: #ffffff;
+  --card: #ffffff;
+  --bg-green: #ecfdf3;
+  --bg-green-mid: #d1fae5;
+  --bg-amber: #fffbeb;
+  --bg-blue: #eff6ff;
+  --bg-purple: #f5f3ff;
+  --bg-red: #fef2f2;
+
+  --border: #e5e5ea;
+  --border-strong: #c7c7cc;
+  --border-card: #e5e5ea;
+  --border-green: #bbf7d0;
+  --border-amber: #fde68a;
+  --border-blue: #bfdbfe;
+
+  --text-primary: #000000;
+  --text-secondary: #3c3c43;
+  --text-muted: #8e8e93;
+  --text-dim: #aeaeb2;
+  --text-hint: #c7c7cc;
+
+  --green: #22c55e;
+  --green-dim: rgba(34, 197, 94, 0.12);
+  --green-text: var(--green-dark);
+
+  --amber: #f59e0b;
+  --amber-dim: rgba(245, 158, 11, 0.12);
+  --amber-text: #d97706;
+
+  --red: #ef4444;
+  --red-dim: rgba(239, 68, 68, 0.1);
+  --red-text: #dc2626;
+
+  --blue: #2563eb;
+  --blue-dim: rgba(37, 99, 235, 0.1);
+  --blue-text: #2563eb;
+
+  --green-dark: #15803d;
+  --amber-dark: #b45309;
+  --purple: #7c3aed;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --cta-gradient: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+  --cta-shadow: 0 4px 14px rgba(34, 197, 94, 0.28);
+  --dock-bg: rgba(255, 255, 255, 0.92);
+  --dock-border: rgba(0, 0, 0, 0.06);
+  --dock-blur: blur(16px);
+
+  --nav-bg: rgba(255, 255, 255, 0.94);
+  --sheet-bg: #ffffff;
+  --sheet-scrim: rgba(0, 0, 0, 0.4);
+
+  --inv-low: #ea580c;
+  --inv-low-bg: #fff7ed;
+  --inv-low-border: #fed7aa;
+  --inv-ok: var(--green-dark);
+  --inv-ok-bg: #ecfdf3;
+  --inv-ok-border: #bbf7d0;
+  --inv-card: #ffffff;
+  --inv-sheet: #ffffff;
+  --inv-muted: #8e8e93;
+  --inv-row-text: #3c3c43;
+
+  --invoice-doc-shell: #f2f2f7;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-base: #0f0f0f;
+  --bg-surface: #1a1a1a;
+  --bg-surface-hover: #202020;
+  --bg-surface-active: #252525;
+  --bg-muted: #151515;
+  --bg-elevated: #1e1e1e;
+
+  --bg: #111111;
+  --bg-card: #1a1a1a;
+  --bg-card-2: #1e1e1e;
+  --bg-green: #0d2a0d;
+  --bg-green-mid: #1a3a1a;
+  --bg-amber: #1e1400;
+  --bg-blue: #0a1f3a;
+  --bg-purple: #1a0f2e;
+  --bg-red: #1a0000;
+
+  --border: #2a2a2a;
+  --border-strong: #3a3a3a;
+  --border-card: #222222;
+  --border-green: #2a5a2a;
+  --border-amber: #2a1e00;
+  --border-blue: #0f3060;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --text-muted: #a3a3a3;
+  --text-dim: #8c8c8c;
+  --text-hint: #3a3a3a;
+
+  --green-dim: #1a2e1a;
+  --green-text: #4ade80;
+
+  --amber-dim: #2e2a1a;
+  --amber-text: #fbbf24;
+
+  --red-dim: #2e1a1a;
+  --red-text: #f87171;
+
+  --blue: #60a5fa;
+  --blue-dim: #1a1e2e;
+  --blue-text: #93c5fd;
+
+  --green-dark: #3b6d11;
+  --amber-dark: #854f0b;
+  --purple: #a78bfa;
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --cta-gradient: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+  --cta-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --dock-bg: rgba(15, 15, 15, 0.92);
+  --dock-border: rgba(255, 255, 255, 0.08);
+  --dock-blur: blur(16px);
+
+  --nav-bg: #111111;
+  --sheet-bg: #121212;
+  --sheet-scrim: rgba(0, 0, 0, 0.6);
+
+  --inv-low: #e07050;
+  --inv-low-bg: #2d1a0f;
+  --inv-low-border: #4a2a1a;
+  --inv-ok: #3dc97a;
+  --inv-ok-bg: #0f2d1a;
+  --inv-ok-border: #1a4a2a;
+  --inv-card: #1e1e1e;
+  --inv-sheet: #1c1c1c;
+  --inv-muted: #555;
+  --inv-row-text: #d0d0d0;
+
+  --invoice-doc-shell: #0f0f0f;
+}
+
+/* Shared semantic tokens (both themes) */
+:root {
+  --tap-target-min: 44px;
+
+  --invoice-accent: var(--green);
+  --invoice-font-body: var(--font-dm-sans), ui-sans-serif, sans-serif;
+  --invoice-font-display: var(--font-syne), ui-sans-serif, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  --radius-pill: 99px;
+
+  --screen-padding: 16px;
+
+  --font-display: var(--font-syne), ui-sans-serif, sans-serif;
+  --font-body: var(--font-dm-sans), ui-sans-serif, sans-serif;
+  --font-ui: var(--font-body);
+  --font-mono: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+
+  --transition: 150ms ease;
+  --transition-sheet: 280ms cubic-bezier(0.32, 0.72, 0, 1);
+}

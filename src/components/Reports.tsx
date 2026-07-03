@@ -3,19 +3,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { CaretRight, DownloadSimple, FileCsv, FileText, Receipt } from '@phosphor-icons/react'
+import ArSummaryCard from '@/components/business/ArSummaryCard'
+import ArDonutChart from '@/components/business/ArDonutChart'
 import ReportComparisonChart from '@/components/reports/ReportComparisonChart'
+import WaterfallChart from '@/components/reports/WaterfallChart'
+import DateRangeSheet, { type CustomDateRange } from '@/components/reports/DateRangeSheet'
 import ReportExpenseBreakdown from '@/components/reports/ReportExpenseBreakdown'
 import ReportRevenueByService from '@/components/reports/ReportRevenueByService'
 import ReportSection from '@/components/reports/ReportSection'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
+import { Button, ScreenLoading } from '@/components/ui'
 import { useAuthEmptyState } from '@/hooks/useAuthEmptyState'
-import { getJobs, getPLReportBundle, type DateRangeKey } from '@/lib/api'
+import { usePremiumGate } from '@/hooks/usePremiumGate'
+import { useProGate } from '@/hooks/useProGate'
+import { getInvoices, getJobs, getPLReportBundle, type DateRangeKey } from '@/lib/api'
+import { getPLReportBundleForDates, getPLReportLifetimeBundle } from '@/lib/api/reports'
+import { computeArSummary, growthPct } from '@/lib/ar-metrics'
 import { computeJobsExportData, formatJobsExportCSV } from '@/lib/api/aggregates'
 import { computeDashboardKpis, csvJobStatusLabel, rowTableNet } from '@/lib/jobs-dashboard-csv'
 import type { PLReport } from '@/lib/api/aggregates'
 import { downloadReportPdf } from '@/lib/pdf/downloadReportPdf'
 import { loadSettings } from '@/lib/settings'
-import { REPORT_FILTER_CHIPS, buildExpenseBreakdown } from '@/lib/reports-metrics'
+import { REPORT_FILTER_CHIPS, buildExpenseBreakdown, buildWaterfallData } from '@/lib/reports-metrics'
 import { FINANCIAL_DATA_CHANGED } from '@/lib/financial-data-events'
 import { fmt } from '@/lib/calculations'
 import { isLoss } from '@/lib/calculations'
@@ -23,13 +32,15 @@ import type { JobWithRelations } from '@/lib/types'
 import { rangeDateSpanLabel, rangePeriodLabel } from '@/lib/jobs-revenue'
 
 const MONEY_CHIPS = REPORT_FILTER_CHIPS.filter((c) =>
-  ['this_week', 'this_month', 'last_month'].includes(c.key)
+  ['this_week', 'this_month', 'last_month', 'this_year', 'lifetime'].includes(c.key)
 )
 
 export default function Reports() {
   const pathname = usePathname()
   const router = useRouter()
   const { isLoggedOut } = useAuthEmptyState()
+  const { runGated: runPdfGated } = usePremiumGate('export_pdf')
+  const { runProGated } = useProGate('custom_report_range')
   const [range, setRange] = useState<DateRangeKey>('this_month')
   const [current, setCurrent] = useState<PLReport | null>(null)
   const [prior, setPrior] = useState<PLReport | null>(null)
@@ -37,6 +48,24 @@ export default function Reports() {
   const [exportBusy, setExportBusy] = useState(false)
   const [exportMessage, setExportMessage] = useState('')
   const [exportPreviewOpen, setExportPreviewOpen] = useState(false)
+  const [invoices, setInvoices] = useState<Awaited<ReturnType<typeof getInvoices>>>([])
+  const [customOpen, setCustomOpen] = useState(false)
+  const [useCustomRange, setUseCustomRange] = useState(false)
+  const [customRange, setCustomRange] = useState<CustomDateRange>(() => {
+    const end = new Date()
+    const start = new Date(end.getFullYear(), end.getMonth(), 1)
+    return {
+      start: start.toISOString().slice(0, 10),
+      end: end.toISOString().slice(0, 10),
+    }
+  })
+  const [chartView, setChartView] = useState<'compare' | 'waterfall'>('compare')
+
+  const arSummary = useMemo(() => computeArSummary(invoices), [invoices])
+  const revenueGrowth = useMemo(
+    () => (current && prior ? growthPct(current.revenue, prior.revenue) : null),
+    [current, prior]
+  )
 
   const exportData = useMemo(
     () =>
@@ -52,12 +81,33 @@ export default function Reports() {
 
   const exportKpis = useMemo(() => computeDashboardKpis(exportData.rows), [exportData.rows])
 
+  const waterfallData = useMemo(
+    () => (current ? buildWaterfallData(current) : null),
+    [current]
+  )
+
   const loadReport = useCallback(() => {
+    if (useCustomRange) {
+      getJobs().then((jobList) => {
+        const bundle = getPLReportBundleForDates(jobList, customRange.start, customRange.end)
+        setCurrent(bundle.current)
+        setPrior(bundle.prior)
+      })
+      return
+    }
+    if (range === 'lifetime') {
+      getJobs().then((jobList) => {
+        const bundle = getPLReportLifetimeBundle(jobList)
+        setCurrent(bundle.current)
+        setPrior(bundle.prior)
+      })
+      return
+    }
     getPLReportBundle(range).then(({ current: c, prior: p }) => {
       setCurrent(c)
       setPrior(p)
     })
-  }, [range])
+  }, [range, useCustomRange, customRange.start, customRange.end])
 
   useEffect(() => {
     loadReport()
@@ -65,6 +115,7 @@ export default function Reports() {
 
   useEffect(() => {
     getJobs().then(setJobs)
+    getInvoices().then(setInvoices)
   }, [range])
 
   useEffect(() => {
@@ -132,11 +183,7 @@ export default function Reports() {
   }
 
   if (!current || !prior) {
-    return (
-      <div className="screen page-content body" style={{ paddingTop: 40, textAlign: 'center', color: '#555' }}>
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body />
   }
 
   const loss = isLoss(current.netProfit)
@@ -148,9 +195,12 @@ export default function Reports() {
     <div className="screen page-content body money-screen">
       <header className="page-header">
         <div>
-          <h1>Money</h1>
+          <h1>Business</h1>
           <p>
-            {rangePeriodLabel(range)} · {current.jobCount} job{current.jobCount === 1 ? '' : 's'}
+            {useCustomRange
+              ? `${customRange.start} – ${customRange.end}`
+              : rangePeriodLabel(range)}{' '}
+            · {current.jobCount} job{current.jobCount === 1 ? '' : 's'}
           </p>
         </div>
       </header>
@@ -161,21 +211,31 @@ export default function Reports() {
         </p>
       ) : null}
 
-      <div className="chips">
+      <div className="chips" data-coach="money-range">
         {MONEY_CHIPS.map((chip) => (
           <button
             key={chip.key}
             type="button"
-            className={`chip${range === chip.key ? ' active' : ''}`}
-            onClick={() => setRange(chip.key)}
+            className={`chip${!useCustomRange && range === chip.key ? ' active' : ''}`}
+            onClick={() => {
+              setUseCustomRange(false)
+              setRange(chip.key)
+            }}
           >
             {chip.label}
           </button>
         ))}
+        <button
+          type="button"
+          className={`chip${useCustomRange ? ' active' : ''}`}
+          onClick={() => runProGated(() => setCustomOpen(true))}
+        >
+          Custom
+        </button>
       </div>
 
       <div className="money-summary">
-        <div className={`money-hero${loss ? ' money-hero--loss' : ' money-hero--profit'}`}>
+        <div className={`money-hero${loss ? ' money-hero--loss' : ' money-hero--profit'}`} data-coach="money-hero">
           <div className="money-hero-label">{loss ? 'Net loss' : 'Net profit'}</div>
           <CurrencyAmount
             value={current.netProfit}
@@ -187,10 +247,28 @@ export default function Reports() {
           )}
         </div>
 
+        {!isLoggedOut && arSummary.openCount > 0 ? (
+          <div className="business-ar-panel">
+            <ArSummaryCard summary={arSummary} compact />
+          </div>
+        ) : null}
+
         <div className="stat-grid">
           <div className="stat-card">
             <div className="stat-label">Revenue</div>
-            <div className="stat-value">{fmt(current.revenue)}</div>
+            <div className="stat-value">
+              {fmt(current.revenue)}
+              {revenueGrowth != null ? (
+                <span
+                  className={`business-growth-pill${
+                    revenueGrowth >= 0 ? ' business-growth-pill--up' : ' business-growth-pill--down'
+                  }`}
+                >
+                  {revenueGrowth >= 0 ? '+' : ''}
+                  {revenueGrowth}%
+                </span>
+              ) : null}
+            </div>
             <div className="stat-sub">{current.jobCount} jobs</div>
           </div>
           <div className="stat-card">
@@ -211,6 +289,12 @@ export default function Reports() {
             <div className="stat-sub">per job</div>
           </div>
         </div>
+
+        {!isLoggedOut && current.revenue > 0 ? (
+          <div className="business-donut-panel">
+            <ArDonutChart report={current} />
+          </div>
+        ) : null}
       </div>
 
       <div className="money-context-links">
@@ -233,9 +317,35 @@ export default function Reports() {
       </ReportSection>
 
       <ReportSection label="Revenue vs expenses">
-        <ReportComparisonChart report={current} />
+        <div className="reports-chart-toggle">
+          <button
+            type="button"
+            className={`chip${chartView === 'compare' ? ' active' : ''}`}
+            onClick={() => setChartView('compare')}
+          >
+            Compare
+          </button>
+          <button
+            type="button"
+            className={`chip${chartView === 'waterfall' ? ' active' : ''}`}
+            onClick={() => setChartView('waterfall')}
+          >
+            Waterfall
+          </button>
+        </div>
+        {chartView === 'compare' ? (
+          <ReportComparisonChart report={current} />
+        ) : waterfallData ? (
+          <WaterfallChart
+            data={waterfallData}
+            revenue={current.revenue}
+            totalExpenses={current.totalExpenses}
+            netProfit={current.netProfit}
+          />
+        ) : null}
       </ReportSection>
 
+      <div data-coach="money-export">
       <ReportSection label="Export" className="money-export-section">
         <div className="money-export-card" aria-label="Export data">
         <button
@@ -311,20 +421,50 @@ export default function Reports() {
           </div>
         )}
 
-        <div className="money-export-row">
-          <button type="button" className="money-export-btn money-export-btn--primary" onClick={handlePdf} disabled={exportBusy}>
-            <DownloadSimple size={16} aria-hidden="true" />
-            Export PDF
-          </button>
-          <button type="button" className="money-export-btn" onClick={handleCSV} disabled={exportBusy}>
-            <FileCsv size={16} aria-hidden="true" />
-            Export CSV
-          </button>
+        <div className="money-export-actions">
+          <Button
+            type="button"
+            variant="primary"
+            fullWidth={false}
+            disabled={exportBusy}
+            loading={exportBusy}
+            onClick={() => runPdfGated(() => void handlePdf())}
+          >
+            <span className="money-export-btn-inner">
+              <DownloadSimple size={16} aria-hidden="true" />
+              Export PDF
+            </span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            fullWidth={false}
+            disabled={exportBusy}
+            onClick={() => void handleCSV()}
+          >
+            <span className="money-export-btn-inner">
+              <FileCsv size={16} aria-hidden="true" />
+              Export CSV
+            </span>
+          </Button>
         </div>
         </div>
       </ReportSection>
+      </div>
 
-      {exportMessage && <div className="reports-export-error">{exportMessage}</div>}
+      {exportMessage ? (
+        <p className="reports-export-error form-field-hint form-field-hint--error" role="alert">
+          {exportMessage}
+        </p>
+      ) : null}
+
+      <DateRangeSheet
+        open={customOpen}
+        onOpenChange={setCustomOpen}
+        value={customRange}
+        onChange={setCustomRange}
+        onApply={() => setUseCustomRange(true)}
+      />
     </div>
   )
 }

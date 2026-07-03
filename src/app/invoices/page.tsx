@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import InvoicesList from '@/components/InvoicesList'
+import { ScreenLoading } from '@/components/ui'
 import { getClients, getInvoices } from '@/lib/api'
 import type { Client, Invoice } from '@/lib/types'
 
@@ -17,7 +18,7 @@ export default function InvoicesPage() {
   }, [])
 
   if (!invoices) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+    return <ScreenLoading />
   }
 
   return <InvoicesList invoices={invoices} clients={clients} />

@@ -140,3 +140,38 @@ export async function resolveConnectDestination(
   const status = await refreshConnectStatus(orgId, userPb)
   return status.ready && status.accountId ? status.accountId : null
 }
+
+const CONNECT_RETURN_PATH = '/settings/invoicing'
+
+export function connectLinkStrategy(status: StripeConnectStatus): 'login' | 'onboarding' {
+  return status.ready ? 'login' : 'onboarding'
+}
+
+/** Express accounts cannot use account_update links — use onboarding or Express Dashboard. */
+export async function buildConnectRedirectUrl(
+  accountId: string,
+  request: Request,
+  status: StripeConnectStatus,
+): Promise<string> {
+  const stripe = getStripe()
+  if (!stripe) throw new Error('Stripe not configured')
+
+  const origin = appOriginFromRequest(request)
+  const refreshUrl = `${origin}${CONNECT_RETURN_PATH}?connect=refresh`
+  const returnUrl = `${origin}${CONNECT_RETURN_PATH}?connect=return`
+
+  if (connectLinkStrategy(status) === 'login') {
+    const login = await stripe.accounts.createLoginLink(accountId)
+    if (!login.url) throw new Error('Could not open Stripe dashboard')
+    return login.url
+  }
+
+  const link = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: refreshUrl,
+    return_url: returnUrl,
+    type: 'account_onboarding',
+  })
+  if (!link.url) throw new Error('Could not start Stripe onboarding')
+  return link.url
+}

@@ -21,7 +21,7 @@ export default function AddDamageSheet({ onPhotoSelected, onClose }: AddDamageSh
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title="Add damage photo"
       subtitle="Document pre-existing damage before the detail"
       ariaLabel="Add damage photo"

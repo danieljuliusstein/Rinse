@@ -51,7 +51,7 @@ export function supplyQuantityLabel(supply: Supply): string {
 export interface CategoryMeta {
   count: number
   subtitle: string
-  metaClass?: 'category-card__meta--warning' | 'category-card__meta--danger'
+  metaClass?: 'category-grid__meta--warning' | 'category-grid__meta--danger'
 }
 
 export function categoryMeta(
@@ -81,8 +81,8 @@ export function categoryMeta(
   const lowCount = items.filter((s) => isLowStock(s) && !isOutOfStock(s)).length
 
   let metaClass: CategoryMeta['metaClass']
-  if (outCount > 0) metaClass = 'category-card__meta--danger'
-  else if (lowCount > 0) metaClass = 'category-card__meta--warning'
+  if (outCount > 0) metaClass = 'category-grid__meta--danger'
+  else if (lowCount > 0) metaClass = 'category-grid__meta--warning'
 
   const parts: string[] = [`${items.length} item${items.length === 1 ? '' : 's'}`]
   if (outCount > 0) parts.push(`${outCount} out`)

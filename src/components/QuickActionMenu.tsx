@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Briefcase, FileText, Flask, Funnel, Receipt } from '@phosphor-icons/react'
 import { useQuickAction } from '@/providers/QuickActionContext'
 import { useAuth } from '@/providers/AuthProvider'
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/body-scroll-lock'
+import { trapFocus } from '@/lib/focus-trap'
 
 interface ActionItem {
   id: string
@@ -17,6 +18,7 @@ interface ActionItem {
 
 export default function QuickActionMenu() {
   const router = useRouter()
+  const sheetRef = useRef<HTMLDivElement>(null)
   const { isLoggedIn } = useAuth()
   const { menuOpen, closeMenu, openExpenseSheet, openSupplyPurchaseSheet, openLeadSheet } =
     useQuickAction()
@@ -47,6 +49,17 @@ export default function QuickActionMenu() {
         if (!isLoggedIn) return requireSignIn()
         closeMenu()
         router.push('/jobs/new')
+      },
+    },
+    {
+      id: 'new-invoice',
+      label: 'Create invoice',
+      subtitle: 'Open a job and send an invoice',
+      Icon: Receipt,
+      onSelect: () => {
+        if (!isLoggedIn) return requireSignIn()
+        closeMenu()
+        router.push('/invoices/new')
       },
     },
     {
@@ -94,7 +107,17 @@ export default function QuickActionMenu() {
       if (e.key === 'Escape') closeMenu()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    let releaseFocus: (() => void) | undefined
+    const frame = window.requestAnimationFrame(() => {
+      if (sheetRef.current) {
+        releaseFocus = trapFocus(sheetRef.current, '.quick-action-row')
+      }
+    })
+    return () => {
+      window.cancelAnimationFrame(frame)
+      releaseFocus?.()
+      window.removeEventListener('keydown', onKey)
+    }
   }, [menuOpen, closeMenu])
 
   if (!menuOpen) return null
@@ -107,7 +130,13 @@ export default function QuickActionMenu() {
         onClick={closeMenu}
         aria-label="Close quick actions"
       />
-      <div className="quick-action-sheet" role="menu" aria-label="Quick actions">
+      <div
+        ref={sheetRef}
+        className="quick-action-sheet"
+        role="menu"
+        aria-label="Quick actions"
+        data-tour="quick-action-sheet"
+      >
         <div className="quick-action-sheet-handle" />
         <div className="quick-action-sheet-title">Quick actions</div>
         {actions.map((action) => {
@@ -118,6 +147,7 @@ export default function QuickActionMenu() {
               type="button"
               role="menuitem"
               className="quick-action-row"
+              data-tour={`quick-action-row-${action.id}`}
               onClick={action.onSelect}
             >
               <span className="quick-action-row-icon">

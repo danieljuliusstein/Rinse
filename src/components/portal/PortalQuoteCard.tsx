@@ -36,7 +36,7 @@ export default function PortalQuoteCard({ quote }: { quote: NonNullable<PortalPa
       </div>
 
       {quote.notes && (
-        <div className="portal-notes-block" style={{ marginTop: 14 }}>
+        <div className="portal-notes-block portal-notes-block--spaced">
           {quote.notes}
         </div>
       )}

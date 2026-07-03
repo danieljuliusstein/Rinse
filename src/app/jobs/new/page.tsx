@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import QuickAddJob from '@/components/QuickAddJob'
+import { ScreenLoading } from '@/components/ui'
 import { useRequireSignIn } from '@/hooks/useRequireSignIn'
 import { createJob, getClient, getClientsWithStats, getPackages } from '@/lib/api'
 import { DEFAULT_RETURN_DAYS } from '@/lib/package-cadence'
@@ -45,11 +46,7 @@ export default function NewJobPage() {
   }, [clientId])
 
   if (!isLoggedIn || !ready) {
-    return (
-      <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Loading…
-      </div>
-    )
+    return <ScreenLoading />
   }
 
   return (

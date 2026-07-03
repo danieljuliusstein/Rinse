@@ -1,11 +1,11 @@
 {
-  "name": "Atlas Detailing",
-  "short_name": "Atlas",
+  "name": "Rinse",
+  "short_name": "Rinse",
   "description": "Car detailing business operations and profit tracking",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#0f0f0f",
+  "background_color": "#f2f2f7",
+  "theme_color": "#f2f2f7",
   "orientation": "portrait",
   "icons": [
     {
@@ -19,6 +19,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New job",
+      "short_name": "New job",
+      "description": "Schedule a new detailing job",
+      "url": "/jobs/new",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Create invoice",
+      "short_name": "Invoice",
+      "description": "Create an invoice from a job",
+      "url": "/invoices/new",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Today",
+      "short_name": "Home",
+      "description": "Open today's schedule",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

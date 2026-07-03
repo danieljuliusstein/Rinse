@@ -19,20 +19,22 @@ export function leadSourceLabel(source: string | undefined): string {
   return source.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-export function leadSourceBadgeClass(source: string | undefined): string {
+export type LeadSourceBadgeTone = 'green' | 'amber' | 'blue' | 'gray' | 'red'
+
+export function leadSourceBadgeTone(source: string | undefined): LeadSourceBadgeTone {
   switch (source) {
     case 'instagram':
-      return 'pipeline-source--instagram'
+      return 'red'
     case 'google':
-      return 'pipeline-source--google'
+      return 'blue'
     case 'referral':
-      return 'pipeline-source--referral'
+      return 'green'
     case 'text':
-      return 'pipeline-source--text'
+      return 'blue'
     case 'website':
-      return 'pipeline-source--website'
+      return 'amber'
     default:
-      return 'pipeline-source--other'
+      return 'gray'
   }
 }
 

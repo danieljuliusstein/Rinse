@@ -1,5 +1,6 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { normalizeVehicleColorHex, vehicleColorDisplayHex } from '@/lib/vehicle-color'
 
 type Props = {
@@ -13,7 +14,11 @@ export default function VehicleColorSwatchPicker({ value, onChange }: Props) {
   return (
     <div className="color-swatch-picker">
       <label className="color-swatch-picker__button" aria-label="Pick vehicle color">
-        <span className="color-swatch-picker__fill" style={{ background: displayHex }} aria-hidden="true" />
+        <span
+          className="color-swatch-picker__fill"
+          style={{ '--swatch-fill': displayHex } as CSSProperties}
+          aria-hidden="true"
+        />
         <input
           type="color"
           value={displayHex}

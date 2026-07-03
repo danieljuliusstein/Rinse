@@ -1,7 +1,8 @@
+import { isRecurringJob } from './recurrence'
 import { mapJobStatusForDisplay } from './calculations'
 import type { JobWithRelations } from './types'
 
-export type JobsListFilter = 'all' | 'scheduled' | 'in_progress'
+export type JobsListFilter = 'all' | 'scheduled' | 'in_progress' | 'recurring'
 
 export interface JobListSection {
   key: string
@@ -25,6 +26,33 @@ function startOfMonth(d = new Date()): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1)
 }
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+export function isValidJobDateParam(value: string | null | undefined): value is string {
+  return typeof value === 'string' && ISO_DATE.test(value)
+}
+
+export function filterJobsByDate(jobs: JobWithRelations[], date: string): JobWithRelations[] {
+  return jobs.filter((job) => job.date === date)
+}
+
+export function formatJobsDayLabel(dateStr: string): string {
+  return new Date(`${dateStr}T12:00:00`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+export function groupJobsForDay(jobs: JobWithRelations[], dateStr: string): JobListSection[] {
+  const dayJobs = filterJobsByDate(jobs, dateStr).sort((a, b) =>
+    (a.start_time ?? '').localeCompare(b.start_time ?? '')
+  )
+  if (dayJobs.length === 0) return []
+  return [{ key: `day-${dateStr}`, label: formatJobsDayLabel(dateStr), jobs: dayJobs }]
+}
+
 export function filterJobsList(jobs: JobWithRelations[], query: string, chip: JobsListFilter): JobWithRelations[] {
   const q = query.trim().toLowerCase()
   return jobs.filter((job) => {
@@ -35,6 +63,7 @@ export function filterJobsList(jobs: JobWithRelations[], query: string, chip: Jo
     }
     if (chip === 'scheduled') return job.status === 'scheduled'
     if (chip === 'in_progress') return job.status === 'in_progress'
+    if (chip === 'recurring') return isRecurringJob(job.recurrence_cadence)
     return true
   })
 }

@@ -1,5 +1,8 @@
 export { default as FloatingField } from './FloatingField'
 export { default as FloatingAffixField } from './FloatingAffixField'
+export { default as SetupRowField } from './SetupRowField'
+export { default as SetupMoneyRow } from './SetupMoneyRow'
+export { default as SetupStackField } from './SetupStackField'
 export { default as FormProgressBar } from './FormProgressBar'
 export { default as PillGroup } from './PillGroup'
 export { default as SheetFooter } from './SheetFooter'

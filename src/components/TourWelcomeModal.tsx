@@ -15,7 +15,8 @@ export default function TourWelcomeModal({ onStart, onSkip }: TourWelcomeModalPr
           Take a quick tour?
         </h2>
         <p className="tour-welcome-lead">
-          Two minutes to learn your dashboard, quick actions, and where to find jobs, clients, and money.
+          Six quick stops — Home, Jobs, Clients, money, and your pipeline. Use Next to move through; you can skip or
+          end anytime.
         </p>
         <div className="tour-welcome-actions">
           <button type="button" className="btn-primary tour-welcome-actions__primary" onClick={onStart}>

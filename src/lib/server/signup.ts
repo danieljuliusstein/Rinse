@@ -42,6 +42,89 @@ export interface SignupInput {
   slug?: string
 }
 
+export interface OAuthProvisionInput {
+  userId: string
+  email: string
+  businessName?: string
+}
+
+async function seedOrganizationData(
+  pb: Awaited<ReturnType<typeof authenticateServerAdmin>>,
+  orgId: string,
+  businessName: string,
+  email: string,
+) {
+  await pb.collection('app_settings').create({
+    organization_id: orgId,
+    business_name: businessName,
+    business_phone: '',
+    business_email: email,
+    business_address: '',
+    onboarding_step: 1,
+    invoice_terms_footer: DEFAULT_INVOICE_TERMS,
+    booking_schedule: DEFAULT_BOOKING_SCHEDULE,
+    notifications: {
+      job_reminder: true,
+      morning_reminder: true,
+      follow_up: true,
+      invoice_overdue: true,
+      low_inventory: true,
+    },
+  })
+
+  for (const pkg of DEFAULT_PACKAGES) {
+    await pb.collection('packages').create({ ...pkg, organization_id: orgId })
+  }
+
+  for (const supply of DEFAULT_SUPPLIES) {
+    await pb.collection('supplies').create({ ...supply, organization_id: orgId })
+  }
+}
+
+export async function provisionOrganizationForOAuthUser(input: OAuthProvisionInput) {
+  const email = input.email.trim().toLowerCase()
+  const businessName =
+    input.businessName?.trim() || email.split('@')[0]?.replace(/[._+]/g, ' ') || 'My Detailing'
+
+  if (!input.userId || !email) {
+    throw new Error('Valid user required')
+  }
+
+  const pb = await authenticateServerAdmin()
+  const user = await pb.collection('users').getOne<PbRecord>(input.userId)
+  const existingOrgId = String(user.organization_id ?? '').trim()
+  if (existingOrgId) {
+    return {
+      organizationId: existingOrgId,
+      slug: String((await pb.collection('organizations').getOne(existingOrgId)).slug ?? ''),
+      alreadyProvisioned: true,
+    }
+  }
+
+  const slug = await uniqueSlug(pb, businessName)
+  const org = await pb.collection('organizations').create<PbRecord>({
+    name: businessName,
+    slug,
+    plan: 'starter',
+    founding_member: false,
+    booking_enabled: true,
+    subscription_status: 'trialing',
+    trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  })
+
+  await seedOrganizationData(pb, org.id, businessName, email)
+
+  await pb.collection('users').update(input.userId, {
+    organization_id: org.id,
+  })
+
+  return {
+    organizationId: String(org.id),
+    slug: String(org.slug),
+    alreadyProvisioned: false,
+  }
+}
+
 export async function registerOrganization(input: SignupInput) {
   const email = input.email.trim().toLowerCase()
   const password = input.password
@@ -58,8 +141,8 @@ export async function registerOrganization(input: SignupInput) {
   const org = await pb.collection('organizations').create<PbRecord>({
     name: businessName,
     slug,
-    plan: 'founding',
-    founding_member: true,
+    plan: 'starter',
+    founding_member: false,
     booking_enabled: true,
     subscription_status: 'trialing',
     trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
@@ -73,30 +156,7 @@ export async function registerOrganization(input: SignupInput) {
     verified: true,
   })
 
-  await pb.collection('app_settings').create({
-    organization_id: org.id,
-    business_name: businessName,
-    business_phone: '',
-    business_email: email,
-    business_address: '',
-    invoice_terms_footer: DEFAULT_INVOICE_TERMS,
-    booking_schedule: DEFAULT_BOOKING_SCHEDULE,
-    notifications: {
-      job_reminder: true,
-      morning_reminder: true,
-      follow_up: true,
-      invoice_overdue: true,
-      low_inventory: true,
-    },
-  })
-
-  for (const pkg of DEFAULT_PACKAGES) {
-    await pb.collection('packages').create({ ...pkg, organization_id: org.id })
-  }
-
-  for (const supply of DEFAULT_SUPPLIES) {
-    await pb.collection('supplies').create({ ...supply, organization_id: org.id })
-  }
+  await seedOrganizationData(pb, org.id, businessName, email)
 
   return {
     organizationId: String(org.id),

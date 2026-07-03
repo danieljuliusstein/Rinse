@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { PencilSimple, Plus } from '@phosphor-icons/react'
+import { PencilSimple, Plus, Package as PackageIcon } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import { FloatingAffixField, FloatingField, SheetSubmitButton } from '@/components/forms'
+import { ListRow, SectionGroup } from '@/components/ui'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
 import { createPackage, getAllPackages, updatePackage } from '@/lib/api'
 import { fmt } from '@/lib/calculations'
@@ -28,7 +29,9 @@ export default function PackagesSettings() {
   const [customDuration, setCustomDuration] = useState('')
 
   const load = async () => setPackages(await getAllPackages())
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   useEffect(() => {
     if (!showAdd && !editingId) return
@@ -110,25 +113,30 @@ export default function PackagesSettings() {
   }
 
   return (
-    <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', paddingTop: 16, paddingBottom: 20, gap: 12 }}>
+    <div className="screen page-content settings-screen">
+      <header className="settings-header">
         <BackButton onClick={goBack} />
-        <div style={{ flex: 1, fontSize: 18, fontWeight: 600 }}>Services &amp; pricing</div>
+        <h1 className="settings-header__title">Services &amp; pricing</h1>
         <button
-          onClick={() => { setShowAdd(!showAdd); cancelEdit() }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+          type="button"
+          className="page-header__action"
+          onClick={() => {
+            setShowAdd(!showAdd)
+            cancelEdit()
+          }}
           aria-label="Add service"
         >
-          <Plus size={22} color="var(--green)" />
+          <Plus size={18} weight="bold" aria-hidden="true" />
         </button>
-      </div>
+      </header>
 
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
-        Set base prices and revisit cadence for each service. Client follow-up timing and visit frequency scores use the cadence from their last booked service.
-      </div>
+      <p className="settings-lead">
+        Set base prices and revisit cadence for each service. Client follow-up timing and visit
+        frequency scores use the cadence from their last booked service.
+      </p>
 
       {(showAdd || editingId) && (
-        <div ref={formRef} className="page-form-card page-form" style={{ marginBottom: 16 }}>
+        <div ref={formRef} className="page-form-card page-form job-form-section">
           <div className="section-title">{editingId ? 'Edit service' : 'New service'}</div>
 
           <FloatingField id="pkg-name" label="Service name" filled={name.trim().length > 0}>
@@ -216,15 +224,17 @@ export default function PackagesSettings() {
             </FloatingField>
           )}
 
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: -4, marginBottom: 12, lineHeight: 1.5 }}>
-            Used to block your calendar when clients book online.
-          </p>
+          <p className="form-field-hint-block">Used to block your calendar when clients book online.</p>
 
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn-ghost" onClick={() => { showAdd ? setShowAdd(false) : cancelEdit() }} style={{ flex: 1 }}>
+          <div className="package-form-actions">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => (showAdd ? setShowAdd(false) : cancelEdit())}
+            >
               Cancel
             </button>
-            <div className="page-form-save" style={{ flex: 1, margin: 0 }}>
+            <div className="page-form-save">
               <SheetSubmitButton
                 label={editingId ? 'Save' : 'Add service'}
                 ready={name.trim().length > 0}
@@ -235,32 +245,28 @@ export default function PackagesSettings() {
         </div>
       )}
 
-      {packages.map((pkg) => (
-        <div key={pkg.id} className="card" style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, opacity: pkg.active ? 1 : 0.5 }}>{pkg.name}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-              {fmt(pkg.base_price)}
-              {pkg.description ? ` · ${pkg.description}` : ''}
-              {` · ${cadencePresetLabel(pkg.expected_return_days)}`}
-              {` · ${durationPresetLabel(pkg.duration_minutes)}`}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <button
-              className="btn-ghost"
-              onClick={() => startEdit(pkg)}
-              style={{ fontSize: 12, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
-            >
-              <PencilSimple size={14} weight="bold" />
-              Edit
-            </button>
-            <button className="btn-ghost" onClick={() => handleToggle(pkg)} style={{ fontSize: 12, padding: '6px 12px' }}>
-              {pkg.active ? 'Active' : 'Inactive'}
-            </button>
-          </div>
-        </div>
-      ))}
+      <SectionGroup title="Your services">
+        {packages.map((pkg) => (
+          <ListRow
+            key={pkg.id}
+            icon={<PackageIcon size={18} weight="duotone" />}
+            iconTone="green"
+            title={pkg.name}
+            subtitle={`${fmt(pkg.base_price)}${pkg.description ? ` · ${pkg.description}` : ''} · ${cadencePresetLabel(pkg.expected_return_days)} · ${durationPresetLabel(pkg.duration_minutes)}`}
+            trailing={
+              <div className="package-row-actions">
+                <button type="button" className="btn-ghost" onClick={() => startEdit(pkg)}>
+                  <PencilSimple size={14} weight="bold" aria-hidden="true" />
+                  Edit
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => void handleToggle(pkg)}>
+                  {pkg.active ? 'Active' : 'Inactive'}
+                </button>
+              </div>
+            }
+          />
+        ))}
+      </SectionGroup>
     </div>
   )
 }

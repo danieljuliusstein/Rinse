@@ -1,17 +1,20 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { DM_Sans, Syne } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { ActionToastProvider } from '@/providers/ActionToastProvider'
 import { ConfirmProvider } from '@/providers/ConfirmProvider'
+import { ThemeProvider } from '@/providers/ThemeProvider'
 import AppShell from '@/components/AppShell'
+import { THEME_INIT_SCRIPT } from '@/lib/theme'
 import './globals.css'
 
 const syne = Syne({ subsets: ['latin'], variable: '--font-syne' })
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
 
 export const metadata: Metadata = {
-  title: 'Atlas Detailing',
+  title: 'Rinse',
   description: 'Car detailing business operations and profit tracking',
   manifest: '/manifest.json',
   icons: {
@@ -24,7 +27,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Atlas Detailing',
+    title: 'Rinse',
   },
 }
 
@@ -34,7 +37,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#0f0f0f',
+  themeColor: '#f2f2f7',
 }
 
 export default function RootLayout({
@@ -45,18 +48,25 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${syne.variable} ${dmSans.variable}`}
-      style={{ colorScheme: 'dark' }}
+      className={`${syne.variable} ${dmSans.variable}`}
+      data-theme="light"
       suppressHydrationWarning
     >
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
+      </head>
       <body suppressHydrationWarning>
-        <AuthProvider>
-          <ActionToastProvider>
-            <ConfirmProvider>
-              <AppShell>{children}</AppShell>
-            </ConfirmProvider>
-          </ActionToastProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ActionToastProvider>
+              <ConfirmProvider>
+                <AppShell>{children}</AppShell>
+              </ConfirmProvider>
+            </ActionToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

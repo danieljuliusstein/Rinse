@@ -1,10 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { CaretRight, CurrencyDollar, Wallet } from '@phosphor-icons/react'
+import { CurrencyDollar, Wallet } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
+import { SectionGroup } from '@/components/ui'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
 import SettingsFooter from './SettingsFooter'
+import SettingsMenuListRow from './SettingsMenuListRow'
 
 const EXPENSE_ITEMS = [
   {
@@ -37,28 +39,18 @@ export default function SettingsExpensesPage() {
       </header>
 
       <div className="settings-hub">
-        <div className="settings-menu-group">
-          {EXPENSE_ITEMS.map((item) => {
-            const Icon = item.Icon
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className="settings-menu-item"
-                onClick={() => router.push(item.href)}
-              >
-                <span className={`settings-menu-icon settings-menu-icon--${item.tone}`}>
-                  <Icon size={18} weight="duotone" aria-hidden="true" />
-                </span>
-                <span className="settings-menu-text">
-                  <span className="settings-menu-title">{item.title}</span>
-                  <span className="settings-menu-sub">{item.subtitle}</span>
-                </span>
-                <CaretRight size={16} className="settings-menu-chevron" aria-hidden="true" />
-              </button>
-            )
-          })}
-        </div>
+        <SectionGroup title="Expense types">
+          {EXPENSE_ITEMS.map((item) => (
+            <SettingsMenuListRow
+              key={item.id}
+              title={item.title}
+              subtitle={item.subtitle}
+              Icon={item.Icon}
+              tone={item.tone}
+              onClick={() => router.push(item.href)}
+            />
+          ))}
+        </SectionGroup>
       </div>
 
       <SettingsFooter showSave={false} />

@@ -60,6 +60,17 @@ function recordToSettings(
         ? record.travel_rate_per_mile
         : undefined,
     track_job_supplies: record.track_job_supplies === true,
+    invoice_template: record.invoice_template
+      ? (String(record.invoice_template) as AppSettings['invoice_template'])
+      : fallback?.invoice_template,
+    onboarding_step:
+      typeof record.onboarding_step === 'number' ? record.onboarding_step : fallback?.onboarding_step,
+    onboarding_completed_at: record.onboarding_completed_at
+      ? String(record.onboarding_completed_at).slice(0, 10)
+      : fallback?.onboarding_completed_at,
+    onboarding_first_invoice_at: record.onboarding_first_invoice_at
+      ? String(record.onboarding_first_invoice_at).slice(0, 10)
+      : fallback?.onboarding_first_invoice_at,
     pb_record_id: record.id,
   }
 }
@@ -162,6 +173,18 @@ export async function saveSettingsToPocketBase(
   }
   if (settings.track_job_supplies !== undefined) {
     payload.track_job_supplies = settings.track_job_supplies
+  }
+  if (settings.invoice_template !== undefined) {
+    payload.invoice_template = settings.invoice_template ?? 'rinse'
+  }
+  if (settings.onboarding_step !== undefined) {
+    payload.onboarding_step = settings.onboarding_step
+  }
+  if (settings.onboarding_completed_at !== undefined) {
+    payload.onboarding_completed_at = settings.onboarding_completed_at || null
+  }
+  if (settings.onboarding_first_invoice_at !== undefined) {
+    payload.onboarding_first_invoice_at = settings.onboarding_first_invoice_at || null
   }
   if (settings.last_backup_at) {
     payload.last_backup_at = settings.last_backup_at.slice(0, 10)

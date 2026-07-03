@@ -163,6 +163,13 @@ export function pbInvoiceToApp(r: PbRecord): Invoice {
     paid_at: str(r.paid_at),
     terms: str(r.terms),
     notes: str(r.notes),
+    discount_amount: num(r.discount_amount) || undefined,
+    tax_rate: num(r.tax_rate) || undefined,
+    tax_amount: num(r.tax_amount) || undefined,
+    po_number: str(r.po_number) || undefined,
+    signature_url: str(r.signature_url) || undefined,
+    signed_at: str(r.signed_at),
+    extra_line_items: jsonArray(r.extra_line_items),
   }
 }
 
@@ -191,6 +198,11 @@ export function pbJobToApp(r: PbRecord): Job {
     photo_count: photoCount,
     photo_meta: jsonArray<PhotoMeta>(r.photo_meta),
     invoice_id: relationId(r.invoice_id) || undefined,
+    recurrence_cadence: (() => {
+      const c = str(r.recurrence_cadence)
+      return c === 'weekly' || c === 'biweekly' || c === 'monthly' ? c : undefined
+    })(),
+    recurrence_anchor_date: str(r.recurrence_anchor_date)?.slice(0, 10) || undefined,
     created: r.created,
     updated: r.updated,
   }
@@ -222,6 +234,8 @@ export function appJobCreateToPb(input: {
   travel_cost?: number
   marketing_cost?: number
   equipment_depreciation?: number
+  recurrence_cadence?: string
+  recurrence_anchor_date?: string
 }) {
   return {
     date: input.date,
@@ -240,6 +254,8 @@ export function appJobCreateToPb(input: {
     travel_cost: input.travel_cost ?? 0,
     marketing_cost: input.marketing_cost ?? 0,
     equipment_depreciation: input.equipment_depreciation ?? 0,
+    recurrence_cadence: input.recurrence_cadence ?? '',
+    recurrence_anchor_date: input.recurrence_anchor_date ?? '',
   }
 }
 
@@ -259,6 +275,8 @@ export function appJobEditToPb(updates: {
   marketing_cost?: number
   equipment_depreciation?: number
   expenses?: ExpenseLine[]
+  recurrence_cadence?: string
+  recurrence_anchor_date?: string
 }) {
   const payload: Record<string, unknown> = {
     ...(updates.date !== undefined ? { date: updates.date } : {}),
@@ -277,6 +295,12 @@ export function appJobEditToPb(updates: {
   if (updates.marketing_cost !== undefined) payload.marketing_cost = updates.marketing_cost
   if (updates.equipment_depreciation !== undefined) {
     payload.equipment_depreciation = updates.equipment_depreciation
+  }
+  if (updates.recurrence_cadence !== undefined) {
+    payload.recurrence_cadence = updates.recurrence_cadence ?? ''
+    payload.recurrence_anchor_date = updates.recurrence_cadence
+      ? updates.recurrence_anchor_date ?? ''
+      : ''
   }
   if (updates.expenses !== undefined) payload.expenses = updates.expenses
   return payload

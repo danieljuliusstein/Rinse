@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   getClients,
   getDashboardData,
+  getInvoices,
   getJobs,
   getJobsForDate,
   getLeads,
@@ -11,13 +12,14 @@ import {
   getSupplies,
 } from '@/lib/api'
 import Dashboard from '@/components/Dashboard'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
 import {
   buildComingUpJobs,
   buildInventoryAlert,
   buildTodayJobCard,
 } from '@/lib/home-dashboard'
 import { computeMilestoneState, hasUnviewedMilestones } from '@/lib/milestones'
-import type { JobWithRelations, LeadWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
+import type { Invoice, JobWithRelations, LeadWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
 
 export default function HomePage() {
   const [ready, setReady] = useState(false)
@@ -25,6 +27,7 @@ export default function HomePage() {
   const [todayJobRows, setTodayJobRows] = useState<RecentJobRow[]>([])
   const [jobs, setJobs] = useState<JobWithRelations[]>([])
   const [leads, setLeads] = useState<LeadWithRelations[]>([])
+  const [invoices, setInvoices] = useState<Invoice[]>([])
   const [inventoryAlert, setInventoryAlert] = useState<ReturnType<typeof buildInventoryAlert>>(null)
   const [clientCount, setClientCount] = useState(0)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -32,12 +35,21 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([getDashboardData(), getJobs(), getLeads(), getSupplies(), getPackages(), getClients()])
-      .then(async ([data, allJobs, allLeads, supplyList, packageList, clients]) => {
+    Promise.all([
+      getDashboardData(),
+      getJobs(),
+      getLeads(),
+      getSupplies(),
+      getPackages(),
+      getClients(),
+      getInvoices(),
+    ])
+      .then(async ([data, allJobs, allLeads, supplyList, packageList, clients, allInvoices]) => {
         if (cancelled) return
         setWeekDays(data.weekDays)
         setJobs(allJobs)
         setLeads(allLeads)
+        setInvoices(allInvoices)
         setClientCount(clients.length)
 
         const today = data.weekDays.find((d) => d.isToday)?.date ?? data.weekDays[0]?.date ?? ''
@@ -71,21 +83,17 @@ export default function HomePage() {
 
   if (loadError) {
     return (
-      <div className="screen page-content body" style={{ paddingTop: 40, textAlign: 'center' }}>
+      <ScreenMessage body role="alert" live="assertive">
         <div style={{ color: 'var(--red)', marginBottom: 12 }}>{loadError}</div>
         <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
           Retry
         </button>
-      </div>
+      </ScreenMessage>
     )
   }
 
   if (!ready) {
-    return (
-      <div className="screen page-content body" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body />
   }
 
   return (
@@ -94,6 +102,8 @@ export default function HomePage() {
       todayJobRows={todayJobRows}
       upcomingJobs={upcomingJobs}
       jobs={jobs}
+      leads={leads}
+      invoices={invoices}
       inventoryAlert={inventoryAlert}
       clientCount={clientCount}
       hasUnviewedMilestone={hasUnviewedMilestone}

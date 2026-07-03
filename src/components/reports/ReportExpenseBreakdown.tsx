@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { PLReport } from '@/lib/api/aggregates'
 import { fmtDetailed } from '@/lib/calculations'
 import { buildExpenseBreakdown, formatExpensePctOfTotal } from '@/lib/reports-metrics'
@@ -43,10 +43,12 @@ export default function ReportExpenseBreakdown({ report }: ReportExpenseBreakdow
           <div className="report-expense-track">
             <div
               className="report-expense-fill"
-              style={{
-                width: animate ? `${row.pctOfTotal}%` : '0%',
-                backgroundColor: row.color,
-              }}
+              style={
+                {
+                  '--fill-size': animate ? `${row.pctOfTotal}%` : '0%',
+                  '--bar-color': row.color,
+                } as CSSProperties
+              }
             />
           </div>
         </div>

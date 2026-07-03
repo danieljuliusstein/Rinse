@@ -47,15 +47,24 @@ export interface InvoiceViewModel {
   lineItems: InvoiceLineItem[]
   subtotal: number
   tip: number
+  discount?: number
+  taxRate?: number
+  taxAmount?: number
+  poNumber?: string
   total: number
   balanceDue: number
   showTip: boolean
+  showDiscount: boolean
+  showTax: boolean
   payments: InvoicePaymentRow[]
   showPayments: boolean
   termsFooter: string
   questionsLine?: string
   portalUrl?: string
   isPaid: boolean
+  signatureUrl?: string
+  signedAtLabel?: string
+  showSignature: boolean
 }
 
 function capitalize(s: string): string {
@@ -114,11 +123,22 @@ export function buildInvoiceViewModel(
       note: job.notes?.trim() || undefined,
       amount: job.revenue,
     },
+    ...(invoice.extra_line_items ?? []).map((line) => ({
+      description: line.description,
+      amount: line.default_amount,
+    })),
   ]
+
+  const extrasTotal = (invoice.extra_line_items ?? []).reduce((s, l) => s + l.default_amount, 0)
+  const lineSubtotal = job.revenue + extrasTotal
 
   const questionsParts: string[] = []
   if (settings.business_email) questionsParts.push(settings.business_email)
   if (settings.business_phone) questionsParts.push(settings.business_phone)
+
+  const discount = invoice.discount_amount ?? 0
+  const taxRate = invoice.tax_rate ?? 0
+  const taxAmount = invoice.tax_amount ?? 0
 
   return {
     businessName: settings.business_name,
@@ -139,11 +159,17 @@ export function buildInvoiceViewModel(
     locationLabel,
     serviceContextLine: `${vehicleLabel} · ${locationLabel} · ${serviceDateLabel}`,
     lineItems,
-    subtotal: job.revenue,
+    subtotal: lineSubtotal,
     tip: job.tip,
+    discount: discount > 0 ? discount : undefined,
+    taxRate: taxRate > 0 ? taxRate : undefined,
+    taxAmount: taxAmount > 0 ? taxAmount : undefined,
+    poNumber: invoice.po_number?.trim() || undefined,
     total: invoice.total,
     balanceDue: invoice.balance_due,
     showTip: job.tip > 0,
+    showDiscount: discount > 0,
+    showTax: taxAmount > 0,
     payments: invoice.payments.map((p) => ({
       method: p.method,
       date: p.date,
@@ -155,5 +181,10 @@ export function buildInvoiceViewModel(
       questionsParts.length > 0 ? `Questions? ${questionsParts.join(' · ')}` : undefined,
     portalUrl: options?.portalUrl,
     isPaid: invoice.status === 'paid' || invoice.balance_due <= 0,
+    signatureUrl: invoice.signature_url,
+    signedAtLabel: invoice.signed_at
+      ? formatLongDate(invoice.signed_at.split('T')[0])
+      : undefined,
+    showSignature: Boolean(invoice.signature_url),
   }
 }

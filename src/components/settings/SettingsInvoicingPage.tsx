@@ -1,12 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Badge, Button } from '@/components/ui'
+import InvoiceTemplateGallery from '@/components/invoice/InvoiceTemplateGallery'
+import InvoiceTemplateMock from '@/components/invoice/InvoiceTemplateMock'
+import InvoiceLineTemplateManager from '@/components/invoice/InvoiceLineTemplateManager'
 import { getPocketBaseAuthToken } from '@/lib/pb-auth'
 import { readApiJson } from '@/lib/api-json'
 import SettingsDetailShell from './SettingsDetailShell'
 import { useSettingsDraft } from './SettingsDraftProvider'
+import { isValidHexColor, normalizeAccentColor } from '@/lib/brand-color'
+import type { InvoiceTemplateId } from '@/lib/invoice-templates'
+
+const ACCENT_PRESETS = ['#22c55e', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#0ea5e9']
 
 type ConnectStatus = {
   accountId: string | null
@@ -28,6 +35,7 @@ async function connectFetch(path: string, method: 'GET' | 'POST' = 'GET') {
 }
 
 export default function SettingsInvoicingPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const { settings, ready, update } = useSettingsDraft()
   const [connect, setConnect] = useState<ConnectStatus | null>(null)
@@ -35,6 +43,11 @@ export default function SettingsInvoicingPage() {
   const [connectBusy, setConnectBusy] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
   const connectReturn = searchParams.get('connect')
+  const refreshHandled = useRef(false)
+  const returnCaptured = useRef(false)
+  const [stripeReturnNotice, setStripeReturnNotice] = useState<
+    'checking' | 'incomplete' | 'complete' | null
+  >(null)
 
   const loadConnect = useCallback(async () => {
     setConnectLoading(true)
@@ -49,12 +62,7 @@ export default function SettingsInvoicingPage() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!ready) return
-    void loadConnect()
-  }, [ready, loadConnect, connectReturn])
-
-  const handleConnect = async () => {
+  const handleConnect = useCallback(async () => {
     setConnectBusy(true)
     setConnectError(null)
     try {
@@ -67,7 +75,30 @@ export default function SettingsInvoicingPage() {
     } finally {
       setConnectBusy(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!ready) return
+    void loadConnect()
+  }, [ready, loadConnect, connectReturn])
+
+  useEffect(() => {
+    if (connectReturn !== 'return' || returnCaptured.current) return
+    returnCaptured.current = true
+    setStripeReturnNotice('checking')
+    router.replace('/settings/invoicing', { scroll: false })
+  }, [connectReturn, router])
+
+  useEffect(() => {
+    if (stripeReturnNotice !== 'checking' || connectLoading) return
+    setStripeReturnNotice(connect?.ready ? 'complete' : 'incomplete')
+  }, [stripeReturnNotice, connectLoading, connect?.ready])
+
+  useEffect(() => {
+    if (!ready || connectReturn !== 'refresh' || refreshHandled.current) return
+    refreshHandled.current = true
+    void handleConnect()
+  }, [ready, connectReturn, handleConnect])
 
   if (!ready || !settings) {
     return (
@@ -78,6 +109,9 @@ export default function SettingsInvoicingPage() {
   }
 
   const connectReady = connect?.ready === true
+  const template = (settings.invoice_template ?? 'rinse') as InvoiceTemplateId
+  const accent = normalizeAccentColor(settings.accent_color)
+  const businessName = settings.business_name.trim() || 'Your business'
 
   return (
     <SettingsDetailShell title="Invoicing">
@@ -94,11 +128,19 @@ export default function SettingsInvoicingPage() {
           Connect your Stripe account so clients pay you directly when they click Pay online on
           invoices. Rinse subscription billing is separate.
         </p>
-        {connectReturn === 'return' ? (
-          <p className="settings-msg">Stripe setup updated — checking status…</p>
+        {stripeReturnNotice === 'checking' ? (
+          <p className="settings-msg">Returned from Stripe — checking status…</p>
+        ) : null}
+        {stripeReturnNotice === 'incomplete' ? (
+          <p className="settings-msg settings-msg--warn">
+            Stripe setup is not finished yet. Tap Connect Stripe below to continue where you left off.
+          </p>
+        ) : null}
+        {stripeReturnNotice === 'complete' ? (
+          <p className="settings-msg">Stripe is connected — client invoices can accept Pay online.</p>
         ) : null}
         {connectReturn === 'refresh' ? (
-          <p className="settings-msg settings-msg--warn">Stripe session expired — try again.</p>
+          <p className="settings-msg">Reopening Stripe…</p>
         ) : null}
         {!connectLoading && connect && !connectReady ? (
           <p className="settings-status-line">
@@ -108,7 +150,7 @@ export default function SettingsInvoicingPage() {
           </p>
         ) : null}
         {!connectLoading && !connectReady ? (
-          <p className="settings-field-hint" style={{ marginTop: 8 }}>
+          <p className="settings-field-hint form-field-hint-block">
             Stripe opens in your browser. If captcha fails, use Safari or Chrome (not an embedded preview). Use a real business email in Settings → Your business.
           </p>
         ) : null}
@@ -118,19 +160,85 @@ export default function SettingsInvoicingPage() {
         <div className="settings-divider" />
         <Button
           type="button"
-          variant={connectReady ? 'secondary' : 'primary'}
+          variant="secondary"
           disabled={connectBusy || connectLoading}
           onClick={() => void handleConnect()}
         >
-          {connectReady ? 'Manage Stripe account' : 'Connect Stripe'}
+          {connectReady ? 'Open Stripe dashboard' : 'Connect Stripe'}
         </Button>
         {connectError ? <p className="settings-msg settings-msg--error">{connectError}</p> : null}
       </section>
 
+      <section className="card settings-panel">
+        <h2 className="settings-billing-card__title">Invoice appearance</h2>
+        <p className="settings-section-desc">
+          Template and accent color appear on client-facing invoices and PDFs.
+        </p>
+
+        <InvoiceTemplateGallery
+          value={template}
+          onChange={(v) => update('invoice_template', v)}
+          accent={accent}
+          businessName={businessName}
+          logoUrl={settings.logo_url}
+        />
+
+        <div className="invoice-template-live">
+          <h3 className="settings-section-head">Live preview</h3>
+          <p className="settings-field-hint">Matches what clients see on invoices you send.</p>
+          <div className="invoice-doc-card-wrap invoice-template-live__doc">
+            <InvoiceTemplateMock
+              template={template}
+              accent={accent}
+              businessName={businessName}
+              logoUrl={settings.logo_url}
+              scale="full"
+            />
+          </div>
+        </div>
+
+        <div className="settings-field settings-accent-field">
+          <h3 className="settings-section-head">Accent color</h3>
+          <div className="invoice-accent-presets">
+            {ACCENT_PRESETS.map((hex) => (
+              <button
+                key={hex}
+                type="button"
+                className={`invoice-accent-swatch${
+                  accent === hex ? ' invoice-accent-swatch--on' : ''
+                }`}
+                style={{ backgroundColor: hex }}
+                aria-label={`Accent ${hex}`}
+                onClick={() => update('accent_color', hex)}
+              />
+            ))}
+          </div>
+          <div className="settings-accent-row">
+            <input
+              type="color"
+              className="settings-accent-swatch-input"
+              value={accent}
+              onChange={(e) => update('accent_color', e.target.value)}
+              aria-label="Custom accent color"
+            />
+            <input
+              type="text"
+              className="f-input settings-accent-hex"
+              value={settings.accent_color ?? ''}
+              placeholder="#22c55e"
+              onChange={(e) => {
+                const next = e.target.value
+                if (!next.trim() || isValidHexColor(next)) update('accent_color', next.trim() || null)
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
       <div className="settings-panel">
         <div className="settings-field">
-          <label htmlFor="settings-invoice-terms">Terms footer</label>
-          <p className="settings-field-hint">Shown on invoice PDFs and the client portal footer.</p>
+          <h2 className="settings-section-head">Terms footer</h2>
+          <p className="settings-section-desc">Shown on invoice PDFs and the client portal footer.</p>
           <textarea
             id="settings-invoice-terms"
             className="input settings-textarea"
@@ -140,6 +248,8 @@ export default function SettingsInvoicingPage() {
           />
         </div>
       </div>
+
+      <InvoiceLineTemplateManager />
     </SettingsDetailShell>
   )
 }

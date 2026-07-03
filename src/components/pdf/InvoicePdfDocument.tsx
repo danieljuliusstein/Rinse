@@ -1,4 +1,4 @@
-import { Document, Link, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Document, Image, Link, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 import { PdfBusinessLogo } from '@/components/pdf/PdfBusinessLogo'
 import {
   INVOICE_ACCENT,
@@ -189,6 +189,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textDecoration: 'none',
   },
+  signatureSection: { marginBottom: 16 },
+  signatureImage: { width: 180, height: 56, objectFit: 'contain' },
+  signatureDate: { fontSize: 9, color: '#666666', marginTop: 4 },
 })
 
 function statusStyle(tone: string) {
@@ -313,6 +316,16 @@ export default function InvoicePdfDocument({ job, invoice, settings, logoDataUri
                 <Text style={styles.summaryValue}>{formatInvoiceMoney(p.amount)}</Text>
               </View>
             ))}
+          </View>
+        ) : null}
+
+        {vm.showSignature && vm.signatureUrl ? (
+          <View style={styles.signatureSection}>
+            <Text style={styles.label}>Client signature</Text>
+            <Image src={vm.signatureUrl} style={styles.signatureImage} />
+            {vm.signedAtLabel ? (
+              <Text style={styles.signatureDate}>Signed {vm.signedAtLabel}</Text>
+            ) : null}
           </View>
         ) : null}
 

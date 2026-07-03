@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CameraPlus } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
-import { FloatingField, SheetSubmitButton } from '@/components/forms'
+import { FloatingField, PillGroup, SheetSubmitButton } from '@/components/forms'
 import {
   createDamageDoc,
   dataUrlToFile,
@@ -13,6 +13,8 @@ import {
 } from '@/lib/api'
 import { DAMAGE_AREA_OPTIONS, pendingDamagePhotoKey } from '@/lib/damage-docs'
 import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
+
+const AREA_PILLS = DAMAGE_AREA_OPTIONS.map((opt) => ({ value: opt, label: opt }))
 
 interface AddDamageFormProps {
   clientId: string
@@ -32,6 +34,11 @@ export default function AddDamageForm({ clientId, vehicleId }: AddDamageFormProp
   const [jobOptions, setJobOptions] = useState<{ id: string; label: string }[]>([])
   const [saving, setSaving] = useState(false)
   const [vehicleLabel, setVehicleLabel] = useState('')
+
+  const pillArea = useMemo(
+    () => (DAMAGE_AREA_OPTIONS.includes(area as (typeof DAMAGE_AREA_OPTIONS)[number]) ? area : ''),
+    [area]
+  )
 
   useEffect(() => {
     const key = pendingDamagePhotoKey(vehicleId)
@@ -60,11 +67,6 @@ export default function AddDamageForm({ clientId, vehicleId }: AddDamageFormProp
     syncSelectFloatingLabel(linkedJobRef.current)
   }, [area, note, date, linkedJobId])
 
-  const activeChip = useMemo(
-    () => DAMAGE_AREA_OPTIONS.find((opt) => opt === area) ?? null,
-    [area]
-  )
-
   const handleSave = async () => {
     if (!area.trim()) return
     setSaving(true)
@@ -89,103 +91,94 @@ export default function AddDamageForm({ clientId, vehicleId }: AddDamageFormProp
   }
 
   return (
-    <div className="screen damage-docs">
-      <div className="page-content" style={{ paddingTop: 16 }}>
-        <div className="nav-row">
-          <BackButton onClick={() => router.back()} />
-          <span className="nav-row__title">Add damage</span>
-        </div>
+    <div className="screen page-content body">
+      <header className="job-form-header">
+        <BackButton onClick={() => router.back()} />
+        <div className="job-form-header__title">Add damage</div>
+      </header>
 
-        <div className="photo-preview">
-          {photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoPreview} alt="" />
-          ) : (
-            <CameraPlus size={32} weight="duotone" color="var(--dmg-t3)" aria-hidden="true" />
-          )}
-          <span className="photo-preview__label">{area || 'Tap chips to select area'}</span>
-        </div>
+      <div className="crm-photo-preview job-form-section">
+        {photoPreview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoPreview} alt="" className="crm-photo-preview__img" />
+        ) : (
+          <CameraPlus size={32} weight="duotone" className="crm-photo-preview__placeholder" aria-hidden="true" />
+        )}
+        <span className="crm-photo-preview__label">{area || 'Select an area below'}</span>
+      </div>
 
-        <div className="field-label">Area *</div>
-        <div className="chip-row">
-          {DAMAGE_AREA_OPTIONS.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              className={`chip${activeChip === opt ? ' active' : ''}`}
-              onClick={() => setArea(opt)}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
+      <div className="job-form-section">
+        <PillGroup
+          label="Area"
+          options={AREA_PILLS}
+          value={pillArea}
+          onChange={setArea}
+        />
+      </div>
 
-        <div ref={formRef} className="page-form-card page-form">
-          <FloatingField id="damage-area" label="Custom area" filled={area.trim().length > 0}>
-            <input
-              id="damage-area"
-              className={`f-input${area.trim() ? ' hv' : ''}`}
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
-
-          <FloatingField id="damage-note" label="Note" filled={note.trim().length > 0} optional textarea>
-            <textarea
-              id="damage-note"
-              className={`f-textarea${note.trim() ? ' hv' : ''}`}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder=" "
-              rows={3}
-            />
-          </FloatingField>
-
-          <FloatingField id="damage-date" label="Date" filled={date.trim().length > 0}>
-            <input
-              id="damage-date"
-              type="date"
-              className={`f-input${date.trim() ? ' hv' : ''}`}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
-
-          <FloatingField id="damage-linked-job" label="Link to job" filled={Boolean(linkedJobId)} optional>
-            <select
-              ref={linkedJobRef}
-              id="damage-linked-job"
-              className={`f-select${linkedJobId ? ' hv' : ''}`}
-              value={linkedJobId}
-              onChange={(e) => {
-                setLinkedJobId(e.target.value)
-                syncSelectFloatingLabel(linkedJobRef.current)
-              }}
-            >
-              <option value=""> </option>
-              {jobOptions.map((j) => (
-                <option key={j.id} value={j.id}>
-                  {j.label}
-                </option>
-              ))}
-            </select>
-          </FloatingField>
-        </div>
-
-        {vehicleLabel ? (
-          <p style={{ fontSize: 11, color: 'var(--dmg-t3)', marginBottom: 12 }}>Vehicle: {vehicleLabel}</p>
-        ) : null}
-
-        <div className="page-form-save">
-          <SheetSubmitButton
-            label={saving ? 'Saving…' : 'Save documentation'}
-            ready={area.trim().length > 0}
-            disabled={saving}
-            onClick={() => void handleSave()}
+      <div ref={formRef} className="page-form-card page-form">
+        <FloatingField id="damage-area" label="Custom area" filled={area.trim().length > 0}>
+          <input
+            id="damage-area"
+            className={`f-input${area.trim() ? ' hv' : ''}`}
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
+            placeholder=" "
           />
-        </div>
+        </FloatingField>
+
+        <FloatingField id="damage-note" label="Note" filled={note.trim().length > 0} optional textarea>
+          <textarea
+            id="damage-note"
+            className={`f-textarea${note.trim() ? ' hv' : ''}`}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder=" "
+            rows={3}
+          />
+        </FloatingField>
+
+        <FloatingField id="damage-date" label="Date" filled={date.trim().length > 0}>
+          <input
+            id="damage-date"
+            type="date"
+            className={`f-input${date.trim() ? ' hv' : ''}`}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            placeholder=" "
+          />
+        </FloatingField>
+
+        <FloatingField id="damage-linked-job" label="Link to job" filled={Boolean(linkedJobId)} optional>
+          <select
+            ref={linkedJobRef}
+            id="damage-linked-job"
+            className={`f-select${linkedJobId ? ' hv' : ''}`}
+            value={linkedJobId}
+            onChange={(e) => {
+              setLinkedJobId(e.target.value)
+              syncSelectFloatingLabel(linkedJobRef.current)
+            }}
+          >
+            <option value=""> </option>
+            {jobOptions.map((j) => (
+              <option key={j.id} value={j.id}>
+                {j.label}
+              </option>
+            ))}
+          </select>
+        </FloatingField>
+      </div>
+
+      {vehicleLabel ? <p className="damage-form-vehicle-hint">Vehicle: {vehicleLabel}</p> : null}
+
+      <div className="page-form-save">
+        <SheetSubmitButton
+          label={saving ? 'Saving…' : 'Save documentation'}
+          ready={area.trim().length > 0}
+          disabled={saving}
+          onClick={() => void handleSave()}
+        />
       </div>
     </div>
   )

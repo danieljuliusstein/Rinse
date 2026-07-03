@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MagnifyingGlass, Plus, Users } from '@phosphor-icons/react'
+import { CaretDown, DownloadSimple, MagnifyingGlass, Plus, UploadSimple, Users } from '@phosphor-icons/react'
 import AuthEmptyState from '@/components/AuthEmptyState'
 import ClientCard from '@/components/clients/ClientCard'
+import ClientImportSheet from '@/components/clients/ClientImportSheet'
 import FollowUpClientCard from '@/components/clients/FollowUpClientCard'
+import { EmptyState, VaulSheet } from '@/components/ui'
+import { clientsToCsv, downloadCsv } from '@/lib/client-csv'
 import { useAuthEmptyState } from '@/hooks/useAuthEmptyState'
 import {
   buildDerivedMap,
@@ -24,6 +27,14 @@ const SEGMENTS: { key: ClientSegment; label: string }[] = [
   { key: 'new', label: 'New' },
 ]
 
+type ClientSort = 'revenue' | 'name' | 'recent'
+
+const SORT_OPTIONS: { key: ClientSort; label: string }[] = [
+  { key: 'revenue', label: 'Revenue' },
+  { key: 'name', label: 'Name' },
+  { key: 'recent', label: 'Last service' },
+]
+
 const CLIENTS_VISIBLE = 5
 
 function matchesSearch(client: ClientWithStats, q: string): boolean {
@@ -33,6 +44,15 @@ function matchesSearch(client: ClientWithStats, q: string): boolean {
     (client.phone?.includes(q) ?? false) ||
     (client.email?.toLowerCase().includes(lower) ?? false)
   )
+}
+
+function sortClients(list: ClientWithStats[], sort: ClientSort): ClientWithStats[] {
+  const copy = [...list]
+  if (sort === 'name') return copy.sort((a, b) => a.name.localeCompare(b.name))
+  if (sort === 'recent') {
+    return copy.sort((a, b) => (b.lastJobDate ?? '').localeCompare(a.lastJobDate ?? ''))
+  }
+  return copy.sort((a, b) => b.totalRevenue - a.totalRevenue)
 }
 
 export default function ClientsList({
@@ -47,6 +67,9 @@ export default function ClientsList({
   const [search, setSearch] = useState('')
   const [segment, setSegment] = useState<ClientSegment>('all')
   const [showAllRest, setShowAllRest] = useState(false)
+  const [sort, setSort] = useState<ClientSort>('revenue')
+  const [sortOpen, setSortOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   const derivedMap = useMemo(() => buildDerivedMap(clients), [clients])
   const overdue = useMemo(() => overdueClients(clients, derivedMap), [clients, derivedMap])
@@ -57,8 +80,8 @@ export default function ClientsList({
     let list = filterBySegment(clients, segment, derivedMap)
     list = sortForSegment(list, segment, derivedMap)
     if (q) list = list.filter((c) => matchesSearch(c, q))
-    return list
-  }, [clients, segment, search, derivedMap])
+    return sortClients(list, sort)
+  }, [clients, segment, search, derivedMap, sort])
 
   const allRest = useMemo(() => {
     const topIds = new Set(topClients.map((c) => c.id))
@@ -78,7 +101,7 @@ export default function ClientsList({
     })
 
   return (
-    <div className="screen page-content body clients-screen">
+    <div className="screen page-content body">
       <header className="page-header">
         <div>
           <h1>Clients</h1>
@@ -91,14 +114,38 @@ export default function ClientsList({
           </p>
         </div>
         {!isLoggedOut ? (
-          <button
-            type="button"
-            className="icon-btn green"
-            onClick={() => router.push('/clients/new')}
-            aria-label="Add client"
-          >
-            <Plus size={18} weight="bold" aria-hidden="true" />
-          </button>
+          <div className="page-header__actions">
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Import clients"
+              onClick={() => setImportOpen(true)}
+            >
+              <UploadSimple size={18} weight="bold" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Export clients CSV"
+              onClick={() =>
+                downloadCsv(
+                  clientsToCsv(clients),
+                  `clients-${new Date().toISOString().slice(0, 10)}.csv`
+                )
+              }
+            >
+              <DownloadSimple size={18} weight="bold" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Add client"
+              data-coach="clients-add"
+              onClick={() => router.push('/clients/new')}
+            >
+              <Plus size={18} weight="bold" aria-hidden="true" />
+            </button>
+          </div>
         ) : null}
       </header>
 
@@ -113,7 +160,7 @@ export default function ClientsList({
         />
       </div>
 
-      <div className="chips" role="tablist" aria-label="Client filters">
+      <div className="chips" role="tablist" aria-label="Client filters" data-coach="clients-segments">
         {SEGMENTS.map((s) => (
           <button
             key={s.key}
@@ -126,7 +173,30 @@ export default function ClientsList({
             {s.label}
           </button>
         ))}
+        {!isLoggedOut ? (
+          <button type="button" className="chip chip--sort" onClick={() => setSortOpen(true)}>
+            <CaretDown size={14} aria-hidden="true" />
+            {SORT_OPTIONS.find((o) => o.key === sort)?.label}
+          </button>
+        ) : null}
       </div>
+
+      <VaulSheet open={sortOpen} onOpenChange={setSortOpen} title="Sort by">
+        {SORT_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            className={`vaul-option${sort === opt.key ? ' vaul-option--active' : ''}`}
+            onClick={() => {
+              setSort(opt.key)
+              setSortOpen(false)
+            }}
+          >
+            {opt.label}
+            {sort === opt.key ? ' ✓' : ''}
+          </button>
+        ))}
+      </VaulSheet>
 
       {isLoggedOut ? (
         <AuthEmptyState
@@ -134,51 +204,77 @@ export default function ClientsList({
           title="Sign in to see your clients"
           subtitle="Your client list and history sync after you sign in."
         />
-      ) : segment !== 'all' ? (
-        filtered.length === 0 ? (
-          <div className="empty-state"><p>No clients found</p></div>
-        ) : (
-          renderSegmentList()
-        )
       ) : (
-        <>
-          {overdue.length > 0 && (
+        <div data-coach="clients-list">
+          {segment !== 'all' ? (
+            filtered.length === 0 ? (
+              <EmptyState title="No clients found" description="Try another segment or search term." />
+            ) : (
+              renderSegmentList()
+            )
+          ) : (
             <>
-              <p className="sec">Follow up</p>
-              {overdue.map((client) => (
-                <FollowUpClientCard key={client.id} client={client} />
-              ))}
-            </>
-          )}
+              {overdue.length > 0 && (
+                <>
+                  <p className="sec">Follow up</p>
+                  {overdue.map((client) => (
+                    <FollowUpClientCard key={client.id} client={client} />
+                  ))}
+                </>
+              )}
 
-          {topClients.length > 0 && (
-            <>
-              <p className="sec">Top clients</p>
-              {topClients.map((client) => (
-                <ClientCard key={client.id} client={client} derived={derivedMap.get(client.id)!} onClientRemoved={onClientRemoved} />
-              ))}
-            </>
-          )}
+              {topClients.length > 0 && (
+                <>
+                  <p className="sec">Top clients</p>
+                  {topClients.map((client) => (
+                    <ClientCard
+                      key={client.id}
+                      client={client}
+                      derived={derivedMap.get(client.id)!}
+                      onClientRemoved={onClientRemoved}
+                    />
+                  ))}
+                </>
+              )}
 
-          {allRest.length > 0 && (
-            <>
-              <p className="sec">All clients</p>
-              {visibleRest.map((client) => (
-                <ClientCard key={client.id} client={client} derived={derivedMap.get(client.id)!} onClientRemoved={onClientRemoved} />
-              ))}
-              {hiddenRest > 0 && (
-                <button type="button" className="more-pill" onClick={() => setShowAllRest(true)}>
-                  + {hiddenRest} more client{hiddenRest > 1 ? 's' : ''}
-                </button>
+              {allRest.length > 0 && (
+                <>
+                  <p className="sec">All clients</p>
+                  {visibleRest.map((client) => (
+                    <ClientCard
+                      key={client.id}
+                      client={client}
+                      derived={derivedMap.get(client.id)!}
+                      onClientRemoved={onClientRemoved}
+                    />
+                  ))}
+                  {hiddenRest > 0 && (
+                    <button type="button" className="more-pill" onClick={() => setShowAllRest(true)}>
+                      + {hiddenRest} more client{hiddenRest > 1 ? 's' : ''}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {clients.length === 0 && (
+                <EmptyState
+                  icon={<Users size={80} weight="duotone" />}
+                  title="No clients yet"
+                  description="Add your first client to start booking jobs."
+                  actionLabel="Add client"
+                  onAction={() => router.push('/clients/new')}
+                />
               )}
             </>
           )}
-
-          {clients.length === 0 && (
-            <div className="empty-state"><p>No clients yet</p></div>
-          )}
-        </>
+        </div>
       )}
+
+      <ClientImportSheet
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => window.location.reload()}
+      />
     </div>
   )
 }

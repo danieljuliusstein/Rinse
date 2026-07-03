@@ -9,6 +9,7 @@ import {
   SHARE_LINK_PRESETS,
   type ShareLinkContext,
 } from '@/lib/share-link-presets'
+import { usePremiumGate } from '@/hooks/usePremiumGate'
 
 export default function ShareLinkActions({
   clientId,
@@ -43,6 +44,8 @@ export default function ShareLinkActions({
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
 
+  const { runGated: runPortalGated } = usePremiumGate('share_portal')
+
   const settings = loadSettings()
   const resolvedSubject =
     emailSubject ??
@@ -61,17 +64,19 @@ export default function ShareLinkActions({
   }
 
   const handleCopy = async () => {
-    setBusy(true)
-    setMsg('')
-    try {
-      const link = await ensureLink()
-      await copyShareLink(link)
-      setMsg('Link copied')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setBusy(false)
-    }
+    runPortalGated(async () => {
+      setBusy(true)
+      setMsg('')
+      try {
+        const link = await ensureLink()
+        await copyShareLink(link)
+        setMsg('Link copied')
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : 'Failed')
+      } finally {
+        setBusy(false)
+      }
+    })
   }
 
   const handleEmail = async () => {
@@ -79,40 +84,44 @@ export default function ShareLinkActions({
       setMsg('Client has no email')
       return
     }
-    setBusy(true)
-    setMsg('')
-    try {
-      const link = await ensureLink()
-      await emailShareLink({
-        to: clientEmail,
-        clientName,
-        businessName: settings.business_name,
-        portalUrl: link,
-        subject: resolvedSubject,
-        message: resolvedMessage,
-      })
-      setMsg('Email sent')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setBusy(false)
-    }
+    runPortalGated(async () => {
+      setBusy(true)
+      setMsg('')
+      try {
+        const link = await ensureLink()
+        await emailShareLink({
+          to: clientEmail,
+          clientName,
+          businessName: settings.business_name,
+          portalUrl: link,
+          subject: resolvedSubject,
+          message: resolvedMessage,
+        })
+        setMsg('Email sent')
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : 'Failed')
+      } finally {
+        setBusy(false)
+      }
+    })
   }
 
   const handleOpen = async () => {
     if (openingRef.current || busy) return
-    openingRef.current = true
-    setBusy(true)
-    setMsg('')
-    try {
-      const link = await ensureLink()
-      openPortalLink(link, router.push)
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setBusy(false)
-      openingRef.current = false
-    }
+    runPortalGated(async () => {
+      openingRef.current = true
+      setBusy(true)
+      setMsg('')
+      try {
+        const link = await ensureLink()
+        openPortalLink(link, router.push)
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : 'Failed')
+      } finally {
+        setBusy(false)
+        openingRef.current = false
+      }
+    })
   }
 
   const previewPath = url ? sameOriginPortalPath(url) : null

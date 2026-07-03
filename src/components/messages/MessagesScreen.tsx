@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import BackButton from '@/components/BackButton'
 import AllMessagesTab from '@/components/messages/AllMessagesTab'
 import AutoMessagesTab from '@/components/messages/AutoMessagesTab'
+import AutoMessageEditSheet from '@/components/messages/AutoMessageEditSheet'
 import MessageDetailView from '@/components/messages/MessageDetailView'
+import { ScreenLoading } from '@/components/ui'
 import type { AutoMessageTemplate, SentMessage } from '@/lib/messages'
 import {
   DEFAULT_AUTO_TEMPLATES,
@@ -27,6 +29,11 @@ export default function MessagesScreen() {
   const [selected, setSelected] = useState<SentMessage | null>(null)
   const [sentMessages, setSentMessages] = useState<SentMessage[]>([])
   const [loadingSent, setLoadingSent] = useState(true)
+  const [editTemplate, setEditTemplate] = useState<AutoMessageTemplate | null>(null)
+
+  useEffect(() => {
+    setTab(searchParams.get('tab') === 'auto' ? 'auto' : 'all')
+  }, [searchParams])
 
   useEffect(() => {
     loadAutoMessageTemplatesAsync().then(setTemplates)
@@ -41,7 +48,7 @@ export default function MessagesScreen() {
   }, [])
 
   const handleTemplateUpdate = useCallback(
-    (id: string, patch: Partial<Pick<AutoMessageTemplate, 'enabled'>>) => {
+    (id: string, patch: Partial<Pick<AutoMessageTemplate, 'enabled' | 'emailBody'>>) => {
       persistTemplates(
         templates.map((t) => (t.id === id ? { ...t, ...patch } : t))
       )
@@ -49,43 +56,62 @@ export default function MessagesScreen() {
     [templates, persistTemplates]
   )
 
+  const setTabAndUrl = useCallback(
+    (next: Tab) => {
+      setTab(next)
+      router.replace(next === 'auto' ? '/messages?tab=auto' : '/messages', { scroll: false })
+    },
+    [router]
+  )
+
   if (selected) {
     return <MessageDetailView message={selected} onBack={() => setSelected(null)} />
   }
 
-  return (
-    <div className="messages-screen">
-      <div className="messages-screen__header">
-        <BackButton onClick={() => router.push('/')} />
-        <h1 className="messages-screen__title">Messages</h1>
-      </div>
+  const enabledCount = templates.filter((t) => t.enabled).length
 
-      <div className="messages-tabs" role="tablist" aria-label="Messages views">
+  return (
+    <div className="screen page-content body">
+      <header className="page-header page-header--compact">
+        <BackButton onClick={() => router.push('/')} />
+        <div className="page-header__title-block">
+          <div>
+            <h1>Messages</h1>
+            <p>
+              {tab === 'all'
+                ? loadingSent
+                  ? 'Loading sent messages…'
+                  : `${sentMessages.length} sent`
+                : `${enabledCount} of ${templates.length} enabled`}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="chips" role="tablist" aria-label="Messages views">
         <button
           type="button"
           role="tab"
           aria-selected={tab === 'all'}
-          className={`messages-tabs__btn${tab === 'all' ? ' messages-tabs__btn--active' : ''}`}
-          onClick={() => setTab('all')}
+          className={`chip${tab === 'all' ? ' active' : ''}`}
+          onClick={() => setTabAndUrl('all')}
         >
-          All Messages
+          All messages
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={tab === 'auto'}
-          className={`messages-tabs__btn${tab === 'auto' ? ' messages-tabs__btn--active' : ''}`}
-          onClick={() => setTab('auto')}
+          className={`chip${tab === 'auto' ? ' active' : ''}`}
+          onClick={() => setTabAndUrl('auto')}
         >
-          Auto Messages
+          Auto messages
         </button>
       </div>
 
       {tab === 'all' ? (
         loadingSent ? (
-          <p className="messages-empty">Loading messages…</p>
-        ) : sentMessages.length === 0 ? (
-          <p className="messages-empty">No messages sent yet. Enable auto messages to start texting clients.</p>
+          <ScreenLoading label="Loading messages…" inline />
         ) : (
           <AllMessagesTab messages={sentMessages} onSelect={setSelected} />
         )
@@ -95,8 +121,20 @@ export default function MessagesScreen() {
           expandedId={expandedId}
           onExpandedChange={setExpandedId}
           onUpdate={handleTemplateUpdate}
+          onEdit={setEditTemplate}
         />
       )}
+
+      {editTemplate ? (
+        <AutoMessageEditSheet
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditTemplate(null)
+          }}
+          template={editTemplate}
+          onSave={(emailBody) => handleTemplateUpdate(editTemplate.id, { emailBody })}
+        />
+      ) : null}
     </div>
   )
 }

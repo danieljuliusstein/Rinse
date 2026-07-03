@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus } from '@phosphor-icons/react'
+import { Plus, Receipt } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
 import BusinessExpenseSheet from '@/components/business/BusinessExpenseSheet'
 import SupplyPurchaseSheet from '@/components/business/SupplyPurchaseSheet'
+import { EmptyState, ListRow, SectionGroup } from '@/components/ui'
 import { getBusinessExpenses, getEquipment } from '@/lib/api'
 import { isEquipmentExpense } from '@/lib/equipment-expense-logic'
 import { isSupplyPurchase } from '@/lib/supply-purchase-logic'
@@ -75,99 +76,83 @@ export default function BusinessExpenses() {
   const linkedEquipmentName = (expense: BusinessExpense) =>
     expense.equipment_id ? equipmentById.get(expense.equipment_id)?.name : undefined
 
+  const expenseSubtitle = (expense: BusinessExpense) => {
+    const parts = [formatRowDate(expense.date), expense.category ?? 'other']
+    if (isSupplyPurchase(expense) && expense.quantity) parts.push(`${expense.quantity} units`)
+    const equipName = isEquipmentExpense(expense) ? linkedEquipmentName(expense) : undefined
+    if (equipName) parts.push(equipName)
+    if (expense.vendor) parts.push(expense.vendor)
+    return parts.join(' · ')
+  }
+
   return (
-    <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', paddingTop: 16, paddingBottom: 20, gap: 12 }}>
+    <div className="screen page-content settings-screen">
+      <header className="settings-header">
         <BackButton onClick={goBack} />
-        <div style={{ flex: 1, fontSize: 18, fontWeight: 600 }}>Business expenses</div>
+        <h1 className="settings-header__title">Business expenses</h1>
         <button
           type="button"
+          className="page-header__action"
           onClick={() => {
             setEditing(null)
             setShowAdd(true)
           }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
           aria-label="Add business expense"
         >
-          <Plus size={22} color="var(--green)" weight="bold" />
+          <Plus size={18} weight="bold" aria-hidden="true" />
         </button>
-      </div>
+      </header>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>This month</div>
-        <div className="money money-negative" style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
+      <div className="card business-expenses-hero">
+        <div className="business-expenses-hero__label">This month</div>
+        <div className="money money-negative business-expenses-hero__value">
           {fmtDetailed(currentMonthTotal)}
         </div>
       </div>
 
-      {monthTotals.length > 0 && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="section-title" style={{ marginBottom: 10 }}>
-            By month
-          </div>
+      {monthTotals.length > 0 ? (
+        <SectionGroup title="By month">
           {monthTotals.map(([key, total]) => (
-            <div
+            <ListRow
               key={key}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: 13,
-                padding: '6px 0',
-                borderBottom: '0.5px solid var(--border)',
-              }}
-            >
-              <span style={{ color: 'var(--text-muted)' }}>{monthLabel(key)}</span>
-              <span className="money money-negative">{fmtDetailed(total)}</span>
-            </div>
+              title={monthLabel(key)}
+              trailing={<span className="money money-negative">{fmtDetailed(total)}</span>}
+            />
           ))}
-        </div>
-      )}
+        </SectionGroup>
+      ) : null}
 
-      {expenses.length === 0 && (
-        <div style={{ fontSize: 14, color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0' }}>
-          No business expenses yet. Tap + to log one.
-        </div>
+      {expenses.length === 0 ? (
+        <EmptyState
+          illustration="inventory"
+          title="No business expenses yet"
+          description="Log rent, insurance, marketing, and other overhead."
+          actionLabel="Add expense"
+          onAction={() => setShowAdd(true)}
+        />
+      ) : (
+        <SectionGroup title="All expenses">
+          {expenses.map((expense) => (
+            <ListRow
+              key={expense.id}
+              icon={<Receipt size={18} weight="duotone" />}
+              iconTone="amber"
+              title={expense.name}
+              subtitle={expenseSubtitle(expense)}
+              badge={
+                isEquipmentExpense(expense) ? (
+                  <span className="inv-expense-linked-badge">In inventory</span>
+                ) : undefined
+              }
+              trailing={<span className="money money-negative">{fmtDetailed(expense.amount)}</span>}
+              onClick={() => {
+                setShowAdd(false)
+                setEditing(expense)
+              }}
+            />
+          ))}
+        </SectionGroup>
       )}
-
-      {expenses.map((e) => (
-        <button
-          key={e.id}
-          type="button"
-          className="card card-pressable"
-          style={{
-            marginBottom: 10,
-            width: '100%',
-            textAlign: 'left',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-          onClick={() => {
-            setShowAdd(false)
-            setEditing(e)
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-              {e.name}
-              {isEquipmentExpense(e) && (
-                <span className="inv-expense-linked-badge">In inventory</span>
-              )}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-              {formatRowDate(e.date)} · {e.category ?? 'other'}
-              {isSupplyPurchase(e) && e.quantity ? ` · ${e.quantity} units` : ''}
-              {isEquipmentExpense(e) && linkedEquipmentName(e)
-                ? ` · ${linkedEquipmentName(e)}`
-                : ''}
-              {e.vendor ? ` · ${e.vendor}` : ''}
-            </div>
-          </div>
-          <div className="money money-negative" style={{ fontSize: 14, fontWeight: 600 }}>
-            {fmtDetailed(e.amount)}
-          </div>
-        </button>
-      ))}
 
       {showAdd && (
         <BusinessExpenseSheet expense={null} onClose={closeSheet} onSaved={handleSaved} />

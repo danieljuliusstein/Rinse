@@ -47,7 +47,7 @@ type VehicleTypePickerProps = {
 
 export function VehicleTypePicker({ value, onChange }: VehicleTypePickerProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+    <div className="job-form-vehicle-grid">
       {VEHICLE_TYPE_OPTIONS.map((option) => {
         const active = value === option.id
         const { Icon } = option
@@ -55,34 +55,16 @@ export function VehicleTypePicker({ value, onChange }: VehicleTypePickerProps) {
           <button
             key={option.id}
             type="button"
+            className={`job-form-vehicle-btn${active ? ' job-form-vehicle-btn--on' : ''}`}
             onClick={() => onChange(option.id)}
-            style={{
-              background: active ? 'var(--green)' : 'var(--bg-surface)',
-              border: `0.5px solid ${active ? 'var(--green)' : 'var(--border)'}`,
-              borderRadius: 'var(--radius-md)',
-              padding: '10px 6px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              color: 'inherit',
-            }}
           >
             <Icon
               size={24}
               weight={active ? 'fill' : 'regular'}
               color={active ? '#071407' : 'var(--text-muted)'}
-              style={{ margin: '0 auto' }}
               aria-hidden="true"
             />
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: active ? 600 : 400,
-                color: active ? '#071407' : 'var(--text-muted)',
-                marginTop: 4,
-              }}
-            >
-              {option.label}
-            </div>
+            <span className="job-form-vehicle-btn__label">{option.label}</span>
           </button>
         )
       })}

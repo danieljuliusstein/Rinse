@@ -46,6 +46,22 @@ Optional (support):
 
 Deploy. Note your production URL, e.g. `https://detailing-app.vercel.app`.
 
+### Google & Apple sign-in (OAuth2)
+
+In PocketBase admin → **Collections → users → Settings → OAuth2**:
+
+1. Enable OAuth2 auth for the collection
+2. Add providers:
+   - **Google** — Client ID + secret from Google Cloud Console (OAuth consent + redirect URI)
+   - **Apple** — Services ID, team ID, key ID, and private key from Apple Developer
+3. Set redirect URLs (must match the app callback exactly):
+   - `https://your-app.vercel.app/auth/oauth/callback`
+   - `http://localhost:3000/auth/oauth/callback`
+
+After OAuth login, new users without an `organization_id` are provisioned via `POST /api/auth/oauth-provision` (Starter trial org + seeded packages). They then enter the onboarding wizard at `/onboarding?step=business`.
+
+Welcome screen for new visitors: `/welcome` → **Get started** → `/auth`.
+
 ## 3. Wire notification cron
 
 Two triggers call `/api/cron/notifications` daily at 08:00 UTC:

@@ -1,0 +1,63 @@
+.paywall-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+.paywall-sheet__icon {
+  color: var(--green);
+}
+
+.paywall-sheet__lead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.paywall-sheet__trial {
+  margin: 0;
+  font-size: 13px;
+  color: var(--green-text);
+}
+
+.paywall-sheet__plans {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.paywall-sheet__plan {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.paywall-sheet__plan strong {
+  display: block;
+}
+
+.paywall-sheet__plan span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.paywall-sheet__price {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.paywall-sheet__coming-soon {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px dashed var(--border);
+}

@@ -15,6 +15,8 @@
     "seed:schedule-demo": "node scripts/seed-schedule-demo.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
     "demo": "npm run seed:demo",
+    "demo:account": "node scripts/ensure-demo-account.mjs",
+    "demo:setup": "node scripts/ensure-demo-account.mjs && FORCE_DEMO_PHOTOS=1 ORG_SLUG=summit-detail PB_EMAIL=demo@rinsehq.com PB_PASSWORD=SummitDemo2026! APP_URL=https://rinsehq.com node scripts/seed-demo.mjs",
     "capture:screenshots": "node scripts/capture-screenshots.mjs",
     "export:waitlist-assets": "node scripts/export-waitlist-assets.mjs",
     "verify:backend": "node scripts/verify-backend.mjs",
@@ -25,7 +27,14 @@
     "qa:walkthrough": "node scripts/qa-walkthrough.mjs",
     "generate:vapid": "node scripts/generate-vapid-keys.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test e2e/site-smoke.spec.ts",
+    "test:e2e:flows": "playwright test e2e/flows",
+    "test:e2e:tour": "playwright test e2e/product-tour.spec.ts",
+    "test:e2e:ci": "npm run test:e2e:smoke && npm run test:e2e:tour",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
@@ -33,13 +42,14 @@
     "@react-pdf/renderer": "^4.5.1",
     "@vercel/analytics": "^2.0.1",
     "chart.js": "^4.5.1",
-    "driver.js": "^1.6.0",
+    "motion": "^12.42.2",
     "next": "16.2.7",
     "pocketbase": "^0.27.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.12.4",
     "stripe": "^22.3.0",
+    "vaul": "^1.1.2",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

@@ -3,8 +3,24 @@ import {
   generateInvoiceNumber,
   normalizeInvoice,
 } from '../invoices'
+import { recalculateInvoiceTotals } from '../invoice-totals'
 import { loadData, newId, saveData } from '../storage'
 import type { Invoice, Job, Payment } from '../types'
+
+export type InvoiceUpdate = Partial<
+  Pick<
+    Invoice,
+    | 'discount_amount'
+    | 'tax_rate'
+    | 'po_number'
+    | 'terms'
+    | 'notes'
+    | 'signature_url'
+    | 'signed_at'
+    | 'extra_line_items'
+    | 'subtotal'
+  >
+>
 
 function persistInvoice(invoice: Invoice): Invoice {
   const data = loadData()
@@ -110,4 +126,57 @@ export function markInvoicePaid(invoiceId: string, method: string): Invoice {
   }
 
   return addPayment(invoiceId, payment)
+}
+
+export function updateInvoice(invoiceId: string, patch: InvoiceUpdate): Invoice {
+  const invoice = getInvoice(invoiceId)
+  if (!invoice) throw new Error('Invoice not found')
+  const merged = recalculateInvoiceTotals({ ...invoice, ...patch })
+  return persistInvoice(merged)
+}
+
+export function deleteInvoice(invoiceId: string): void {
+  const data = loadData()
+  const invoice = data.invoices.find((i) => i.id === invoiceId)
+  if (!invoice) throw new Error('Invoice not found')
+
+  data.invoices = data.invoices.filter((i) => i.id !== invoiceId)
+  const job = data.jobs.find((j) => j.id === invoice.job_id)
+  if (job && job.invoice_id === invoiceId) {
+    job.invoice_id = undefined
+    if (job.status === 'invoiced' || job.status === 'paid') job.status = 'completed'
+    job.updated = new Date().toISOString()
+  }
+  saveData(data)
+}
+
+export function duplicateInvoice(invoiceId: string): Invoice {
+  const invoice = getInvoice(invoiceId)
+  if (!invoice) throw new Error('Invoice not found')
+
+  const data = loadData()
+  const invoiceNumber = generateInvoiceNumber(data.invoices)
+  const copy: Invoice = recalculateInvoiceTotals({
+    ...invoice,
+    id: newId(),
+    invoice_number: invoiceNumber,
+    status: 'draft',
+    payments: [],
+    amount_paid: 0,
+    sent_at: undefined,
+    paid_at: undefined,
+    signature_url: undefined,
+    signed_at: undefined,
+  })
+
+  data.invoices = data.invoices.filter((i) => i.id !== invoiceId)
+  data.invoices.push(normalizeInvoice(copy))
+  const job = data.jobs.find((j) => j.id === invoice.job_id)
+  if (job) {
+    job.invoice_id = copy.id
+    job.status = 'invoiced'
+    job.updated = new Date().toISOString()
+  }
+  saveData(data)
+  return normalizeInvoice(copy)
 }

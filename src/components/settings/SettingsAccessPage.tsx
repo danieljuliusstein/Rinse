@@ -1,10 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CaretRight } from '@phosphor-icons/react'
-import { Button } from '@/components/ui'
+import { Button, ListRow, SectionGroup } from '@/components/ui'
 import {
   clearLocalDeviceData,
   clearOfflineQueue,
@@ -20,6 +18,10 @@ import {
   type SyncStatus,
 } from '@/lib/api'
 import { buildLocalExport, downloadJson, runNotificationsCheck, triggerServerBackup } from '@/lib/export-data'
+import { clientsToCsv, downloadCsv } from '@/lib/client-csv'
+import { isDemoModeEnabled, setDemoModeEnabled } from '@/lib/demo-mode'
+import { getClients } from '@/lib/api'
+import { loadSampleData } from '@/lib/storage'
 import { getPocketBaseAuthToken } from '@/lib/pb-auth'
 import { saveSettingsAsync } from '@/lib/settings'
 import { useConfirm } from '@/providers/ConfirmProvider'
@@ -154,6 +156,11 @@ export default function SettingsAccessPage() {
   const [deleteConfirmed, setDeleteConfirmed] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteMsg, setDeleteMsg] = useState<string | null>(null)
+  const [demoMode, setDemoMode] = useState(false)
+
+  useEffect(() => {
+    setDemoMode(isDemoModeEnabled())
+  }, [])
 
   const refreshSync = async () => {
     const [b, m, s] = await Promise.all([getActiveBackend(), getMigrationStatus(), getSyncStatus()])
@@ -187,6 +194,47 @@ export default function SettingsAccessPage() {
   const handleExport = () => {
     const bundle = buildLocalExport()
     downloadJson(bundle, `detailing-export-${bundle.exported_at.slice(0, 10)}.json`)
+  }
+
+  const handleExportClientsCsv = async () => {
+    const clients = await getClients()
+    downloadCsv(clientsToCsv(clients), `clients-${new Date().toISOString().slice(0, 10)}.csv`)
+  }
+
+  const handleToggleDemoMode = async () => {
+    const next = !demoMode
+    if (next && backend !== 'local') {
+      setBackupMsg('Demo overlay works best in local mode — load sample data first if needed.')
+    }
+    setDemoModeEnabled(next)
+    setDemoMode(next)
+    if (next && backend === 'local') {
+      const ok = await confirm({
+        title: 'Load sample data?',
+        message: 'Turn on sample business overlay and load demo jobs/clients for screenshots?',
+        confirmLabel: 'Load sample data',
+        cancelLabel: 'Overlay only',
+      })
+      if (ok) {
+        loadSampleData()
+        resetBackend()
+        window.location.reload()
+      }
+    }
+  }
+
+  const handleLoadSample = async () => {
+    if (backend !== 'local') return
+    const ok = await confirm({
+      title: 'Load sample data?',
+      message: 'Replace local jobs, clients, quotes, and inventory with demo sample data? Cloud data is not affected.',
+      confirmLabel: 'Load sample',
+      cancelLabel: 'Cancel',
+    })
+    if (!ok) return
+    loadSampleData()
+    resetBackend()
+    window.location.reload()
   }
 
   const handleMigrate = async () => {
@@ -325,12 +373,29 @@ export default function SettingsAccessPage() {
         <Button type="button" variant="ghost" onClick={handleExport}>
           Export all data (local JSON)
         </Button>
+        <Button type="button" variant="ghost" onClick={() => void handleExportClientsCsv()}>
+          Export clients (CSV)
+        </Button>
+        <Button
+          type="button"
+          variant={demoMode ? 'primary' : 'ghost'}
+          onClick={() => void handleToggleDemoMode()}
+        >
+          {demoMode ? 'Sample business overlay on' : 'Sample business overlay'}
+        </Button>
+        {backend === 'local' ? (
+          <Button type="button" variant="ghost" onClick={() => void handleLoadSample()}>
+            Load sample data
+          </Button>
+        ) : null}
         {backupMsg ? <p className="settings-msg">{backupMsg}</p> : null}
-        <div className="settings-divider" />
-        <Link href="/privacy" className="settings-row-link settings-row-link--plain">
-          <span>Privacy policy</span>
-          <CaretRight size={16} color="var(--text-dim)" />
-        </Link>
+      </div>
+
+      <SectionGroup title="Legal">
+        <ListRow title="Privacy policy" onClick={() => router.push('/privacy')} />
+      </SectionGroup>
+
+      <div className="settings-panel settings-panel--flush">
         <DeveloperToolsPanel
           backend={backend}
           migration={migration}

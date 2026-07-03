@@ -1,0 +1,54 @@
+/* High-contrast enhancements for critical client + auth flows (Wave 32). */
+
+@media (prefers-contrast: more) {
+  .book-btn-primary,
+  .book-btn-primary:disabled,
+  .client-light-root .cl-btn-primary,
+  .portal-btn-primary,
+  .auth-screen .btn-primary,
+  .btn-primary {
+    border: 2px solid #000;
+    box-shadow: none;
+  }
+
+  .book-error-banner,
+  .auth-error,
+  .error-banner,
+  .form-field-hint--error {
+    border: 2px solid currentColor;
+  }
+
+  .book-slot,
+  .book-slot--selected,
+  .chip.active,
+  .form-pill--on {
+    border-width: 2px;
+  }
+
+  .f-input:focus,
+  .f-select:focus,
+  .f-textarea:focus,
+  .book-field input:focus,
+  .auth-form .f-input:focus {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  .skip-link:focus {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  .book-btn-primary,
+  .portal-btn-primary,
+  .btn-primary {
+    border: 2px solid ButtonText;
+  }
+
+  .book-error-banner,
+  .auth-error {
+    border: 1px solid CanvasText;
+  }
+}

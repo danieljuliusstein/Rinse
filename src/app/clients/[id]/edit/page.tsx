@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import ClientForm from '@/components/ClientForm'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
 import { getClient } from '@/lib/api'
 import type { Client } from '@/lib/types'
 
@@ -16,11 +17,11 @@ export default function EditClientPage() {
   }, [id])
 
   if (client === undefined) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+    return <ScreenLoading />
   }
 
   if (!client) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Client not found</div>
+    return <ScreenMessage>Client not found</ScreenMessage>
   }
 
   return <ClientForm client={client} />

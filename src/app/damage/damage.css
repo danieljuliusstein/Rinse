@@ -1,438 +1,141 @@
-/* ATLAS — Damage documentation (scoped) */
+/* CRM — vehicle profile & damage documentation (app tokens) */
 
-.damage-docs {
-  --dmg-bg: #0d0d0d;
-  --dmg-s1: #161616;
-  --dmg-s2: #1e1e1e;
-  --dmg-bdr: rgba(255, 255, 255, 0.08);
-  --dmg-t1: #f5f5f4;
-  --dmg-t2: #9b9b96;
-  --dmg-t3: #6b6b67;
-  --dmg-grn: #4ade80;
-  --dmg-amr: #fbbf24;
-  --dmg-red: #f87171;
-
-  --font-display: var(--font-syne), sans-serif;
-  --font-body: var(--font-dm-sans), sans-serif;
-
-  font-family: var(--font-body);
-  color: var(--dmg-t1);
+.crm-page-header .page-header__title-block {
+  min-width: 0;
 }
 
-.damage-docs .section-label {
+/* Vehicle hero */
+.vehicle-hero {
+  height: 120px;
+  background: var(--bg-blue);
+  border: 0.5px solid var(--border-blue);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vehicle-hero__icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+}
+
+.vehicle-hero__icon-wrap--paint {
+  width: 72px;
+  height: 72px;
+  background: var(--vehicle-paint, var(--bg-card));
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: var(--shadow-card);
+}
+
+.vehicle-color-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Damage list rows */
+.damage-list-row .ui-list-row__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.damage-list-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.damage-list-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.damage-list-row__date {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Add damage photo preview */
+.crm-photo-preview {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-muted);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.crm-photo-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crm-photo-preview__placeholder {
+  color: var(--text-muted);
+}
+
+.crm-photo-preview__label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 6px;
+  padding: 3px 8px;
   font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--dmg-t3);
-  text-transform: uppercase;
-  font-family: var(--font-body);
-  margin: 0 0 6px;
+  color: #fff;
 }
 
-.damage-docs .card {
-  background: var(--dmg-s1);
-  border: 1px solid var(--dmg-bdr);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 10px;
+/* Damage detail photo */
+.crm-detail-photo {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  min-height: 180px;
 }
 
-.damage-docs .card--flush {
-  padding: 0 14px;
+.crm-detail-photo__img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
 }
 
-.damage-docs .empty-zone {
+.crm-detail-photo__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
   gap: 8px;
-}
-
-.damage-docs .empty-zone__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--dmg-s2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--dmg-t3);
-}
-
-.damage-docs .empty-zone__title {
+  min-height: 180px;
+  color: var(--text-muted);
   font-size: 13px;
-  font-weight: 600;
-  color: var(--dmg-t2);
 }
 
-.damage-docs .empty-zone__sub {
-  font-size: 11px;
-  color: var(--dmg-t3);
-  text-align: center;
-  line-height: 1.5;
-}
-
-.damage-docs .empty-zone__divider {
-  border-top: 1px solid var(--dmg-bdr);
-  padding-top: 12px;
-  width: 100%;
-}
-
-.damage-docs .ghost-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 100%;
-  padding: 11px;
-  background: transparent;
-  border: 1px solid var(--dmg-bdr);
-  border-radius: 10px;
-  font-size: 13px;
-  color: var(--dmg-t2);
-  font-family: var(--font-body);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.damage-docs .ghost-btn:active {
-  opacity: 0.7;
-}
-
-.damage-docs .damage-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--dmg-bdr);
-  cursor: pointer;
-  width: 100%;
-  background: none;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  text-align: left;
-  color: inherit;
-}
-
-.damage-docs .damage-row:last-of-type {
-  border-bottom: none;
-}
-
-.damage-docs .damage-row__thumb {
-  width: 52px;
-  height: 52px;
-  border-radius: 8px;
-  background: var(--dmg-s2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  overflow: hidden;
-  color: var(--dmg-t3);
-}
-
-.damage-docs .damage-row__thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.damage-docs .damage-row__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.damage-docs .damage-row__area {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--dmg-t1);
-}
-
-.damage-docs .damage-row__note {
-  font-size: 11px;
-  color: var(--dmg-t2);
-  margin-top: 2px;
-  line-height: 1.4;
-  max-height: 2.8em;
-  overflow: hidden;
-}
-
-.damage-docs .damage-row__date {
-  font-size: 10px;
-  color: var(--dmg-t3);
-  margin-top: 3px;
-}
-
-.damage-docs .damage-row__chevron {
-  color: var(--dmg-t3);
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
-/* Add photo sheet (custom — lighter than inv-sheet) */
-.damage-sheet-root {
-  --dmg-s1: #161616;
-  --dmg-s2: #1e1e1e;
-  --dmg-bdr: rgba(255, 255, 255, 0.08);
-  --dmg-t1: #f5f5f4;
-  --dmg-t2: #9b9b96;
-  --dmg-t3: #6b6b67;
-  --dmg-grn: #4ade80;
-
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  max-width: 390px;
-  margin: 0 auto;
-  left: 0;
-  right: 0;
-  overscroll-behavior: contain;
-  touch-action: none;
-}
-
-.damage-sheet-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  border: none;
-  cursor: pointer;
-}
-
-.damage-sheet {
-  position: relative;
-  width: 100%;
-  background: var(--dmg-s1, #161616);
-  border-radius: 20px 20px 0 0;
-  padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px));
-  z-index: 1;
-  border-top: 1px solid var(--dmg-bdr, rgba(255, 255, 255, 0.08));
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
-}
-
-.damage-sheet__handle {
-  width: 32px;
-  height: 3px;
-  background: var(--dmg-bdr);
-  border-radius: 2px;
-  margin: 10px auto 14px;
-}
-
-.damage-sheet__title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--dmg-t1, #f5f5f4);
-  font-family: var(--font-display, var(--font-syne), sans-serif);
-  margin-bottom: 14px;
-}
-
-.damage-sheet-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--dmg-bdr);
-  cursor: pointer;
-  width: 100%;
-  background: none;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  text-align: left;
-  color: inherit;
-}
-
-.damage-sheet-row:last-of-type {
-  border-bottom: none;
-}
-
-.damage-sheet-row__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: rgba(74, 222, 128, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--dmg-grn);
-}
-
-.damage-sheet-row__title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--dmg-t1, #f5f5f4);
-}
-
-.damage-sheet-row__sub {
-  font-size: 11px;
-  color: var(--dmg-t2, #9b9b96);
-  margin-top: 2px;
-}
-
-.damage-sheet__cancel {
-  display: block;
-  width: 100%;
-  text-align: center;
-  padding: 14px;
-  font-size: 13px;
-  color: var(--dmg-t3, #6b6b67);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-}
-
-/* Form */
-.damage-docs .photo-preview {
-  width: 100%;
-  height: 140px;
-  border-radius: 10px;
-  background: var(--dmg-s2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  overflow: hidden;
-  position: relative;
-}
-
-.damage-docs .photo-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.damage-docs .photo-preview__label {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 10px;
-  color: var(--dmg-t2);
-}
-
-.damage-docs .field-label {
-  font-size: 10px;
-  color: var(--dmg-t3);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.damage-docs .chip-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin: 6px 0 12px;
-}
-
-.damage-docs .chip {
-  background: var(--dmg-s2);
-  border: 1px solid var(--dmg-bdr);
-  border-radius: 20px;
-  padding: 5px 10px;
-  font-size: 11px;
-  color: var(--dmg-t2);
-  cursor: pointer;
-  font-family: var(--font-body);
-}
-
-.damage-docs .chip.active {
-  background: rgba(74, 222, 128, 0.12);
-  border-color: rgba(74, 222, 128, 0.3);
-  color: var(--dmg-grn);
-}
-
-.damage-docs .field-input {
-  display: block;
-  width: 100%;
-  background: var(--dmg-s2);
-  border: 1px solid var(--dmg-bdr);
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 13px;
-  color: var(--dmg-t1);
-  font-family: var(--font-body);
-  margin-bottom: 10px;
-  outline: none;
-}
-
-.damage-docs .field-input::placeholder {
-  color: var(--dmg-t3);
-}
-
-.damage-docs .field-input--multiline {
-  min-height: 60px;
-  resize: vertical;
-}
-
-.damage-docs .field-input-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.damage-docs .btn-primary {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  background: var(--dmg-grn);
-  color: #0d0d0d;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: var(--font-body);
-  text-align: center;
-  cursor: pointer;
-}
-
-.damage-docs .btn-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Detail view */
-.damage-docs .detail-photo {
-  width: 100%;
-  height: 180px;
-  background: var(--dmg-s2);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 14px;
-  position: relative;
-  overflow: hidden;
-  color: var(--dmg-t3);
-}
-
-.damage-docs .detail-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.damage-docs .detail-badge {
+.crm-detail-photo__badge {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(251, 191, 36, 0.15);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 20px;
-  padding: 3px 10px;
-  font-size: 11px;
-  color: var(--dmg-amr);
 }
 
-.damage-docs .detail-photo__count {
+.crm-detail-photo__count {
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -440,190 +143,9 @@
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 10px;
-  color: var(--dmg-t2);
+  color: #fff;
 }
 
-.damage-docs .detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--dmg-bdr);
-}
-
-.damage-docs .detail-row:last-child {
-  border-bottom: none;
-}
-
-.damage-docs .detail-row__key {
-  font-size: 11px;
-  color: var(--dmg-t3);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.damage-docs .detail-row__val {
-  font-size: 13px;
-  color: var(--dmg-t1);
-  text-align: right;
-  max-width: 60%;
-}
-
-.damage-docs .detail-row__val--muted {
-  color: var(--dmg-t2);
-}
-
-.damage-docs .detail-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.damage-docs .btn-secondary {
-  flex: 1;
-  padding: 11px;
-  background: transparent;
-  border: 1px solid var(--dmg-bdr);
-  border-radius: 10px;
-  font-size: 13px;
-  color: var(--dmg-t2);
-  font-family: var(--font-body);
-  text-align: center;
-  cursor: pointer;
-}
-
-.damage-docs .btn-danger {
-  flex: 1;
-  padding: 11px;
-  background: transparent;
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  border-radius: 10px;
-  font-size: 13px;
-  color: var(--dmg-red);
-  font-family: var(--font-body);
-  text-align: center;
-  cursor: pointer;
-}
-
-/* Vehicle profile */
-.damage-docs .vehicle-hero {
-  height: 120px;
-  background: #0a1020;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-
-.damage-docs .vehicle-hero img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.damage-docs .vehicle-hero__icon-wrap {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #1a2a3a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #3a6a9a;
-}
-
-.damage-docs .vehicle-hero__icon-wrap--paint {
-  width: 72px;
-  height: 72px;
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.04);
-}
-
-.damage-docs .vehicle-meta {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.damage-docs .meta-label {
-  font-size: 11px;
-  color: var(--dmg-t3);
-}
-
-.damage-docs .meta-value {
-  font-size: 13px;
-  color: var(--dmg-t1);
-}
-
-.damage-docs .meta-value--muted {
-  color: var(--dmg-t2);
-}
-
-.damage-docs .color-swatch {
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  vertical-align: middle;
-  margin-right: 5px;
-  border: 1px solid var(--dmg-bdr);
-}
-
-.damage-docs .nav-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0 12px;
-}
-
-.damage-docs .nav-row__title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--dmg-t1);
-  font-family: var(--font-display);
-}
-
-.damage-docs .nav-row__title--lg {
-  font-size: 17px;
-}
-
-.damage-docs .nav-row__action {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  background: none;
-  border: none;
-  font-size: 13px;
-  color: var(--dmg-t2);
-  cursor: pointer;
-  font-family: var(--font-body);
-}
-
-.damage-docs .page-content {
-  padding: 0 14px 24px;
-}
-
-.damage-docs .vehicle-list-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--dmg-bdr);
-  cursor: pointer;
-  width: 100%;
-  background: none;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  text-align: left;
-  color: inherit;
-}
-
-.damage-docs .vehicle-list-row:last-child {
-  border-bottom: none;
+.crm-detail-actions {
+  margin-top: 8px;
 }

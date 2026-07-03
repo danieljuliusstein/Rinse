@@ -3,11 +3,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Car, ChatCircle, Funnel, Gear, Trophy } from '@phosphor-icons/react'
+import ArSummaryCard from '@/components/business/ArSummaryCard'
+import HomeCtaRow from '@/components/home/HomeCtaRow'
+import HomeMonthCalendar from '@/components/home/HomeMonthCalendar'
 import InventoryAlertCard from '@/components/home/InventoryAlertCard'
 import ProfileCompleteCard from '@/components/home/ProfileCompleteCard'
 import TodayJobCard from '@/components/home/TodayJobCard'
+import { Badge, ListRow, MonthCarousel, SectionGroup } from '@/components/ui'
+import TrialExpiryBanner from '@/components/TrialExpiryBanner'
+import { useOrgSubscription } from '@/hooks/useOrgSubscription'
 import { useProfileCompletion } from '@/hooks/useProfileCompletion'
 import { useAuthEmptyState } from '@/hooks/useAuthEmptyState'
+import { dismissTrialBanner, isTrialBannerDismissed } from '@/lib/subscription-gates'
+import { computeArSummary } from '@/lib/ar-metrics'
 import { fmt } from '@/lib/calculations'
 import { DEFAULT_BOOKING_SCHEDULE, weekdayFromIsoDate } from '@/lib/booking-availability'
 import { getTimeBlocks } from '@/lib/api'
@@ -15,15 +23,16 @@ import {
   buildHomeWeekStats,
   buildTodayJobCard,
   formatStartTimeLabel,
-  homeJobIconTone,
-  homeJobStatusClass,
-  homeJobStatusLabel,
   type ComingUpJobData,
   type InventoryAlertData,
 } from '@/lib/home-dashboard'
+import { buildMonthCarouselItems } from '@/lib/month-revenue'
+import { buildInvoiceMonthCarouselItems } from '@/lib/invoice-month-revenue'
+import HomeRevenueChart from '@/components/home/HomeRevenueChart'
+import { isHomeModuleEnabled, type HomeModulePrefs } from '@/lib/home-modules'
 import { openMapsDirections } from '@/lib/maps-url'
 import { loadSettingsAsync } from '@/lib/settings'
-import type { JobWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
+import type { Invoice, JobWithRelations, LeadWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
 
 function greeting() {
   const h = new Date().getHours()
@@ -40,51 +49,8 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-function HomeJobRow({ job, onPress }: { job: RecentJobRow; onPress: () => void }) {
-  const tone = homeJobIconTone(job)
-  const timeLabel = formatStartTimeLabel(job.startTime)
-
-  return (
-    <div
-      className="job-card job-card--home"
-      onClick={onPress}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onPress()}
-    >
-      <div className={`job-icon ${tone}`}>
-        <Car size={16} weight="duotone" aria-hidden="true" />
-      </div>
-      <div className="job-body">
-        <div className="job-name">{job.clientName}</div>
-        <div className="job-meta">
-          {job.package} · {job.vehicleType}
-        </div>
-        <span className={homeJobStatusClass(job)}>{homeJobStatusLabel(job)}</span>
-      </div>
-      <div className="job-right">
-        {timeLabel && <div className="job-amount">{timeLabel}</div>}
-        <div className="job-date">{capitalize(job.locationType)}</div>
-      </div>
-    </div>
-  )
-}
-
-function UpcomingRow({ job, onPress }: { job: ComingUpJobData; onPress: () => void }) {
-  const pending = job.statusLabel === 'Pending'
-  return (
-    <button type="button" className="upcoming-card" onClick={onPress}>
-      <div className="upcoming-date">
-        <div className="upcoming-month">{job.monthLabel}</div>
-        <div className="upcoming-day">{job.dayLabel}</div>
-      </div>
-      <div className="upcoming-body">
-        <p className="upcoming-name">{job.clientName}</p>
-        <p className="upcoming-meta">{job.packageName} · {job.datetimeLabel.split('·').pop()?.trim() ?? job.locationLabel}</p>
-      </div>
-      <span className={`upcoming-status${pending ? ' upcoming-status--pending' : ''}`}>{job.statusLabel}</span>
-    </button>
-  )
+function pipelineOpenCount(leads: LeadWithRelations[]): number {
+  return leads.filter((l) => l.stage !== 'booked').length
 }
 
 export interface DashboardProps {
@@ -92,6 +58,8 @@ export interface DashboardProps {
   todayJobRows: RecentJobRow[]
   upcomingJobs: ComingUpJobData[]
   jobs: JobWithRelations[]
+  leads: LeadWithRelations[]
+  invoices: Invoice[]
   inventoryAlert: InventoryAlertData | null
   clientCount: number
   hasUnviewedMilestone?: boolean
@@ -102,21 +70,42 @@ export default function Dashboard({
   todayJobRows,
   upcomingJobs,
   jobs,
+  leads,
+  invoices,
   inventoryAlert,
   clientCount,
   hasUnviewedMilestone = false,
 }: DashboardProps) {
   const router = useRouter()
   const { isLoggedOut } = useAuthEmptyState()
+  const { showTrialBanner, daysLeft } = useOrgSubscription()
+  const [trialDismissed, setTrialDismissed] = useState(() => isTrialBannerDismissed())
+  const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
   const profileCompletion = useProfileCompletion()
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
   const weekStats = buildHomeWeekStats(jobs, weekDays)
-  const todayStr = weekDays.find((d) => d.isToday)?.date ?? new Date().toISOString().split('T')[0]
   const todayJob = useMemo(() => buildTodayJobCard(todayJobRows), [todayJobRows])
   const moreTodayJobs = useMemo(
     () => (todayJob ? todayJobRows.filter((j) => j.id !== todayJob.id) : todayJobRows),
     [todayJobRows, todayJob],
   )
+  const arSummary = useMemo(() => computeArSummary(invoices), [invoices])
+  const monthCarousel = useMemo(
+    () => (isLoggedOut ? [] : buildMonthCarouselItems(jobs)),
+    [jobs, isLoggedOut],
+  )
+  const invoiceMonthCarousel = useMemo(
+    () => (isLoggedOut ? [] : buildInvoiceMonthCarouselItems(invoices)),
+    [invoices, isLoggedOut],
+  )
+  const pipelineCount = useMemo(() => pipelineOpenCount(leads), [leads])
+
+  const todayExpectedRevenue = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0]
+    return jobs
+      .filter((j) => j.date === todayStr && j.status !== 'paid')
+      .reduce((s, j) => s + j.revenue + j.tip, 0)
+  }, [jobs])
 
   useEffect(() => {
     if (weekDays.length === 0) return
@@ -125,6 +114,7 @@ export default function Dashboard({
     let cancelled = false
     void Promise.all([loadSettingsAsync(), getTimeBlocks(from, to)]).then(([settings, blocks]) => {
       if (cancelled) return
+      setHomeModules(settings.home_modules ?? {})
       const schedule = settings.booking_schedule ?? DEFAULT_BOOKING_SCHEDULE
       const blocked = new Set<string>()
       for (const day of weekDays) {
@@ -140,6 +130,17 @@ export default function Dashboard({
       cancelled = true
     }
   }, [weekDays])
+
+  useEffect(() => {
+    const refreshModules = () => {
+      void loadSettingsAsync().then((settings) => setHomeModules(settings.home_modules ?? {}))
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshModules()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
 
   return (
     <div className="screen page-content body">
@@ -194,86 +195,192 @@ export default function Dashboard({
         </div>
       </header>
 
+      {showTrialBanner && daysLeft != null && !trialDismissed ? (
+        <TrialExpiryBanner
+          daysLeft={daysLeft}
+          onDismiss={() => {
+            dismissTrialBanner()
+            setTrialDismissed(true)
+          }}
+        />
+      ) : null}
+
       {profileCompletion && !profileCompletion.isComplete && !isLoggedOut ? (
         <ProfileCompleteCard completion={profileCompletion} />
       ) : null}
 
-      <div data-tour="week-strip">
-      <div className={`stat-grid stat-grid--dashboard${isLoggedOut ? ' stat-grid--logged-out' : ''}`}>
-        <div className="stat-card">
-          <div className="stat-label">This week</div>
-          <div className="stat-value">{isLoggedOut ? '—' : `${weekStats.jobsThisWeek} jobs`}</div>
-          <div className={`stat-sub${isLoggedOut ? ' stat-sub--sign-in' : ''}`}>
-            {isLoggedOut ? 'Sign in' : `${weekStats.jobsRemaining} remaining`}
-          </div>
+      {!isLoggedOut && isHomeModuleEnabled(homeModules, 'cta_row') ? (
+        <HomeCtaRow invoices={invoices} jobs={jobs} />
+      ) : null}
+
+      {!isLoggedOut && isHomeModuleEnabled(homeModules, 'ar_alert') ? (
+        <ArSummaryCard summary={arSummary} />
+      ) : null}
+
+      {!isLoggedOut &&
+      isHomeModuleEnabled(homeModules, 'quick_chips') &&
+      (pipelineCount > 0 || arSummary.overdueCount > 0) ? (
+        <div className="home-quick-chips">
+          {pipelineCount > 0 ? (
+            <button type="button" className="home-quick-chip" onClick={() => router.push('/pipeline')}>
+              <Funnel size={16} aria-hidden="true" />
+              Pipeline
+              <span className="home-quick-chip__count">{pipelineCount}</span>
+            </button>
+          ) : null}
+          {arSummary.overdueCount > 0 ? (
+            <button
+              type="button"
+              className="home-quick-chip"
+              onClick={() => router.push('/invoices?filter=overdue')}
+            >
+              Overdue
+              <span className="home-quick-chip__count">{arSummary.overdueCount}</span>
+            </button>
+          ) : null}
+          <button type="button" className="home-quick-chip" onClick={() => router.push('/messages')}>
+            <ChatCircle size={16} aria-hidden="true" />
+            Messages
+          </button>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Earned</div>
-          <div className="stat-value">{isLoggedOut ? '—' : fmt(weekStats.earnedThisWeek)}</div>
-          {isLoggedOut ? (
-            <div className="stat-sub stat-sub--sign-in">Sign in</div>
-          ) : weekStats.earnedDeltaPct != null ? (
-            <div className="stat-sub">
-              {weekStats.earnedDeltaPct >= 0 ? '+' : ''}
-              {weekStats.earnedDeltaPct}% vs last wk
+      ) : null}
+
+      {!isLoggedOut && isHomeModuleEnabled(homeModules, 'month_carousel') && monthCarousel.length > 0 ? (
+        <>
+          <p className="sec">Job revenue</p>
+          <MonthCarousel items={monthCarousel} />
+        </>
+      ) : null}
+
+      {!isLoggedOut &&
+      isHomeModuleEnabled(homeModules, 'invoice_month_carousel') &&
+      invoiceMonthCarousel.length > 0 ? (
+        <>
+          <p className="sec">Collected</p>
+          <MonthCarousel items={invoiceMonthCarousel} />
+        </>
+      ) : null}
+
+      {!isLoggedOut && isHomeModuleEnabled(homeModules, 'revenue_chart') ? (
+        <HomeRevenueChart jobs={jobs} />
+      ) : null}
+
+      <div data-tour="week-strip">
+        <div className={`stat-grid stat-grid--dashboard${isLoggedOut ? ' stat-grid--logged-out' : ''}`}>
+          <div className="stat-card">
+            <div className="stat-label">This week</div>
+            <div className="stat-value">{isLoggedOut ? '—' : `${weekStats.jobsThisWeek} jobs`}</div>
+            <div className={`stat-sub${isLoggedOut ? ' stat-sub--sign-in' : ''}`}>
+              {isLoggedOut ? 'Sign in' : `${weekStats.jobsRemaining} remaining`}
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Earned</div>
+            <div className="stat-value">{isLoggedOut ? '—' : fmt(weekStats.earnedThisWeek)}</div>
+            {isLoggedOut ? (
+              <div className="stat-sub stat-sub--sign-in">Sign in</div>
+            ) : weekStats.earnedDeltaPct != null ? (
+              <div className="stat-sub">
+                {weekStats.earnedDeltaPct >= 0 ? '+' : ''}
+                {weekStats.earnedDeltaPct}% vs last wk
+              </div>
+            ) : null}
+          </div>
+          {!isLoggedOut && isHomeModuleEnabled(homeModules, 'today_revenue') ? (
+            <div className="stat-card">
+              <div className="stat-label">Today expected</div>
+              <div className="stat-value">{fmt(todayExpectedRevenue)}</div>
+              <div className="stat-sub">scheduled revenue</div>
             </div>
           ) : null}
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Clients</div>
-          <div className="stat-value">{isLoggedOut ? '—' : clientCount}</div>
-          <div className={`stat-sub${isLoggedOut ? ' stat-sub--sign-in' : ''}`}>
-            {isLoggedOut ? 'Sign in' : 'on file'}
-          </div>
-        </div>
+
+        {inventoryAlert && isHomeModuleEnabled(homeModules, 'inventory_alert') ? (
+          <InventoryAlertCard alert={inventoryAlert} onPress={() => router.push('/inventory')} />
+        ) : null}
+
+        {!isLoggedOut && isHomeModuleEnabled(homeModules, 'month_calendar') ? (
+          <>
+            <p className="sec">Calendar</p>
+            <HomeMonthCalendar jobs={jobs} />
+          </>
+        ) : isLoggedOut ? (
+          <>
+            <p className="sec">This week</p>
+            <div className="week-strip">
+              {weekDays.map((day) => (
+                <button
+                  key={day.date}
+                  type="button"
+                  className={`day${day.isToday ? ' today' : ''}${blockedDates.has(day.date) ? ' day--blocked' : ''}`}
+                  onClick={() => router.push(`/jobs?date=${day.date}`)}
+                >
+                  <div className="day-name">{day.label}</div>
+                  <div className="day-num">{day.dayNum}</div>
+                  <div className={`day-dot${day.jobCount > 0 ? '' : ' hidden'}`} />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
       </div>
 
-      {inventoryAlert && (
-        <InventoryAlertCard alert={inventoryAlert} onPress={() => router.push('/inventory')} />
-      )}
-
-      <p className="sec">This week</p>
-      <div className="week-strip">
-        {weekDays.map((day) => (
-          <button
-            key={day.date}
-            type="button"
-            className={`day${day.isToday ? ' today' : ''}${blockedDates.has(day.date) ? ' day--blocked' : ''}`}
-            onClick={() => router.push(`/jobs?date=${day.date}`)}
-          >
-            <div className="day-name">{day.label}</div>
-            <div className="day-num">{day.dayNum}</div>
-            <div className={`day-dot${day.jobCount > 0 ? '' : ' hidden'}`} />
-          </button>
-        ))}
-      </div>
-      </div>
-
+      {(isLoggedOut || isHomeModuleEnabled(homeModules, 'today_jobs')) && (
       <div data-tour="today-jobs">
-      <p className="sec">Today&apos;s jobs</p>
-      <TodayJobCard
-        job={todayJob}
-        isLoggedOut={isLoggedOut}
-        onDirections={openMapsDirections}
-        onStart={(jobId) => router.push(`/jobs/${jobId}`)}
-        onAddJob={() => {
-          if (isLoggedOut) router.push('/auth')
-          else router.push('/jobs/new')
-        }}
-      />
-      {moreTodayJobs.map((job) => (
-        <HomeJobRow key={job.id} job={job} onPress={() => router.push(`/jobs/${job.id}`)} />
-      ))}
+        <p className="sec">Today&apos;s jobs</p>
+        <TodayJobCard
+          job={todayJob}
+          isLoggedOut={isLoggedOut}
+          onDirections={openMapsDirections}
+          onStart={(jobId) => router.push(`/jobs/${jobId}`)}
+          onAddJob={() => {
+            if (isLoggedOut) router.push('/auth')
+            else router.push('/jobs/new')
+          }}
+        />
+        {!isLoggedOut && moreTodayJobs.length > 0 ? (
+          <SectionGroup title="Also today">
+            {moreTodayJobs.map((job) => (
+              <ListRow
+                key={job.id}
+                icon={<Car size={18} weight="duotone" />}
+                iconTone="green"
+                title={job.clientName}
+                subtitle={`${job.package} · ${capitalize(job.locationType)}`}
+                badgeStatus={job.jobStatus ?? job.status}
+                trailing={
+                  formatStartTimeLabel(job.startTime) ? (
+                    <span className="ui-list-row__amount">{formatStartTimeLabel(job.startTime)}</span>
+                  ) : undefined
+                }
+                onClick={() => router.push(`/jobs/${job.id}`)}
+              />
+            ))}
+          </SectionGroup>
+        ) : null}
       </div>
-
-      {upcomingJobs.length > 0 && (
-        <>
-          <p className="sec">Upcoming</p>
-          {upcomingJobs.map((job) => (
-            <UpcomingRow key={job.id} job={job} onPress={() => router.push(`/jobs/${job.id}`)} />
-          ))}
-        </>
       )}
+
+      {upcomingJobs.length > 0 && isHomeModuleEnabled(homeModules, 'upcoming') && (
+        <SectionGroup title="Upcoming">
+          {upcomingJobs.map((job) => (
+            <ListRow
+              key={job.id}
+              title={job.clientName}
+              subtitle={`${job.packageName} · ${job.datetimeLabel.split('·').pop()?.trim() ?? job.locationLabel}`}
+              trailing={<Badge tone={job.statusLabel === 'Pending' ? 'amber' : 'blue'}>{job.statusLabel}</Badge>}
+              onClick={() => router.push(`/jobs/${job.id}`)}
+            />
+          ))}
+        </SectionGroup>
+      )}
+
+      {!isLoggedOut ? (
+        <div className="stat-card stat-card--tail">
+          <div className="stat-label">Clients on file</div>
+          <div className="stat-value">{clientCount}</div>
+        </div>
+      ) : null}
     </div>
   )
 }

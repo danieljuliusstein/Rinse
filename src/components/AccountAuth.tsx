@@ -1,22 +1,23 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AppLogo from '@/components/AppLogo'
-import { FloatingField } from '@/components/forms'
-import { Button } from '@/components/ui'
+import SocialAuthButtons from '@/components/auth/SocialAuthButtons'
+import { SetupRowField } from '@/components/forms'
 import { loginWithPassword, requestPasswordReset } from '@/lib/pb-auth'
 import { markTourPending } from '@/lib/product-tour'
-import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { onboardingStepUrl } from '@/lib/onboarding'
 import { slugifyBusinessName } from '@/lib/tenant'
 
 interface AccountAuthProps {
-  onAuthenticated: () => void
+  onAuthenticated: (options?: { isSignup?: boolean }) => void
 }
 
 type AuthMode = 'login' | 'signup' | 'forgot'
 
 export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
@@ -25,17 +26,12 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
-  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     if (searchParams.get('mode') === 'signup') {
       setMode('signup')
     }
   }, [searchParams])
-
-  useEffect(() => {
-    syncPrefilledFloatingLabels(formRef.current)
-  }, [businessName, email, password, mode])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +69,9 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
       }
       if (mode === 'signup') {
         markTourPending()
+        onAuthenticated({ isSignup: true })
+        router.replace(onboardingStepUrl('business'))
+        return
       }
       onAuthenticated()
     } catch {
@@ -94,7 +93,7 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
         : 'Enter your email and we will send a reset link'
 
   return (
-    <div className="auth-screen">
+    <div className="auth-screen setup-flow client-light-root">
       <div className="auth-screen__logo">
         <AppLogo size={56} priority />
       </div>
@@ -109,64 +108,73 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
         </ul>
       ) : null}
 
-      <form ref={formRef} className="auth-form page-form" onSubmit={handleSubmit}>
-        {mode === 'signup' ? (
-          <FloatingField id="auth-business-name" label="Business name" filled={businessName.trim().length > 0}>
-            <input
+      {mode !== 'forgot' ? (
+        <SocialAuthButtons disabled={loading} onError={setError} />
+      ) : null}
+
+      <form className="auth-form page-form" onSubmit={handleSubmit}>
+        <div className="ob-field-group">
+          {mode === 'signup' ? (
+            <SetupRowField
               id="auth-business-name"
+              label="Business name"
               type="text"
-              className={`f-input${businessName.trim() ? ' hv' : ''}`}
-              placeholder=" "
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               required
               autoComplete="organization"
             />
-          </FloatingField>
-        ) : null}
-        {mode === 'signup' && slugPreview ? (
-          <p className="auth-slug-preview">
-            Booking link: <strong>/book/{slugPreview}</strong>
-          </p>
-        ) : null}
-        <FloatingField id="auth-email" label="Email" filled={email.trim().length > 0}>
-          <input
+          ) : null}
+          <SetupRowField
             id="auth-email"
+            label="Email"
             type="email"
-            className={`f-input${email.trim() ? ' hv' : ''}`}
-            placeholder=" "
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
           />
-        </FloatingField>
-        {mode !== 'forgot' ? (
-        <FloatingField
-          id="auth-password"
-          label={mode === 'signup' ? 'Password (8+ characters)' : 'Password'}
-          filled={password.trim().length > 0}
-        >
-          <input
-            id="auth-password"
-            type="password"
-            className={`f-input${password.trim() ? ' hv' : ''}`}
-            placeholder=" "
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={mode === 'signup' ? 8 : 1}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-          />
-        </FloatingField>
+          {mode !== 'forgot' ? (
+            <SetupRowField
+              id="auth-password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={mode === 'signup' ? 8 : 1}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              placeholder={mode === 'signup' ? '8+ characters' : undefined}
+            />
+          ) : null}
+        </div>
+
+        {mode === 'signup' && slugPreview ? (
+          <p className="auth-slug-preview">
+            Booking link: <strong>/book/{slugPreview}</strong>
+          </p>
         ) : null}
 
-        {error ? <p className="auth-error">{error}</p> : null}
-        {info ? <p className="auth-info">{info}</p> : null}
+        {error ? (
+          <p className="auth-error" role="alert" aria-live="assertive">
+            {error}
+          </p>
+        ) : null}
+        {info ? (
+          <p className="auth-info" role="status">
+            {info}
+          </p>
+        ) : null}
 
-        <Button type="submit" loading={loading}>
-          {mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-        </Button>
+        <button type="submit" className="setup-btn-primary" disabled={loading}>
+          {loading
+            ? 'Please wait…'
+            : mode === 'login'
+              ? 'Sign in'
+              : mode === 'signup'
+                ? 'Create account'
+                : 'Send reset link'}
+        </button>
       </form>
 
       {mode === 'login' ? (

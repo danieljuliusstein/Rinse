@@ -25,9 +25,30 @@ const STORAGE_KEY = 'detailing_auto_messages_v1'
 
 export const PREVIEW_CLIENT = {
   name: 'Sarah',
+  phone: '555-010-9988',
   package: 'Full Detail',
   time: '9:00 AM',
   date: 'Jun 6',
+}
+
+export interface MessageTemplateContext {
+  name: string
+  packageName?: string
+  time?: string
+  date?: string
+  portalLink?: string
+  reviewLink?: string
+}
+
+export function mergeTemplateBodyForContext(template: string, ctx: MessageTemplateContext): string {
+  const firstName = ctx.name.trim().split(/\s+/)[0] || ctx.name.trim() || 'there'
+  return template
+    .replace(/\{\{name\}\}/g, firstName)
+    .replace(/\{\{package\}\}/g, ctx.packageName ?? 'Detail')
+    .replace(/\{\{time\}\}/g, ctx.time ?? '')
+    .replace(/\{\{date\}\}/g, ctx.date ?? '')
+    .replace(/\{\{portal_link\}\}/g, ctx.portalLink ?? 'https://rinsehq.com/portal')
+    .replace(/\{\{review_link\}\}/g, ctx.reviewLink ?? 'https://g.page/review')
 }
 
 export const DEFAULT_AUTO_TEMPLATES: AutoMessageTemplate[] = [
@@ -70,10 +91,16 @@ export function loadAutoMessageTemplates(): AutoMessageTemplate[] {
   const raw = localStorage.getItem(scopedStorageKey(STORAGE_KEY))
   if (!raw) return DEFAULT_AUTO_TEMPLATES.map((t) => ({ ...t }))
   try {
-    const parsed = JSON.parse(raw) as { id: string; enabled?: boolean }[]
+    const parsed = JSON.parse(raw) as { id: string; enabled?: boolean; emailBody?: string }[]
     return DEFAULT_AUTO_TEMPLATES.map((def) => {
       const saved = parsed.find((p) => p.id === def.id)
-      return saved ? { ...def, enabled: saved.enabled ?? def.enabled } : { ...def }
+      return saved
+        ? {
+            ...def,
+            enabled: saved.enabled ?? def.enabled,
+            emailBody: saved.emailBody?.trim() ? saved.emailBody : def.emailBody,
+          }
+        : { ...def }
     })
   } catch {
     return DEFAULT_AUTO_TEMPLATES.map((t) => ({ ...t }))
@@ -82,7 +109,7 @@ export function loadAutoMessageTemplates(): AutoMessageTemplate[] {
 
 export function saveAutoMessageTemplates(templates: AutoMessageTemplate[]): void {
   if (typeof window === 'undefined') return
-  const payload = templates.map(({ id, enabled }) => ({ id, enabled }))
+  const payload = templates.map(({ id, enabled, emailBody }) => ({ id, enabled, emailBody }))
   localStorage.setItem(scopedStorageKey(STORAGE_KEY), JSON.stringify(payload))
 }
 
@@ -125,17 +152,18 @@ export async function loadSentMessagesAsync(): Promise<SentMessage[]> {
 }
 
 export function mergeTemplateBody(template: string): string {
-  return template
-    .replace(/\{\{name\}\}/g, PREVIEW_CLIENT.name)
-    .replace(/\{\{package\}\}/g, PREVIEW_CLIENT.package)
-    .replace(/\{\{time\}\}/g, PREVIEW_CLIENT.time)
-    .replace(/\{\{date\}\}/g, PREVIEW_CLIENT.date)
-    .replace(/\{\{portal_link\}\}/g, 'https://detailing.app/portal/example')
-    .replace(/\{\{review_link\}\}/g, 'https://g.page/review')
+  return mergeTemplateBodyForContext(template, {
+    name: PREVIEW_CLIENT.name,
+    packageName: PREVIEW_CLIENT.package,
+    time: PREVIEW_CLIENT.time,
+    date: PREVIEW_CLIENT.date,
+    portalLink: 'https://detailing.app/portal/example',
+    reviewLink: 'https://g.page/review',
+  })
 }
 
 export const AUTO_MESSAGE_HINT =
-  'Sends by email when the client has an email on file. To text manually, use Text on the client profile.'
+  'Email sends automatically when a client has an email on file. For texting, open Messages with a prefilled draft — you tap Send.'
 
 export function formatMessageTimestamp(iso: string): string {
   const d = new Date(iso)

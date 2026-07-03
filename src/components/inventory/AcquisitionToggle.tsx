@@ -1,6 +1,13 @@
 'use client'
 
+import { PillGroup } from '@/components/forms'
+
 export type AcquisitionMode = 'bought_new' | 'already_owned'
+
+const ACQUISITION_PILLS = [
+  { value: 'bought_new' as const, label: 'Log expense' },
+  { value: 'already_owned' as const, label: 'Inventory only' },
+]
 
 interface Props {
   value: AcquisitionMode
@@ -12,25 +19,12 @@ export default function AcquisitionToggle({ value, onChange }: Props) {
 
   return (
     <div className="inv-acquisition">
-      <p className="inv-field-label">INCLUDE IN EXPENSES?</p>
-      <div className="inv-acquisition__toggle inv-tog-row">
-        <button
-          type="button"
-          className={`inv-acquisition__opt inv-tog${includeExpense ? ' inv-acquisition__opt--active' : ''}`}
-          onClick={() => onChange('bought_new')}
-        >
-          <span className="inv-acquisition__opt-title inv-tog__title">Yes</span>
-          <span className="inv-acquisition__opt-sub inv-tog__sub">Log as business expense</span>
-        </button>
-        <button
-          type="button"
-          className={`inv-acquisition__opt inv-tog${!includeExpense ? ' inv-acquisition__opt--active' : ''}`}
-          onClick={() => onChange('already_owned')}
-        >
-          <span className="inv-acquisition__opt-title inv-tog__title">No</span>
-          <span className="inv-acquisition__opt-sub inv-tog__sub">Inventory only</span>
-        </button>
-      </div>
+      <PillGroup
+        label="Include in expenses?"
+        options={ACQUISITION_PILLS}
+        value={value}
+        onChange={onChange}
+      />
       <p className="inv-acquisition__hint">
         {includeExpense
           ? 'Amount paid will be logged to business expenses when you save'

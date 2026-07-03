@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Plus } from '@phosphor-icons/react'
+import { Plus, Wallet } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import { FloatingAffixField, FloatingField, SheetSubmitButton } from '@/components/forms'
+import { EmptyState, ListRow, SectionGroup } from '@/components/ui'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
 import { createOverheadExpense, deleteOverheadExpense, getMonthlyOverheadTotal, getOverheadExpenses } from '@/lib/api'
 import { useConfirm } from '@/providers/ConfirmProvider'
@@ -39,7 +40,9 @@ export default function OverheadTracker() {
     setExpenses(list)
     setMonthlyTotal(total)
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   useEffect(() => {
     if (!showAdd) return
@@ -71,22 +74,23 @@ export default function OverheadTracker() {
   }
 
   return (
-    <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', paddingTop: 16, paddingBottom: 20, gap: 12 }}>
+    <div className="screen page-content settings-screen">
+      <header className="settings-header">
         <BackButton onClick={goBack} />
-        <div style={{ flex: 1, fontSize: 18, fontWeight: 600 }}>Overhead</div>
+        <h1 className="settings-header__title">Overhead</h1>
         <button
-          onClick={() => setShowAdd(!showAdd)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
-          aria-label="Add expense"
+          type="button"
+          className="page-header__action"
+          onClick={() => setShowAdd((v) => !v)}
+          aria-label="Add overhead expense"
         >
-          <Plus size={22} color="var(--green)" weight="bold" />
+          <Plus size={18} weight="bold" aria-hidden="true" />
         </button>
-      </div>
+      </header>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Monthly recurring</div>
-        <div className="money money-negative" style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
+      <div className="card business-expenses-hero">
+        <div className="business-expenses-hero__label">Monthly recurring</div>
+        <div className="money money-negative business-expenses-hero__value">
           {fmtDetailed(monthlyTotal)}
         </div>
       </div>
@@ -114,7 +118,7 @@ export default function OverheadTracker() {
             onChange={(e) => setAmount(Number(e.target.value))}
           />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div className="overhead-form-grid">
             <FloatingField id="overhead-category" label="Category" filled={Boolean(category)}>
               <select
                 ref={categoryRef}
@@ -126,7 +130,11 @@ export default function OverheadTracker() {
                   syncSelectFloatingLabel(categoryRef.current)
                 }}
               >
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </FloatingField>
 
@@ -141,7 +149,11 @@ export default function OverheadTracker() {
                   syncSelectFloatingLabel(cycleRef.current)
                 }}
               >
-                {CYCLES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {CYCLES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </FloatingField>
           </div>
@@ -156,22 +168,39 @@ export default function OverheadTracker() {
         </div>
       )}
 
-      {expenses.map((e) => (
-        <div key={e.id} className="card" style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{e.name}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-              {e.category ?? 'other'} · {cycleLabel[e.billing_cycle ?? 'monthly']}
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div className="money money-negative" style={{ fontSize: 14, fontWeight: 600 }}>{fmtDetailed(e.amount)}</div>
-            <button onClick={() => handleDelete(e.id)} style={{ background: 'none', border: 'none', fontSize: 11, color: 'var(--red)', cursor: 'pointer', marginTop: 4 }}>
-              Delete
-            </button>
-          </div>
-        </div>
-      ))}
+      {expenses.length === 0 ? (
+        <EmptyState
+          illustration="inventory"
+          title="No overhead expenses"
+          description="Track insurance, software, vehicle costs, and other recurring bills."
+          actionLabel="Add expense"
+          onAction={() => setShowAdd(true)}
+        />
+      ) : (
+        <SectionGroup title="All overhead">
+          {expenses.map((expense) => (
+            <ListRow
+              key={expense.id}
+              icon={<Wallet size={18} weight="duotone" />}
+              iconTone="amber"
+              title={expense.name}
+              subtitle={`${expense.category ?? 'other'} · ${cycleLabel[expense.billing_cycle ?? 'monthly']}`}
+              trailing={
+                <div className="overhead-row-trailing">
+                  <span className="money money-negative">{fmtDetailed(expense.amount)}</span>
+                  <button
+                    type="button"
+                    className="overhead-row-trailing__delete"
+                    onClick={() => void handleDelete(expense.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              }
+            />
+          ))}
+        </SectionGroup>
+      )}
     </div>
   )
 }

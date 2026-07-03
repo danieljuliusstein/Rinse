@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
 import MessagesScreen from '@/components/messages/MessagesScreen'
+import ScreenLoading from '@/components/ui/ScreenLoading'
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={<div className="messages-screen"><p className="messages-empty">Loading…</p></div>}>
+    <Suspense fallback={<ScreenLoading body label="Loading messages…" />}>
       <MessagesScreen />
     </Suspense>
   )

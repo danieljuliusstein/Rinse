@@ -1,6 +1,7 @@
 'use client'
 
 import BackButton from '@/components/BackButton'
+import { Badge, Card, ListRow, SectionGroup } from '@/components/ui'
 import type { SentMessage } from '@/lib/messages'
 import { formatMessageTimestamp } from '@/lib/messages'
 
@@ -11,38 +12,28 @@ interface Props {
 
 export default function MessageDetailView({ message, onBack }: Props) {
   return (
-    <div className="messages-screen">
-      <div className="messages-screen__header">
+    <div className="screen page-content body">
+      <header className="page-header page-header--compact">
         <BackButton onClick={onBack} />
-        <h1 className="messages-screen__title">Message</h1>
+        <div className="page-header__title-block">
+          <h1>Message</h1>
+        </div>
+      </header>
+
+      <div className="message-detail-badges">
+        <Badge tone={message.channel === 'sms' ? 'blue' : 'green'}>{message.channel}</Badge>
+        <Badge tone={message.status === 'failed' ? 'red' : 'green'}>{message.status}</Badge>
       </div>
 
-      <div className="message-detail__photo-wrap">
-        <div className="message-detail__channel-row">
-          <span className={`all-message-pill all-message-pill--${message.channel}`}>
-            {message.channel}
-          </span>
-          <span className={`all-message-pill all-message-pill--${message.status}`}>
-            {message.status}
-          </span>
-        </div>
-        <p className="message-detail__body">{message.body}</p>
-      </div>
+      <Card className="message-detail-body">
+        <p className="message-detail-body__text">{message.body}</p>
+      </Card>
 
-      <div className="message-detail__meta-card">
-        <div className="message-detail__meta-row">
-          <span className="message-detail__meta-key">Client</span>
-          <span>{message.client_name}</span>
-        </div>
-        <div className="message-detail__meta-row">
-          <span className="message-detail__meta-key">Sent</span>
-          <span>{formatMessageTimestamp(message.sent_at)}</span>
-        </div>
-        <div className="message-detail__meta-row">
-          <span className="message-detail__meta-key">Channel</span>
-          <span style={{ textTransform: 'uppercase' }}>{message.channel}</span>
-        </div>
-      </div>
+      <SectionGroup title="Details">
+        <ListRow title="Client" trailing={message.client_name} />
+        <ListRow title="Sent" trailing={formatMessageTimestamp(message.sent_at)} />
+        <ListRow title="Channel" trailing={message.channel.toUpperCase()} />
+      </SectionGroup>
     </div>
   )
 }

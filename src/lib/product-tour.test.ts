@@ -13,8 +13,8 @@ import {
   shouldShowTourWelcome,
   skipProductTour,
   tourSelector,
+  PRODUCT_TOUR_REQUIRED_TARGETS,
 } from './product-tour'
-import { PRODUCT_TOUR_REQUIRED_TARGETS } from './product-tour-steps'
 
 vi.mock('./pocketbase', () => ({
   getPocketBase: () => ({ authStore: { record: { id: 'user_test' } } }),
@@ -66,9 +66,8 @@ describe('product-tour storage', () => {
   })
 
   it('lists required home-screen targets', () => {
-    expect(PRODUCT_TOUR_REQUIRED_TARGETS).toContain('week-strip')
-    expect(PRODUCT_TOUR_REQUIRED_TARGETS).toContain('header-pipeline')
-    expect(PRODUCT_TOUR_REQUIRED_TARGETS).toHaveLength(8)
+    expect(PRODUCT_TOUR_REQUIRED_TARGETS).toContain('fab')
+    expect(PRODUCT_TOUR_REQUIRED_TARGETS).toHaveLength(1)
   })
 
   it('auto-starts when pending and not completed', () => {

@@ -1,6 +1,7 @@
 'use client'
 
-import { ChatCircle } from '@phosphor-icons/react'
+import { useRouter } from 'next/navigation'
+import { Badge, EmptyState, ListRow, SectionGroup } from '@/components/ui'
 import type { SentMessage } from '@/lib/messages'
 import { formatMessageTimestamp } from '@/lib/messages'
 
@@ -10,38 +11,39 @@ interface Props {
 }
 
 export default function AllMessagesTab({ messages, onSelect }: Props) {
+  const router = useRouter()
+
   if (messages.length === 0) {
     return (
-      <div className="all-messages-empty">
-        <ChatCircle className="all-messages-empty__icon" size={32} weight="duotone" aria-hidden="true" />
-        <p className="all-messages-empty__title">No messages sent yet</p>
-        <p className="all-messages-empty__sub">Automated and manual messages will appear here</p>
-      </div>
+      <EmptyState
+        illustration="messages"
+        title="No messages sent yet"
+        description="Turn on auto messages for email, or text clients from their profile or a job — Messages opens with your draft ready."
+        actionLabel="Set up auto messages"
+        onAction={() => router.push('/messages?tab=auto')}
+      />
     )
   }
 
   return (
-    <div>
+    <SectionGroup title="Sent">
       {messages.map((msg) => (
-        <button
+        <ListRow
           key={msg.id}
-          type="button"
-          className="all-message-row"
+          title={msg.client_name}
+          subtitle={msg.preview}
+          trailing={
+            <span className="messages-list-row__time">{formatMessageTimestamp(msg.sent_at)}</span>
+          }
+          badge={
+            <span className="messages-list-row__pills">
+              <Badge tone={msg.channel === 'sms' ? 'blue' : 'green'}>{msg.channel}</Badge>
+              <Badge tone={msg.status === 'failed' ? 'red' : 'green'}>{msg.status}</Badge>
+            </span>
+          }
           onClick={() => onSelect(msg)}
-        >
-          <div className="all-message-row__body">
-            <div className="all-message-row__top">
-              <p className="all-message-row__name">{msg.client_name}</p>
-              <span className="all-message-row__time">{formatMessageTimestamp(msg.sent_at)}</span>
-            </div>
-            <p className="all-message-row__preview">{msg.preview}</p>
-            <div className="all-message-row__meta">
-              <span className={`all-message-pill all-message-pill--${msg.channel}`}>{msg.channel}</span>
-              <span className={`all-message-pill all-message-pill--${msg.status}`}>{msg.status}</span>
-            </div>
-          </div>
-        </button>
+        />
       ))}
-    </div>
+    </SectionGroup>
   )
 }

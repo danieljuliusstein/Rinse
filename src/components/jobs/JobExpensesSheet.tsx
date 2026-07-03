@@ -57,7 +57,7 @@ export default function JobExpensesSheet({
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title="Job expenses"
       subtitle="Travel, marketing, and equipment for this job"
       ariaLabel="Job expenses"

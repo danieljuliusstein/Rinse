@@ -10,9 +10,16 @@ import LeadSheet from './pipeline/LeadSheet'
 import QuickActionMenu from './QuickActionMenu'
 import ServiceWorkerCleanup from './ServiceWorkerCleanup'
 import ProductTour from './ProductTour'
+import RinseTourHost from './tour/RinseTourHost'
+import PwaInstallBanner from './PwaInstallBanner'
+import DemoModeBadge from './DemoModeBadge'
+import TrialPlanBadge from './TrialPlanBadge'
+import SubscriptionLapsedBanner from './SubscriptionLapsedBanner'
 import { QuickActionProvider, useQuickAction } from '@/providers/QuickActionContext'
 import SyncProvider from '@/providers/SyncProvider'
+import { PaywallGateProvider } from '@/providers/PaywallGateProvider'
 import { useAuth } from '@/providers/AuthProvider'
+import { handleTourFinished } from '@/lib/product-tour'
 import { getPackages } from '@/lib/api'
 import type { Package } from '@/lib/types'
 
@@ -60,14 +67,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isPortal = pathname.startsWith('/portal')
   const isBook = pathname.startsWith('/book/')
   const isEmbed = pathname.startsWith('/embed/')
+  const isDemo = pathname.startsWith('/demo')
   const isSettings = pathname.startsWith('/settings') || pathname === '/privacy'
   const isAuthFlow =
     pathname === '/auth' ||
+    pathname === '/welcome' ||
     pathname === '/onboarding' ||
     pathname.startsWith('/auth/')
   const isPublicClient = isPortal || isBook || isEmbed
-  const showLoggedOutBanner = !isPublicClient && !isAuthFlow
-  const showProductTour = !isPublicClient && !isAuthFlow && isLoggedIn
+  const showLoggedOutBanner = !isPublicClient && !isAuthFlow && !isDemo
+  const showProductTour = !isPublicClient && !isAuthFlow && isLoggedIn && !isDemo
 
   const shellClass = [
     'app-shell',
@@ -83,14 +92,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SyncProvider>
       <QuickActionProvider>
+        <PaywallGateProvider>
         <ServiceWorkerCleanup />
         <div className={shellClass}>
+          {!isPublicClient && !isAuthFlow ? (
+            <a href="#main-content" className="skip-link">
+              Skip to content
+            </a>
+          ) : null}
           {showLoggedOutBanner ? <LoggedOutBanner /> : null}
-          {children}
-          <BottomNav />
+          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <SubscriptionLapsedBanner /> : null}
+          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <TrialPlanBadge /> : null}
+          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <DemoModeBadge /> : null}
+          {!isPublicClient && !isAuthFlow && isLoggedIn ? <PwaInstallBanner /> : null}
+          <main id="main-content" className="app-shell__main" tabIndex={-1}>
+            {children}
+          </main>
+          {!isDemo ? <BottomNav /> : null}
           {showProductTour ? <ProductTour /> : null}
-          {!isPublicClient && <QuickActionOverlays />}
+          {showProductTour ? <RinseTourHost onTourEnd={handleTourFinished} /> : null}
+          {!isPublicClient && !isDemo && <QuickActionOverlays />}
         </div>
+        </PaywallGateProvider>
       </QuickActionProvider>
     </SyncProvider>
   )

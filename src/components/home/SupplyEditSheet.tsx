@@ -232,7 +232,7 @@ export default function SupplyEditSheet({
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={title}
       subtitle={subtitle}
       onClose={onClose}
@@ -268,22 +268,15 @@ export default function SupplyEditSheet({
 
         {supply && mode !== 'add' && onModeChange && (
           <div className="inv-sheet-section">
-            <div className="inv-status-toggle">
-              <button
-                type="button"
-                className={`inv-status-btn${mode === 'edit' ? ' inv-status-btn--ok' : ''}`}
-                onClick={() => onModeChange('edit')}
-              >
-                Details
-              </button>
-              <button
-                type="button"
-                className={`inv-status-btn${mode === 'restock' ? ' inv-status-btn--low' : ''}`}
-                onClick={() => onModeChange('restock')}
-              >
-                Restock
-              </button>
-            </div>
+            <PillGroup
+              label="Supply sheet"
+              options={[
+                { value: 'edit', label: 'Details' },
+                { value: 'restock', label: 'Restock' },
+              ]}
+              value={mode === 'restock' ? 'restock' : 'edit'}
+              onChange={(value) => onModeChange(value === 'restock' ? 'restock' : 'edit')}
+            />
           </div>
         )}
 
@@ -341,7 +334,7 @@ export default function SupplyEditSheet({
                 value={activeUnit}
                 onChange={setUnit}
               />
-              <p className="inv-field-hint">All amounts below use this unit ({activeUnit})</p>
+              <p className="form-field-hint">All amounts below use this unit ({activeUnit})</p>
             </div>
           </>
         )}
@@ -435,7 +428,7 @@ export default function SupplyEditSheet({
                     filled={costPerUnitManual.trim().length > 0}
                     onChange={(e) => setCostPerUnitManual(e.target.value)}
                   />
-                  <p className="inv-field-hint">For job costing only — not logged as expense</p>
+                  <p className="form-field-hint">For job costing only — not logged as expense</p>
 
                   <FloatingField id="supply-supplier-no-exp" label="Supplier" filled={supplier.trim().length > 0} optional>
                     <input
@@ -454,7 +447,7 @@ export default function SupplyEditSheet({
 
         {mode === 'restock' && supply && (
           <div className="premium-sheet__form">
-            <p className="inv-field-hint" style={{ marginTop: 0, marginBottom: 16 }}>
+            <p className="form-field-hint form-field-hint-block" style={{ marginTop: 0 }}>
               Currently on hand: {supply.quantity_on_hand} {supply.unit}
               {supply.cost_per_unit ? ` · ${fmtDetailed(supply.cost_per_unit)}/${supply.unit}` : ''}
             </p>
@@ -506,7 +499,7 @@ export default function SupplyEditSheet({
                   placeholder=" "
                 />
               </FloatingField>
-              <p className="inv-field-hint">
+              <p className="form-field-hint">
                 <Warning size={10} weight="fill" aria-hidden /> Shows LOW when on hand drops below this amount
               </p>
 

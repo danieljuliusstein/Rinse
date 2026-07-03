@@ -5,7 +5,6 @@ import {
   Flask,
   Package,
   Star,
-  Warehouse,
   Wrench,
   type Icon as PhosphorIcon,
 } from '@phosphor-icons/react'
@@ -17,6 +16,7 @@ import {
   sectionForSupply,
   type SectionKey,
 } from '@/components/inventory/inventory-utils'
+import { SectionGroup } from '@/components/ui'
 import type { HomeInventoryItem } from '@/lib/home-inventory'
 import type { Equipment, Supply } from '@/lib/types'
 
@@ -52,65 +52,62 @@ export default function InventoryHome({
 
   return (
     <>
-      <header className="inventory-header">
-        <div className="inventory-header__icon">
-          <Warehouse size={18} weight="duotone" />
-        </div>
+      <header className="page-header">
         <div>
-          <h1 className="inventory-header__title">Inventory</h1>
-          <p className="inventory-header__subtitle">
+          <h1>Inventory</h1>
+          <p>
             {loading ? 'Loading…' : `${totalItems} item${totalItems === 1 ? '' : 's'}`}
             {lowCount > 0 ? ` · ${lowCount} low` : ''}
           </p>
         </div>
       </header>
 
-      <p className="inventory-section-label">Categories</p>
+      <section className="ui-section">
+        <div className="ui-section__header">
+          <h2 className="ui-section__title">Categories</h2>
+        </div>
+        <div className="category-grid">
+          {SECTION_CONFIG.map((section) => {
+            const Icon = CATEGORY_ICONS[section.key]
+            const meta = categoryMeta(section.key, catalog, equipment, wishlist)
+            const showLowBadge = section.key === 'supplies' && lowCount > 0
 
-      <div className="category-grid">
-        {SECTION_CONFIG.map((section) => {
-          const Icon = CATEGORY_ICONS[section.key]
-          const meta = categoryMeta(section.key, catalog, equipment, wishlist)
-          const showLowBadge = section.key === 'supplies' && lowCount > 0
+            return (
+              <button
+                key={section.key}
+                type="button"
+                className="category-grid__cell"
+                onClick={() => onOpenCategory(section.key)}
+              >
+                <div className="category-grid__top">
+                  <Icon className="category-grid__icon" size={20} weight="duotone" />
+                  {showLowBadge ? (
+                    <span className="category-grid__badge">{lowCount} low</span>
+                  ) : (
+                    <CaretRight className="category-grid__chevron" size={14} weight="bold" />
+                  )}
+                </div>
+                <p className="category-grid__name">{section.title}</p>
+                <p className={`category-grid__meta${meta.metaClass ? ` ${meta.metaClass}` : ''}`}>
+                  {meta.subtitle}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+      </section>
 
-          return (
-            <button
-              key={section.key}
-              type="button"
-              className="category-grid__cell"
-              onClick={() => onOpenCategory(section.key)}
-            >
-              <div className="category-grid__top">
-                <Icon className="category-grid__icon" size={20} weight="duotone" />
-                {showLowBadge ? (
-                  <span className="category-grid__badge">{lowCount} low</span>
-                ) : (
-                  <CaretRight className="category-grid__chevron" size={14} weight="bold" />
-                )}
-              </div>
-              <p className="category-grid__name">{section.title}</p>
-              <p className={`category-grid__meta${meta.metaClass ? ` ${meta.metaClass}` : ''}`}>
-                {meta.subtitle}
-              </p>
-            </button>
-          )
-        })}
-      </div>
-
-      {attention.length > 0 && (
-        <>
-          <p className="inventory-section-label inventory-section-label--spaced">Needs attention</p>
-          <div className="inventory-card">
-            {attention.map((supply) => (
-              <SupplyInventoryRow
-                key={supply.id}
-                supply={supply}
-                onPress={() => onOpenSupply(supply, sectionForSupply(supply))}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      {attention.length > 0 ? (
+        <SectionGroup title="Needs attention" meta={String(attention.length)}>
+          {attention.map((supply) => (
+            <SupplyInventoryRow
+              key={supply.id}
+              supply={supply}
+              onPress={() => onOpenSupply(supply, sectionForSupply(supply))}
+            />
+          ))}
+        </SectionGroup>
+      ) : null}
     </>
   )
 }

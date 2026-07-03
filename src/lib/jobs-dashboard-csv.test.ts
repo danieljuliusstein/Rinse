@@ -62,12 +62,12 @@ describe('JobsDashboard CSV (React reference)', () => {
 
   it('includes dashboard sections and job rows', () => {
     const csv = formatJobsDashboardCSV(sampleRows, sampleSummary, {
-      businessName: 'Atlas Detailing',
+      businessName: 'Rinse',
       periodLabel: 'June 2026',
       periodRange: 'Jun 1 – Jun 30, 2026',
     })
 
-    expect(csv).toContain('Atlas Detailing — Jobs overview')
+    expect(csv).toContain('Rinse — Jobs overview')
     expect(csv).toContain('KEY METRICS')
     expect(csv).toContain('REVENUE BY PACKAGE')
     expect(csv).toContain('DAILY REVENUE')

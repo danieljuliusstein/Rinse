@@ -1,0 +1,147 @@
+# End-to-end smoke + product tour on every pull request.
+#
+# Strategy:
+#   1. Build production Next.js (`npm run build`) — catches compile errors early.
+#   2. Start `next start` in the background (not Playwright webServer) so CI
+#      controls boot timing and we can health-check before tests run.
+#   3. Set PW_NO_SERVER=1 so playwright.config.ts skips its dev webServer.
+#   4. Run smoke (~56 routes) then tour (6-step driver) against remote Fly PocketBase.
+#
+# Required repository secrets:
+#   PB_URL              — e.g. https://detailing-pb.fly.dev
+#   E2E_EMAIL           — demo operator with completed onboarding
+#   E2E_PASSWORD        — password for E2E_EMAIL
+#
+# Optional secrets (portal smoke tests skip gracefully without these):
+#   INTERNAL_API_SECRET — enables /api/portal/create in smoke suite
+#   NEXT_PUBLIC_INTERNAL_API_SECRET — same value, baked into client bundle at build
+
+name: E2E (smoke + tour)
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  NODE_ENV: production
+  APP_URL: http://127.0.0.1:3000
+  PW_NO_SERVER: '1'
+  NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  e2e:
+    name: Playwright smoke + tour
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-chromium-${{ runner.os }}-
+
+      - name: Install Playwright Chromium + OS deps
+        run: npx playwright install chromium --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright OS deps only (browser cache hit)
+        run: npx playwright install-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+
+      - name: Write CI env file
+        run: |
+          cat > .env.local <<EOF
+          NEXT_PUBLIC_PB_URL=${{ secrets.PB_URL }}
+          PB_URL=${{ secrets.PB_URL }}
+          NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000
+          E2E_EMAIL=${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}
+          INTERNAL_API_SECRET=${{ secrets.INTERNAL_API_SECRET }}
+          NEXT_PUBLIC_INTERNAL_API_SECRET=${{ secrets.NEXT_PUBLIC_INTERNAL_API_SECRET || secrets.INTERNAL_API_SECRET }}
+          EOF
+
+      - name: Build Next.js (production)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_PB_URL: ${{ secrets.PB_URL }}
+          NEXT_PUBLIC_INTERNAL_API_SECRET: ${{ secrets.NEXT_PUBLIC_INTERNAL_API_SECRET || secrets.INTERNAL_API_SECRET }}
+
+      - name: Start production server
+        run: |
+          npm run start > /tmp/next-start.log 2>&1 &
+          echo $! > /tmp/next.pid
+          echo "next start pid=$(cat /tmp/next.pid)"
+
+      - name: Wait for app health (/auth)
+        run: node scripts/wait-for-url.mjs http://127.0.0.1:3000/auth
+        env:
+          WAIT_TIMEOUT_MS: 120000
+          WAIT_INTERVAL_MS: 2000
+
+      - name: Verify PocketBase reachable
+        run: curl -sf "${{ secrets.PB_URL }}/api/health"
+
+      - name: Run E2E smoke
+        run: npm run test:e2e:smoke
+        env:
+          PB_URL: ${{ secrets.PB_URL }}
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
+
+      - name: Run E2E product tour
+        run: npm run test:e2e:tour
+        env:
+          PB_URL: ${{ secrets.PB_URL }}
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+
+      - name: Upload Playwright artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ github.run_id }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+      - name: Upload next start log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-start-log-${{ github.run_id }}
+          path: /tmp/next-start.log
+          retention-days: 3
+
+      - name: Stop production server
+        if: always()
+        run: |
+          if [ -f /tmp/next.pid ]; then
+            kill "$(cat /tmp/next.pid)" 2>/dev/null || true
+          fi

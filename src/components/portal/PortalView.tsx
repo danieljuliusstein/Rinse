@@ -81,7 +81,7 @@ export default function PortalView({ payload, token }: PortalViewProps) {
         )}
 
         {paymentReceived && (
-          <div className="portal-success-banner" style={{ marginBottom: 12 }}>
+          <div className="portal-success-banner portal-flash">
             <div>
               <div className="portal-success-banner__title">Payment received</div>
               <div className="portal-success-banner__sub">Thank you — your payment is being processed.</div>
@@ -90,7 +90,7 @@ export default function PortalView({ payload, token }: PortalViewProps) {
         )}
 
         {payError && (
-          <p className="portal-inline-error" style={{ marginBottom: 12 }}>
+          <p className="portal-inline-error portal-flash">
             {payError}
           </p>
         )}

@@ -2,6 +2,7 @@ import { getPocketBase } from '../pocketbase'
 import { appJobCreateToPb, pbClientToApp, pbJobToApp, pbLeadToApp, pbLeadToAppWithRelations, pbPackageToApp, pbQuoteToApp, escapeFilterValue, type PbRecord } from './mappers'
 import { isMissingCollectionError } from './pb-errors'
 import { clearLeadsCollectionMissing, markLeadsCollectionMissing } from './leads-migration'
+import { rethrowPremiumPocketBaseError } from '../premium-api'
 import { withOrganization } from './tenant-pocketbase'
 import type { Client, Lead, LeadInput, LeadStage, LeadWithRelations, Quote } from '../types'
 import { createClient } from './pocketbase'
@@ -71,7 +72,7 @@ export async function createLead(input: LeadInput): Promise<Lead> {
     return pbLeadToApp(created)
   } catch (err) {
     if (isMissingCollectionError(err)) throw new Error(LEADS_MIGRATION_HINT)
-    throw err
+    rethrowPremiumPocketBaseError(err)
   }
 }
 
@@ -145,23 +146,27 @@ export async function createQuoteForLead(leadId: string): Promise<Quote> {
   const packageApp = pbPackageToApp(pkg)
   const subtotal = lead.quote_amount && lead.quote_amount > 0 ? lead.quote_amount : packageApp.base_price
 
-  const created = await pb().collection('quotes').create<PbRecord>(
-    withOrganization({
-      quote_number: 'PENDING',
-      client_id: client.id,
-      package_id: lead.package_id,
-      vehicle_type: lead.vehicle_type,
-      location_type: 'mobile',
-      date: defaultQuoteDate(),
-      subtotal,
-      notes: lead.service_interest ?? lead.notes ?? '',
-      status: 'draft',
-      valid_until: '',
-    }),
-  )
-  const quote = pbQuoteToApp(created)
-  await updateLead(leadId, { client_id: client.id, quote_id: quote.id, stage: 'quoted' })
-  return quote
+  try {
+    const created = await pb().collection('quotes').create<PbRecord>(
+      withOrganization({
+        quote_number: 'PENDING',
+        client_id: client.id,
+        package_id: lead.package_id,
+        vehicle_type: lead.vehicle_type,
+        location_type: 'mobile',
+        date: defaultQuoteDate(),
+        subtotal,
+        notes: lead.service_interest ?? lead.notes ?? '',
+        status: 'draft',
+        valid_until: '',
+      }),
+    )
+    const quote = pbQuoteToApp(created)
+    await updateLead(leadId, { client_id: client.id, quote_id: quote.id, stage: 'quoted' })
+    return quote
+  } catch (err) {
+    rethrowPremiumPocketBaseError(err)
+  }
 }
 
 export interface ConvertLeadToJobOptions {
@@ -198,12 +203,16 @@ export async function convertLeadToJob(
     notes: lead.service_interest ?? lead.notes ?? '',
   })
 
-  const jobRecord = await pb().collection('jobs').create<PbRecord>(
-    withOrganization(payload as Record<string, unknown>),
-  )
-  const job = pbJobToApp(jobRecord)
-  await updateLead(leadId, { client_id: client.id, job_id: job.id, stage: 'booked' })
-  return { jobId: job.id, clientId: client.id }
+  try {
+    const jobRecord = await pb().collection('jobs').create<PbRecord>(
+      withOrganization(payload as Record<string, unknown>),
+    )
+    const job = pbJobToApp(jobRecord)
+    await updateLead(leadId, { client_id: client.id, job_id: job.id, stage: 'booked' })
+    return { jobId: job.id, clientId: client.id }
+  } catch (err) {
+    rethrowPremiumPocketBaseError(err)
+  }
 }
 
 export async function syncLeadForQuoteJob(quoteId: string, jobId: string): Promise<void> {

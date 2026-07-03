@@ -10,6 +10,7 @@ import {
   PillGroup,
   SheetFooter,
 } from '@/components/forms'
+import ReceiptLineItemsEditor from '@/components/business/ReceiptLineItemsEditor'
 import {
   createBusinessExpense,
   deleteBusinessExpense,
@@ -19,7 +20,7 @@ import { computeFormProgress } from '@/lib/form-progress'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
 import { useActionToast } from '@/providers/ActionToastProvider'
 import { useConfirm } from '@/providers/ConfirmProvider'
-import type { BusinessExpense, BusinessExpenseCategory, BusinessExpenseInput } from '@/lib/types'
+import type { BusinessExpense, BusinessExpenseCategory, BusinessExpenseInput, ExpenseLine } from '@/lib/types'
 
 const CATEGORY_PILLS: { value: BusinessExpenseCategory; label: string }[] = [
   { value: 'legal', label: 'Legal' },
@@ -60,6 +61,10 @@ export default function BusinessExpenseSheet({
   const [category, setCategory] = useState<BusinessExpenseCategory>('legal')
   const [vendor, setVendor] = useState('')
   const [notes, setNotes] = useState('')
+  const [receiptMode, setReceiptMode] = useState(false)
+  const [receiptLines, setReceiptLines] = useState<ExpenseLine[]>([
+    { category: 'supplies', description: '', amount: 0 },
+  ])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -154,7 +159,7 @@ export default function BusinessExpenseSheet({
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={isEdit ? 'Edit expense' : 'Log business expense'}
       subtitle="Dated one-time payment — shows in P&L for that month only"
       ariaLabel="Business expense"
@@ -188,6 +193,24 @@ export default function BusinessExpenseSheet({
       ) : null}
 
       {!isEdit ? <FormProgressBar progress={progress} /> : null}
+
+      {!isEdit ? (
+        <button
+          type="button"
+          className={`chip${receiptMode ? ' active' : ''}`}
+          onClick={() => setReceiptMode((v) => !v)}
+        >
+          {receiptMode ? 'Receipt scan on' : 'Scan receipt (line items)'}
+        </button>
+      ) : null}
+
+      {!isEdit && receiptMode ? (
+        <ReceiptLineItemsEditor
+          lines={receiptLines}
+          onChange={setReceiptLines}
+          onTotalChange={(total) => setAmount(total > 0 ? String(total) : '')}
+        />
+      ) : null}
 
       <div ref={formRef} className="premium-sheet__form">
         <div className="premium-sheet__grid2">

@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarPlus, FileText, MapPin, PencilSimple, Receipt, Trash } from '@phosphor-icons/react'
+import { CalendarPlus, ChatText, CheckCircle, FileText, MapPin, PencilSimple, Receipt, Trash } from '@phosphor-icons/react'
 import JobPhotosEntry from '@/components/jobs/JobPhotosEntry'
+import JobTimer from '@/components/jobs/JobTimer'
 import { suggestNextServiceDate } from '@/lib/next-service'
 import { normalizeReturnDays } from '@/lib/package-cadence'
 import BackButton from '@/components/BackButton'
+import { Badge, Button, ListRow, SectionGroup } from '@/components/ui'
 import ShareLinkActions from '@/components/portal/ShareLinkActions'
 import { SHARE_LINK_PRESETS } from '@/lib/share-link-presets'
 import { openMapsDirections } from '@/lib/maps-url'
-import { deleteJob, getQuotes } from '@/lib/api'
+import { deleteJob, getJob, getQuotes, updateJob } from '@/lib/api'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import { useActionToast } from '@/providers/ActionToastProvider'
 import {
@@ -20,15 +22,20 @@ import {
   marginPct,
   netProfit,
 } from '@/lib/calculations'
+import { buildJobEditData } from '@/lib/job-edit-data'
+import { loadSettingsAsync } from '@/lib/settings'
+import { DEFAULT_AUTO_TEMPLATES, mergeTemplateBodyForContext } from '@/lib/messages'
+import { buildSmsComposeUrl } from '@/lib/sms-compose'
+import { isCompletingJob } from '@/lib/supplies-logic'
 import type { ExpenseLine, JobStatus, JobWithRelations } from '@/lib/types'
 
-const statusConfig: Record<JobStatus | 'overdue', { label: string; badge: string }> = {
-  scheduled: { label: 'Scheduled', badge: 'badge-scheduled' },
-  in_progress: { label: 'In progress', badge: 'badge-pending' },
-  completed: { label: 'Completed', badge: 'badge-draft' },
-  invoiced: { label: 'Invoice sent', badge: 'badge-pending' },
-  paid: { label: 'Paid', badge: 'badge-paid' },
-  overdue: { label: 'Overdue', badge: 'badge-overdue' },
+const statusToJobBadge = (displayStatus: JobStatus | 'overdue'): string => {
+  if (displayStatus === 'overdue') return 'overdue'
+  if (displayStatus === 'paid') return 'paid'
+  if (displayStatus === 'invoiced') return 'sent'
+  if (displayStatus === 'in_progress') return 'in_progress'
+  if (displayStatus === 'scheduled') return 'scheduled'
+  return 'draft'
 }
 
 const expenseLabel: Record<ExpenseLine['category'], string> = {
@@ -44,12 +51,18 @@ interface JobDetailProps {
   job: JobWithRelations
 }
 
-export default function JobDetail({ job }: JobDetailProps) {
+export default function JobDetail({ job: initialJob }: JobDetailProps) {
   const router = useRouter()
   const confirm = useConfirm()
   const { showMessage } = useActionToast()
+  const [job, setJob] = useState(initialJob)
   const [cancelling, setCancelling] = useState(false)
+  const [completing, setCompleting] = useState(false)
   const [linkedQuoteId, setLinkedQuoteId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setJob(initialJob)
+  }, [initialJob])
 
   useEffect(() => {
     let cancelled = false
@@ -71,7 +84,6 @@ export default function JobDetail({ job }: JobDetailProps) {
     job.invoice?.status === 'overdue'
       ? 'overdue'
       : job.status
-  const status = statusConfig[displayStatus]
 
   const payments = job.invoice?.payments ?? []
   const totalPaid = payments.reduce((s, p) => s + p.amount, 0)
@@ -94,6 +106,53 @@ export default function JobDetail({ job }: JobDetailProps) {
   const nextServiceDate = showNextService ? suggestNextServiceDate(job.date, returnDays) : null
 
   const isUpcoming = job.status === 'scheduled' || job.status === 'in_progress'
+
+  const smsTemplateId = isPostService ? 'job_completion' : 'appointment_reminder'
+  const smsTemplate = DEFAULT_AUTO_TEMPLATES.find((t) => t.id === smsTemplateId)
+  const smsComposeUrl =
+    job.client?.phone && smsTemplate
+      ? buildSmsComposeUrl(
+          job.client.phone,
+          mergeTemplateBodyForContext(smsTemplate.emailBody, {
+            name: job.client.name,
+            packageName: job.package?.name,
+            date: dateLabel,
+            time: job.start_time
+              ? new Date(`1970-01-01T${job.start_time}`).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+              : undefined,
+          }),
+        )
+      : null
+
+  const handleMarkComplete = async () => {
+    if (isCompletingJob(job.status, 'completed')) {
+      const appSettings = await loadSettingsAsync()
+      if (appSettings.track_job_supplies) {
+        router.push(`/jobs/${job.id}/edit`)
+        showMessage('Log supplies used, then set status to Complete')
+        return
+      }
+    }
+
+    setCompleting(true)
+    try {
+      const updated = await updateJob(job.id, buildJobEditData(job, { status: 'completed' }))
+      if (!updated) {
+        showMessage('Could not mark job complete')
+        return
+      }
+      const refreshed = await getJob(job.id)
+      if (refreshed) setJob(refreshed)
+      showMessage('Job marked complete — you can invoice from here')
+    } catch {
+      showMessage('Could not mark job complete')
+    } finally {
+      setCompleting(false)
+    }
+  }
 
   const handleCancel = async () => {
     const cancelDateLabel = new Date(job.date + 'T12:00:00').toLocaleDateString('en-US', {
@@ -124,22 +183,27 @@ export default function JobDetail({ job }: JobDetailProps) {
 
   return (
     <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', paddingTop: 16, paddingBottom: 20, gap: 12 }}>
+      <div className="job-detail-header">
         <BackButton onClick={() => router.back()} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {job.client?.name ?? 'Unknown client'}
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>
+        <div className="job-detail-header__body">
+          <div className="job-detail-header__name">{job.client?.name ?? 'Unknown client'}</div>
+          <div className="job-detail-header__meta">
             {invoiceNumber ? `${invoiceNumber} · ` : ''}
             {dateLabel}
           </div>
         </div>
-        <span className={`badge ${status.badge}`}>{status.label}</span>
+        <Badge status={statusToJobBadge(displayStatus)} />
       </div>
 
-      <div className="card" style={{ marginBottom: 12 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      {isUpcoming ? (
+        <Button fullWidth disabled={completing} onClick={() => void handleMarkComplete()}>
+          <CheckCircle size={18} weight="bold" aria-hidden="true" />
+          {completing ? 'Marking complete…' : 'Mark job complete'}
+        </Button>
+      ) : null}
+
+      <div className="card job-detail-card-spaced">
+        <div className="job-detail-kv-grid">
           {[
             ['Package', job.package?.name ?? '—'],
             ['Vehicle', `${job.vehicle_type.charAt(0).toUpperCase() + job.vehicle_type.slice(1)}`],
@@ -147,19 +211,18 @@ export default function JobDetail({ job }: JobDetailProps) {
             ['Hours worked', job.hours_worked > 0 ? `${job.hours_worked} hrs` : '—'],
           ].map(([label, value]) => (
             <div key={label}>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>{label}</div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{value}</div>
+              <div className="job-detail-kv__label">{label}</div>
+              <div className="job-detail-kv__value">{value}</div>
             </div>
           ))}
         </div>
       </div>
 
       {job.location_type === 'mobile' && job.client?.address ? (
-        <div className="detail-context-links" style={{ marginBottom: 12 }}>
+        <div className="detail-context-links job-detail-card-spaced">
           <button
             type="button"
-            className="detail-context-link"
-            style={{ gridColumn: '1 / -1' }}
+            className="detail-context-link detail-context-link--full"
             onClick={() => openMapsDirections(job.client!.address!)}
           >
             <MapPin size={18} aria-hidden="true" />
@@ -168,68 +231,87 @@ export default function JobDetail({ job }: JobDetailProps) {
         </div>
       ) : null}
 
-      <div className="card" style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Revenue</span>
-          <span className="money" style={{ fontSize: 13, color: 'var(--text-primary)' }}>{fmtDetailed(job.revenue)}</span>
+      {smsComposeUrl ? (
+        <div className="detail-context-links job-detail-card-spaced">
+          <a href={smsComposeUrl} className="detail-context-link detail-context-link--full">
+            <ChatText size={18} aria-hidden="true" />
+            Text client — open in Messages
+          </a>
+        </div>
+      ) : null}
+
+      <div className="card job-detail-card-spaced">
+        <div className="job-detail-money-row">
+          <span className="job-detail-money-row__label">Revenue</span>
+          <span className="money job-detail-money-row__value">{fmtDetailed(job.revenue)}</span>
         </div>
         {job.tip > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Tip</span>
-            <span className="money" style={{ fontSize: 13, color: 'var(--text-primary)' }}>{fmtDetailed(job.tip)}</span>
+          <div className="job-detail-money-row">
+            <span className="job-detail-money-row__label">Tip</span>
+            <span className="money job-detail-money-row__value">{fmtDetailed(job.tip)}</span>
           </div>
         )}
 
         {expenses.length > 0 && <div className="divider" />}
 
         {expenses.map((exp, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          <div key={i} className="job-detail-money-row">
+            <span className="job-detail-money-row__label">
               {expenseLabel[exp.category]}
               {exp.description ? ` · ${exp.description}` : ''}
             </span>
-            <span className="money money-negative" style={{ fontSize: 13 }}>−{fmtDetailed(exp.amount)}</span>
+            <span className="money money-negative">−{fmtDetailed(exp.amount)}</span>
           </div>
         ))}
 
         <div className="divider" />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>Net profit</span>
-          <span className={`money ${profit >= 0 ? 'money-positive' : 'money-negative'}`} style={{ fontSize: 15, fontWeight: 700 }}>
+        <div className="job-detail-money-row job-detail-money-row--profit">
+          <span className="job-detail-money-row__label">Net profit</span>
+          <span className={`money ${profit >= 0 ? 'money-positive' : 'money-negative'}`}>
             {fmtDetailed(profit)}
           </span>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            Margin <span className="money" style={{ color: margin >= 50 ? 'var(--green)' : margin >= 30 ? 'var(--amber)' : 'var(--red)' }}>{margin}%</span>
+        <div className="job-detail-money-footer">
+          <span>
+            Margin{' '}
+            <span
+              className={`money job-detail-margin--${
+                margin >= 50 ? 'good' : margin >= 30 ? 'warn' : 'bad'
+              }`}
+            >
+              {margin}%
+            </span>
           </span>
           {rate !== null && (
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              Effective rate <span className="money" style={{ color: 'var(--text-secondary)' }}>${rate.toFixed(2)}/hr</span>
+            <span>
+              Effective rate{' '}
+              <span className="money job-detail-effective-rate">
+                ${rate.toFixed(2)}/hr
+              </span>
             </span>
           )}
         </div>
       </div>
 
       {(job.status === 'invoiced' || job.status === 'paid' || job.invoice) && payments.length > 0 && (
-        <div className="card" style={{ marginBottom: 12 }}>
-          <div className="section-title" style={{ marginBottom: 10 }}>Payments</div>
+        <div className="card job-detail-card-spaced">
+          <div className="section-title job-detail-section-title">Payments</div>
           {payments.map((p, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+            <div key={i} className="job-detail-money-row job-detail-money-row--compact">
+              <span className="job-detail-money-row__label">
                 {p.method} · {new Date(p.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
-              <span className="money money-positive" style={{ fontSize: 13 }}>{fmtDetailed(p.amount)}</span>
+              <span className="money money-positive">{fmtDetailed(p.amount)}</span>
             </div>
           ))}
           {balanceDue > 0 && job.invoice && (
             <>
               <div className="divider" />
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--amber)' }}>Balance due</span>
-                <span className="money" style={{ fontSize: 13, fontWeight: 700, color: 'var(--amber)' }}>{fmtDetailed(balanceDue)}</span>
+              <div className="job-detail-money-row">
+                <span className="job-detail-balance-due">Balance due</span>
+                <span className="money job-detail-balance-due__value">{fmtDetailed(balanceDue)}</span>
               </div>
             </>
           )}
@@ -237,21 +319,19 @@ export default function JobDetail({ job }: JobDetailProps) {
       )}
 
       {nextServiceDate && job.client && job.package && (
-        <div className="card" style={{ marginBottom: 12 }}>
+        <div className="card job-detail-card-spaced">
           <div className="section-title">Next service</div>
-          <div style={{ fontSize: 14, marginBottom: 10 }}>
+          <div className="job-detail-next-service">
             Suggested:{' '}
             {new Date(nextServiceDate + 'T12:00:00').toLocaleDateString('en-US', {
               month: 'long',
               day: 'numeric',
               year: 'numeric',
             })}
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}> ({returnDays}-day cadence)</span>
+            <span className="job-detail-next-service__cadence"> ({returnDays}-day cadence)</span>
           </div>
-          <button
-            type="button"
-            className="btn-primary"
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          <Button
+            fullWidth
             onClick={() =>
               router.push(
                 `/jobs/new?clientId=${job.client_id}&packageId=${job.package_id}&date=${nextServiceDate}`
@@ -259,21 +339,40 @@ export default function JobDetail({ job }: JobDetailProps) {
             }
           >
             <CalendarPlus size={18} /> Book next
-          </button>
+          </Button>
         </div>
       )}
 
       {linkedQuoteId ? (
         <div className="detail-context-links">
-          <button type="button" className="detail-context-link" onClick={() => router.push(`/quotes/${linkedQuoteId}`)}>
+          <button
+            type="button"
+            className="detail-context-link detail-context-link--full"
+            onClick={() => router.push(`/quotes/${linkedQuoteId}`)}
+          >
             <FileText size={18} aria-hidden="true" />
             View quote
+          </button>
+        </div>
+      ) : job.client_id && job.package_id ? (
+        <div className="detail-context-links">
+          <button
+            type="button"
+            className="detail-context-link detail-context-link--full"
+            onClick={() =>
+              router.push(
+                `/quotes/new?clientId=${job.client_id}&packageId=${job.package_id}&vehicleType=${job.vehicle_type}&locationType=${job.location_type}`
+              )
+            }
+          >
+            <FileText size={18} aria-hidden="true" />
+            Create quote
           </button>
         </div>
       ) : null}
 
       {isUpcoming && job.client ? (
-        <div className="card job-detail-phase" style={{ marginBottom: 12 }}>
+        <div className="card job-detail-phase job-detail-card-spaced">
           <div className="section-title">{SHARE_LINK_PRESETS.appointment.sectionTitle}</div>
           <p className="job-detail-phase__hint">
             Send a confirmation link before the appointment. Invoicing is available after the job is complete.
@@ -289,32 +388,44 @@ export default function JobDetail({ job }: JobDetailProps) {
       ) : null}
 
       {isPostService ? (
-        <>
-          <div className="detail-context-links">
-            <button
-              type="button"
-              className="detail-context-link"
-              onClick={() => router.push(`/jobs/${job.id}/invoice`)}
-              style={{ gridColumn: '1 / -1' }}
-            >
-              <Receipt size={18} aria-hidden="true" />
-              {job.invoice ? 'View invoice' : 'Create invoice'}
-            </button>
-          </div>
-        </>
+        <SectionGroup title="Invoice">
+          <ListRow
+            icon={<Receipt size={18} weight="duotone" />}
+            iconTone="green"
+            title={job.invoice ? job.invoice.invoice_number : 'Create invoice'}
+            subtitle={
+              job.invoice
+                ? `${job.invoice.status}${balanceDue > 0 ? ` · ${fmtDetailed(balanceDue)} due` : ''}`
+                : 'Generate and send to client'
+            }
+            badgeStatus={job.invoice?.status}
+            onClick={() => router.push(`/jobs/${job.id}/invoice`)}
+          />
+        </SectionGroup>
+      ) : null}
+
+      {isUpcoming ? (
+        <JobTimer
+          jobId={job.id}
+          onStopped={(hours) => {
+            if (hours > 0) {
+              showMessage(`Tracked ${hours.toFixed(2)} hrs — update hours on edit if needed`)
+            }
+          }}
+        />
       ) : null}
 
       <JobPhotosEntry job={job} onPress={() => router.push(`/jobs/${job.id}/photos`)} />
 
       {job.notes && (
-        <div className="card" style={{ marginBottom: 12 }}>
+        <div className="card job-detail-card-spaced">
           <div className="section-title">Notes</div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{job.notes}</div>
+          <div className="job-detail-notes">{job.notes}</div>
         </div>
       )}
 
       {isPostService && job.client ? (
-        <div className="card job-detail-phase" style={{ marginBottom: 12 }}>
+        <div className="card job-detail-phase job-detail-card-spaced">
           <div className="section-title">{SHARE_LINK_PRESETS.full.sectionTitle}</div>
           <p className="job-detail-phase__hint">Share invoice, photos, and service details after the job.</p>
           <ShareLinkActions
@@ -328,7 +439,7 @@ export default function JobDetail({ job }: JobDetailProps) {
         </div>
       ) : null}
 
-      <button className="btn-ghost" onClick={() => router.push(`/jobs/${job.id}/edit`)} style={{ width: '100%', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <button className="btn-ghost job-detail-full-btn" onClick={() => router.push(`/jobs/${job.id}/edit`)}>
         <PencilSimple size={16} weight="regular" color="var(--text-secondary)" />
         Edit job
       </button>
@@ -336,10 +447,9 @@ export default function JobDetail({ job }: JobDetailProps) {
       {isUpcoming ? (
         <button
           type="button"
-          className="btn-danger"
+          className="btn-danger job-detail-full-btn"
           disabled={cancelling}
           onClick={handleCancel}
-          style={{ width: '100%', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
           <Trash size={16} weight="regular" aria-hidden="true" />
           {cancelling ? 'Cancelling…' : 'Cancel appointment'}

@@ -7,6 +7,7 @@ import { FloatingAffixField, FloatingField, PillGroup, SheetSubmitButton } from 
 import { createQuote } from '@/lib/api'
 import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
 import { useActionToast } from '@/providers/ActionToastProvider'
+import { usePremiumGate } from '@/hooks/usePremiumGate'
 import type { Client, Package, VehicleType } from '@/lib/types'
 
 const VEHICLE_TYPES: VehicleType[] = ['sedan', 'suv', 'truck', 'van', 'boat', 'other']
@@ -24,19 +25,34 @@ const LOCATION_PILLS = [
 export default function QuoteForm({
   clients,
   packages,
+  initialClientId,
+  initialPackageId,
+  initialVehicleType,
+  initialLocationType,
 }: {
   clients: Client[]
   packages: Package[]
+  initialClientId?: string
+  initialPackageId?: string
+  initialVehicleType?: VehicleType
+  initialLocationType?: 'mobile' | 'fixed'
 }) {
   const router = useRouter()
   const { handleWriteError } = useActionToast()
+  const { runGated: runCreateQuoteGated } = usePremiumGate('create_quote')
   const formRef = useRef<HTMLDivElement>(null)
   const clientRef = useRef<HTMLSelectElement>(null)
   const packageRef = useRef<HTMLSelectElement>(null)
-  const [clientId, setClientId] = useState(clients[0]?.id ?? '')
-  const [packageId, setPackageId] = useState(packages.find((p) => p.active)?.id ?? packages[0]?.id ?? '')
-  const [vehicleType, setVehicleType] = useState<VehicleType>('sedan')
-  const [locationType, setLocationType] = useState<'mobile' | 'fixed'>('mobile')
+  const defaultPackageId =
+    initialPackageId ?? packages.find((p) => p.active)?.id ?? packages[0]?.id ?? ''
+  const [clientId, setClientId] = useState(
+    initialClientId && clients.some((c) => c.id === initialClientId)
+      ? initialClientId
+      : clients[0]?.id ?? ''
+  )
+  const [packageId, setPackageId] = useState(defaultPackageId)
+  const [vehicleType, setVehicleType] = useState<VehicleType>(initialVehicleType ?? 'sedan')
+  const [locationType, setLocationType] = useState<'mobile' | 'fixed'>(initialLocationType ?? 'mobile')
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [subtotal, setSubtotal] = useState(packages.find((p) => p.id === packageId)?.base_price ?? 0)
   const [notes, setNotes] = useState('')
@@ -63,35 +79,39 @@ export default function QuoteForm({
 
   const handleSave = async () => {
     if (!clientId || !packageId) return
-    setBusy(true)
-    setError('')
-    try {
-      const quote = await createQuote({
-        client_id: clientId,
-        package_id: packageId,
-        vehicle_type: vehicleType,
-        location_type: locationType,
-        date,
-        subtotal,
-        notes: notes || undefined,
-        valid_until: validUntil,
-      })
-      setSaved(true)
-      window.setTimeout(() => router.replace(`/quotes/${quote.id}`), 1500)
-    } catch (err) {
-      if (handleWriteError(err)) return
-      setError(err instanceof Error ? err.message : 'Could not create quote')
-    } finally {
-      setBusy(false)
-    }
+    runCreateQuoteGated(() => {
+      void (async () => {
+        setBusy(true)
+        setError('')
+        try {
+          const quote = await createQuote({
+            client_id: clientId,
+            package_id: packageId,
+            vehicle_type: vehicleType,
+            location_type: locationType,
+            date,
+            subtotal,
+            notes: notes || undefined,
+            valid_until: validUntil,
+          })
+          setSaved(true)
+          window.setTimeout(() => router.replace(`/quotes/${quote.id}`), 1500)
+        } catch (err) {
+          if (handleWriteError(err)) return
+          setError(err instanceof Error ? err.message : 'Could not create quote')
+        } finally {
+          setBusy(false)
+        }
+      })()
+    })
   }
 
   return (
     <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, paddingBottom: 20 }}>
+      <header className="job-form-header">
         <BackButton onClick={() => router.back()} />
-        <div style={{ fontSize: 18, fontWeight: 600 }}>New quote</div>
-      </div>
+        <div className="job-form-header__title">New quote</div>
+      </header>
 
       <div ref={formRef} className="page-form-card page-form">
         <FloatingField id="quote-client" label="Client" filled={Boolean(clientId)}>

@@ -47,7 +47,7 @@ export default function JobSuppliesConfirmSheet({
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title="Log supplies used"
       subtitle="Confirm or adjust supplies for this job before saving"
       ariaLabel="Confirm supplies used"

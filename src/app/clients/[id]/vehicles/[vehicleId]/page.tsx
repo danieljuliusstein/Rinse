@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import VehicleProfile from '@/components/crm/VehicleProfile'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
 import { getDamageDocsForVehicle, getVehicle } from '@/lib/api'
 import type { DamageRecord, Vehicle } from '@/lib/types'
 
@@ -26,19 +27,11 @@ export default function VehicleProfilePage() {
   }, [reload])
 
   if (vehicle === undefined) {
-    return (
-      <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Loading…
-      </div>
-    )
+    return <ScreenLoading />
   }
 
   if (!vehicle) {
-    return (
-      <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Vehicle not found
-      </div>
-    )
+    return <ScreenMessage>Vehicle not found</ScreenMessage>
   }
 
   return (

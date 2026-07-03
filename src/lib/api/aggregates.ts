@@ -68,6 +68,8 @@ export function rangeFor(key: DateRangeKey, now = new Date()): { start: Date; en
       return { start: new Date(y, m - 1, 1), end: new Date(y, m, 0, 23, 59, 59) }
     case 'this_year':
       return { start: new Date(y, 0, 1), end: new Date(y, 11, 31, 23, 59, 59) }
+    case 'lifetime':
+      return { start: new Date(2000, 0, 1), end: now }
   }
 }
 
@@ -92,6 +94,8 @@ export function priorRangeFor(key: DateRangeKey, now = new Date()): { start: Dat
       return { start: prevStart, end: prevEnd }
     }
     case 'this_year':
+      return { start: new Date(y - 1, 0, 1), end: new Date(y - 1, 11, 31, 23, 59, 59) }
+    case 'lifetime':
       return { start: new Date(y - 1, 0, 1), end: new Date(y - 1, 11, 31, 23, 59, 59) }
   }
 }

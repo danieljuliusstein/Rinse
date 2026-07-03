@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import DamageDetailView from '@/components/crm/damage/DamageDetailView'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
 import { getDamageDoc } from '@/lib/api'
 import type { DamageRecord } from '@/lib/types'
 
@@ -19,19 +20,11 @@ export default function DamageDetailPage() {
   }, [damageId])
 
   if (damage === undefined) {
-    return (
-      <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Loading…
-      </div>
-    )
+    return <ScreenLoading />
   }
 
   if (!damage) {
-    return (
-      <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Damage record not found
-      </div>
-    )
+    return <ScreenMessage>Damage record not found</ScreenMessage>
   }
 
   return (

@@ -55,8 +55,14 @@ export async function loadAutoMessageTemplatesForOrg(orgId: string): Promise<Aut
     return DEFAULT_AUTO_TEMPLATES.map((t) => ({ ...t }))
   }
   return DEFAULT_AUTO_TEMPLATES.map((def) => {
-    const saved = (raw as { id?: string; enabled?: boolean }[]).find((p) => p.id === def.id)
-    return saved ? { ...def, enabled: saved.enabled ?? def.enabled } : { ...def }
+    const saved = (raw as { id?: string; enabled?: boolean; emailBody?: string }[]).find((p) => p.id === def.id)
+    return saved
+      ? {
+          ...def,
+          enabled: saved.enabled ?? def.enabled,
+          emailBody: saved.emailBody?.trim() ? saved.emailBody : def.emailBody,
+        }
+      : { ...def }
   })
 }
 
@@ -70,7 +76,7 @@ export async function saveAutoMessageTemplatesForOrg(
     filter: `organization_id = "${orgEsc}"`,
     limit: 1,
   })
-  const payload = templates.map(({ id, enabled }) => ({ id, enabled }))
+  const payload = templates.map(({ id, enabled, emailBody }) => ({ id, enabled, emailBody }))
   if (records.length === 0) {
     await pb.collection('app_settings').create({
       organization_id: orgId,

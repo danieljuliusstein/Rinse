@@ -1,5 +1,6 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import BusinessLogo from '@/components/BusinessLogo'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
@@ -9,6 +10,7 @@ import {
   type InvoiceViewModel,
 } from '@/lib/invoice-layout'
 import { openPortalLink } from '@/lib/portal-client'
+import { normalizeAccentColor } from '@/lib/brand-color'
 import type { AppSettings } from '@/lib/settings'
 import type { Invoice, JobWithRelations } from '@/lib/types'
 
@@ -49,9 +51,14 @@ export default function InvoiceDocumentBody({
   const vm = buildInvoiceViewModel(job, invoice, settings, { portalUrl })
   const statusStyle = STATUS_STYLES[vm.statusTone]
   const clientAddressParts = [vm.billToAddress].filter(Boolean) as string[]
+  const template = settings.invoice_template ?? 'rinse'
+  const accent = normalizeAccentColor(settings.accent_color)
 
   return (
-    <div className="invoice-doc invoice-doc--rinse">
+    <div
+      className={`invoice-doc invoice-doc--${template}`}
+      style={{ '--invoice-accent': accent } as CSSProperties}
+    >
       <div className="invoice-doc-brand">
         <div className="invoice-doc-brand__logo">
           <BusinessLogo logoUrl={vm.logoUrl} size={52} />
@@ -69,6 +76,7 @@ export default function InvoiceDocumentBody({
             <div className="invoice-doc-section-label">Invoice</div>
             <div className="invoice-doc-meta__number">{vm.invoiceNumber}</div>
             <div className="invoice-doc-meta__issued">Issued {vm.issuedDateLabel}</div>
+            {vm.poNumber ? <div className="invoice-doc-meta__po">PO {vm.poNumber}</div> : null}
           </div>
           <span
             className="invoice-doc-status-pill"
@@ -123,6 +131,20 @@ export default function InvoiceDocumentBody({
               <span>{formatInvoiceMoney(vm.tip)}</span>
             </div>
           )}
+          {vm.showDiscount && vm.discount != null && (
+            <div className="invoice-doc-totals__row">
+              <span className="invoice-doc-totals__muted">Discount</span>
+              <span>-{formatInvoiceMoney(vm.discount)}</span>
+            </div>
+          )}
+          {vm.showTax && vm.taxAmount != null && (
+            <div className="invoice-doc-totals__row">
+              <span className="invoice-doc-totals__muted">
+                Tax{vm.taxRate ? ` (${vm.taxRate}%)` : ''}
+              </span>
+              <span>{formatInvoiceMoney(vm.taxAmount)}</span>
+            </div>
+          )}
           <div className="invoice-doc-totals__divider" />
           <div className="invoice-doc-totals__row invoice-doc-totals__row--grand">
             <span>Total</span>
@@ -152,6 +174,16 @@ export default function InvoiceDocumentBody({
           ))}
         </div>
       )}
+
+      {vm.showSignature && vm.signatureUrl ? (
+        <div className="invoice-doc-section invoice-doc-section--border invoice-doc-signature">
+          <div className="invoice-doc-section-label">Client signature</div>
+          {vm.signedAtLabel ? (
+            <p className="invoice-doc-signature__date">Signed {vm.signedAtLabel}</p>
+          ) : null}
+          <img src={vm.signatureUrl} alt="Client signature" className="invoice-doc-signature__image" />
+        </div>
+      ) : null}
 
       <div className="invoice-doc-footer-rinse">
         {vm.termsFooter && <p>{vm.termsFooter}</p>}

@@ -1,19 +1,20 @@
-import type { DriveStep } from 'driver.js'
-import {
-  PRODUCT_TOUR_REQUIRED_TARGETS,
-  buildTourSteps,
-} from './product-tour-steps'
-import { tourSelector, type ProductTourTarget } from './product-tour-targets'
+import { abortRinseTour, isRinseTourActive, startRinseTour } from './rinse-tour/controller'
+import { buildRinseTourSteps, RINSE_TOUR_HOME_TARGETS } from './rinse-tour/steps'
 import { getPocketBase } from './pocketbase'
+import { navigateForTour } from './tour-nav'
+import { tourSelector, type ProductTourTarget } from './tour-targets'
 
-export { PRODUCT_TOUR_TARGETS, tourSelector, type ProductTourTarget } from './product-tour-targets'
-export { PRODUCT_TOUR_REQUIRED_TARGETS, buildTourSteps } from './product-tour-steps'
+export { PRODUCT_TOUR_TARGETS, coachSelector, tourSelector, type CoachTarget, type ProductTourTarget } from './tour-targets'
+
+/** Home targets required before the tour starts. */
+export const PRODUCT_TOUR_REQUIRED_TARGETS = RINSE_TOUR_HOME_TARGETS
 
 export const TOUR_COMPLETED_KEY = 'detailing_product_tour_completed'
 export const TOUR_PENDING_KEY = 'detailing_product_tour_pending'
 export const TOUR_REPLAY_KEY = 'detailing_product_tour_replay'
 export const TOUR_WELCOME_DISMISSED_KEY = 'detailing_product_tour_welcome_dismissed'
 export const TOUR_REPLAY_EVENT = 'detailing-product-tour-replay'
+export const TOUR_FINISHED_EVENT = 'detailing-product-tour-finished'
 
 function getTourUserId(): string | null {
   if (typeof window === 'undefined') return null
@@ -53,7 +54,9 @@ export function markTourCompleted(): void {
 
 export function requestTourReplay(): void {
   if (!canUseTourStorage()) return
+  localStorage.removeItem(scopedKey(TOUR_COMPLETED_KEY))
   sessionStorage.setItem(scopedKey(TOUR_REPLAY_KEY), '1')
+  sessionStorage.setItem(scopedKey(TOUR_PENDING_KEY), '1')
 }
 
 export function isTourReplaySession(): boolean {
@@ -68,8 +71,9 @@ export function dismissTourWelcome(): void {
 
 export function shouldAutoStartTour(): boolean {
   if (!canUseTourStorage()) return false
+  if (isTourCompleted()) return false
   if (sessionStorage.getItem(scopedKey(TOUR_REPLAY_KEY)) === '1') return true
-  return localStorage.getItem(scopedKey(TOUR_PENDING_KEY)) === '1' && !isTourCompleted()
+  return localStorage.getItem(scopedKey(TOUR_PENDING_KEY)) === '1'
 }
 
 export function shouldShowTourWelcome(): boolean {
@@ -78,16 +82,17 @@ export function shouldShowTourWelcome(): boolean {
   return sessionStorage.getItem(scopedKey(TOUR_WELCOME_DISMISSED_KEY)) !== '1'
 }
 
-export async function waitForTourTargets(maxMs = 8000): Promise<boolean> {
+export async function waitForTourTargets(
+  targets: readonly ProductTourTarget[] = PRODUCT_TOUR_REQUIRED_TARGETS,
+  maxMs = 8000,
+): Promise<boolean> {
   const start = Date.now()
   while (Date.now() - start < maxMs) {
-    const ready = PRODUCT_TOUR_REQUIRED_TARGETS.every((target) =>
-      document.querySelector(tourSelector(target)),
-    )
+    const ready = targets.every((target) => document.querySelector(tourSelector(target)))
     if (ready) return true
     await new Promise((resolve) => setTimeout(resolve, 120))
   }
-  return PRODUCT_TOUR_REQUIRED_TARGETS.every((target) => document.querySelector(tourSelector(target)))
+  return targets.every((target) => document.querySelector(tourSelector(target)))
 }
 
 function scrollHomeToTop(): void {
@@ -96,109 +101,34 @@ function scrollHomeToTop(): void {
   document.body.scrollTop = 0
 }
 
-let activeDriver: {
-  destroy: () => void
-  refresh: () => void
-  isActive: () => boolean
-} | null = null
-
-let viewportListener: (() => void) | null = null
-
-function attachViewportRefresh(refresh: () => void): void {
-  detachViewportRefresh()
-  const vv = window.visualViewport
-  if (!vv) return
-
-  const handler = () => {
-    if (!activeDriver?.isActive()) return
-    requestAnimationFrame(refresh)
-  }
-
-  vv.addEventListener('resize', handler)
-  vv.addEventListener('scroll', handler)
-  window.addEventListener('orientationchange', handler)
-  viewportListener = () => {
-    vv.removeEventListener('resize', handler)
-    vv.removeEventListener('scroll', handler)
-    window.removeEventListener('orientationchange', handler)
-    viewportListener = null
-  }
+export function isTourActive(): boolean {
+  return isRinseTourActive()
 }
 
-function detachViewportRefresh(): void {
-  viewportListener?.()
-  viewportListener = null
-}
-
-function buildDriverSteps(): DriveStep[] {
-  const includeProfileStep = Boolean(document.querySelector(tourSelector('profile-complete')))
-
-  const dockHooks = () => ({
-    onHighlightStarted: () => {
-      scrollHomeToTop()
-      requestAnimationFrame(() => activeDriver?.refresh())
-    },
-    onHighlighted: () => {
-      requestAnimationFrame(() => activeDriver?.refresh())
-    },
-  })
-
-  return buildTourSteps({
-    includeProfileStep,
-    dockHooks,
-  })
+export function handleTourFinished(): void {
+  markTourCompleted()
+  dismissTourWelcome()
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(TOUR_FINISHED_EVENT))
+  }
+  scrollHomeToTop()
+  void navigateForTour('/')
 }
 
 export async function startProductTour(): Promise<boolean> {
   if (typeof document === 'undefined') return false
+  if (isTourCompleted()) return false
 
-  const ready = await waitForTourTargets()
+  const ready = await waitForTourTargets(PRODUCT_TOUR_REQUIRED_TARGETS)
   if (!ready) return false
 
   scrollHomeToTop()
-
-  const { driver } = await import('driver.js')
-  await import('driver.js/dist/driver.css')
-
-  activeDriver?.destroy()
-
-  const driverObj = driver({
-    showProgress: true,
-    progressText: '{{current}} of {{total}}',
-    allowClose: true,
-    allowScroll: true,
-    smoothScroll: false,
-    overlayOpacity: 0.72,
-    stagePadding: 8,
-    stageRadius: 12,
-    popoverOffset: 10,
-    popoverClass: 'driver-popover--rinse',
-    disableActiveInteraction: true,
-    nextBtnText: 'Next',
-    prevBtnText: 'Back',
-    doneBtnText: 'Done',
-    onHighlightStarted: () => {
-      requestAnimationFrame(() => driverObj.refresh())
-    },
-    onDestroyed: () => {
-      detachViewportRefresh()
-      markTourCompleted()
-      scrollHomeToTop()
-      activeDriver = null
-    },
-    steps: buildDriverSteps(),
-  })
-
-  activeDriver = driverObj
-  attachViewportRefresh(() => driverObj.refresh())
-  driverObj.drive()
+  startRinseTour(buildRinseTourSteps())
   return true
 }
 
 export function destroyProductTour(): void {
-  detachViewportRefresh()
-  activeDriver?.destroy()
-  activeDriver = null
+  abortRinseTour()
 }
 
 export function skipProductTour(): void {

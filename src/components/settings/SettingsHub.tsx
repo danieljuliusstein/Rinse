@@ -1,15 +1,17 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { type ReactNode, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CaretRight, MagnifyingGlass } from '@phosphor-icons/react'
+import { MagnifyingGlass } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
+import { SectionGroup } from '@/components/ui'
 import { useMilestones } from '@/hooks/useMilestones'
 import { useProfileCompletion } from '@/hooks/useProfileCompletion'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
 import { MILESTONE_COUNT } from '@/lib/milestones'
 import { searchSettings, type SettingsSearchResult } from '@/lib/settings-search'
 import SettingsFooter from './SettingsFooter'
+import SettingsMenuListRow from './SettingsMenuListRow'
 import ProfileCompleteCard from '@/components/home/ProfileCompleteCard'
 import { useAuth } from '@/providers/AuthProvider'
 import {
@@ -18,98 +20,125 @@ import {
   type SettingsMenuItem,
 } from '@/lib/settings-menu'
 
-function SearchResultRow({
-  result,
-  onSelect,
+function SettingsMenuTrailing({
+  itemId,
   profileCompletion,
   hasUnviewed,
   unlockedCount,
+  faq,
 }: {
-  result: SettingsSearchResult
-  onSelect: (href: string) => void
+  itemId?: string
   profileCompletion: ReturnType<typeof useProfileCompletion>
   hasUnviewed: boolean
   unlockedCount: number
+  faq?: boolean
 }) {
+  const badges: ReactNode[] = []
+
+  if (faq) {
+    badges.push(
+      <span key="faq" className="settings-search-kind-badge">
+        FAQ
+      </span>
+    )
+  }
+  if (itemId === 'business' && profileCompletion && !profileCompletion.isComplete) {
+    badges.push(
+      <span key="profile" className="settings-menu-profile-badge">
+        {profileCompletion.totalCount - profileCompletion.completedCount} left
+      </span>
+    )
+  }
+  if (itemId === 'progress' && hasUnviewed) {
+    badges.push(
+      <span key="milestones" className="settings-menu-milestone-badge">
+        {unlockedCount}/{MILESTONE_COUNT}
+      </span>
+    )
+  }
+
+  if (badges.length === 0) return undefined
+
+  return <span className="settings-menu-trailing">{badges}</span>
+}
+
+function hubRowFromItem(
+  item: SettingsMenuItem,
+  onSelect: (href: string) => void,
+  profileCompletion: ReturnType<typeof useProfileCompletion>,
+  hasUnviewed: boolean,
+  unlockedCount: number,
+) {
+  return (
+    <SettingsMenuListRow
+      key={item.id}
+      title={item.title}
+      subtitle={item.subtitle}
+      Icon={item.Icon}
+      tone={item.tone}
+      onClick={() => onSelect(item.href)}
+      trailing={
+        <SettingsMenuTrailing
+          itemId={item.id}
+          profileCompletion={profileCompletion}
+          hasUnviewed={hasUnviewed}
+          unlockedCount={unlockedCount}
+        />
+      }
+    />
+  )
+}
+
+function hubRowFromSearch(
+  result: SettingsSearchResult,
+  onSelect: (href: string) => void,
+  profileCompletion: ReturnType<typeof useProfileCompletion>,
+  hasUnviewed: boolean,
+  unlockedCount: number,
+) {
   const Icon = result.Icon ?? result.menuItem?.Icon
   const tone = result.tone ?? result.menuItem?.tone ?? 'blue'
   const itemId = result.menuItem?.id
 
+  if (!Icon) {
+    return (
+      <SettingsMenuListRow
+        key={`${result.kind}-${result.href}-${result.title}`}
+        title={result.title}
+        subtitle={result.matchHint ?? result.subtitle}
+        Icon={MagnifyingGlass}
+        tone="blue"
+        onClick={() => onSelect(result.href)}
+        trailing={
+          <SettingsMenuTrailing
+            faq={result.kind === 'faq'}
+            profileCompletion={profileCompletion}
+            hasUnviewed={hasUnviewed}
+            unlockedCount={unlockedCount}
+          />
+        }
+      />
+    )
+  }
+
   return (
-    <button
-      type="button"
-      className="settings-menu-item"
+    <SettingsMenuListRow
+      key={`${result.kind}-${result.href}-${result.title}`}
+      title={result.title}
+      subtitle={result.matchHint ?? result.subtitle}
+      Icon={Icon}
+      tone={tone}
       onClick={() => onSelect(result.href)}
-    >
-      {Icon ? (
-        <span className={`settings-menu-icon settings-menu-icon--${tone}`}>
-          <Icon size={18} weight="duotone" aria-hidden="true" />
-        </span>
-      ) : null}
-      <span className="settings-menu-text">
-        <span className="settings-menu-title">{result.title}</span>
-        <span className="settings-menu-sub">
-          {result.matchHint ?? result.subtitle}
-        </span>
-      </span>
-      {result.kind === 'faq' ? (
-        <span className="settings-search-kind-badge">FAQ</span>
-      ) : null}
-      {itemId === 'business' && profileCompletion && !profileCompletion.isComplete ? (
-        <span className="settings-menu-profile-badge">
-          {profileCompletion.totalCount - profileCompletion.completedCount} left
-        </span>
-      ) : null}
-      {itemId === 'progress' && hasUnviewed ? (
-        <span className="settings-menu-milestone-badge">
-          {unlockedCount}/{MILESTONE_COUNT}
-        </span>
-      ) : null}
-      <CaretRight size={16} className="settings-menu-chevron" aria-hidden="true" />
-    </button>
-  )
-}
-
-function MenuItemRow({
-  item,
-  onSelect,
-  profileCompletion,
-  hasUnviewed,
-  unlockedCount,
-}: {
-  item: SettingsMenuItem
-  onSelect: (href: string) => void
-  profileCompletion: ReturnType<typeof useProfileCompletion>
-  hasUnviewed: boolean
-  unlockedCount: number
-}) {
-  const Icon = item.Icon
-
-  return (
-    <button
-      type="button"
-      className="settings-menu-item"
-      onClick={() => onSelect(item.href)}
-    >
-      <span className={`settings-menu-icon settings-menu-icon--${item.tone}`}>
-        <Icon size={18} weight="duotone" aria-hidden="true" />
-      </span>
-      <span className="settings-menu-text">
-        <span className="settings-menu-title">{item.title}</span>
-        <span className="settings-menu-sub">{item.subtitle}</span>
-      </span>
-      {item.id === 'business' && profileCompletion && !profileCompletion.isComplete ? (
-        <span className="settings-menu-profile-badge">
-          {profileCompletion.totalCount - profileCompletion.completedCount} left
-        </span>
-      ) : null}
-      {item.id === 'progress' && hasUnviewed ? (
-        <span className="settings-menu-milestone-badge">
-          {unlockedCount}/{MILESTONE_COUNT}
-        </span>
-      ) : null}
-      <CaretRight size={16} className="settings-menu-chevron" aria-hidden="true" />
-    </button>
+      trailing={
+        <SettingsMenuTrailing
+          itemId={itemId}
+          faq={result.kind === 'faq'}
+          profileCompletion={profileCompletion}
+          hasUnviewed={hasUnviewed}
+          unlockedCount={unlockedCount}
+        />
+      }
+    />
   )
 }
 
@@ -159,44 +188,22 @@ export default function SettingsHub() {
 
       <div className="settings-hub">
         {searching ? (
-          <section className="settings-hub__section">
-            <h2 className="settings-hub__label">
-              {showingSimilar ? 'Similar matches' : 'Results'}
-            </h2>
-            <div className="settings-menu-group">
-              {searchResults.map((result) => (
-                <SearchResultRow
-                  key={`${result.kind}-${result.href}-${result.title}`}
-                  result={result}
-                  onSelect={navigate}
-                  profileCompletion={profileCompletion}
-                  hasUnviewed={hasUnviewed}
-                  unlockedCount={unlockedCount}
-                />
-              ))}
-            </div>
-          </section>
+          <SectionGroup title={showingSimilar ? 'Similar matches' : 'Results'}>
+            {searchResults.map((result) =>
+              hubRowFromSearch(result, navigate, profileCompletion, hasUnviewed, unlockedCount),
+            )}
+          </SectionGroup>
         ) : (
           SETTINGS_MENU_GROUPS.map((group) => {
             const items = SETTINGS_MENU_ITEMS.filter((item) => item.group === group.id)
             if (items.length === 0) return null
 
             return (
-              <section key={group.id} className="settings-hub__section">
-                <h2 className="settings-hub__label">{group.label}</h2>
-                <div className="settings-menu-group">
-                  {items.map((item) => (
-                    <MenuItemRow
-                      key={item.id}
-                      item={item}
-                      onSelect={navigate}
-                      profileCompletion={profileCompletion}
-                      hasUnviewed={hasUnviewed}
-                      unlockedCount={unlockedCount}
-                    />
-                  ))}
-                </div>
-              </section>
+              <SectionGroup key={group.id} title={group.label}>
+                {items.map((item) =>
+                  hubRowFromItem(item, navigate, profileCompletion, hasUnviewed, unlockedCount),
+                )}
+              </SectionGroup>
             )
           })
         )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import VehicleForm from '@/components/crm/VehicleForm'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
 import { getVehicle } from '@/lib/api'
 import type { Vehicle } from '@/lib/types'
 
@@ -17,19 +18,11 @@ export default function EditVehiclePage() {
   }, [vehicleId])
 
   if (vehicle === undefined) {
-    return (
-      <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Loading…
-      </div>
-    )
+    return <ScreenLoading />
   }
 
   if (!vehicle) {
-    return (
-      <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-        Vehicle not found
-      </div>
-    )
+    return <ScreenMessage>Vehicle not found</ScreenMessage>
   }
 
   return <VehicleForm clientId={clientId} vehicle={vehicle} />

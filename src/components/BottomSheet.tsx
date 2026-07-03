@@ -4,16 +4,18 @@ import { useCallback, useEffect, useRef, useState, type TouchEvent } from 'react
 import { createPortal } from 'react-dom'
 import { X } from '@phosphor-icons/react'
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/body-scroll-lock'
+import { trapFocus } from '@/lib/focus-trap'
 
 /**
- * Bottom sheet shell. Footer children often use `.inv-sheet-save` — intentionally
- * light-on-dark inverted buttons; see docs/a11y-audit-phase2.md.
+ * Bottom sheet shell. Footer children use `SheetSubmitButton` / `.sheet-submit`.
+ * `variant="light"` (default) — operator forms on light shell.
+ * `variant="premium"` is an alias for light (dark chrome removed).
  */
 interface BottomSheetProps {
   title: string
   subtitle?: string
   ariaLabel?: string
-  variant?: 'default' | 'premium'
+  variant?: 'default' | 'premium' | 'light'
   sheetClassName?: string
   onClose: () => void
   children: React.ReactNode
@@ -27,7 +29,7 @@ export default function BottomSheet({
   title,
   subtitle,
   ariaLabel,
-  variant = 'default',
+  variant = 'light',
   sheetClassName,
   onClose,
   children,
@@ -36,6 +38,7 @@ export default function BottomSheet({
   const [dragY, setDragY] = useState(0)
   const [dragging, setDragging] = useState(false)
   const dragRef = useRef({ startY: 0, active: false, currentY: 0 })
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     lockBodyScroll()
@@ -43,7 +46,17 @@ export default function BottomSheet({
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
+
+    let releaseFocus: (() => void) | undefined
+    const frame = window.requestAnimationFrame(() => {
+      if (dialogRef.current) {
+        releaseFocus = trapFocus(dialogRef.current, '.inv-sheet-close')
+      }
+    })
+
     return () => {
+      window.cancelAnimationFrame(frame)
+      releaseFocus?.()
       unlockBodyScroll()
       window.removeEventListener('keydown', onKey)
     }
@@ -93,14 +106,20 @@ export default function BottomSheet({
 
   const sheetClasses = [
     'inv-sheet',
-    variant === 'premium' ? 'premium-sheet' : '',
+    variant === 'premium' || variant === 'light' ? 'light-sheet' : '',
     sheetClassName ?? '',
   ]
     .filter(Boolean)
     .join(' ')
 
   return createPortal(
-    <div className="inv-sheet-root" role="dialog" aria-modal="true" aria-label={ariaLabel ?? title}>
+    <div
+      ref={dialogRef}
+      className="inv-sheet-root"
+      role="dialog"
+      aria-modal="true"
+      aria-label={ariaLabel ?? title}
+    >
       <button
         type="button"
         className="inv-sheet-overlay"

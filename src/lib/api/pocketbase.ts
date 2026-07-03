@@ -10,6 +10,7 @@ import {
   resolveSuppliesUsed,
 } from '../supplies-logic'
 import { ensurePocketBaseAuth } from '../pb-auth'
+import { rethrowPremiumPocketBaseError } from '../premium-api'
 import { getPocketBase } from '../pocketbase'
 import {
   computeDashboard,
@@ -136,8 +137,12 @@ export async function createClient(input: import('../types').ClientInput): Promi
   }
   if (input.lead_source) payload.lead_source = input.lead_source
 
-  const created = await pb().collection('clients').create<PbRecord>(withOrganization(payload))
-  return pbClientToApp(created)
+  try {
+    const created = await pb().collection('clients').create<PbRecord>(withOrganization(payload))
+    return pbClientToApp(created)
+  } catch (err) {
+    rethrowPremiumPocketBaseError(err)
+  }
 }
 
 export async function updateClient(id: string, input: Partial<import('../types').ClientInput>): Promise<Client | null> {
@@ -212,10 +217,14 @@ export async function findOrCreateClient(name: string, existingId: string | null
   })
   if (matches.length > 0) return pbClientToApp(matches[0])
 
-  const created = await pb().collection('clients').create<PbRecord>(
-    withOrganization({ name: trimmed }),
-  )
-  return pbClientToApp(created)
+  try {
+    const created = await pb().collection('clients').create<PbRecord>(
+      withOrganization({ name: trimmed }),
+    )
+    return pbClientToApp(created)
+  } catch (err) {
+    rethrowPremiumPocketBaseError(err)
+  }
 }
 
 export async function createJob(input: QuickJobData): Promise<Job> {
@@ -234,6 +243,10 @@ export async function createJob(input: QuickJobData): Promise<Job> {
     travel_cost: input.travel_cost,
     marketing_cost: input.marketing_cost,
     equipment_depreciation: input.equipment_depreciation,
+    recurrence_cadence: input.recurrence_cadence,
+    recurrence_anchor_date: input.recurrence_cadence
+      ? input.recurrence_anchor_date ?? input.date
+      : undefined,
   }) as Record<string, unknown>
 
   const { getSupplies, deductSupplies } = await import('./supplies-pocketbase')
@@ -247,11 +260,15 @@ export async function createJob(input: QuickJobData): Promise<Job> {
   payload.supplies_used = supplies_used
   payload.expenses = expenses
 
-  const record = await pb().collection('jobs').create<PbRecord>(withOrganization(payload))
-  if (supplies_used.length > 0) {
-    await deductSupplies(suppliesUsed)
+  try {
+    const record = await pb().collection('jobs').create<PbRecord>(withOrganization(payload))
+    if (supplies_used.length > 0) {
+      await deductSupplies(suppliesUsed)
+    }
+    return pbJobToApp(record)
+  } catch (err) {
+    rethrowPremiumPocketBaseError(err)
   }
-  return pbJobToApp(record)
 }
 
 export async function updateJob(id: string, updates: JobEditData): Promise<Job | null> {

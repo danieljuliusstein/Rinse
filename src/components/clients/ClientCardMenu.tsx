@@ -6,6 +6,7 @@ import { CalendarPlus, ChatCircle, DotsThreeVertical, Phone, Trash } from '@phos
 import { deleteClient } from '@/lib/api'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import { useActionToast } from '@/providers/ActionToastProvider'
+import { buildSmsComposeUrl } from '@/lib/sms-compose'
 import type { ClientWithStats } from '@/lib/types'
 
 interface ClientCardMenuProps {
@@ -96,7 +97,11 @@ export default function ClientCardMenu({ client, onClientRemoved }: ClientCardMe
             Call
           </a>
           <a
-            href={client.phone ? `sms:${client.phone}` : undefined}
+            href={
+              client.phone
+                ? buildSmsComposeUrl(client.phone, `Hi ${client.name.split(' ')[0] || client.name}`) ?? undefined
+                : undefined
+            }
             role="menuitem"
             className={`client-card-menu-item${client.phone ? '' : ' client-card-menu-item--disabled'}`}
             onClick={(e) => {

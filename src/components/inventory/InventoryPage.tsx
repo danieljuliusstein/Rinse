@@ -72,6 +72,7 @@ export default function InventoryPage() {
 
   const [editingWishlist, setEditingWishlist] = useState<HomeInventoryItem | null>(null)
   const [addingWishlist, setAddingWishlist] = useState(false)
+  const [categoryAddDock, setCategoryAddDock] = useState(false)
 
   const equipmentExpenseMap = useMemo(
     () => expenseByEquipmentId(businessExpenses),
@@ -209,7 +210,11 @@ export default function InventoryPage() {
     : null
 
   return (
-    <div className="screen page-content inventory-section">
+    <div
+      className={`screen page-content body inventory-section${
+        view !== 'home' && categoryAddDock ? ' screen--dock-nav' : ''
+      }`}
+    >
       {view === 'home' ? (
         <InventoryHome
           loading={loading}
@@ -251,6 +256,7 @@ export default function InventoryPage() {
           onDeleteSupply={handleSupplyDelete}
           onDeleteEquipment={handleEquipmentDelete}
           onDeleteWishlist={handleWishlistDelete}
+          onAddDockChange={setCategoryAddDock}
         />
       )}
 

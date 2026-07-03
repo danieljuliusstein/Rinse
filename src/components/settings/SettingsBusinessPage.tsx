@@ -130,9 +130,9 @@ export default function SettingsBusinessPage() {
     <SettingsDetailShell title="Your business">
       <div className="settings-panel">
         <div className="settings-field">
-          <span className="settings-field__label" id="settings-logo-label">
+          <h2 className="settings-section-head" id="settings-logo-label">
             Logo
-          </span>
+          </h2>
           <LogoSection
             logoSrc={displayLogoSrc}
             businessName={settings.business_name}
@@ -147,7 +147,7 @@ export default function SettingsBusinessPage() {
         </div>
 
         <div className="settings-field settings-accent-field">
-          <span className="settings-field__label">Brand accent</span>
+          <h2 className="settings-section-head">Brand accent</h2>
           <p className="settings-panel__lead settings-panel__lead--tight">
             Used on your booking page and client portal.
           </p>
@@ -229,21 +229,23 @@ export default function SettingsBusinessPage() {
 
         <div className="settings-divider" />
 
-        <p className="settings-field__label">Get booked online</p>
-        <p className="settings-panel__lead settings-panel__lead--tight">
+        <h2 className="settings-section-head">Get booked online</h2>
+        <p className="settings-section-desc">
           Works with what you already have — no need to rebuild your site.
         </p>
 
-        {orgSlug && appOrigin && bookingUrl ? (
-          <WebsiteBookingGuide
-            appOrigin={appOrigin}
-            slug={orgSlug}
-            bookingUrl={bookingUrl}
-            brandName={settings.business_name}
-          />
-        ) : (
-          <p className="settings-status-line">Your booking options will appear after you sign in.</p>
-        )}
+        <section className="card settings-booking-card">
+          {orgSlug && appOrigin && bookingUrl ? (
+            <WebsiteBookingGuide
+              appOrigin={appOrigin}
+              slug={orgSlug}
+              bookingUrl={bookingUrl}
+              brandName={settings.business_name}
+            />
+          ) : (
+            <p className="settings-status-line">Your booking options will appear after you sign in.</p>
+          )}
+        </section>
       </div>
     </SettingsDetailShell>
   )

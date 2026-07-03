@@ -12,7 +12,7 @@
   margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-secondary);
 }
 
 .progress-stat-grid {
@@ -33,10 +33,11 @@
 }
 
 .progress-stat-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border);
   border-radius: 16px;
   padding: 14px;
+  box-shadow: var(--shadow-card);
 }
 
 .progress-stat-card__label {
@@ -65,15 +66,16 @@
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.28);
+  color: var(--text-muted);
   margin: 4px 0 8px 4px;
 }
 
 .milestone-list {
-  background: rgba(255, 255, 255, 0.05);
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 .milestone-row {
@@ -81,7 +83,7 @@
   align-items: center;
   gap: 12px;
   padding: 13px 16px;
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 0.5px solid var(--border);
 }
 
 .milestone-row:last-child {
@@ -103,13 +105,13 @@
 }
 
 .milestone-row__icon--unlocked {
-  background: rgba(34, 197, 94, 0.12);
+  background: var(--green-dim);
   color: var(--green-text);
 }
 
 .milestone-row__icon--locked {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.28);
+  background: var(--bg-muted);
+  color: var(--text-muted);
 }
 
 .milestone-row__body {
@@ -126,7 +128,7 @@
 }
 
 .milestone-row__title--locked {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-secondary);
 }
 
 .milestone-row__sub {
@@ -138,7 +140,7 @@
 }
 
 .milestone-row__sub--locked {
-  color: rgba(255, 255, 255, 0.28);
+  color: var(--text-muted);
 }
 
 .milestone-badge {
@@ -156,8 +158,8 @@
 }
 
 .milestone-badge--locked {
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.3);
+  border: 0.5px solid var(--border);
+  color: var(--text-muted);
 }
 
 /* Settings hub row badge */

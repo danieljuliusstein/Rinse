@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import JobEdit from '@/components/JobEdit'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
 import { getJob, getPackages, getSupplies, updateJob } from '@/lib/api'
 import type { JobWithRelations, Package, Supply } from '@/lib/types'
 
@@ -22,11 +23,11 @@ export default function JobEditPage() {
   }, [id])
 
   if (job === undefined || packages.length === 0) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+    return <ScreenLoading />
   }
 
   if (!job) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Job not found</div>
+    return <ScreenMessage>Job not found</ScreenMessage>
   }
 
   return (

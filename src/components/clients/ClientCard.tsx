@@ -1,8 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { MapPin } from '@phosphor-icons/react'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import ClientCardMenu from '@/components/clients/ClientCardMenu'
+import { openMapsDirections } from '@/lib/maps-url'
 import {
   timeAgo,
   type ClientDerived,
@@ -72,6 +74,16 @@ export default function ClientCard({ client, derived, onClientRemoved }: ClientC
           </div>
         </div>
       </button>
+      {client.address?.trim() ? (
+        <button
+          type="button"
+          className="client-card-map"
+          aria-label={`Navigate to ${client.name}`}
+          onClick={() => openMapsDirections(client.address!)}
+        >
+          <MapPin size={16} weight="bold" aria-hidden="true" />
+        </button>
+      ) : null}
       <ClientCardMenu client={client} onClientRemoved={onClientRemoved} />
     </div>
   )

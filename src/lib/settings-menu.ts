@@ -13,6 +13,7 @@ import {
   Trophy,
   UserCircle,
   Wallet,
+  Wrench,
 } from '@phosphor-icons/react'
 
 export type SettingsIconTone = 'green' | 'amber' | 'blue' | 'purple'
@@ -157,6 +158,16 @@ export const SETTINGS_MENU_ITEMS: SettingsMenuItem[] = [
     Icon: CurrencyDollar,
     tone: 'green',
     searchKeys: ['invoices', 'money', 'billing'],
+  },
+  {
+    id: 'tools',
+    group: 'management',
+    title: 'Tools',
+    subtitle: 'Shortcuts for invoices, expenses, and more',
+    href: '/tools',
+    Icon: Wrench,
+    tone: 'blue',
+    searchKeys: ['tools', 'hub', 'shortcuts', 'operations'],
   },
   {
     id: 'expenses',

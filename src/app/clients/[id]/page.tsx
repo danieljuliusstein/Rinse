@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import ClientDetail from '@/components/ClientDetail'
-import { getClient, getClientJobs, getVehiclesForClient } from '@/lib/api'
-import type { Client, JobWithRelations, Vehicle } from '@/lib/types'
+import { ScreenLoading, ScreenMessage } from '@/components/ui'
+import { getClient, getClientJobs, getQuotes, getVehiclesForClient } from '@/lib/api'
+import type { Client, JobWithRelations, QuoteWithRelations, Vehicle } from '@/lib/types'
 
 export default function ClientDetailPage() {
   const params = useParams()
@@ -12,24 +13,28 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<Client | null | undefined>(undefined)
   const [jobs, setJobs] = useState<JobWithRelations[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [quotes, setQuotes] = useState<QuoteWithRelations[]>([])
 
   useEffect(() => {
-    Promise.all([getClient(id), getClientJobs(id), getVehiclesForClient(id)]).then(([c, j, v]) => {
-      setClient(c)
-      setJobs(j)
-      setVehicles(v)
-    })
+    Promise.all([getClient(id), getClientJobs(id), getVehiclesForClient(id), getQuotes()]).then(
+      ([c, j, v, allQuotes]) => {
+        setClient(c)
+        setJobs(j)
+        setVehicles(v)
+        setQuotes(allQuotes.filter((q) => q.client_id === id))
+      }
+    )
   }, [id])
 
   if (client === undefined) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+    return <ScreenLoading />
   }
 
   if (!client) {
-    return <div className="screen page-content" style={{ paddingTop: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Client not found</div>
+    return <ScreenMessage>Client not found</ScreenMessage>
   }
 
   const totalRevenue = jobs.reduce((s, j) => s + j.revenue + j.tip, 0)
 
-  return <ClientDetail client={client} jobs={jobs} vehicles={vehicles} totalRevenue={totalRevenue} />
+  return <ClientDetail client={client} jobs={jobs} vehicles={vehicles} quotes={quotes} totalRevenue={totalRevenue} />
 }

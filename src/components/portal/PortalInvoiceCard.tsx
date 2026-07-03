@@ -5,6 +5,7 @@ import {
   portalMoney,
 } from '@/lib/portal-display'
 import PortalPayButton from './PortalPayButton'
+import PortalInvoiceSignature from './PortalInvoiceSignature'
 
 export default function PortalInvoiceCard({
   invoice,
@@ -27,7 +28,7 @@ export default function PortalInvoiceCard({
     <div className="portal-card">
       <div className="portal-card-inner">
         <div className="portal-card-header-row">
-          <div className="portal-section-label" style={{ marginBottom: 0 }}>
+          <div className="portal-section-label portal-section-label--flush">
             Invoice
           </div>
           <span className={portalInvoiceBadgeClass(invoice.status)}>
@@ -94,6 +95,14 @@ export default function PortalInvoiceCard({
             token={token}
             balanceDue={invoice.balanceDue}
             businessPhone={businessPhone}
+          />
+        ) : null}
+
+        {token ? (
+          <PortalInvoiceSignature
+            token={token}
+            signatureUrl={invoice.signatureUrl}
+            signedAt={invoice.signedAt}
           />
         ) : null}
       </div>

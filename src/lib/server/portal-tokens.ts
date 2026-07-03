@@ -25,7 +25,7 @@ function expiresAt(days = 90): string {
   return d.toISOString().slice(0, 10)
 }
 
-async function resolveClientOrgId(
+export async function resolveClientOrgId(
   pb: Awaited<ReturnType<typeof authenticateServerAdmin>>,
   clientId: string,
 ): Promise<string> {

@@ -1,11 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CaretRight } from '@phosphor-icons/react'
 import { FloatingField, SheetSubmitButton } from '@/components/forms'
-import { Button } from '@/components/ui'
+import { Button, ListRow, SectionGroup } from '@/components/ui'
 import {
   changePassword,
   getCurrentUserEmail,
@@ -96,7 +94,7 @@ export default function SettingsAccountPage() {
       <div ref={formRef} className="settings-account">
         <section className="settings-panel">
           <h2 className="settings-account__heading">Sign-in</h2>
-          <p className="settings-panel__lead">Your Atlas Detailing login uses email and password.</p>
+          <p className="settings-panel__lead">Your Rinse login uses email and password.</p>
           <FloatingField id="account-email" label="Email" filled={Boolean(email)} showCheck={false}>
             <input
               id="account-email"
@@ -179,16 +177,13 @@ export default function SettingsAccountPage() {
           ) : null}
         </section>
 
-        <section className="settings-panel settings-panel--flush">
-          <div className="settings-divider" />
-          <Link href="/settings/access" className="settings-row-link settings-row-link--plain">
-            <span>
-              <span className="settings-account__link-title">Access and data</span>
-              <span className="settings-account__link-sub">Backups, export, and delete account</span>
-            </span>
-            <CaretRight size={16} color="var(--text-dim)" />
-          </Link>
-        </section>
+        <SectionGroup title="Data">
+          <ListRow
+            title="Access and data"
+            subtitle="Backups, export, and delete account"
+            onClick={() => router.push('/settings/access')}
+          />
+        </SectionGroup>
       </div>
     </SettingsDetailShell>
   )

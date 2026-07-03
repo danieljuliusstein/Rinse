@@ -37,3 +37,10 @@ export function trialDaysLeft(org: OrgSubscription, now = new Date()): number | 
   if (diff <= 0) return 0
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
+
+export function isProPlan(org: OrgSubscription | null, now = new Date()): boolean {
+  if (!org) return false
+  if (isFoundingMember(org)) return true
+  if (!isSubscriptionActive(org, now)) return false
+  return org.plan === 'pro'
+}

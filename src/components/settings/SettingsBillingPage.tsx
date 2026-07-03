@@ -12,7 +12,7 @@ import {
   trialDaysLeft,
   type OrgSubscription,
 } from '@/lib/subscription'
-import { STARTER_PLAN } from '@/lib/plans'
+import { STARTER_PLAN, PRO_PLAN } from '@/lib/plans'
 import { readApiJson } from '@/lib/api-json'
 import SettingsDetailShell from './SettingsDetailShell'
 
@@ -100,6 +100,19 @@ export default function SettingsBillingPage() {
     }
   }
 
+  const handleSubscribePro = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const data = await billingFetch('/api/billing/checkout', { plan: 'pro' })
+      if (typeof data.url === 'string') window.location.href = data.url
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Checkout failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const handlePortal = async () => {
     setBusy(true)
     setError(null)
@@ -160,7 +173,7 @@ export default function SettingsBillingPage() {
 
       {!founding && !subscribed ? (
         <section className="card settings-billing-plans">
-          <div className="settings-billing-plan">
+          <div className="settings-billing-plan settings-billing-plan--featured">
             <div>
               <h2 className="settings-billing-card__title">{STARTER_PLAN.name}</h2>
               <p className="settings-panel__lead settings-panel__lead--tight">
@@ -184,6 +197,31 @@ export default function SettingsBillingPage() {
             <Button type="button" variant="primary" fullWidth={false} disabled={busy} onClick={() => void handleSubscribe()}>
               Subscribe
             </Button>
+          </div>
+
+          <div className="settings-billing-plan settings-billing-plan--muted">
+            <div>
+              <div className="settings-billing-plan__row">
+                <h2 className="settings-billing-card__title">{PRO_PLAN.name}</h2>
+                {PRO_PLAN.comingSoon ? <Badge tone="amber">Coming soon</Badge> : null}
+              </div>
+              <p className="settings-panel__lead settings-panel__lead--tight">
+                {PRO_PLAN.priceLabel} — {PRO_PLAN.tagline}
+              </p>
+              <ul className="settings-billing-features settings-billing-features--compact">
+                {PRO_PLAN.features.slice(1, 5).map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+              {PRO_PLAN.footnote ? (
+                <p className="settings-status-line">{PRO_PLAN.footnote}</p>
+              ) : null}
+            </div>
+            {!PRO_PLAN.comingSoon ? (
+              <Button type="button" variant="secondary" fullWidth={false} disabled={busy} onClick={() => void handleSubscribePro()}>
+                Subscribe to Pro
+              </Button>
+            ) : null}
           </div>
         </section>
       ) : null}

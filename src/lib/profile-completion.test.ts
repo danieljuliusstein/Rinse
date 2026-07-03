@@ -3,7 +3,7 @@ import { computeProfileCompletion } from './profile-completion'
 import type { AppSettings } from './settings'
 
 const base: AppSettings = {
-  business_name: 'Atlas Detailing',
+  business_name: 'Rinse',
   business_phone: '(404) 555-0142',
   business_email: 'hello@atlas.com',
   business_address: '1200 Peachtree St, Atlanta, GA',

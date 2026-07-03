@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, CameraPlus, Image as ImageIcon, ShareNetwork } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import AddJobPhotoSheet from '@/components/jobs/AddJobPhotoSheet'
+import { EmptyState } from '@/components/ui'
 import JobPhotoLightbox from '@/components/jobs/JobPhotoLightbox'
 import ShareLinkActions from '@/components/portal/ShareLinkActions'
 import { deleteJobPhoto, getJobPhotos, uploadJobPhoto } from '@/lib/api'
@@ -63,8 +64,12 @@ function PhotoSection({
       </div>
       <div className="job-photos__grid">
         {photos.length === 0 ? (
-          <div className="job-photos__thumb job-photos__thumb--empty" style={{ gridColumn: '1 / -1' }}>
-            <ImageIcon size={28} weight="duotone" aria-hidden="true" />
+          <div className="job-photos__empty-state">
+            <EmptyState
+              illustration="photos"
+              title={`No ${label.toLowerCase()} photos`}
+              description="Tap Add to capture from your camera or library."
+            />
           </div>
         ) : (
           photos.map((p, i) => (

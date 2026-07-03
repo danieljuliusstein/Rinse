@@ -1,8 +1,8 @@
 # UI CSS Audit
 
-Owner map for shared patterns across the detailing app. Use this when adding surfaces or consolidating CSS in Phase 3.
+Owner map for shared patterns across the detailing app. Use this when adding surfaces or consolidating CSS.
 
-**Last updated:** Phase 1 Week 1 (design evolution sprint)
+**Last updated:** Wave 17 (CSS consolidation)
 
 ---
 
@@ -10,9 +10,9 @@ Owner map for shared patterns across the detailing app. Use this when adding sur
 
 | System | Scope | Token source |
 |--------|-------|--------------|
-| Operator Dark | `/`, `/jobs`, `/clients`, sheets, FAB | `globals.css` `:root` + `app-ui.css` |
-| Client Light | `/book/*`, `/portal/*` (Phase 2) | `client-light.css` → `--cl-*` |
-| Sheet sub-language | Bottom sheets, quick actions, inventory pickers | `globals.css` inventory/sheet blocks |
+| Operator Light | `/`, `/jobs`, `/clients`, sheets, FAB | `tokens.css` → `globals.css` `:root` + `app-ui.css` |
+| Client Light | `/book/*`, `/portal/*` | `client-light.css` → `--cl-*` |
+| Sheet sub-language | Bottom sheets, quick actions, supply picker | `globals.css` inv-sheet blocks + `premium-sheet.css` |
 
 **Accent green:** `#22c55e` via `--green` / `--green-text`. Inventory OK state keeps `--inv-ok: #3dc97a` (semantic, not UI accent).
 
@@ -50,7 +50,7 @@ Used by: `JobsList`, `Dashboard` (`HomeJobRow`).
 | **Primary** | `app-ui.css` | `.client-card`, `.client-card.vip`, `.client-card-main` |
 | Menu | `globals.css` | `.client-card-menu-*` (popover actions) |
 
-**Overlap (defer Phase 3):** `globals.css` has `.clients-*` list utilities from earlier iteration. Prefer `app-ui.css` `.client-card` for new work.
+Legacy `.clients-screen` wrapper removed (Wave 17). List screens use `screen page-content body` only.
 
 Used by: `ClientsList`, `ClientDetail` related lists.
 
@@ -61,9 +61,7 @@ Used by: `ClientsList`, `ClientDetail` related lists.
 | Owner | File | Notes |
 |-------|------|-------|
 | **Canonical** | `globals.css` | Full layout, FAB, safe-area, animations |
-| **Overrides** | `app-ui.css` | Minor tab label sizing — **duplicate risk** |
-
-**Action (Phase 3):** Collapse `app-ui.css` bottom-nav block into globals or document as intentional overrides only.
+| **Overrides** | `embed.css`, `product-tour.css` | Embed hide, tour dim only |
 
 Used by: `BottomNav.tsx`.
 
@@ -73,29 +71,59 @@ Used by: `BottomNav.tsx`.
 
 | Owner | File | Notes |
 |-------|------|-------|
-| **Primary** | `app-ui.css` | `.page-header`, `h1`, `h1.lg`, subtitle `p` |
-| Actions | `app-ui.css` | `.icon-btn` beside header |
+| **Primary** | `app-ui.css` | `.page-header`, `h1`, `h1.lg`, subtitle `p`, `--compact`, `__title-block` |
+| Actions | `app-ui.css` | `.page-header-actions`, `.icon-btn` beside header |
+| Header buttons | `components.css` | `.page-header__action` (compact screens) |
 
-Used by: `Dashboard`, `JobsList`, `ClientsList`, `Reports`, settings, etc.
+Used by: `Dashboard`, `JobsList`, `ClientsList`, `Reports`, settings, pipeline, CRM, messages, etc.
 
-**Messages affordance:** Dashboard uses `.icon-btn` + optional `messages.css` `.home-header__messages` pattern for unread state.
+**Screen shell:** Prefer `screen page-content body` with no feature-specific wrapper class unless the feature CSS file defines layout rules for it (e.g. `.money-screen`, `.inventory-section`).
 
 ---
 
-## Removed / dead (Phase 1 — June 2026)
+### Sheet forms
+
+| Owner | File | Notes |
+|-------|------|-------|
+| Shell | `globals.css` | `.inv-sheet-*`, `.inv-supply-picker-*` |
+| **Light operator forms** | `light-sheet.css` | `BottomSheet variant="light"` (default) — all operator sheets |
+| **Dark premium** | `premium-sheet.css` | Legacy layout class names only; dark chrome deprecated |
+| Submit | `premium-sheet.css` + `light-sheet.css` | `.sheet-submit`, `.sheet-footer` |
+| Fields | `floating-labels.css` + `@/components/forms` | `FloatingField`, `PillGroup` |
+
+**Wave 19–20:** All operator `BottomSheet` surfaces use light chrome. Invoice client signatures: `signature_url` + `signed_at` on portal/PDF/preview.
+
+Legacy `.inv-field-*` removed (Wave 17). Supply picker retained.
+
+---
+
+### Settings hub
+
+| Owner | File | Notes |
+|-------|------|-------|
+| Hub layout | `settings.css` | `.settings-hub`, `.settings-panel`, `.settings-menu-trailing` |
+| Hub rows | `@/components/ui` `ListRow` via `SettingsMenuListRow` | Icon tones from `ListRow` |
+| Badges | `app-ui.css`, `settings-progress.css` | `.settings-menu-profile-badge`, `.settings-menu-milestone-badge` |
+
+Legacy `.settings-menu-item` / `.settings-row-link` removed (Wave 17).
+
+---
+
+## Removed / dead
 
 | Item | Resolution |
 |------|------------|
-| `home/home.css` | **Deleted** with unrouted `HomeScreen.tsx` |
-| `JobsRevenueChart.tsx` | **Deleted**; `lib/jobs-revenue.ts` kept for Reports revenue aggregation |
-| Stray greens `#16a34a`, `#4caf50` | Replaced with `var(--green)` / `var(--cl-accent)`; guarded by `css-accent-guard.test.ts` |
-| `--inv-ok: #3dc97a` | Kept in globals (inventory semantic, not UI accent) |
+| `home/home.css` | **Deleted** with unrouted `HomeScreen.tsx` (Phase 1) |
+| `JobsRevenueChart.tsx` | **Deleted**; `lib/jobs-revenue.ts` kept (Phase 1) |
+| Stray greens `#16a34a`, `#4caf50` | Replaced with tokens; guarded by `css-accent-guard.test.ts` |
+| `.inv-field-*`, `.inv-select-wrap`, `.inv-input-affix`, `.inv-status-*` | **Deleted** — use floating labels (Wave 17) |
+| `.clients-screen`, `.messages-screen`, `.crm-screen`, `.pipeline-screen`, `.quotes-screen` | **Deleted** — empty wrappers (Wave 17) |
+| `.settings-menu-item`, `.settings-row-link` | **Deleted** — hub uses `ListRow` (Wave 17) |
+| `globals.css` `.clients-*` list utilities | **Removed** — only `.client-card-menu-*` remains |
 
 ---
 
-## Deferred (Phase 2–3)
+## Deferred / intentional
 
-- QuickAddJob footer → `.btn-primary` / `.btn-ghost` (**done** Phase 2)
-- Portal → `client-light.css` tokens (**done** Phase 2)
-- `src/components/ui/*` primitives (**done** Phase 3) — adopt incrementally in new screens
-- Empty state standardization (**done** Quotes, Inventory; Jobs/Clients already used `.empty-state`)
+- `.inv-sheet-save` / `.inv-sheet-cancel` in `globals.css` — legacy inverted buttons; new sheets use `.sheet-submit`. Remove when confirmed no external HTML depends on them.
+- `src/components/ui/*` — adopt incrementally in new screens (ongoing)

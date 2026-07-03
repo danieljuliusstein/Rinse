@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { apiUnauthorized, verifyApiSecret } from '@/lib/server/api-auth'
+import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
+import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
@@ -9,10 +11,16 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { to, clientName, businessName, portalUrl, subject, message } = body
+    const { to, clientName, businessName, portalUrl, subject, message, organizationId } = body
 
     if (!to || !portalUrl || !businessName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (organizationId) {
+      const pb = await authenticateServerAdmin()
+      const premiumDenied = await requirePremiumSubscription(pb, String(organizationId))
+      if (premiumDenied) return premiumDenied
     }
 
     if (!resend) {

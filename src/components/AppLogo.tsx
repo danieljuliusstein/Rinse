@@ -14,7 +14,7 @@ export default function AppLogo({ size = 48, className = '', priority = false }:
     >
       <Image
         src="/logo.png"
-        alt="Atlas Detailing"
+        alt="Rinse"
         fill
         className="business-logo"
         priority={priority}

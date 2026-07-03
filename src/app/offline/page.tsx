@@ -1,13 +1,23 @@
-import { WifiSlash } from '@phosphor-icons/react/dist/ssr'
+'use client'
+
+import { WifiSlash } from '@phosphor-icons/react'
+import { Button, EmptyState } from '@/components/ui'
 
 export default function OfflinePage() {
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#0f0f0f', color: '#f5f5f5' }}>
-      <WifiSlash size={48} weight="duotone" color="#737373" aria-hidden="true" style={{ marginBottom: 16 }} />
-      <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>You&apos;re offline</h1>
-      <p style={{ fontSize: 14, color: '#737373', textAlign: 'center' }}>
-        Reconnect to sync your latest data.
-      </p>
+    <div className="screen page-content body offline-screen">
+      <EmptyState
+        icon={<WifiSlash size={48} weight="duotone" className="offline-screen__icon" aria-hidden="true" />}
+        title="You're offline"
+        description="Reconnect to sync your latest data."
+        actionLabel="Try again"
+        onAction={() => window.location.reload()}
+      />
+      <div className="offline-screen__hint">
+        <Button variant="ghost" onClick={() => window.history.back()}>
+          Go back
+        </Button>
+      </div>
     </div>
   )
 }

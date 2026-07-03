@@ -78,6 +78,8 @@ export function rangePeriodLabel(range: DateRangeKey, now = new Date()): string 
       return start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     case 'this_year':
       return String(now.getFullYear())
+    case 'lifetime':
+      return 'All time'
     case 'this_week': {
       const sameMonth = start.getMonth() === end.getMonth()
       const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -101,6 +103,9 @@ export function rangeDateSpanLabel(range: DateRangeKey, now = new Date()): strin
   })
   if (range === 'this_year') {
     return `Jan 1 – ${endStr}`
+  }
+  if (range === 'lifetime') {
+    return `Since ${startStr}`
   }
   return `${startStr} – ${endStr}`
 }

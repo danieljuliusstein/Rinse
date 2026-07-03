@@ -183,6 +183,31 @@ async function processItem(item: QueueItem, maps: IdMaps): Promise<void> {
       await invPb.markInvoicePaid(resolvedId, op.params.method)
       break
     }
+    case 'updateInvoice': {
+      const invoiceId = maps.resolveInvoice(op.params.invoiceId)
+      const resolvedId = maps.invoices.has(op.params.invoiceId)
+        ? invoiceId
+        : await resolveInvoiceId(op.params.invoiceId)
+      await invPb.updateInvoice(resolvedId, op.params.patch)
+      break
+    }
+    case 'deleteInvoice': {
+      const invoiceId = maps.resolveInvoice(op.params.invoiceId)
+      const resolvedId = maps.invoices.has(op.params.invoiceId)
+        ? invoiceId
+        : await resolveInvoiceId(op.params.invoiceId)
+      await invPb.deleteInvoice(resolvedId)
+      break
+    }
+    case 'duplicateInvoice': {
+      const invoiceId = maps.resolveInvoice(op.params.invoiceId)
+      const resolvedId = maps.invoices.has(op.params.invoiceId)
+        ? invoiceId
+        : await resolveInvoiceId(op.params.invoiceId)
+      const invoice = await invPb.duplicateInvoice(resolvedId)
+      maps.invoices.set(op.params.invoiceId, invoice.id)
+      break
+    }
     case 'createSupply': {
       const supply = await suppliesPb.createSupply(op.params)
       maps.supplies.set(op.localSupplyId, supply.id)

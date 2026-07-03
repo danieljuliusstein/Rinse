@@ -128,7 +128,7 @@ export default function EquipmentEditSheet({
 
   return (
     <BottomSheet
-      variant="premium"
+      variant="light"
       title={mode === 'add' ? 'Add equipment' : item?.name ?? 'Edit equipment'}
       subtitle={mode === 'add' ? 'New durable tool or machine' : 'Update equipment details'}
       onClose={onClose}

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CaretRight, Images } from '@phosphor-icons/react'
+import { Images } from '@phosphor-icons/react'
+import { ListRow } from '@/components/ui'
 import { getJobPhotos } from '@/lib/api'
 import type { JobWithRelations } from '@/lib/types'
 
@@ -27,15 +28,12 @@ export default function JobPhotosEntry({ job, onPress }: JobPhotosEntryProps) {
       : 'No photos yet'
 
   return (
-    <button type="button" className="job-photos-entry" onClick={onPress}>
-      <span className="job-photos-entry__icon">
-        <Images size={20} weight="duotone" color="var(--green)" aria-hidden="true" />
-      </span>
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <div className="job-photos-entry__title">Photos</div>
-        <div className="job-photos-entry__sub">{subtitle}</div>
-      </span>
-      <CaretRight size={16} color="var(--text-dim)" aria-hidden="true" />
-    </button>
+    <ListRow
+      icon={<Images size={18} weight="duotone" />}
+      iconTone="green"
+      title="Photos"
+      subtitle={subtitle}
+      onClick={onPress}
+    />
   )
 }

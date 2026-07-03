@@ -1,6 +1,7 @@
 import { getPocketBase } from '../pocketbase'
 import { pbQuoteToApp, pbQuoteToAppWithRelations, escapeFilterValue, type PbRecord } from './mappers'
 import { syncLeadForQuoteJob } from './leads-pocketbase'
+import { rethrowPremiumPocketBaseError } from '../premium-api'
 import { withOrganization } from './tenant-pocketbase'
 import type { Quote, QuoteInput, QuoteWithRelations } from '../types'
 
@@ -30,21 +31,25 @@ export async function getQuote(id: string): Promise<QuoteWithRelations | null> {
 }
 
 export async function createQuote(input: QuoteInput): Promise<Quote> {
-  const created = await pb().collection('quotes').create<PbRecord>(
-    withOrganization({
-      quote_number: 'PENDING',
-      client_id: input.client_id,
-      package_id: input.package_id,
-      vehicle_type: input.vehicle_type,
-      location_type: input.location_type,
-      date: input.date,
-      subtotal: input.subtotal,
-      notes: input.notes ?? '',
-      status: 'draft',
-      valid_until: input.valid_until ?? '',
-    }),
-  )
-  return pbQuoteToApp(created)
+  try {
+    const created = await pb().collection('quotes').create<PbRecord>(
+      withOrganization({
+        quote_number: 'PENDING',
+        client_id: input.client_id,
+        package_id: input.package_id,
+        vehicle_type: input.vehicle_type,
+        location_type: input.location_type,
+        date: input.date,
+        subtotal: input.subtotal,
+        notes: input.notes ?? '',
+        status: 'draft',
+        valid_until: input.valid_until ?? '',
+      }),
+    )
+    return pbQuoteToApp(created)
+  } catch (err) {
+    rethrowPremiumPocketBaseError(err)
+  }
 }
 
 export async function updateQuoteStatus(id: string, status: Quote['status']): Promise<Quote | null> {

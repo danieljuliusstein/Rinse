@@ -13,6 +13,9 @@ export type QueueOperation =
   | { type: 'markInvoiceSent'; params: { invoiceId: string } }
   | { type: 'addPayment'; params: { invoiceId: string; payment: import('./types').Payment } }
   | { type: 'markInvoicePaid'; params: { invoiceId: string; method: string } }
+  | { type: 'updateInvoice'; params: { invoiceId: string; patch: import('./api/invoices-local').InvoiceUpdate } }
+  | { type: 'deleteInvoice'; params: { invoiceId: string } }
+  | { type: 'duplicateInvoice'; params: { invoiceId: string } }
   | { type: 'createSupply'; params: import('./types').SupplyInput; localSupplyId: string }
   | { type: 'updateSupply'; params: { id: string; input: Partial<import('./types').SupplyInput> } }
   | { type: 'restockSupply'; params: { id: string; input: import('./types').RestockInput } }

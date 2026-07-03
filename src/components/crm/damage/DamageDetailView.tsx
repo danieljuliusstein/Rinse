@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Image as ImageIcon } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import { FloatingField, SheetSubmitButton } from '@/components/forms'
+import { Badge, Button, Card, ListRow, SectionGroup } from '@/components/ui'
 import { deleteDamageDoc, updateDamageDocNote } from '@/lib/api'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import { formatCapturedAt, formatDamageDate } from '@/lib/damage-docs'
@@ -65,98 +66,81 @@ export default function DamageDetailView({
   }
 
   return (
-    <div className="screen damage-docs">
-      <div className="page-content" style={{ paddingTop: 16 }}>
-        <div className="nav-row">
-          <BackButton onClick={() => router.back()} />
-          <span className="nav-row__title">Damage detail</span>
-          {!editing && (
-            <button type="button" className="nav-row__action" onClick={() => setEditing(true)}>
-              Edit note
-            </button>
-          )}
+    <div className="screen page-content body">
+      <header className="page-header page-header--compact crm-page-header">
+        <BackButton onClick={() => router.back()} />
+        <div className="page-header__title-block">
+          <h1>Damage detail</h1>
         </div>
+        {!editing ? (
+          <button type="button" className="ui-section__action" onClick={() => setEditing(true)}>
+            Edit note
+          </button>
+        ) : null}
+      </header>
 
-        <div className="detail-photo">
-          {damage.photo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={damage.photo_url} alt="" />
-          ) : (
-            <>
-              <ImageIcon size={40} weight="duotone" aria-hidden="true" />
-              <span style={{ position: 'absolute', bottom: 12, fontSize: 12, color: 'var(--dmg-t3)' }}>
-                No photo
-              </span>
-            </>
-          )}
-          <span className="detail-badge">Pre-existing damage</span>
-          {damage.photo_url ? (
-            <span className="detail-photo__count">
-              {photoIndex} of {photoTotal} photo
-            </span>
-          ) : null}
-        </div>
-
-        {editing ? (
-          <div ref={formRef} className="page-form-card page-form" style={{ marginBottom: 12 }}>
-            <FloatingField id="damage-edit-note" label="Note" filled={note.trim().length > 0} optional textarea>
-              <textarea
-                id="damage-edit-note"
-                className={`f-textarea${note.trim() ? ' hv' : ''}`}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder=" "
-                rows={4}
-              />
-            </FloatingField>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className="btn-secondary" onClick={() => setEditing(false)} disabled={busy}>
-                Cancel
-              </button>
-              <div className="page-form-save" style={{ flex: 1, margin: 0 }}>
-                <SheetSubmitButton
-                  label={busy ? 'Saving…' : 'Save note'}
-                  ready
-                  disabled={busy}
-                  onClick={() => void handleSaveNote()}
-                />
-              </div>
-            </div>
-          </div>
+      <Card className="crm-detail-photo job-form-section">
+        {damage.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={damage.photo_url} alt="" className="crm-detail-photo__img" />
         ) : (
-          <div className="card card--flush" style={{ padding: '0 14px', marginBottom: 14 }}>
-            <div className="detail-row">
-              <span className="detail-row__key">Area</span>
-              <span className="detail-row__val">{damage.area}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-row__key">Note</span>
-              <span className="detail-row__val">{damage.note || '—'}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-row__key">Date</span>
-              <span className="detail-row__val">{formatDamageDate(damage.date)}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-row__key">Captured</span>
-              <span className="detail-row__val detail-row__val--muted">
-                {formatCapturedAt(damage.captured_at)}
-              </span>
-            </div>
+          <div className="crm-detail-photo__empty">
+            <ImageIcon size={40} weight="duotone" aria-hidden="true" />
+            <span>No photo</span>
           </div>
         )}
+        <Badge tone="amber" className="crm-detail-photo__badge">
+          Pre-existing damage
+        </Badge>
+        {damage.photo_url ? (
+          <span className="crm-detail-photo__count">
+            {photoIndex} of {photoTotal} photo
+          </span>
+        ) : null}
+      </Card>
 
-        {!editing && (
-          <div className="detail-actions">
-            <button type="button" className="btn-secondary" onClick={() => setEditing(true)} disabled={busy}>
-              Edit note
-            </button>
-            <button type="button" className="btn-danger" onClick={handleDelete} disabled={busy}>
-              Delete
-            </button>
+      {editing ? (
+        <div ref={formRef} className="page-form-card page-form job-form-section">
+          <FloatingField id="damage-edit-note" label="Note" filled={note.trim().length > 0} optional textarea>
+            <textarea
+              id="damage-edit-note"
+              className={`f-textarea${note.trim() ? ' hv' : ''}`}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder=" "
+              rows={4}
+            />
+          </FloatingField>
+          <div className="package-form-actions">
+            <Button variant="secondary" disabled={busy} onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+            <div className="page-form-save">
+              <SheetSubmitButton
+                label={busy ? 'Saving…' : 'Save note'}
+                ready
+                disabled={busy}
+                onClick={() => void handleSaveNote()}
+              />
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <SectionGroup title="Details">
+          <ListRow title="Area" trailing={damage.area} />
+          <ListRow title="Note" trailing={damage.note || '—'} />
+          <ListRow title="Date" trailing={formatDamageDate(damage.date)} />
+          <ListRow title="Captured" trailing={formatCapturedAt(damage.captured_at)} />
+        </SectionGroup>
+      )}
+
+      {!editing ? (
+        <div className="crm-detail-actions">
+          <Button variant="danger" disabled={busy} onClick={() => void handleDelete()}>
+            Delete record
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }

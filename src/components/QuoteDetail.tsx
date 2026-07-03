@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, FilePdf, PaperPlaneTilt, X } from '@phosphor-icons/react'
+import { Check, FileText, Lock, X } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
-import ShareLinkActions from '@/components/portal/ShareLinkActions'
-import { SHARE_LINK_PRESETS } from '@/lib/share-link-presets'
+import QuoteSendSheet from '@/components/quote/QuoteSendSheet'
+import { ActionDock, Badge, Button } from '@/components/ui'
 import {
   acceptQuote,
   declineQuote,
@@ -14,15 +14,16 @@ import {
 } from '@/lib/api'
 import { fmtDetailed } from '@/lib/calculations'
 import { downloadQuotePdf } from '@/lib/pdf/downloadQuotePdf'
+import { createShareLink, emailShareLink } from '@/lib/portal-client'
 import { loadSettingsAsync, type AppSettings } from '@/lib/settings'
+import { usePremiumGate } from '@/hooks/usePremiumGate'
 import type { QuoteWithRelations } from '@/lib/types'
 
-const statusBadge: Record<string, string> = {
-  draft: 'badge-draft',
-  sent: 'badge-pending',
-  accepted: 'badge-paid',
-  declined: 'badge-overdue',
-  expired: 'badge-overdue',
+function formatQuoteDate(dateStr?: string): string {
+  if (!dateStr?.trim()) return 'Date TBD'
+  const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return 'Date TBD'
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
 export default function QuoteDetail({ quote: initial }: { quote: QuoteWithRelations }) {
@@ -31,26 +32,85 @@ export default function QuoteDetail({ quote: initial }: { quote: QuoteWithRelati
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
-  const [sentDone, setSentDone] = useState(false)
+  const [sendOpen, setSendOpen] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [portalUrl, setPortalUrl] = useState<string | undefined>()
+
+  const { runGated: runSendGated, isPremiumLocked: sendLocked } = usePremiumGate('send_quote')
+  const { runGated: runPortalGated } = usePremiumGate('share_portal')
+  const { runGated: runPdfGated } = usePremiumGate('export_pdf')
 
   useEffect(() => {
     void loadSettingsAsync().then(setSettings)
   }, [])
+
+  useEffect(() => {
+    if (!quote.client_id) return
+    createShareLink({ clientId: quote.client_id, quoteId: quote.id, scope: 'quote' })
+      .then((link) => setPortalUrl(link.url))
+      .catch(() => setPortalUrl(undefined))
+  }, [quote.client_id, quote.id])
 
   const refresh = useCallback(async () => {
     const updated = await getQuote(quote.id)
     if (updated) setQuote(updated)
   }, [quote.id])
 
-  const handleSend = async () => {
-    setBusy(true)
-    setMessage('')
-    try {
+  const ensureSent = async () => {
+    if (quote.status === 'draft') {
       await markQuoteSent(quote.id)
       await refresh()
-      setSentDone(true)
-      window.setTimeout(() => setSentDone(false), 2000)
-      setMessage('Marked as sent — share link below to email client')
+    }
+  }
+
+  const resolvePortalUrl = async () => {
+    if (portalUrl) return portalUrl
+    const link = await createShareLink({
+      clientId: quote.client_id,
+      quoteId: quote.id,
+      scope: 'quote',
+    })
+    setPortalUrl(link.url)
+    return link.url
+  }
+
+  const copyLink = async () => {
+    const url = await resolvePortalUrl()
+    await navigator.clipboard.writeText(url)
+    setLinkCopied(true)
+    window.setTimeout(() => setLinkCopied(false), 2000)
+    if (quote.status === 'draft') await ensureSent()
+    setMessage('Link copied')
+    await refresh()
+  }
+
+  const sendEmail = async () => {
+    if (!settings?.business_email || !quote.client?.email) {
+      await ensureSent()
+      setMessage('Quote marked as sent')
+      return
+    }
+    await ensureSent()
+    const url = await resolvePortalUrl()
+    await emailShareLink({
+      to: quote.client.email,
+      clientName: quote.client.name,
+      businessName: settings.business_name,
+      portalUrl: url,
+      subject: `Quote ${quote.quote_number} from ${settings.business_name}`,
+      message: `Hi ${quote.client.name},\n\nYour quote for ${fmtDetailed(quote.subtotal)} is ready to review.`,
+    })
+    setMessage('Quote sent via email')
+    await refresh()
+  }
+
+  const handlePdf = async () => {
+    setBusy(true)
+    try {
+      const s = settings ?? (await loadSettingsAsync())
+      await downloadQuotePdf(quote, s)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'PDF failed')
     } finally {
       setBusy(false)
     }
@@ -83,84 +143,91 @@ export default function QuoteDetail({ quote: initial }: { quote: QuoteWithRelati
     }
   }
 
-  const handlePdf = async () => {
-    setBusy(true)
-    try {
-      const settings = await loadSettingsAsync()
-      await downloadQuotePdf(quote, settings)
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'PDF failed')
-    } finally {
-      setBusy(false)
-    }
-  }
+  const proposedLabel = formatQuoteDate(quote.date)
+
+  const canRespond = (quote.status === 'sent' || quote.status === 'draft') && !quote.job_id
 
   return (
-    <div className="screen page-content">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, paddingBottom: 20 }}>
+    <div className="screen page-content quote-screen screen--dock-nav">
+      <header className="page-header page-header--compact">
         <BackButton onClick={() => router.back()} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 600 }}>{quote.quote_number}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{quote.client?.name}</div>
+        <div className="page-header__title-block">
+          <h1>{quote.quote_number}</h1>
+          <Badge status={quote.status} />
         </div>
-        <span className={`badge ${statusBadge[quote.status]}`}>{quote.status}</span>
-      </div>
+      </header>
 
-      <div className="card" style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 14, marginBottom: 8 }}>{quote.package?.name} · {quote.vehicle_type}</div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
-          Proposed: {new Date(quote.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+      <p className="quote-screen__client">{quote.client?.name}</p>
+
+      <div className="card quote-doc-card">
+        <div className="quote-doc-card__service">
+          {quote.package?.name} · {quote.vehicle_type}
         </div>
-        {quote.valid_until && (
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-            Valid until {new Date(quote.valid_until + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        <div className="quote-doc-card__date">Proposed {proposedLabel}</div>
+        {quote.valid_until ? (
+          <div className="quote-doc-card__valid">
+            Valid until {formatQuoteDate(quote.valid_until.split('T')[0])}
           </div>
-        )}
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--green)' }}>{fmtDetailed(quote.subtotal)}</div>
-        {quote.notes && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>{quote.notes}</div>}
+        ) : null}
+        <div className="quote-doc-card__amount">{fmtDetailed(quote.subtotal)}</div>
+        {quote.notes ? <p className="quote-doc-card__notes">{quote.notes}</p> : null}
       </div>
 
-      {quote.client && (
-        <div className="card job-detail-phase" style={{ marginBottom: 12 }}>
-          <div className="section-title">{SHARE_LINK_PRESETS.quote.sectionTitle}</div>
-          <ShareLinkActions
-            clientId={quote.client_id}
-            clientEmail={quote.client.email}
-            clientName={quote.client.name}
-            quoteId={quote.id}
-            context="quote"
-            quoteNumber={quote.quote_number}
-          />
-        </div>
-      )}
+      {message ? <p className="quote-screen__message">{message}</p> : null}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-        <button type="button" className="btn-ghost" disabled={busy} onClick={handlePdf} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <FilePdf size={18} /> PDF
-        </button>
-        <button type="button" className="btn-ghost" disabled={busy || sentDone || quote.status !== 'draft'} onClick={handleSend} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <PaperPlaneTilt size={18} /> {busy ? 'Sending…' : sentDone ? 'Sent' : 'Mark sent'}
-        </button>
-      </div>
+      {quote.job_id ? (
+        <Button variant="secondary" fullWidth onClick={() => router.push(`/jobs/${quote.job_id}`)}>
+          <FileText size={18} /> View scheduled job
+        </Button>
+      ) : null}
 
-      {(quote.status === 'sent' || quote.status === 'draft') && !quote.job_id && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-          <button type="button" className="btn-primary" disabled={busy} onClick={handleAccept} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <Check size={18} /> Accept → job
-          </button>
-          <button type="button" className="btn-ghost" disabled={busy} onClick={handleDecline} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <X size={18} /> Decline
-          </button>
-        </div>
-      )}
+      <ActionDock aboveNav>
+        <Button
+          variant="primary"
+          className={`ui-action-dock__btn ui-action-dock__btn--primary${sendLocked ? ' ui-action-dock__btn--premium-locked' : ''}`}
+          onClick={() => runSendGated(() => setSendOpen(true))}
+          disabled={busy || quote.status === 'accepted' || quote.status === 'declined'}
+          aria-label={sendLocked ? 'Send quote — subscription required' : 'Send quote'}
+        >
+          {sendLocked ? <Lock size={16} weight="bold" aria-hidden="true" /> : null}
+          Send
+        </Button>
+        {canRespond ? (
+          <>
+            <Button variant="secondary" className="ui-action-dock__btn" onClick={() => void handleAccept()} disabled={busy}>
+              <Check size={16} /> Accept
+            </Button>
+            <Button variant="ghost" className="ui-action-dock__btn" onClick={() => void handleDecline()} disabled={busy}>
+              <X size={16} /> Decline
+            </Button>
+          </>
+        ) : null}
+      </ActionDock>
 
-      {quote.job_id && (
-        <button type="button" className="btn-ghost" style={{ width: '100%', marginBottom: 12 }} onClick={() => router.push(`/jobs/${quote.job_id}`)}>
-          View scheduled job
-        </button>
-      )}
-
-      {message && <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>{message}</div>}
+      <QuoteSendSheet
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        canEmail={Boolean(settings?.business_email && quote.client?.email)}
+        busy={busy}
+        linkCopied={linkCopied}
+        onEmail={() =>
+          runSendGated(() => {
+            setBusy(true)
+            void sendEmail()
+              .catch((e) => setMessage(e instanceof Error ? e.message : 'Send failed'))
+              .finally(() => setBusy(false))
+          })
+        }
+        onCopyLink={() =>
+          runPortalGated(() => {
+            setBusy(true)
+            void copyLink()
+              .catch((e) => setMessage(e instanceof Error ? e.message : 'Copy failed'))
+              .finally(() => setBusy(false))
+          })
+        }
+        onPdf={() => runPdfGated(() => void handlePdf())}
+      />
     </div>
   )
 }

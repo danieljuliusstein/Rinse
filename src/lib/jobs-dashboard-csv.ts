@@ -167,7 +167,7 @@ export function formatJobsDashboardCSV(
 ): string {
   const sortedRows = [...rows].sort((a, b) => a.date.localeCompare(b.date))
   const kpis = computeDashboardKpis(sortedRows)
-  const business = options.businessName?.trim() || 'Atlas Detailing'
+  const business = options.businessName?.trim() || 'Rinse'
   const period = options.periodLabel?.trim() || 'This month'
   const periodRange = options.periodRange?.trim() || period
   const generated = new Date().toLocaleString('en-US', {

@@ -11,6 +11,7 @@ import { DEFAULT_BOOKING_SCHEDULE, type BookingSchedule } from '@/lib/booking-av
 import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
 import type { TimeBlock } from '@/lib/types'
 import SettingsDetailShell from './SettingsDetailShell'
+import SettingsToggle from './SettingsToggle'
 import { useSettingsDraft } from './SettingsDraftProvider'
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -41,20 +42,7 @@ function formatBlockDate(date: string) {
 }
 
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      onClick={() => onChange(!on)}
-      className="settings-toggle"
-    >
-      <span className={`settings-toggle__track${on ? ' settings-toggle__track--on' : ''}`}>
-        <span className="settings-toggle__thumb" />
-      </span>
-    </button>
-  )
+  return <SettingsToggle on={on} onChange={onChange} label={label} />
 }
 
 export default function SettingsSchedulePage() {
@@ -158,9 +146,9 @@ export default function SettingsSchedulePage() {
     <SettingsDetailShell title="Schedule & time off">
       <div ref={formRef} className="settings-panel">
         <div className="settings-field">
-          <span className="settings-field__label">Work days</span>
-          <p className="settings-field-hint">Days clients can book online.</p>
-          <div className="form-pill-block" style={{ marginTop: 8 }}>
+          <h2 className="settings-section-head">Work days</h2>
+          <p className="settings-section-desc">Days clients can book online.</p>
+          <div className="form-pill-block schedule-work-days">
             {DAY_LABELS.map((label, day) => (
               <button
                 key={label}
@@ -172,7 +160,7 @@ export default function SettingsSchedulePage() {
               </button>
             ))}
           </div>
-          <p className="settings-field-hint" style={{ marginTop: 8 }}>
+          <p className="settings-field-hint">
             <Link href="/demo/booking" className="new-job-link">
               Preview booking calendar →
             </Link>
@@ -180,7 +168,7 @@ export default function SettingsSchedulePage() {
         </div>
 
         <div className="settings-field">
-          <span className="settings-field__label">Business hours</span>
+          <h2 className="settings-section-head">Business hours</h2>
           <div className="schedule-time-grid">
             <FloatingField id="sched-start" label="Start" filled showCheck={false}>
               <input
@@ -222,7 +210,7 @@ export default function SettingsSchedulePage() {
         </div>
 
         {lunchEnabled && (
-          <div className="schedule-time-grid" style={{ marginBottom: 16 }}>
+          <div className="schedule-time-grid job-form-section">
             <FloatingField id="sched-lunch-start" label="Lunch start" filled showCheck={false}>
               <input
                 id="sched-lunch-start"
@@ -280,29 +268,28 @@ export default function SettingsSchedulePage() {
               update('travel_rate_per_mile', v ? Number(v) : undefined)
             }}
           />
-          <p className="settings-field-hint" style={{ marginTop: 6 }}>
+          <p className="settings-field-hint">
             Optional. Used to auto-calculate travel costs from miles on job expenses.
           </p>
         </div>
 
         <div className="settings-divider" />
 
-        <div className="settings-field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="settings-field settings-field-header">
           <div>
-            <span className="settings-field__label">Time off</span>
-            <p className="settings-field-hint">Next 30 days — blocks online booking.</p>
+            <h2 className="settings-section-head">Time off</h2>
+            <p className="settings-section-desc">Next 30 days — blocks online booking.</p>
           </div>
           <button
             type="button"
-            className="btn-ghost"
+            className="page-header__action"
             aria-label="Add time off"
             onClick={() => {
               setBlockDate(todayIso())
               setAddOpen(true)
             }}
-            style={{ padding: 6 }}
           >
-            <Plus size={20} color="var(--green)" />
+            <Plus size={20} color="var(--green)" aria-hidden="true" />
           </button>
         </div>
 
@@ -322,9 +309,9 @@ export default function SettingsSchedulePage() {
               deleteConfirmMessage={`Remove time off on ${formatBlockDate(block.date)}?`}
               showDivider
             >
-              <div style={{ padding: '12px 0' }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{formatBlockDate(block.date)}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+              <div className="schedule-time-off-row">
+                <div className="schedule-time-off-row__title">{formatBlockDate(block.date)}</div>
+                <div className="schedule-time-off-row__sub">
                   {formatBlockTime(block)}
                   {block.label ? ` · ${block.label}` : ''}
                 </div>
@@ -336,7 +323,7 @@ export default function SettingsSchedulePage() {
 
       {addOpen && (
         <BottomSheet
-          variant="premium"
+          variant="light"
           title="Add time off"
           subtitle="Block your calendar for appointments or personal time"
           ariaLabel="Add time off"
@@ -364,7 +351,7 @@ export default function SettingsSchedulePage() {
               />
             </FloatingField>
 
-            <div className="settings-toggle-row" style={{ marginBottom: 12 }}>
+            <div className="settings-toggle-row job-form-section">
               <span className="settings-toggle-row__label">All day</span>
               <Toggle label="All day" on={blockAllDay} onChange={setBlockAllDay} />
             </div>

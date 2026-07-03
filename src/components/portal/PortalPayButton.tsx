@@ -17,8 +17,7 @@ export default function PortalPayButton({
     <div className="portal-pay-area">
       <a
         href={`/api/portal/${token}/checkout`}
-        className="portal-btn-primary"
-        style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
+        className="portal-btn-primary portal-btn-primary--link"
       >
         {`Pay ${portalMoney(balanceDue)} online`}
       </a>

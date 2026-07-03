@@ -39,6 +39,8 @@ export interface PortalPayload {
     amountPaid: number
     balanceDue: number
     status: string
+    signatureUrl?: string
+    signedAt?: string
   }
   quote?: {
     id: string
@@ -189,6 +191,8 @@ export async function buildPortalPayload(
           amountPaid: Number(inv.amount_paid ?? 0),
           balanceDue: Number(inv.balance_due ?? 0),
           status: String(inv.status),
+          signatureUrl: inv.signature_url ? String(inv.signature_url) : undefined,
+          signedAt: inv.signed_at ? String(inv.signed_at) : undefined,
         }
       } else if (job.invoice_id && (scope === 'invoice' || scope === 'full')) {
         const inv = await pb.collection('invoices').getOne(String(job.invoice_id))
@@ -201,6 +205,8 @@ export async function buildPortalPayload(
           amountPaid: Number(inv.amount_paid ?? 0),
           balanceDue: Number(inv.balance_due ?? 0),
           status: String(inv.status),
+          signatureUrl: inv.signature_url ? String(inv.signature_url) : undefined,
+          signedAt: inv.signed_at ? String(inv.signed_at) : undefined,
         }
       }
 

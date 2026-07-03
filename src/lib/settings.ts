@@ -1,4 +1,5 @@
 import { normalizeBookingSchedule, type BookingSchedule } from './booking-availability'
+import type { HomeModulePrefs } from './home-modules'
 import { DEMO_BOOKING_SCHEDULE, DEMO_TRAVEL_RATE_PER_MILE } from './demo-schedule'
 import { isPocketBaseConfigured } from './pocketbase'
 
@@ -26,6 +27,18 @@ export interface AppSettings {
   travel_rate_per_mile?: number
   /** When true, prompt to log supplies when saving a job. Default off. */
   track_job_supplies?: boolean
+  /** Operator app color scheme. Default light (Invoice Fly–style). */
+  appearance?: 'light' | 'dark'
+  /** Invoice document template id */
+  invoice_template?: 'rinse' | 'classic' | 'minimal'
+  /** Home dashboard module visibility */
+  home_modules?: HomeModulePrefs
+  /** Onboarding wizard progress (1–6) */
+  onboarding_step?: number
+  /** Set when user finishes the plans step */
+  onboarding_completed_at?: string
+  /** Set when user creates a sample invoice during onboarding */
+  onboarding_first_invoice_at?: string
   pb_record_id?: string
 }
 
@@ -48,10 +61,12 @@ const DEFAULTS: AppSettings = {
     invoice_overdue: true,
     low_inventory: true,
   },
+  appearance: 'light',
+  invoice_template: 'rinse',
 }
 
 const DEV_DEMO_SETTINGS: Partial<AppSettings> = {
-  business_name: 'Atlas Detailing',
+  business_name: 'Rinse',
   business_phone: '(404) 555-0142',
   business_address: '1200 West Peachtree St NW, Atlanta, GA 30309',
   booking_schedule: DEMO_BOOKING_SCHEDULE,
@@ -87,6 +102,15 @@ export async function loadSettingsAsync(): Promise<AppSettings> {
     const remote = await loadSettingsFromPocketBase()
     if (remote) {
       const merged = { ...local, ...remote, notifications: { ...local.notifications, ...remote.notifications } }
+      if (local.onboarding_completed_at && !remote.onboarding_completed_at) {
+        merged.onboarding_completed_at = local.onboarding_completed_at
+      }
+      if (local.onboarding_first_invoice_at && !remote.onboarding_first_invoice_at) {
+        merged.onboarding_first_invoice_at = local.onboarding_first_invoice_at
+      }
+      if (local.onboarding_step != null && remote.onboarding_step == null) {
+        merged.onboarding_step = local.onboarding_step
+      }
       if (merged.booking_schedule) {
         merged.booking_schedule = normalizeBookingSchedule(merged.booking_schedule)
       }

@@ -1,6 +1,7 @@
 'use client'
 
-import { CaretRight, Image as ImageIcon } from '@phosphor-icons/react'
+import { Image as ImageIcon } from '@phosphor-icons/react'
+import { ListRow } from '@/components/ui'
 import { formatDamageDate } from '@/lib/damage-docs'
 import type { DamageRecord } from '@/lib/types'
 
@@ -10,22 +11,26 @@ interface DamageListRowProps {
 }
 
 export default function DamageListRow({ damage, onPress }: DamageListRowProps) {
+  const thumb = damage.photo_url ? (
+    <span className="damage-list-thumb">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={damage.photo_url} alt="" />
+    </span>
+  ) : (
+    <ImageIcon size={20} weight="duotone" aria-hidden="true" />
+  )
+
   return (
-    <button type="button" className="damage-row" onClick={onPress}>
-      <div className="damage-row__thumb">
-        {damage.photo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={damage.photo_url} alt="" />
-        ) : (
-          <ImageIcon size={20} weight="duotone" aria-hidden="true" />
-        )}
-      </div>
-      <div className="damage-row__body">
-        <div className="damage-row__area">{damage.area}</div>
-        {damage.note ? <div className="damage-row__note">{damage.note}</div> : null}
-        <div className="damage-row__date">{formatDamageDate(damage.date)}</div>
-      </div>
-      <CaretRight size={15} className="damage-row__chevron" aria-hidden="true" />
-    </button>
+    <ListRow
+      className="damage-list-row"
+      icon={thumb}
+      iconTone="amber"
+      title={damage.area}
+      subtitle={damage.note || undefined}
+      trailing={
+        <span className="damage-list-row__date">{formatDamageDate(damage.date)}</span>
+      }
+      onClick={onPress}
+    />
   )
 }

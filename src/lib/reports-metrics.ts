@@ -31,6 +31,7 @@ export const REPORT_FILTER_CHIPS: { key: DateRangeKey; label: string }[] = [
   { key: 'this_month', label: 'This month' },
   { key: 'last_month', label: 'Last month' },
   { key: 'this_year', label: 'This year' },
+  { key: 'lifetime', label: 'All time' },
 ]
 
 export function plProgressPeriodLabel(range: DateRangeKey): string {
@@ -43,6 +44,8 @@ export function plProgressPeriodLabel(range: DateRangeKey): string {
       return 'LAST MONTH'
     case 'this_year':
       return 'THIS YEAR'
+    case 'lifetime':
+      return 'ALL TIME'
   }
 }
 
