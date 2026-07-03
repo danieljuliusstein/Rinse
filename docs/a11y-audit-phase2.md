@@ -1,6 +1,6 @@
 # Accessibility Audit — Phase 2 (Sign-off)
 
-**Wave 32 · Updated:** July 2026  
+**Wave 32 · Updated:** July 2026 (Wave 54 motion + dark depth pass)  
 **Scope:** Operator shell, booking, auth, portal pay, sheets/modals  
 **Exit criteria:** No P0 a11y blockers on core flows; focus trap + skip link shipped; high-contrast pass on critical paths.
 
@@ -18,6 +18,8 @@
 | Live regions — booking errors | **Done** | `role="alert"` + `aria-live="assertive"` |
 | Live regions — auth errors | **Done** | `AccountAuth` error/info announcements |
 | High-contrast critical paths | **Done** | `a11y-high-contrast.css` (book, auth, portal, CTAs) |
+| Dark theme depth parity | **Done** | Wave 54 — `--depth-*` on `.card`, lists, sheets, empties |
+| Motion `prefers-reduced-motion` audit | **Done** | Waves 40–53 owners + Wave 54 globals supplement |
 | 15-min release smoke script | **Done** | `docs/release-smoke-checklist.md` |
 
 **P0 open issues:** none identified for core flows as of Wave 32.
@@ -42,6 +44,8 @@
 | BottomSheet | Focus trap + Escape + dialog semantics (Wave 8) |
 | Job photo lightbox | Focus trap + `aria-label` + arrow keys |
 | High contrast | `prefers-contrast: more` + `forced-colors` overrides |
+| Dark depth | `--depth-card-*` / `--depth-elevated-shadow` wired in `globals.css`, `components.css`, `app-ui.css` (Wave 54) |
+| Operator HC (dark) | Sheet save, settings save, tour CTA, offline sync — `a11y-high-contrast.css` Wave 54 |
 
 ---
 
@@ -84,6 +88,9 @@ With **Increase Contrast** enabled (macOS) or **prefers-contrast: more**:
 2. Auth form focus ring visible on email/password
 3. Error banners have border + readable text
 4. Portal Pay online button has border
+5. Operator dark theme: cards/lists use visible border (not shadow-only depth)
+6. Sheet save + settings save buttons have border in high contrast
+7. Product tour spotlight ring visible with Increase Contrast on
 
 CSS: `src/app/a11y-high-contrast.css`
 
@@ -93,7 +100,7 @@ CSS: `src/app/a11y-high-contrast.css`
 
 - Full WCAG 2.2 AA audit with automated scanner (axe) on every screen
 - Screen reader walkthrough of Reports charts (complex data viz)
-- Operator dark-mode high-contrast variant (product decision: light default)
+- Operator dark-mode high-contrast variant (product decision: light default) — **partial:** Wave 54 adds dark HC borders on operator CTAs; full dark QA matrix still optional
 - OCR receipt flow a11y (Wave 26 — camera input labeled; manual line entry)
 
 ---

@@ -28,7 +28,7 @@ export default function EmptyState({
   ) : null
 
   return (
-    <div className="ui-empty">
+    <div className={`ui-empty${illustration ? ' ui-empty--illustrated' : ''}`}>
       {art ? <div className="ui-empty__art" aria-hidden="true">{art}</div> : null}
       <h3 className="ui-empty__title">{title}</h3>
       {description ? <p className="ui-empty__desc">{description}</p> : null}

@@ -29,7 +29,9 @@ function setState(patch: Partial<RinseTourState>): void {
 
 export function subscribeRinseTour(listener: Listener): () => void {
   listeners.add(listener)
-  listener(state)
+  queueMicrotask(() => {
+    if (listeners.has(listener)) listener(state)
+  })
   return () => listeners.delete(listener)
 }
 

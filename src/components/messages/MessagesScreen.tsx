@@ -71,7 +71,7 @@ export default function MessagesScreen() {
   const enabledCount = templates.filter((t) => t.enabled).length
 
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body messages-screen">
       <header className="page-header page-header--compact">
         <BackButton onClick={() => router.push('/')} />
         <div className="page-header__title-block">
@@ -113,16 +113,20 @@ export default function MessagesScreen() {
         loadingSent ? (
           <ScreenLoading label="Loading messages…" inline />
         ) : (
-          <AllMessagesTab messages={sentMessages} onSelect={setSelected} />
+          <div key="all" className="messages-tab-panel">
+            <AllMessagesTab messages={sentMessages} onSelect={setSelected} />
+          </div>
         )
       ) : (
-        <AutoMessagesTab
-          templates={templates}
-          expandedId={expandedId}
-          onExpandedChange={setExpandedId}
-          onUpdate={handleTemplateUpdate}
-          onEdit={setEditTemplate}
-        />
+        <div key="auto" className="messages-tab-panel">
+          <AutoMessagesTab
+            templates={templates}
+            expandedId={expandedId}
+            onExpandedChange={setExpandedId}
+            onUpdate={handleTemplateUpdate}
+            onEdit={setEditTemplate}
+          />
+        </div>
       )}
 
       {editTemplate ? (

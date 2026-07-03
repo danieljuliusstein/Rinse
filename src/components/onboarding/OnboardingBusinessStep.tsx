@@ -115,7 +115,15 @@ export default function OnboardingBusinessStep({ step, settings, onSaved }: Onbo
       </div>
 
       <p className="ob-section-label">Logo</p>
-      <div className="onboarding-logo-picker">
+      <div
+        className={[
+          'onboarding-logo-picker',
+          logoPreview ? 'onboarding-logo-picker--complete' : '',
+          saving && logoFile ? 'onboarding-logo-picker--uploading' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
         {logoPreview ? <img src={logoPreview} alt="" /> : null}
         <label htmlFor="ob-logo" className="onboarding-logo-btn">
           {logoPreview ? 'Change logo' : 'Add logo (optional)'}
@@ -124,12 +132,25 @@ export default function OnboardingBusinessStep({ step, settings, onSaved }: Onbo
           id="ob-logo"
           type="file"
           accept="image/*"
+          disabled={saving}
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null
             setLogoFile(file)
             if (file) setLogoPreview(URL.createObjectURL(file))
           }}
         />
+        {saving && logoFile ? (
+          <div
+            className="onboarding-logo-progress"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={100}
+            aria-label="Uploading logo"
+          >
+            <div className="onboarding-logo-progress__fill" />
+          </div>
+        ) : null}
       </div>
 
       {error ? <p className="onboarding-error">{error}</p> : null}

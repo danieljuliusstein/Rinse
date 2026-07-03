@@ -143,7 +143,7 @@ export default function Dashboard({
   }, [])
 
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body home-dashboard">
       <header className="page-header">
         <div>
           <h1 className="lg">{greeting()}</h1>
@@ -231,7 +231,7 @@ export default function Dashboard({
           {arSummary.overdueCount > 0 ? (
             <button
               type="button"
-              className="home-quick-chip"
+              className="home-quick-chip home-quick-chip--attention"
               onClick={() => router.push('/invoices?filter=overdue')}
             >
               Overdue

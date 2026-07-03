@@ -257,7 +257,7 @@ export default function InvoiceSwipeableRow({
         className="swipe-row-content"
         style={{
           transform: `translateX(${offset}px)`,
-          transition: isDragging ? 'none' : 'transform 0.2s ease',
+          transition: isDragging ? 'none' : 'transform var(--duration-medium) var(--ease-spring)',
         }}
         onContextMenu={(e) => {
           e.preventDefault()

@@ -327,7 +327,7 @@ export default function InvoicePreview({ job: initialJob }: { job: JobWithRelati
 
   if (!invoice) {
     return (
-      <div className="screen page-content">
+      <div className="screen page-content body">
         <div className="page-header page-header--compact">
           <BackButton onClick={() => router.back()} />
           <div className="page-header__title-block">
@@ -341,7 +341,17 @@ export default function InvoicePreview({ job: initialJob }: { job: JobWithRelati
             {busy ? 'Creating…' : 'Generate invoice'}
           </button>
         </div>
-        {message && <div className="invoice-screen__message">{message}</div>}
+        {message && (
+        <div
+          className={`invoice-screen__message${
+            /sent|paid|copied|logged|created/i.test(message)
+              ? ' invoice-screen__message--success'
+              : ''
+          }`}
+        >
+          {message}
+        </div>
+      )}
       </div>
     )
   }
@@ -349,12 +359,12 @@ export default function InvoicePreview({ job: initialJob }: { job: JobWithRelati
   const status = invoice.status
 
   return (
-    <div className="screen page-content invoice-screen screen--dock-nav">
+    <div className="screen page-content body invoice-screen screen--dock-nav">
       <header className="page-header page-header--compact">
         <BackButton onClick={() => router.back()} />
         <div className="page-header__title-block">
           <h1>Invoice</h1>
-          <Badge status={status} />
+          <Badge key={status} status={status} />
           {invoice.signature_url ? <Badge tone="green">Signed</Badge> : null}
         </div>
         <InvoiceMoreButton onClick={() => setMoreOpen(true)} />
@@ -366,7 +376,17 @@ export default function InvoicePreview({ job: initialJob }: { job: JobWithRelati
         </div>
       </div>
 
-      {message && <div className="invoice-screen__message">{message}</div>}
+      {message && (
+        <div
+          className={`invoice-screen__message${
+            /sent|paid|copied|logged|created/i.test(message)
+              ? ' invoice-screen__message--success'
+              : ''
+          }`}
+        >
+          {message}
+        </div>
+      )}
 
       <ActionDock aboveNav>
         <Button variant="ghost" className="ui-action-dock__btn" onClick={() => setMoreOpen(true)} disabled={busy}>

@@ -74,9 +74,11 @@ export default function VehicleForm({ clientId, vehicle }: Props) {
 
   return (
     <div className="screen page-content body">
-      <header className="job-form-header">
+      <header className="page-header page-header--compact">
         <BackButton onClick={() => router.back()} />
-        <div className="job-form-header__title">{isEdit ? 'Edit vehicle' : 'Add vehicle'}</div>
+        <div className="page-header__title-block">
+          <h1>{isEdit ? 'Edit vehicle' : 'Add vehicle'}</h1>
+        </div>
       </header>
 
       <div className="vehicle-hero job-form-section">

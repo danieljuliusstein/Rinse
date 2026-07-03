@@ -24,6 +24,7 @@ interface BottomSheetProps {
 
 const DISMISS_THRESHOLD = 100
 const DIRECTION_LOCK_PX = 10
+const SHEET_EXIT_MS = 200
 
 export default function BottomSheet({
   title,
@@ -35,15 +36,31 @@ export default function BottomSheet({
   children,
   footer,
 }: BottomSheetProps) {
+  const [phase, setPhase] = useState<'open' | 'closing'>('open')
   const [dragY, setDragY] = useState(0)
   const [dragging, setDragging] = useState(false)
   const dragRef = useRef({ startY: 0, active: false, currentY: 0 })
+  const hasDraggedRef = useRef(false)
   const dialogRef = useRef<HTMLDivElement>(null)
+
+  const requestClose = useCallback(() => {
+    if (phase === 'closing') return
+    dragRef.current.active = false
+    setDragging(false)
+    setDragY(0)
+    setPhase('closing')
+  }, [phase])
+
+  useEffect(() => {
+    if (phase !== 'closing') return
+    const t = window.setTimeout(onClose, SHEET_EXIT_MS)
+    return () => window.clearTimeout(t)
+  }, [phase, onClose])
 
   useEffect(() => {
     lockBodyScroll()
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') requestClose()
     }
     window.addEventListener('keydown', onKey)
 
@@ -60,9 +77,10 @@ export default function BottomSheet({
       unlockBodyScroll()
       window.removeEventListener('keydown', onKey)
     }
-  }, [onClose])
+  }, [requestClose])
 
   const onDragStart = useCallback((clientY: number) => {
+    hasDraggedRef.current = true
     dragRef.current = { startY: clientY, active: true, currentY: 0 }
     setDragging(true)
   }, [])
@@ -79,12 +97,12 @@ export default function BottomSheet({
     dragRef.current.active = false
     setDragging(false)
     if (dragRef.current.currentY >= DISMISS_THRESHOLD) {
-      onClose()
+      requestClose()
     } else {
       dragRef.current.currentY = 0
       setDragY(0)
     }
-  }, [onClose])
+  }, [requestClose])
 
   const onTouchStart = (e: TouchEvent) => {
     e.stopPropagation()
@@ -100,7 +118,8 @@ export default function BottomSheet({
     }
   }
 
-  const overlayOpacity = Math.max(0.2, 0.55 - dragY / 400)
+  const overlayDragOpacity =
+    dragging || dragY > 0 ? Math.max(0.15, 1 - dragY / 400) : null
 
   if (typeof document === 'undefined') return null
 
@@ -112,10 +131,18 @@ export default function BottomSheet({
     .filter(Boolean)
     .join(' ')
 
+  const sheetStyle =
+    phase === 'closing' || (!hasDraggedRef.current && dragY === 0)
+      ? undefined
+      : {
+          transform: `translateY(${dragY}px)`,
+          transition: dragging ? 'none' : undefined,
+        }
+
   return createPortal(
     <div
       ref={dialogRef}
-      className="inv-sheet-root"
+      className={`inv-sheet-root${phase === 'closing' ? ' inv-sheet-root--closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={ariaLabel ?? title}
@@ -123,17 +150,15 @@ export default function BottomSheet({
       <button
         type="button"
         className="inv-sheet-overlay"
-        onClick={onClose}
+        onClick={requestClose}
         aria-label="Close"
-        style={{ opacity: overlayOpacity, transition: dragging ? 'none' : 'opacity 0.2s ease' }}
+        style={
+          overlayDragOpacity !== null
+            ? { opacity: overlayDragOpacity, transition: 'none' }
+            : undefined
+        }
       />
-      <div
-        className={sheetClasses}
-        style={{
-          transform: `translateY(${dragY}px)`,
-          transition: dragging ? 'none' : 'transform 0.25s ease',
-        }}
-      >
+      <div className={sheetClasses} style={sheetStyle}>
         <div
           className="inv-sheet-drag-zone"
           onTouchStart={onTouchStart}
@@ -147,7 +172,7 @@ export default function BottomSheet({
               <div className="inv-sheet-title">{title}</div>
               {subtitle ? <div className="inv-sheet-subtitle">{subtitle}</div> : null}
             </div>
-            <button type="button" className="inv-sheet-close" onClick={onClose} aria-label="Close">
+            <button type="button" className="inv-sheet-close" onClick={requestClose} aria-label="Close">
               <X size={16} weight="bold" aria-hidden="true" />
             </button>
           </div>

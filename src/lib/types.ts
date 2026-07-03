@@ -66,6 +66,7 @@ export interface Supply {
   kind?: SupplyKind
   notes?: string
   image_url?: string
+  icon_key?: string
 }
 
 export interface Equipment {
@@ -77,6 +78,7 @@ export interface Equipment {
   notes?: string
   status?: EquipmentStatus
   image_url?: string
+  icon_key?: string
 }
 
 export interface OverheadExpense {
@@ -435,6 +437,7 @@ export interface SupplyInput {
   kind?: SupplyKind
   notes?: string
   image_url?: string
+  icon_key?: string
 }
 
 export interface SupplyAddOptions {
@@ -456,6 +459,7 @@ export interface EquipmentInput {
   notes?: string
   status?: EquipmentStatus
   image_url?: string
+  icon_key?: string
 }
 
 export interface EquipmentAddOptions {

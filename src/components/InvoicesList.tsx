@@ -131,7 +131,7 @@ export default function InvoicesList({ invoices: initialInvoices, clients }: Pro
   }
 
   return (
-    <div className="screen page-content body screen--dock-nav">
+    <div className="screen page-content body screen--dock-nav invoices-screen">
       <header className="page-header">
         <div>
           <h1>Invoices</h1>

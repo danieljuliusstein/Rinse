@@ -8,6 +8,7 @@ import {
   supplyMetaLabel,
   supplyQuantityLabel,
 } from '@/components/inventory/inventory-utils'
+import { resolveInventoryIcon } from '@/lib/inventory-icons'
 import type { HomeInventoryItem } from '@/lib/home-inventory'
 import type { Equipment, Supply } from '@/lib/types'
 
@@ -21,12 +22,13 @@ export function SupplyInventoryRow({
   inExpenses = false,
 }: RowBaseProps & { supply: Supply; inExpenses?: boolean }) {
   const variant = inventoryRowVariant(supply)
-  const Icon = supply.kind === 'chemical' ? Flask : Package
+  const FallbackIcon = supply.kind === 'chemical' ? Flask : Package
+  const Icon = resolveInventoryIcon(supply.icon_key, 'supply', FallbackIcon)
 
   return (
     <ListRow
       className={variant ? `inventory-list-row inventory-list-row--${variant}` : 'inventory-list-row'}
-      icon={<Icon size={18} weight="duotone" />}
+      icon={<Icon key={supply.icon_key ?? 'auto'} size={18} weight="duotone" />}
       iconTone={variant === 'danger' ? 'amber' : supply.kind === 'chemical' ? 'blue' : 'green'}
       title={supply.name}
       subtitle={supplyMetaLabel(supply)}
@@ -42,10 +44,12 @@ export function EquipmentInventoryRow({
   onPress,
   inExpenses = false,
 }: RowBaseProps & { item: Equipment; inExpenses?: boolean }) {
+  const Icon = resolveInventoryIcon(item.icon_key, 'equipment', Wrench)
+
   return (
     <ListRow
       className="inventory-list-row"
-      icon={<Wrench size={18} weight="duotone" />}
+      icon={<Icon key={item.icon_key ?? 'auto'} size={18} weight="duotone" />}
       iconTone="purple"
       title={item.name}
       subtitle={item.purchase_date ? `Purchased ${item.purchase_date}` : undefined}

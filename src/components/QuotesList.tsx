@@ -57,7 +57,7 @@ export default function QuotesList({ quotes }: { quotes: QuoteWithRelations[] })
     : '/quotes/new'
 
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body quotes-screen">
       <header className="page-header">
         <div>
           <h1>{clientName ? `${clientName} quotes` : 'Quotes'}</h1>

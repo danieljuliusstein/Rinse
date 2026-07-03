@@ -182,7 +182,7 @@ export default function JobDetail({ job: initialJob }: JobDetailProps) {
   }
 
   return (
-    <div className="screen page-content">
+    <div className="screen page-content body job-detail-screen">
       <div className="job-detail-header">
         <BackButton onClick={() => router.back()} />
         <div className="job-detail-header__body">
@@ -192,7 +192,7 @@ export default function JobDetail({ job: initialJob }: JobDetailProps) {
             {dateLabel}
           </div>
         </div>
-        <Badge status={statusToJobBadge(displayStatus)} />
+        <Badge key={statusToJobBadge(displayStatus)} status={statusToJobBadge(displayStatus)} />
       </div>
 
       {isUpcoming ? (

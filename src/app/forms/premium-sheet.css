@@ -49,7 +49,7 @@
 .form-progress__label,
 .pipeline-sheet__progress-label {
   font-size: 10px;
-  color: #3a3a3a;
+  color: var(--text-muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 600;
@@ -60,13 +60,13 @@
   font-size: 11px;
   color: var(--green);
   font-weight: 700;
-  transition: color 0.3s ease;
+  transition: color var(--duration-medium) var(--ease-out);
 }
 
 .form-progress__bar,
 .pipeline-sheet__progress-bar {
   height: 2px;
-  background: #1e1e1e;
+  background: var(--bg-elevated);
   border-radius: 2px;
   margin-bottom: 18px;
   overflow: hidden;
@@ -77,7 +77,7 @@
   height: 100%;
   background: var(--green);
   border-radius: 2px;
-  transition: width 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+  transition: width var(--duration-slow) var(--ease-spring);
 }
 
 /* Form layout */
@@ -132,10 +132,13 @@
   line-height: 1.4;
 }
 
-/* Field overrides inside premium sheets */
+/* Field overrides inside operator sheets (premium + light) */
 .premium-sheet .f-input,
 .premium-sheet .f-select,
 .premium-sheet .f-textarea,
+.light-sheet .f-input,
+.light-sheet .f-select,
+.light-sheet .f-textarea,
 .pipeline-sheet .f-input,
 .pipeline-sheet .f-select,
 .pipeline-sheet .f-textarea {
@@ -149,6 +152,9 @@
 .premium-sheet .f-input.hv,
 .premium-sheet .f-select.hv,
 .premium-sheet .f-textarea.hv,
+.light-sheet .f-input.hv,
+.light-sheet .f-select.hv,
+.light-sheet .f-textarea.hv,
 .pipeline-sheet .f-input.hv,
 .pipeline-sheet .f-select.hv,
 .pipeline-sheet .f-textarea.hv {
@@ -159,42 +165,53 @@
 .premium-sheet .f-input:focus,
 .premium-sheet .f-select:focus,
 .premium-sheet .f-textarea:focus,
+.light-sheet .f-input:focus,
+.light-sheet .f-select:focus,
+.light-sheet .f-textarea:focus,
 .pipeline-sheet .f-input:focus,
 .pipeline-sheet .f-select:focus,
 .pipeline-sheet .f-textarea:focus {
   border-color: var(--green);
   background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
 .premium-sheet .f-select,
+.light-sheet .f-select,
 .pipeline-sheet .f-select {
   background-position: right 36px center;
   padding-right: 52px;
 }
 
 .premium-sheet .f-field--filled .f-check,
+.light-sheet .f-field--filled .f-check,
 .pipeline-sheet .f-field--filled .f-check {
   transform: translateY(-50%) scale(1);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
 }
 
 .premium-sheet .f-field--textarea.f-field--filled .f-check,
+.light-sheet .f-field--textarea.f-field--filled .f-check,
 .pipeline-sheet .f-field--textarea.f-field--filled .f-check {
   top: 22px;
   transform: scale(1);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
 }
 
 .premium-sheet .f-check,
+.light-sheet .f-check,
 .pipeline-sheet .f-check {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%) scale(0);
   color: var(--green);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--duration-medium) var(--ease-pop);
   pointer-events: none;
 }
 
 .premium-sheet .f-field--textarea .f-check,
+.light-sheet .f-field--textarea .f-check,
 .pipeline-sheet .f-field--textarea .f-check {
   top: 22px;
   transform: scale(0);
@@ -243,9 +260,10 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background 0.15s ease;
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease,
+    background var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-spring);
   font-family: inherit;
 }
 
@@ -253,6 +271,11 @@
 .pipeline-pill:hover {
   border-color: var(--border-strong);
   color: var(--text-primary);
+}
+
+.form-pill:active,
+.pipeline-pill:active {
+  transform: scale(0.94);
 }
 
 .form-pill--on,
@@ -264,7 +287,7 @@
 
 .form-pill--pop,
 .pipeline-pill--pop {
-  animation: form-pill-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: form-pill-pop var(--duration-medium) var(--ease-pop) both;
 }
 
 @keyframes form-pill-pop {
@@ -292,10 +315,11 @@
   position: relative;
   overflow: hidden;
   transition:
-    background 0.35s cubic-bezier(0.34, 1.2, 0.64, 1),
-    color 0.35s ease,
-    border-color 0.35s ease,
-    transform 0.15s ease;
+    background var(--duration-medium) var(--ease-out),
+    color var(--duration-fast) ease,
+    border-color var(--duration-medium) var(--ease-out),
+    box-shadow var(--duration-medium) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
   font-family: inherit;
 }
 
@@ -324,6 +348,36 @@
   color: var(--green-text);
   border-color: var(--border-green);
   cursor: default;
+  animation: success-pop var(--duration-medium) var(--ease-pop) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-submit--done,
+  .pipeline-sheet__submit--done,
+  .light-sheet .sheet-submit--done,
+  .light-sheet .pipeline-sheet__submit--done,
+  .premium-sheet .f-field--filled .f-check,
+  .light-sheet .f-field--filled .f-check,
+  .pipeline-sheet .f-field--filled .f-check,
+  .form-pill--pop,
+  .pipeline-pill--pop {
+    animation: none;
+  }
+
+  .sheet-submit--ready:active:not(:disabled),
+  .pipeline-sheet__submit--ready:active:not(:disabled),
+  .form-pill:active,
+  .pipeline-pill:active,
+  .photo-picker-row:active,
+  .confirm-sheet__confirm--primary:active,
+  .confirm-sheet__confirm--danger:active {
+    transform: none;
+  }
+
+  .sheet-submit__ripple,
+  .pipeline-sheet__ripple {
+    animation: none;
+  }
 }
 
 .sheet-submit__ripple,
@@ -332,7 +386,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.15);
   transform: scale(0);
-  animation: sheet-ripple 0.55s ease-out forwards;
+  animation: sheet-ripple var(--duration-slow) var(--ease-out) forwards;
   pointer-events: none;
 }
 
@@ -392,13 +446,14 @@
 .sheet-footer__cancel {
   padding: 14px 16px;
   border-radius: 14px;
-  background: #1c1c1c;
-  border: 1.5px solid #252525;
-  color: #888;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  transition: transform var(--duration-fast) var(--ease-spring), background var(--duration-fast) ease;
 }
 
 .sheet-footer__cancel--full {
@@ -416,7 +471,7 @@
   }
 }
 
-/* Photo picker rows (damage + job photos) */
+/* Photo picker rows (damage + job photos) — Wave 51 press + focus */
 .photo-picker-actions {
   display: flex;
   flex-direction: column;
@@ -436,7 +491,10 @@
   cursor: pointer;
   color: inherit;
   font-family: inherit;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color var(--duration-fast) ease,
+    background var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-spring);
 }
 
 .photo-picker-row:hover {
@@ -446,6 +504,12 @@
 
 .photo-picker-row:active {
   transform: scale(0.98);
+}
+
+.photo-picker-row:focus-visible {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
 .photo-picker-row__icon {
@@ -499,6 +563,7 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-spring), opacity var(--duration-fast) ease;
 }
 
 .confirm-sheet__confirm--primary {
@@ -508,6 +573,7 @@
 }
 
 .confirm-sheet__confirm--primary:active {
+  transform: scale(0.98);
   opacity: 0.92;
 }
 
@@ -517,6 +583,7 @@
 }
 
 .confirm-sheet__confirm--danger:active {
+  transform: scale(0.98);
   opacity: 0.92;
 }
 

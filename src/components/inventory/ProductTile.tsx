@@ -11,6 +11,7 @@ import {
   stockBarPercent,
   supplyQuantityLabel,
 } from '@/components/inventory/inventory-utils'
+import { resolveInventoryIcon } from '@/lib/inventory-icons'
 import type { Supply } from '@/lib/types'
 
 interface Props {
@@ -25,19 +26,27 @@ export default function ProductTile({ supply, onPress, FallbackIcon = Package, i
   const pct = stockBarPercent(supply)
   const monogramStyle = { '--monogram-bg': monogramColor(supply.name) } as CSSProperties
   const barStyle = { '--bar-fill-pct': `${pct}%` } as CSSProperties
+  const Icon = resolveInventoryIcon(supply.icon_key, 'supply', FallbackIcon)
+  const hasCustomIcon = Boolean(supply.icon_key)
 
   return (
     <button type="button" className="product-tile" onClick={onPress}>
       <div className="product-tile__media">
-        {supply.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={supply.image_url} alt="" className="product-tile__img" loading="lazy" />
-        ) : (
-          <div className="product-tile__monogram" style={monogramStyle}>
-            <FallbackIcon size={24} weight="duotone" color="rgba(255,255,255,0.85)" aria-hidden />
+        <div
+          className={`product-tile__monogram${hasCustomIcon ? ' product-tile__monogram--icon-only' : ''}`}
+          style={monogramStyle}
+        >
+          <Icon
+            key={supply.icon_key ?? 'auto'}
+            size={hasCustomIcon ? 32 : 24}
+            weight="duotone"
+            color="rgba(255,255,255,0.85)"
+            aria-hidden
+          />
+          {!hasCustomIcon ? (
             <span className="product-tile__mono-text">{monogramForName(supply.name)}</span>
-          </div>
-        )}
+          ) : null}
+        </div>
         {inExpenses ? (
           <Badge tone="gray" className="product-tile__expense-badge">
             In expenses

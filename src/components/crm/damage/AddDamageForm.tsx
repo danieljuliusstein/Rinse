@@ -91,13 +91,15 @@ export default function AddDamageForm({ clientId, vehicleId }: AddDamageFormProp
   }
 
   return (
-    <div className="screen page-content body">
-      <header className="job-form-header">
+    <div className="screen page-content body damage-screen">
+      <header className="page-header page-header--compact">
         <BackButton onClick={() => router.back()} />
-        <div className="job-form-header__title">Add damage</div>
+        <div className="page-header__title-block">
+          <h1>Add damage</h1>
+        </div>
       </header>
 
-      <div className="crm-photo-preview job-form-section">
+      <div className={`crm-photo-preview job-form-section${photoPreview ? ' crm-photo-preview--loaded' : ''}`}>
         {photoPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photoPreview} alt="" className="crm-photo-preview__img" />

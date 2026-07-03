@@ -53,7 +53,6 @@ function NavTab({ tab, active }: { tab: NavItem; active: boolean }) {
           weight={active ? 'fill' : 'regular'}
           color={active ? 'var(--green)' : 'var(--text-hint)'}
           aria-hidden="true"
-          style={{ transition: 'color 150ms ease' }}
         />
       </span>
       <span className="bottom-nav-tab-label">{tab.label}</span>
@@ -72,6 +71,7 @@ export default function BottomNav() {
 
   if (
     pathname === '/auth' ||
+    pathname === '/welcome' ||
     pathname.startsWith('/portal') ||
     pathname.startsWith('/book/') ||
     pathname.startsWith('/embed/') ||
@@ -91,9 +91,10 @@ export default function BottomNav() {
       ))}
 
       {isLoggedIn ? (
-        <div className="bottom-nav-fab" data-tour="fab">
+        <div className="bottom-nav-fab">
           <button
             type="button"
+            data-tour="fab"
             className={`bottom-nav-fab-link${menuOpen ? ' bottom-nav-fab-link--open' : ''}`}
             aria-label={menuOpen ? 'Close quick actions' : 'Quick actions'}
             aria-expanded={menuOpen}

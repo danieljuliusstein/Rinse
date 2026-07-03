@@ -79,7 +79,7 @@ export default function PipelineScreen() {
   const stageCount = grouped[activeStage].length
 
   return (
-    <div className={`screen page-content body${!isEmpty && !isLoggedOut ? ' screen--dock-nav' : ''}`}>
+    <div className={`screen page-content body pipeline-screen${!isEmpty && !isLoggedOut ? ' screen--dock-nav' : ''}`}>
       <header className="page-header page-header--compact pipeline-page-header">
         <BackButton onClick={() => router.push('/')} />
         <div className="page-header__title-block">

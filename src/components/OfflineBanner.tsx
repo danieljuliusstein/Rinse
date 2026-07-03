@@ -35,28 +35,28 @@ export default function OfflineBanner({
       ? `${status.pendingWrites} change${status.pendingWrites === 1 ? '' : 's'} waiting to sync`
       : 'PocketBase unavailable — using local data'
 
+  const showSync = status.online && status.pendingWrites > 0
+
   return (
-    <div style={{
-      position: 'sticky', top: 0, zIndex: 50,
-      background: 'var(--amber-dim)', borderBottom: '0.5px solid var(--amber)',
-      padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
-    }}>
-      <CloudSlash size={18} color="var(--amber)" weight="fill" />
-      <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>{message}</span>
-      {status.online && status.pendingWrites > 0 && (
+    <div className="offline-banner" role="status" aria-live="polite">
+      <CloudSlash size={18} color="var(--amber)" weight="fill" aria-hidden="true" />
+      <span className="offline-banner__message">{message}</span>
+      {showSync ? (
         <button
-          onClick={handleSync}
+          type="button"
+          className={[
+            'offline-banner__sync',
+            status.pendingWrites > 0 && !syncing ? 'offline-banner__sync--pulse' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          onClick={() => void handleSync()}
           disabled={syncing}
-          style={{
-            background: 'var(--amber)', border: 'none', borderRadius: 'var(--radius-full)',
-            padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#1a1400',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-          }}
         >
-          <ArrowsClockwise size={14} weight="bold" />
+          <ArrowsClockwise size={14} weight="bold" aria-hidden="true" />
           {syncing ? 'Syncing…' : 'Sync now'}
         </button>
-      )}
+      ) : null}
     </div>
   )
 }

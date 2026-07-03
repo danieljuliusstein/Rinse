@@ -84,9 +84,9 @@ export default function ClientDetail({ client, jobs, vehicles, quotes, totalReve
 
   return (
     <div className="screen page-content body client-detail">
-      <header className="client-detail__header">
+      <header className="page-header page-header--compact client-detail__header">
         <BackButton onClick={() => router.back()} />
-        <div className="client-detail__identity">
+        <div className="page-header__title-block page-header__title-block--stacked client-detail__identity">
           <h1 className="client-detail__name">{client.name}</h1>
           {client.phone ? <p className="client-detail__meta">{client.phone}</p> : null}
           {client.email ? <p className="client-detail__meta">{client.email}</p> : null}
@@ -104,11 +104,11 @@ export default function ClientDetail({ client, jobs, vehicles, quotes, totalReve
         </div>
         <button
           type="button"
-          className="client-detail__edit"
+          className="icon-btn client-detail__edit"
           onClick={() => router.push(`/clients/${client.id}/edit`)}
           aria-label="Edit client"
         >
-          <PencilSimple size={20} color="var(--text-muted)" />
+          <PencilSimple size={20} weight="regular" aria-hidden="true" />
         </button>
       </header>
 

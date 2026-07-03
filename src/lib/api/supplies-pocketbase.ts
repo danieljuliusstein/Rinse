@@ -50,8 +50,15 @@ export async function updateSupply(id: string, input: Partial<SupplyInput>): Pro
     const current = await getSupply(id)
     if (!current) return null
     const merged = { ...current, ...input }
-    const record = await pb().collection('supplies').update<PbRecord>(id, appSupplyToPb(merged))
-    return pbSupplyToApp(record, supplyPhotoUrl(record))
+    try {
+      const record = await pb().collection('supplies').update<PbRecord>(id, appSupplyToPb(merged))
+      return pbSupplyToApp(record, supplyPhotoUrl(record))
+    } catch {
+      if (input.icon_key === undefined) return null
+      const { icon_key: _iconKey, ...rest } = merged
+      const record = await pb().collection('supplies').update<PbRecord>(id, appSupplyToPb(rest))
+      return pbSupplyToApp(record, supplyPhotoUrl(record))
+    }
   } catch {
     return null
   }

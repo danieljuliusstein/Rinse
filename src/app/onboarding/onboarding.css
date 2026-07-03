@@ -1,13 +1,5 @@
 /* Setup flow — Invoice Fly / iOS light (welcome, auth, onboarding) */
 
-.app-shell--auth-flow {
-  max-width: var(--cl-max-width, 430px);
-  margin: 0 auto;
-  min-height: 100dvh;
-  background: #f2f2f7 !important;
-  color-scheme: light;
-}
-
 .setup-flow.client-light-root,
 .onboarding-flow.client-light-root {
   --setup-bg: #f2f2f7;
@@ -161,7 +153,10 @@
 /* ── Auth ── */
 
 .auth-screen.client-light-root {
-  min-height: 100dvh;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
   padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
@@ -169,7 +164,23 @@
   color: var(--setup-text);
 }
 
+.auth-screen.client-light-root .auth-step {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.auth-screen.client-light-root .auth-value-props,
+.auth-screen.client-light-root .social-auth,
+.auth-screen.client-light-root .auth-form {
+  width: 100%;
+  max-width: none;
+  align-self: stretch;
+}
+
 .auth-screen.client-light-root .auth-screen__logo {
+  align-self: center;
   margin-bottom: 20px;
 }
 
@@ -190,6 +201,7 @@
   color: var(--setup-muted);
   text-align: left;
   width: 100%;
+  max-width: none;
   margin-bottom: 20px;
   line-height: 1.5;
 }
@@ -254,16 +266,38 @@
 
 .auth-screen.client-light-root .auth-link {
   color: var(--setup-accent);
-  text-align: left;
-  align-self: flex-start;
+  text-align: center;
+  align-self: stretch;
+  width: 100%;
   padding-left: 0;
   font-weight: 600;
+  margin-top: 16px;
 }
 
 .auth-screen.client-light-root .auth-error {
   color: #ff3b30;
-  margin: 12px 2px 0;
+  margin: 12px 0 0;
   font-size: 14px;
+  width: 100%;
+  max-width: none;
+  line-height: 1.45;
+}
+
+.auth-screen.client-light-root .auth-info {
+  width: 100%;
+  max-width: none;
+  line-height: 1.45;
+}
+
+.auth-screen.client-light-root .auth-info--setup {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: var(--setup-radius);
+  background: var(--setup-surface);
+  border: 0.5px solid var(--setup-border);
+  color: var(--setup-muted);
+  font-size: 14px;
+  text-align: left;
 }
 
 /* ── Social auth ── */
@@ -292,13 +326,17 @@
   color: var(--setup-text);
   cursor: pointer;
   box-shadow: var(--setup-shadow);
-  transition: transform 0.12s ease, background 0.12s ease;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    background var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .social-auth__btn:active:not(:disabled) {
-  transform: scale(0.985);
+  transform: scale(0.97);
   background: var(--setup-raised);
+  box-shadow: none;
 }
 
 .social-auth__btn:disabled {
@@ -411,12 +449,18 @@
   height: 4px;
   border-radius: 999px;
   background: rgba(60, 60, 67, 0.12);
-  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
+  transition:
+    background var(--duration-medium) var(--ease-spring),
+    transform var(--duration-medium) var(--ease-spring);
 }
 
 .onboarding-flow__progress-seg--done,
 .onboarding-flow__progress-seg--current {
   background: var(--setup-accent);
+}
+
+.onboarding-flow__progress-seg--current {
+  transform: scaleY(1.35);
 }
 
 .onboarding-flow__body {
@@ -440,7 +484,7 @@
 
 .onboarding-step {
   width: 100%;
-  animation: setup-step-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
 }
 
 @keyframes setup-step-in {
@@ -579,6 +623,11 @@
   gap: 12px;
   padding: 4px 16px;
   min-height: 48px;
+  transition: background var(--duration-fast) ease;
+}
+
+.setup-row:focus-within {
+  background: var(--setup-accent-dim, rgba(34, 197, 94, 0.04));
 }
 
 .ob-field-group > .setup-row:first-child {
@@ -622,6 +671,7 @@
   padding: 10px 0;
   -webkit-appearance: none;
   appearance: none;
+  transition: color var(--duration-fast) ease;
 }
 
 .setup-row__input::placeholder {
@@ -948,12 +998,16 @@
   cursor: pointer;
   font-family: inherit;
   color: var(--setup-text);
-  transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+  transition:
+    border-color var(--duration-fast) ease,
+    background var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-spring);
   -webkit-tap-highlight-color: transparent;
 }
 
 .ob-pick-card:active {
-  transform: scale(0.99);
+  transform: scale(0.98);
 }
 
 .ob-pick-card--on {
@@ -1233,7 +1287,10 @@
   letter-spacing: -0.02em;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(34, 197, 94, 0.38);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    box-shadow var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1264,7 +1321,10 @@
   letter-spacing: -0.01em;
   cursor: pointer;
   box-shadow: var(--setup-shadow);
-  transition: transform 0.12s ease;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    background var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1295,9 +1355,278 @@
   gap: 0;
 }
 
+.onboarding-first-invoice-phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0 4px;
+}
+
+.onboarding-first-invoice-phases__item {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--setup-hint);
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(60, 60, 67, 0.08);
+  border: 0.5px solid transparent;
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+}
+
+.onboarding-first-invoice-phases__item:nth-child(1) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.onboarding-first-invoice-phases__item:nth-child(2) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.onboarding-first-invoice-phases__item:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.onboarding-first-invoice-phases__item--on {
+  color: #15803d;
+  background: var(--setup-accent-dim);
+  border-color: var(--setup-accent-bdr);
+}
+
 .onboarding-first-invoice-phases .onboarding-step__hint {
   margin: 12px 4px 0;
   font-size: 14px;
   color: var(--setup-muted);
   line-height: 1.4;
+}
+
+/* ── Wave 48 — onboarding & auth motion ── */
+
+.welcome-screen__logo-wrap,
+.welcome-screen__eyebrow,
+.welcome-screen__title,
+.welcome-screen__lead,
+.welcome-screen .setup-feature-card,
+.welcome-screen__actions {
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+}
+
+.welcome-screen__eyebrow {
+  animation-delay: var(--stagger-step);
+}
+
+.welcome-screen__title {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.welcome-screen__lead {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.welcome-screen .setup-feature-card {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.welcome-screen__actions {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.auth-step {
+  width: 100%;
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+}
+
+.auth-screen.client-light-root .auth-info:not(.auth-info--setup) {
+  animation: success-pop var(--duration-slow) var(--ease-pop) both;
+}
+
+.onboarding-logo-progress {
+  width: 100%;
+  max-width: 200px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(60, 60, 67, 0.12);
+  overflow: hidden;
+}
+
+.onboarding-logo-progress__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--setup-accent);
+  animation: onboarding-logo-progress-fill var(--duration-slow) var(--ease-out) forwards;
+}
+
+@keyframes onboarding-logo-progress-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.onboarding-logo-picker--uploading img {
+  opacity: 0.72;
+}
+
+.onboarding-account-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: var(--setup-radius);
+  background: var(--setup-surface);
+  border: 0.5px solid var(--setup-accent-bdr);
+  box-shadow: var(--setup-shadow);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--setup-text);
+  animation: success-pop var(--duration-slow) var(--ease-pop) both;
+}
+
+.onboarding-account-hero svg {
+  flex-shrink: 0;
+  color: var(--setup-accent);
+}
+
+.onboarding-booking-link-row,
+.onboarding-booking-actions {
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+}
+
+.onboarding-booking-actions {
+  animation-delay: var(--stagger-step);
+}
+
+.onboarding-booking-actions__btn--success {
+  animation: success-pop var(--duration-medium) var(--ease-pop) both;
+  border-color: var(--setup-accent-bdr);
+  color: #15803d;
+}
+
+.onboarding-logo-picker--complete {
+  position: relative;
+}
+
+.onboarding-logo-picker--complete img {
+  animation: success-pop var(--duration-slow) var(--ease-pop) both;
+}
+
+.onboarding-logo-picker--complete::after {
+  content: 'Complete';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.14);
+  border: 0.5px solid rgba(34, 197, 94, 0.35);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.onboarding-invoice-preview--hero {
+  animation: onboarding-invoice-hero-in var(--duration-slow) var(--ease-step) both;
+  animation-delay: calc(var(--stagger-step) * 2);
+  box-shadow: var(--setup-shadow-lg);
+}
+
+@keyframes onboarding-invoice-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.onboarding-invoice-step .ob-pick-list .ob-pick-card {
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+}
+
+.onboarding-invoice-step .ob-pick-list .ob-pick-card:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.onboarding-invoice-step .ob-pick-list .ob-pick-card:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.onboarding-invoice-step .ob-pick-list .ob-pick-card:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.onboarding-invoice-step .ob-pick-list .ob-pick-card:nth-child(n + 4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.ob-pick-card--on .ob-pick-card__check {
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+}
+
+.onboarding-plans-card {
+  animation: onboarding-invoice-hero-in var(--duration-slow) var(--ease-step) both;
+}
+
+.onboarding-plans-trial {
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+}
+
+.setup-flow .setup-btn-primary,
+.setup-flow .setup-btn-secondary {
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    box-shadow var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-screen__logo-wrap,
+  .welcome-screen__eyebrow,
+  .welcome-screen__title,
+  .welcome-screen__lead,
+  .welcome-screen .setup-feature-card,
+  .welcome-screen__actions,
+  .auth-step,
+  .onboarding-step,
+  .auth-screen.client-light-root .auth-info:not(.auth-info--setup),
+  .onboarding-logo-progress__fill,
+  .onboarding-account-hero,
+  .onboarding-first-invoice-phases__item,
+  .onboarding-booking-link-row,
+  .onboarding-booking-actions,
+  .onboarding-booking-actions__btn--success,
+  .onboarding-logo-picker--complete img,
+  .onboarding-logo-picker--complete::after,
+  .onboarding-invoice-preview--hero,
+  .onboarding-invoice-step .ob-pick-list .ob-pick-card,
+  .ob-pick-card--on .ob-pick-card__check,
+  .onboarding-plans-card,
+  .onboarding-plans-trial,
+  .onboarding-flow__progress-seg--current {
+    animation: none;
+    transform: none;
+  }
+
+  .onboarding-logo-picker--uploading img {
+    opacity: 1;
+  }
+
+  .social-auth__btn:active:not(:disabled),
+  .setup-flow .setup-btn-primary:active:not(:disabled),
+  .setup-flow .setup-btn-secondary:active:not(:disabled),
+  .ob-pick-card:active {
+    transform: none;
+  }
 }

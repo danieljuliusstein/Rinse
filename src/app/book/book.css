@@ -132,10 +132,10 @@
 
 .book-step-card {
   background: var(--book-surface);
-  border: 0.5px solid var(--book-border);
+  border: var(--cl-depth-card-border);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 1px 2px rgba(20, 20, 20, 0.04);
+  box-shadow: var(--cl-depth-card-shadow);
 }
 
 .book-package-list {
@@ -770,11 +770,6 @@
   border: none;
   cursor: pointer;
   min-height: var(--tap-target-min);
-  transition: opacity 0.12s, transform 0.1s;
-}
-
-.book-btn:active:not(:disabled) {
-  transform: scale(0.99);
 }
 
 .book-btn:disabled {
@@ -855,5 +850,87 @@
   .book-slots-grid,
   .book-datetime-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ── Wave 52 — booking motion ── */
+
+.book-step-card {
+  animation: cl-step-in var(--cl-duration-medium) var(--cl-ease-step) both;
+}
+
+.book-package-list .book-package-card {
+  animation: cl-step-in var(--cl-duration-medium) var(--cl-ease-step) both;
+}
+
+.book-package-list .book-package-card:nth-child(1) { animation-delay: 0ms; }
+.book-package-list .book-package-card:nth-child(2) { animation-delay: var(--cl-stagger-step); }
+.book-package-list .book-package-card:nth-child(3) { animation-delay: calc(var(--cl-stagger-step) * 2); }
+.book-package-list .book-package-card:nth-child(4) { animation-delay: calc(var(--cl-stagger-step) * 3); }
+.book-package-list .book-package-card:nth-child(5) { animation-delay: calc(var(--cl-stagger-step) * 4); }
+.book-package-list .book-package-card:nth-child(n + 6) { animation-delay: calc(var(--cl-stagger-step) * 5); }
+
+.book-progress-dot {
+  transition: background var(--cl-duration-fast) var(--cl-ease-spring);
+}
+
+.book-package-card,
+.book-day-chip,
+.book-slot,
+.book-vehicle-btn,
+.book-location-opt,
+.book-more-options-toggle {
+  transition:
+    border-color var(--cl-duration-fast) ease,
+    background var(--cl-duration-fast) ease,
+    color var(--cl-duration-fast) ease,
+    transform var(--cl-duration-fast) var(--cl-ease-spring);
+}
+
+.book-package-card:active,
+.book-day-chip:active,
+.book-slot:active:not(.taken),
+.book-vehicle-btn:active,
+.book-location-opt:active:not(.book-location-opt--selected),
+.book-more-options-toggle:active {
+  transform: scale(0.97);
+}
+
+.book-btn {
+  transition:
+    opacity var(--cl-duration-fast) ease,
+    transform var(--cl-duration-fast) var(--cl-ease-spring);
+}
+
+.book-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.book-success-banner {
+  animation:
+    cl-step-in var(--cl-duration-medium) var(--cl-ease-step) both,
+    cl-success-pop var(--cl-duration-medium) var(--cl-ease-pop) 0.12s both;
+}
+
+.book-error-banner {
+  animation: cl-step-in var(--cl-duration-fast) var(--cl-ease-step) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-step-card,
+  .book-package-list .book-package-card,
+  .book-success-banner,
+  .book-error-banner {
+    animation: none;
+  }
+
+  .book-package-card:active,
+  .book-day-chip:active,
+  .book-slot:active:not(.taken),
+  .book-vehicle-btn:active,
+  .book-location-opt:active,
+  .book-more-options-toggle:active,
+  .book-btn:active:not(:disabled) {
+    transform: none;
   }
 }

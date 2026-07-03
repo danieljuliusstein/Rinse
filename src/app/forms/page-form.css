@@ -1,4 +1,4 @@
-/* Full-page forms using floating label system */
+/* Full-page forms using floating label system — Wave 51 save + checkmarks */
 
 .page-form {
   display: flex;
@@ -53,30 +53,22 @@
 .page-form .f-textarea:focus {
   border-color: var(--green);
   background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
 .page-form .f-field--filled .f-check {
   transform: translateY(-50%) scale(1);
-}
-
-.page-form .f-field--textarea.f-field--filled .f-check {
-  top: 22px;
-  transform: scale(1);
-}
-
-.page-form .f-check {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%) scale(0);
-  color: var(--green);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
 }
 
 .page-form .f-field--textarea .f-check {
   top: 22px;
   transform: scale(0);
+}
+
+.page-form .f-field--textarea.f-field--filled .f-check {
+  top: 22px;
+  transform: scale(1);
 }
 
 .page-form-save {
@@ -86,6 +78,31 @@
 
 .page-form-save .sheet-submit {
   width: 100%;
+  transition:
+    background var(--duration-medium) var(--ease-out),
+    color var(--duration-fast) ease,
+    border-color var(--duration-medium) var(--ease-out),
+    box-shadow var(--duration-medium) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
+}
+
+.page-form-save .sheet-submit--ready:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.page-form-save .sheet-submit--done {
+  animation: success-pop var(--duration-medium) var(--ease-pop) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-form .f-field--filled .f-check,
+  .page-form-save .sheet-submit--done {
+    animation: none;
+  }
+
+  .page-form-save .sheet-submit--ready:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -122,12 +139,16 @@
   font-size: 14px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color var(--duration-fast) ease,
+    background var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
 }
 
 .premium-search__input:focus {
   border-color: var(--green);
   background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
 .premium-search__input::placeholder {

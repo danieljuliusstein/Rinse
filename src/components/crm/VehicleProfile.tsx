@@ -72,7 +72,7 @@ export default function VehicleProfile({
     )
 
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body vehicle-screen">
       <header className="page-header page-header--compact crm-page-header">
         <BackButton onClick={() => router.push(`/clients/${clientId}`)} />
         <div className="page-header__title-block">

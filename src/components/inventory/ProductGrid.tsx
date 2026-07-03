@@ -5,6 +5,7 @@ import { Flask, Package, Wrench } from '@phosphor-icons/react'
 import ProductTile from '@/components/inventory/ProductTile'
 import { Badge } from '@/components/ui'
 import { monogramColor, monogramForName } from '@/components/inventory/inventory-utils'
+import { resolveInventoryIcon } from '@/lib/inventory-icons'
 import type { BusinessExpense, Equipment, Supply, SupplyKind } from '@/lib/types'
 import { fmtDetailed } from '@/lib/calculations'
 
@@ -16,19 +17,27 @@ interface EquipmentTileProps {
 
 export function EquipmentProductTile({ item, onPress, inExpenses = false }: EquipmentTileProps) {
   const monogramStyle = { '--monogram-bg': monogramColor(item.name) } as CSSProperties
+  const Icon = resolveInventoryIcon(item.icon_key, 'equipment', Wrench)
+  const hasCustomIcon = Boolean(item.icon_key)
 
   return (
     <button type="button" className="product-tile" onClick={onPress}>
       <div className="product-tile__media">
-        {item.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image_url} alt="" className="product-tile__img" loading="lazy" />
-        ) : (
-          <div className="product-tile__monogram" style={monogramStyle}>
-            <Wrench size={24} weight="duotone" color="rgba(255,255,255,0.85)" aria-hidden />
+        <div
+          className={`product-tile__monogram${hasCustomIcon ? ' product-tile__monogram--icon-only' : ''}`}
+          style={monogramStyle}
+        >
+          <Icon
+            key={item.icon_key ?? 'auto'}
+            size={hasCustomIcon ? 32 : 24}
+            weight="duotone"
+            color="rgba(255,255,255,0.85)"
+            aria-hidden
+          />
+          {!hasCustomIcon ? (
             <span className="product-tile__mono-text">{monogramForName(item.name)}</span>
-          </div>
-        )}
+          ) : null}
+        </div>
         {inExpenses ? (
           <Badge tone="gray" className="product-tile__expense-badge">
             In expenses
@@ -61,7 +70,7 @@ export function SupplyProductGrid({ supplies, onOpen, kind, expenseIds }: Supply
     <div className="product-grid">
       {supplies.map((supply) => (
         <ProductTile
-          key={supply.id}
+          key={`${supply.id}:${supply.icon_key ?? 'auto'}`}
           supply={supply}
           onPress={() => onOpen(supply)}
           FallbackIcon={Icon}
@@ -83,7 +92,7 @@ export function EquipmentProductGrid({ items, onOpen, expenseMap }: EquipmentGri
     <div className="product-grid">
       {items.map((item) => (
         <EquipmentProductTile
-          key={item.id}
+          key={`${item.id}:${item.icon_key ?? 'auto'}`}
           item={item}
           onPress={() => onOpen(item)}
           inExpenses={expenseMap ? expenseMap.has(item.id) : false}

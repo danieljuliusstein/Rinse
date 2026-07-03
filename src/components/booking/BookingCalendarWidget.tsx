@@ -115,7 +115,7 @@ export default function BookingCalendarWidget({
   function handleBookSlot() {
     if (!selectedDate || !selectedTime) {
       setShake(true)
-      window.setTimeout(() => setShake(false), 400)
+      window.setTimeout(() => setShake(false), 200)
       return
     }
     const origin = appOrigin ?? (typeof window !== 'undefined' ? window.location.origin : '')
@@ -201,7 +201,7 @@ export default function BookingCalendarWidget({
 
       <button
         type="button"
-        className={`detail-cal-book-btn${shake ? ' detail-cal-book-btn--shake' : ''}`}
+        className={`detail-cal-book-btn${shake ? ' cl-shake-once' : ''}`}
         onClick={handleBookSlot}
       >
         Book this slot →

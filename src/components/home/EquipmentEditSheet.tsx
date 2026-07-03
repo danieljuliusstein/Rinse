@@ -5,14 +5,13 @@ import { ArrowSquareOut } from '@phosphor-icons/react'
 import BottomSheet from '@/components/BottomSheet'
 import AcquisitionToggle, { type AcquisitionMode } from '@/components/inventory/AcquisitionToggle'
 import EquipmentStatusToggle from '@/components/inventory/EquipmentStatusToggle'
-import InventoryImagePicker from '@/components/inventory/InventoryImagePicker'
+import InventoryIconPicker from '@/components/inventory/InventoryIconPicker'
 import {
   FloatingAffixField,
   FloatingField,
   FormProgressBar,
   SheetFooter,
 } from '@/components/forms'
-import { clearEquipmentPhoto, uploadEquipmentPhoto } from '@/lib/api'
 import { fmtDetailed } from '@/lib/calculations'
 import { computeFormProgress } from '@/lib/form-progress'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
@@ -49,9 +48,8 @@ export default function EquipmentEditSheet({
   const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [supplier, setSupplier] = useState('')
   const [notes, setNotes] = useState('')
+  const [iconKey, setIconKey] = useState<string | undefined>(undefined)
   const [status, setStatus] = useState<EquipmentStatus>('active')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [clearPhoto, setClearPhoto] = useState(false)
   const [acquisition, setAcquisition] = useState<AcquisitionMode>('already_owned')
   const [saving, setSaving] = useState(false)
 
@@ -64,9 +62,8 @@ export default function EquipmentEditSheet({
       setPurchaseDate(new Date().toISOString().slice(0, 10))
       setSupplier('')
       setNotes('')
+      setIconKey(undefined)
       setStatus('active')
-      setPhotoFile(null)
-      setClearPhoto(false)
       setAcquisition('already_owned')
       return
     }
@@ -76,24 +73,13 @@ export default function EquipmentEditSheet({
     setPurchaseDate(item.purchase_date ?? new Date().toISOString().slice(0, 10))
     setSupplier(item.supplier ?? '')
     setNotes(item.notes ?? '')
+    setIconKey(item.icon_key || undefined)
     setStatus(item.status ?? 'active')
-    setPhotoFile(null)
-    setClearPhoto(false)
   }, [item, mode])
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
   }, [name, purchasePrice, purchaseDate, supplier, notes, item, mode])
-
-  const handlePhotoChange = (file: File | null) => {
-    setPhotoFile(file)
-    if (file) setClearPhoto(false)
-  }
-
-  const persistPhoto = async (id: string) => {
-    if (clearPhoto) await clearEquipmentPhoto(id)
-    else if (photoFile) await uploadEquipmentPhoto(id, photoFile)
-  }
 
   const handleSave = async () => {
     const trimmed = name.trim()
@@ -108,16 +94,15 @@ export default function EquipmentEditSheet({
         supplier: supplier.trim() || undefined,
         notes: notes.trim() || undefined,
         status,
+        icon_key: iconKey ?? '',
       }
       if (mode === 'add') {
         const options: EquipmentAddOptions = includeExpense
           ? { logExpense: true, purchaseDate }
           : { logExpense: false }
-        const created = await onSaveAdd(payload, options)
-        await persistPhoto(created.id)
+        await onSaveAdd(payload, options)
       } else if (item) {
         await onSaveEdit(item.id, payload)
-        await persistPhoto(item.id)
       }
       await onAfterSave?.()
       onClose()
@@ -144,14 +129,6 @@ export default function EquipmentEditSheet({
         />
       }
     >
-      <div className="premium-sheet__section">
-        <InventoryImagePicker
-          previewUrl={clearPhoto ? null : (item?.image_url ?? null)}
-          onChange={handlePhotoChange}
-          onClearExisting={() => setClearPhoto(true)}
-        />
-      </div>
-
       {mode === 'edit' && linkedExpense && onViewExpense ? (
         <>
           <div className="f-form-divider" />
@@ -185,6 +162,8 @@ export default function EquipmentEditSheet({
             placeholder=" "
           />
         </FloatingField>
+
+        <InventoryIconPicker variant="equipment" value={iconKey} onChange={setIconKey} />
 
         {mode === 'add' ? <AcquisitionToggle value={acquisition} onChange={setAcquisition} /> : null}
 

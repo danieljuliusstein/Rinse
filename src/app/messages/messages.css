@@ -121,3 +121,129 @@
   white-space: pre-wrap;
   margin: 0;
 }
+
+/* ── Wave 49 — messages motion ── */
+
+.messages-screen .page-header {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.messages-screen .chips {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+  animation-delay: var(--stagger-step);
+}
+
+.messages-screen .messages-tab-panel {
+  animation: pipeline-stage-in var(--duration-medium) var(--ease-out) both;
+}
+
+.messages-screen .ui-section .ui-list-row,
+.messages-screen .auto-message-item {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.messages-screen .ui-section .ui-list-row:nth-child(1),
+.messages-screen .auto-message-item:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.messages-screen .ui-section .ui-list-row:nth-child(2),
+.messages-screen .auto-message-item:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.messages-screen .ui-section .ui-list-row:nth-child(3),
+.messages-screen .auto-message-item:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.messages-screen .ui-section .ui-list-row:nth-child(4),
+.messages-screen .auto-message-item:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.messages-screen .ui-section .ui-list-row:nth-child(5),
+.messages-screen .auto-message-item:nth-child(5) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.messages-screen .ui-section .ui-list-row:nth-child(n + 6),
+.messages-screen .auto-message-item:nth-child(n + 6) {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.messages-screen .ui-list-row--pressable {
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-spring);
+}
+
+.messages-screen .ui-list-row--pressable:active {
+  transform: scale(0.995);
+}
+
+.messages-screen .auto-message-chevron {
+  transition: transform var(--duration-medium) var(--ease-spring), background var(--duration-fast) ease;
+}
+
+.messages-screen .auto-message-chevron:active {
+  transform: scale(0.94);
+}
+
+.messages-screen .auto-message-chevron--open:active {
+  transform: rotate(180deg) scale(0.94);
+}
+
+.messages-screen .auto-message-expand {
+  animation: pipeline-stage-in var(--duration-medium) var(--ease-out) both;
+}
+
+.messages-screen .chips .chip {
+  transition: transform var(--duration-fast) var(--ease-spring), background var(--duration-fast) ease;
+}
+
+.messages-screen .chips .chip:active {
+  transform: scale(0.97);
+}
+
+.messages-screen .message-detail-badges,
+.messages-screen .message-detail-body,
+.messages-screen .message-detail-screen .ui-section {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.messages-screen .message-detail-screen .page-header {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.messages-screen .message-detail-body {
+  animation-delay: var(--stagger-step);
+}
+
+.messages-screen .message-detail-screen .ui-section {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messages-screen .page-header,
+  .messages-screen .chips,
+  .messages-screen .messages-tab-panel,
+  .messages-screen .message-detail-screen .page-header,
+  .messages-screen .message-detail-badges,
+  .messages-screen .message-detail-body,
+  .messages-screen .message-detail-screen .ui-section,
+  .messages-screen .ui-section .ui-list-row,
+  .messages-screen .auto-message-item,
+  .messages-screen .auto-message-expand {
+    animation: none;
+  }
+
+  .messages-screen .ui-list-row--pressable:active,
+  .messages-screen .auto-message-chevron:active,
+  .messages-screen .auto-message-chevron--open:active,
+  .messages-screen .chips .chip:active {
+    transform: none;
+  }
+
+  .messages-screen .auto-message-chevron--open {
+    transform: rotate(180deg);
+  }
+}

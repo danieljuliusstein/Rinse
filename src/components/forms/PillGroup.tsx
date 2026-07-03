@@ -20,7 +20,7 @@ export default function PillGroup<T extends string>({ label, options, value, onC
   const handleSelect = (next: T) => {
     onChange(next)
     setPopValue(next)
-    window.setTimeout(() => setPopValue(null), 300)
+    window.setTimeout(() => setPopValue(null), 320)
   }
 
   return (

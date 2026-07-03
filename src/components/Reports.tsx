@@ -334,14 +334,18 @@ export default function Reports() {
           </button>
         </div>
         {chartView === 'compare' ? (
-          <ReportComparisonChart report={current} />
+          <div key={`chart-compare-${range}`} className="reports-chart-panel reports-chart-panel--enter">
+            <ReportComparisonChart report={current} />
+          </div>
         ) : waterfallData ? (
-          <WaterfallChart
+          <div key={`chart-waterfall-${range}`} className="reports-chart-panel reports-chart-panel--enter">
+            <WaterfallChart
             data={waterfallData}
             revenue={current.revenue}
             totalExpenses={current.totalExpenses}
             netProfit={current.netProfit}
           />
+          </div>
         ) : null}
       </ReportSection>
 

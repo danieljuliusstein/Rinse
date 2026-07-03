@@ -12,6 +12,7 @@ import {
   type Plugin,
 } from 'chart.js'
 import type { WaterfallData } from '@/lib/reports-metrics'
+import { readChartTheme } from '@/lib/chart-theme'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip)
 
@@ -47,7 +48,7 @@ function connectorY(ranges: [number, number][], index: number): number {
   return ranges[index][0]
 }
 
-function createConnectorPlugin(ranges: [number, number][]): Plugin<'bar'> {
+function createConnectorPlugin(ranges: [number, number][], strokeColor: string): Plugin<'bar'> {
   return {
     id: 'waterfallConnectors',
     afterDatasetsDraw(chart) {
@@ -59,7 +60,7 @@ function createConnectorPlugin(ranges: [number, number][]): Plugin<'bar'> {
       if (!y) return
 
       ctx.save()
-      ctx.strokeStyle = '#333'
+      ctx.strokeStyle = strokeColor
       ctx.lineWidth = 1
 
       for (let i = 0; i < ranges.length - 1; i++) {
@@ -94,8 +95,9 @@ export default function WaterfallChart({ data, revenue, totalExpenses, netProfit
     chartRef.current?.destroy()
 
     const { ranges, vals, colors, labels, yMax } = data
+    const theme = readChartTheme()
     const ariaLabel = `Waterfall chart showing revenue of $${revenue.toLocaleString()}, expenses of $${totalExpenses.toLocaleString()}, net profit of $${netProfit.toLocaleString()}`
-    const connectorPlugin = createConnectorPlugin(ranges)
+    const connectorPlugin = createConnectorPlugin(ranges, theme.connector)
 
     const config: ChartConfiguration<'bar'> = {
       type: 'bar',
@@ -137,17 +139,17 @@ export default function WaterfallChart({ data, revenue, totalExpenses, netProfit
                 return isExpense ? `-$${val.toLocaleString()}` : `$${val.toLocaleString()}`
               },
             },
-            backgroundColor: '#2a2a2a',
-            titleColor: '#aaa',
-            bodyColor: '#fff',
-            borderColor: '#3a3a3a',
+            backgroundColor: theme.tooltipBg,
+            titleColor: theme.tooltipTitle,
+            bodyColor: theme.tooltipBody,
+            borderColor: theme.tooltipBorder,
             borderWidth: 0.5,
           },
         },
         scales: {
           x: {
             ticks: {
-              color: '#666',
+              color: theme.tick,
               font: { size: 10 },
               autoSkip: false,
               maxRotation: 0,
@@ -159,11 +161,11 @@ export default function WaterfallChart({ data, revenue, totalExpenses, netProfit
             min: 0,
             max: yMax,
             ticks: {
-              color: '#555',
+              color: theme.tick,
               font: { size: 10 },
               callback: (v) => `$${Number(v).toLocaleString()}`,
             },
-            grid: { color: '#222', lineWidth: 0.5 },
+            grid: { color: theme.grid, lineWidth: 0.5 },
             border: { display: false },
           },
         },

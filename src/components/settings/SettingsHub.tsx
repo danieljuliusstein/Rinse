@@ -158,7 +158,7 @@ export default function SettingsHub() {
   }
 
   return (
-    <div className="screen page-content settings-screen">
+    <div className="screen page-content body settings-screen">
       <header className="settings-header">
         <BackButton onClick={goBack} />
         <h1 className="settings-header__title">Settings</h1>

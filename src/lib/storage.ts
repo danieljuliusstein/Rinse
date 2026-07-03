@@ -30,6 +30,8 @@ export interface AppData {
   job_photos: Record<string, JobPhotoLocal[]>
   vehicles?: Vehicle[]
   damage_docs?: DamageRecord[]
+  /** Supply/equipment icon picks when cloud schema lacks icon_key. */
+  inventory_icon_keys?: Record<string, string>
 }
 
 function generateId(): string {
@@ -381,6 +383,7 @@ export function loadData(): AppData {
     job_photos: parsed.job_photos ?? {},
     vehicles: parsed.vehicles ?? fallback.vehicles ?? [],
     damage_docs: parsed.damage_docs ?? fallback.damage_docs ?? [],
+    inventory_icon_keys: parsed.inventory_icon_keys,
   }
 
   // Phone may still have demo saved from an earlier visit — drop it when cloud is configured.

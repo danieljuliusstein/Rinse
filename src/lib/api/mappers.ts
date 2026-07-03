@@ -319,6 +319,7 @@ export function pbSupplyToApp(r: PbRecord, imageUrl?: string): Supply {
     kind: kind && ['chemical', 'consumable', 'other'].includes(kind) ? kind : 'other',
     notes: str(r.notes),
     image_url: imageUrl,
+    icon_key: str(r.icon_key) || undefined,
   }
 }
 
@@ -331,6 +332,7 @@ export function appSupplyToPb(input: {
   supplier?: string
   kind?: SupplyKind
   notes?: string
+  icon_key?: string
 }) {
   return {
     name: input.name,
@@ -341,6 +343,7 @@ export function appSupplyToPb(input: {
     supplier: input.supplier ?? '',
     kind: input.kind ?? 'other',
     notes: input.notes ?? '',
+    icon_key: input.icon_key ?? '',
   }
 }
 
@@ -354,6 +357,7 @@ export function pbEquipmentToApp(r: PbRecord, imageUrl?: string): Equipment {
     notes: str(r.notes),
     status: (str(r.status) as Equipment['status']) ?? 'active',
     image_url: imageUrl,
+    icon_key: str(r.icon_key) || undefined,
   }
 }
 
@@ -364,6 +368,7 @@ export function appEquipmentToPb(input: {
   supplier?: string
   notes?: string
   status?: Equipment['status']
+  icon_key?: string
 }) {
   return {
     name: input.name,
@@ -372,6 +377,7 @@ export function appEquipmentToPb(input: {
     supplier: input.supplier ?? '',
     notes: input.notes ?? '',
     status: input.status ?? 'active',
+    icon_key: input.icon_key ?? '',
   }
 }
 

@@ -139,10 +139,12 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
   }
 
   return (
-    <div className="screen page-content">
-      <header className="job-form-header">
+    <div className="screen page-content body">
+      <header className="page-header page-header--compact">
         <BackButton onClick={() => router.back()} />
-        <div className="job-form-header__title">Edit job</div>
+        <div className="page-header__title-block">
+          <h1>Edit job</h1>
+        </div>
       </header>
 
       <div className="section-title">Client</div>

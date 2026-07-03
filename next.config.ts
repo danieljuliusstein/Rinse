@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION ?? pkg.version,
   },
-  // Set via npm run dev — keeps dev cache off iCloud Drive (see package.json).
+  // Set via npm run dev — keeps dev cache outside iCloud Drive (see package.json).
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   reactStrictMode: true,
   // Allow 127.0.0.1 in dev (portal links often use it; Next 16 blocks cross-origin dev assets otherwise)

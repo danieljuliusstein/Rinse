@@ -47,6 +47,11 @@ import * as suppliesPb from './supplies-pocketbase'
 import { compressJobPhoto } from '../compress-job-photo'
 import { compressInventoryPhoto } from '../compress-inventory-photo'
 import { notifyFinancialDataChanged } from '../financial-data-events'
+import {
+  applyInventoryIconOverride,
+  mergeInventoryIconKeys,
+  persistInventoryIconKey,
+} from '../inventory-icon-overlay'
 import { getBusinessExpensesMerged } from './business-expenses-merge'
 import { clearWriteDegraded, executeWrite } from './write-router'
 import { assertCanWrite } from '../write-guard'
@@ -536,11 +541,19 @@ export async function convertLeadToJob(
 }
 
 export async function getSupplies(): Promise<Supply[]> {
-  return (await resolveBackend()) === 'pocketbase' ? suppliesPb.getSupplies() : suppliesLocal.getSupplies()
+  const supplies =
+    (await resolveBackend()) === 'pocketbase'
+      ? await suppliesPb.getSupplies()
+      : suppliesLocal.getSupplies()
+  return mergeInventoryIconKeys(supplies)
 }
 
 export async function getSupply(id: string): Promise<Supply | null> {
-  return (await resolveBackend()) === 'pocketbase' ? suppliesPb.getSupply(id) : suppliesLocal.getSupply(id)
+  const supply =
+    (await resolveBackend()) === 'pocketbase'
+      ? await suppliesPb.getSupply(id)
+      : suppliesLocal.getSupply(id)
+  return applyInventoryIconOverride(supply)
 }
 
 export async function getLowInventorySupplies(): Promise<Supply[]> {
@@ -551,22 +564,26 @@ export async function getLowInventorySupplies(): Promise<Supply[]> {
 
 export async function createSupply(input: SupplyInput): Promise<Supply> {
   const resolved = await resolveBackend()
-  return executeWrite({
+  const created = await executeWrite({
     resolvedBackend: resolved,
     local: () => suppliesLocal.createSupply(input),
     pocketbase: () => suppliesPb.createSupply(input),
     buildQueue: (supply) => ({ type: 'createSupply', params: input, localSupplyId: supply.id }),
   })
+  if (input.icon_key) persistInventoryIconKey(created.id, input.icon_key)
+  return applyInventoryIconOverride(created) ?? created
 }
 
 export async function updateSupply(id: string, input: Partial<SupplyInput>): Promise<Supply | null> {
+  if (input.icon_key !== undefined) persistInventoryIconKey(id, input.icon_key || undefined)
   const resolved = await resolveBackend()
-  return executeWrite({
+  const updated = await executeWrite({
     resolvedBackend: resolved,
     local: () => suppliesLocal.updateSupply(id, input),
     pocketbase: () => suppliesPb.updateSupply(id, input),
     buildQueue: (supply) => (supply ? { type: 'updateSupply', params: { id, input } } : null),
   })
+  return applyInventoryIconOverride(updated)
 }
 
 export async function uploadSupplyPhoto(id: string, file: File): Promise<Supply | null> {
@@ -621,32 +638,38 @@ export async function restockSupply(id: string, input: RestockInput): Promise<Su
 }
 
 export async function getEquipment(): Promise<Equipment[]> {
-  return (await resolveBackend()) === 'pocketbase'
-    ? equipmentPb.getEquipment()
-    : equipmentLocal.getEquipment()
+  const items =
+    (await resolveBackend()) === 'pocketbase'
+      ? await equipmentPb.getEquipment()
+      : equipmentLocal.getEquipment()
+  return mergeInventoryIconKeys(items)
 }
 
 export async function createEquipment(input: EquipmentInput): Promise<Equipment> {
   const resolved = await resolveBackend()
-  return executeWrite({
+  const created = await executeWrite({
     resolvedBackend: resolved,
     local: () => equipmentLocal.createEquipment(input),
     pocketbase: () => equipmentPb.createEquipment(input),
     buildQueue: (item) => ({ type: 'createEquipment', params: input, localEquipmentId: item.id }),
   })
+  if (input.icon_key) persistInventoryIconKey(created.id, input.icon_key)
+  return applyInventoryIconOverride(created) ?? created
 }
 
 export async function updateEquipment(
   id: string,
   input: Partial<EquipmentInput>
 ): Promise<Equipment | null> {
+  if (input.icon_key !== undefined) persistInventoryIconKey(id, input.icon_key || undefined)
   const resolved = await resolveBackend()
-  return executeWrite({
+  const updated = await executeWrite({
     resolvedBackend: resolved,
     local: () => equipmentLocal.updateEquipment(id, input),
     pocketbase: () => equipmentPb.updateEquipment(id, input),
     buildQueue: (item) => (item ? { type: 'updateEquipment', params: { id, input } } : null),
   })
+  return applyInventoryIconOverride(updated)
 }
 
 export async function uploadEquipmentPhoto(id: string, file: File): Promise<Equipment | null> {

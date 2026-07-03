@@ -30,12 +30,14 @@ function PhotoSection({
   uploading,
   onAdd,
   onOpen,
+  successThumb,
 }: {
   type: PhotoType
   photos: JobPhoto[]
   uploading: boolean
   onAdd: () => void
   onOpen: (index: number) => void
+  successThumb?: string | null
 }) {
   const label = type === 'before' ? 'Before' : 'After'
   const labelClass =
@@ -43,7 +45,7 @@ function PhotoSection({
   const atLimit = isJobPhotoTypeAtLimit(photos.length)
 
   return (
-    <section className="job-photos__section">
+    <section className={`job-photos__section${uploading ? ' job-photos__section--uploading' : ''}`}>
       <div className="job-photos__section-head">
         <div>
           <h2 className={`job-photos__section-label ${labelClass}`}>{label}</h2>
@@ -73,7 +75,15 @@ function PhotoSection({
           </div>
         ) : (
           photos.map((p, i) => (
-            <button key={p.filename} type="button" className="job-photos__thumb" onClick={() => onOpen(i)}>
+            <button
+              key={p.filename}
+              type="button"
+              className={[
+                'job-photos__thumb',
+                p.filename === successThumb ? ' job-photos__thumb--success' : '',
+              ].join('')}
+              onClick={() => onOpen(i)}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt="" loading="lazy" />
             </button>
@@ -88,6 +98,7 @@ export default function PhotoGallery({ job }: { job: JobWithRelations }) {
   const router = useRouter()
   const [photos, setPhotos] = useState<JobPhoto[]>([])
   const [uploading, setUploading] = useState(false)
+  const [successThumb, setSuccessThumb] = useState<string | null>(null)
   const [addType, setAddType] = useState<PhotoType | null>(null)
   const [lightbox, setLightbox] = useState<{ type: PhotoType; index: number } | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
@@ -120,8 +131,10 @@ export default function PhotoGallery({ job }: { job: JobWithRelations }) {
     setAddType(null)
     setError('')
     try {
-      await uploadJobPhoto(job.id, file, type)
+      const photo = await uploadJobPhoto(job.id, file, type)
       await loadPhotos()
+      setSuccessThumb(photo.filename)
+      window.setTimeout(() => setSuccessThumb(null), 900)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -138,16 +151,15 @@ export default function PhotoGallery({ job }: { job: JobWithRelations }) {
   const packageName = job.package?.name ?? 'Detail'
 
   return (
-    <div className="job-photos screen">
-      <div className="job-photos__body">
-        <header className="job-photos__header">
+    <div className="screen page-content body job-photos">
+        <header className="page-header page-header--compact job-photos__header">
           <BackButton onClick={() => router.back()} />
-          <div className="job-photos__header-text">
-            <h1 className="job-photos__title">Photos</h1>
-            <p className="job-photos__subtitle">
+          <div className="page-header__title-block">
+            <h1>Photos</h1>
+            <p>
               {clientName} · {packageName}
             </p>
-            <p className="job-photos__subtitle">{formatJobDate(job.date)}</p>
+            <p>{formatJobDate(job.date)}</p>
           </div>
           <span className="job-photos__count">{photos.length}</span>
         </header>
@@ -183,6 +195,7 @@ export default function PhotoGallery({ job }: { job: JobWithRelations }) {
           type="before"
           photos={beforePhotos}
           uploading={uploading}
+          successThumb={successThumb}
           onAdd={() => tryOpenAdd('before')}
           onOpen={(index) => setLightbox({ type: 'before', index })}
         />
@@ -191,10 +204,10 @@ export default function PhotoGallery({ job }: { job: JobWithRelations }) {
           type="after"
           photos={afterPhotos}
           uploading={uploading}
+          successThumb={successThumb}
           onAdd={() => tryOpenAdd('after')}
           onOpen={(index) => setLightbox({ type: 'after', index })}
         />
-      </div>
 
       {photos.length > 0 && job.client && (
         <div className="job-photos__footer">

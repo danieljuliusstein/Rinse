@@ -74,7 +74,7 @@ function SupplyPicker({ catalog, supplyKey, onSelect }: SupplyPickerProps) {
       <div className="inv-supply-picker">
         <button type="button" className="inv-supply-picker-trigger" onClick={() => setOpen(true)}>
           <span>{displayLabel}</span>
-          <CaretDown size={14} color="#8e8e93" />
+          <CaretDown size={14} className="inv-supply-picker-caret" aria-hidden />
         </button>
       </div>
     )
@@ -108,7 +108,7 @@ function SupplyPicker({ catalog, supplyKey, onSelect }: SupplyPickerProps) {
             </button>
           ))}
           {filtered.length === 0 && search.trim() !== '' ? (
-            <div style={{ padding: '12px 14px', fontSize: 13, color: '#8e8e93' }}>No supplies match</div>
+            <div className="inv-supply-picker-empty">No supplies match</div>
           ) : null}
           <button
             type="button"

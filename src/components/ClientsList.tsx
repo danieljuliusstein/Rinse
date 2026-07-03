@@ -101,7 +101,7 @@ export default function ClientsList({
     })
 
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body clients-screen">
       <header className="page-header">
         <div>
           <h1>Clients</h1>
@@ -210,49 +210,55 @@ export default function ClientsList({
             filtered.length === 0 ? (
               <EmptyState title="No clients found" description="Try another segment or search term." />
             ) : (
-              renderSegmentList()
+              <div className="clients-list-section">{renderSegmentList()}</div>
             )
           ) : (
             <>
               {overdue.length > 0 && (
                 <>
                   <p className="sec">Follow up</p>
-                  {overdue.map((client) => (
-                    <FollowUpClientCard key={client.id} client={client} />
-                  ))}
+                  <div className="clients-list-section">
+                    {overdue.map((client) => (
+                      <FollowUpClientCard key={client.id} client={client} />
+                    ))}
+                  </div>
                 </>
               )}
 
               {topClients.length > 0 && (
                 <>
                   <p className="sec">Top clients</p>
-                  {topClients.map((client) => (
-                    <ClientCard
-                      key={client.id}
-                      client={client}
-                      derived={derivedMap.get(client.id)!}
-                      onClientRemoved={onClientRemoved}
-                    />
-                  ))}
+                  <div className="clients-list-section">
+                    {topClients.map((client) => (
+                      <ClientCard
+                        key={client.id}
+                        client={client}
+                        derived={derivedMap.get(client.id)!}
+                        onClientRemoved={onClientRemoved}
+                      />
+                    ))}
+                  </div>
                 </>
               )}
 
               {allRest.length > 0 && (
                 <>
                   <p className="sec">All clients</p>
-                  {visibleRest.map((client) => (
-                    <ClientCard
-                      key={client.id}
-                      client={client}
-                      derived={derivedMap.get(client.id)!}
-                      onClientRemoved={onClientRemoved}
-                    />
-                  ))}
-                  {hiddenRest > 0 && (
-                    <button type="button" className="more-pill" onClick={() => setShowAllRest(true)}>
-                      + {hiddenRest} more client{hiddenRest > 1 ? 's' : ''}
-                    </button>
-                  )}
+                  <div className="clients-list-section">
+                    {visibleRest.map((client) => (
+                      <ClientCard
+                        key={client.id}
+                        client={client}
+                        derived={derivedMap.get(client.id)!}
+                        onClientRemoved={onClientRemoved}
+                      />
+                    ))}
+                    {hiddenRest > 0 && (
+                      <button type="button" className="more-pill" onClick={() => setShowAllRest(true)}>
+                        + {hiddenRest} more client{hiddenRest > 1 ? 's' : ''}
+                      </button>
+                    )}
+                  </div>
                 </>
               )}
 

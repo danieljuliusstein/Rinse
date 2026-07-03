@@ -25,7 +25,7 @@ export default function PortalInvoiceCard({
   const canPay = showPayOnline && invoice.balanceDue > 0 && token
 
   return (
-    <div className="portal-card">
+    <div className="portal-card portal-card--invoice">
       <div className="portal-card-inner">
         <div className="portal-card-header-row">
           <div className="portal-section-label portal-section-label--flush">

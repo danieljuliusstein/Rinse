@@ -66,7 +66,7 @@ export default function DamageDetailView({
   }
 
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body damage-screen">
       <header className="page-header page-header--compact crm-page-header">
         <BackButton onClick={() => router.back()} />
         <div className="page-header__title-block">

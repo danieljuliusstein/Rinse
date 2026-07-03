@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import BottomNav from './BottomNav'
-import LoggedOutBanner from './LoggedOutBanner'
 import BusinessExpenseSheet from './business/BusinessExpenseSheet'
 import SupplyPurchaseSheet from './business/SupplyPurchaseSheet'
 import LeadSheet from './pipeline/LeadSheet'
@@ -75,7 +74,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname === '/onboarding' ||
     pathname.startsWith('/auth/')
   const isPublicClient = isPortal || isBook || isEmbed
-  const showLoggedOutBanner = !isPublicClient && !isAuthFlow && !isDemo
   const showProductTour = !isPublicClient && !isAuthFlow && isLoggedIn && !isDemo
 
   const shellClass = [
@@ -100,7 +98,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               Skip to content
             </a>
           ) : null}
-          {showLoggedOutBanner ? <LoggedOutBanner /> : null}
           {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <SubscriptionLapsedBanner /> : null}
           {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <TrialPlanBadge /> : null}
           {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <DemoModeBadge /> : null}

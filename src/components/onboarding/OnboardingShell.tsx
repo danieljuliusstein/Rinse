@@ -88,7 +88,7 @@ export default function OnboardingShell({
       </header>
 
       <div className="onboarding-flow__body">
-        <div className="onboarding-step">
+        <div key={step} className="onboarding-step">
           {intro ? <p className="onboarding-step__intro">{intro}</p> : null}
           {children}
           {footnote ? <p className="onboarding-step__footnote">{footnote}</p> : null}

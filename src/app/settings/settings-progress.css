@@ -34,10 +34,10 @@
 
 .progress-stat-card {
   background: var(--bg-surface);
-  border: 0.5px solid var(--border);
+  border: 0.5px solid var(--depth-card-border);
   border-radius: 16px;
   padding: 14px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--depth-card-shadow);
 }
 
 .progress-stat-card__label {
@@ -72,10 +72,10 @@
 
 .milestone-list {
   background: var(--bg-surface);
-  border: 0.5px solid var(--border);
+  border: 0.5px solid var(--depth-card-border);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--depth-card-shadow);
 }
 
 .milestone-row {
@@ -172,4 +172,5 @@
   padding: 2px 7px;
   margin-right: 6px;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }

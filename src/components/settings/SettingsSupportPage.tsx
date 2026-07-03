@@ -69,7 +69,6 @@ export default function SettingsSupportPage() {
 
   const handleReplayTour = () => {
     requestTourReplay()
-    router.push('/')
     window.dispatchEvent(new Event(TOUR_REPLAY_EVENT))
   }
 

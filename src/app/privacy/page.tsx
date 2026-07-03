@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   const updated = 'June 25, 2026'
 
   return (
-    <div className="screen page-content legal-page">
+    <div className="screen page-content legal-page client-light-root">
       <header className="legal-page__header">
         <Link href="/settings" className="legal-page__back">
           ← Settings
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <p className="legal-page__updated">Last updated {updated}</p>
       </header>
 
-      <div className="legal-page__body card">
+      <div className="legal-page__body">
         <section>
           <h2>Who this applies to</h2>
           <p>

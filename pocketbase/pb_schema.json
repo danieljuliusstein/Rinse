@@ -75,7 +75,8 @@
         "maxSelect": 1,
         "maxSize": 262144,
         "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
-      }
+      },
+      { "name": "icon_key", "type": "text" }
     ]
   },
   {
@@ -106,7 +107,8 @@
         "maxSelect": 1,
         "maxSize": 262144,
         "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
-      }
+      },
+      { "name": "icon_key", "type": "text" }
     ]
   },
   {

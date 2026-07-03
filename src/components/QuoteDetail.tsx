@@ -148,12 +148,12 @@ export default function QuoteDetail({ quote: initial }: { quote: QuoteWithRelati
   const canRespond = (quote.status === 'sent' || quote.status === 'draft') && !quote.job_id
 
   return (
-    <div className="screen page-content quote-screen screen--dock-nav">
+    <div className="screen page-content body quote-screen screen--dock-nav">
       <header className="page-header page-header--compact">
         <BackButton onClick={() => router.back()} />
         <div className="page-header__title-block">
           <h1>{quote.quote_number}</h1>
-          <Badge status={quote.status} />
+          <Badge key={quote.status} status={quote.status} />
         </div>
       </header>
 
@@ -173,7 +173,15 @@ export default function QuoteDetail({ quote: initial }: { quote: QuoteWithRelati
         {quote.notes ? <p className="quote-doc-card__notes">{quote.notes}</p> : null}
       </div>
 
-      {message ? <p className="quote-screen__message">{message}</p> : null}
+      {message ? (
+        <p
+          className={`quote-screen__message${
+            /sent|accepted|copied|declined/i.test(message) ? ' quote-screen__message--success' : ''
+          }`}
+        >
+          {message}
+        </p>
+      ) : null}
 
       {quote.job_id ? (
         <Button variant="secondary" fullWidth onClick={() => router.push(`/jobs/${quote.job_id}`)}>

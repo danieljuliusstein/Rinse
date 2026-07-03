@@ -270,6 +270,7 @@ function BookContent() {
   const [error, setError] = useState('')
   const [notFound, setNotFound] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [continueShake, setContinueShake] = useState(false)
   const [prefillApplied, setPrefillApplied] = useState(false)
   const [confirmed, setConfirmed] = useState<{
     packageName: string
@@ -377,6 +378,15 @@ function BookContent() {
   useEffect(() => {
     syncPrefilledFloatingLabels(detailsFormRef.current)
   }, [name, phone, email, address, notes, step, showMoreOptions])
+
+  useEffect(() => {
+    setContinueShake(false)
+  }, [step])
+
+  function triggerContinueShake() {
+    setContinueShake(true)
+    window.setTimeout(() => setContinueShake(false), 200)
+  }
 
   async function handleSubmit() {
     setError('')
@@ -488,10 +498,14 @@ function BookContent() {
         </>
       }
     >
-      {error ? <div className="book-error-banner" role="alert" aria-live="assertive">{error}</div> : null}
+      {error ? (
+        <div key={error} className="book-error-banner" role="alert" aria-live="assertive">
+          {error}
+        </div>
+      ) : null}
 
       {step === 1 ? (
-        <section className="book-step-card">
+        <section key={1} className="book-step-card">
           {loadingPackages ? (
             <p className="book-lead">Loading services…</p>
           ) : packages.length === 0 ? (
@@ -525,7 +539,17 @@ function BookContent() {
             </div>
           )}
           <div className="book-step-actions book-step-actions--end">
-            <button type="button" className="book-btn book-btn-primary" disabled={!packageId} onClick={() => setStep(2)}>
+            <button
+              type="button"
+              className={`book-btn book-btn-primary${continueShake ? ' cl-shake-once' : ''}`}
+              onClick={() => {
+                if (!packageId) {
+                  triggerContinueShake()
+                  return
+                }
+                setStep(2)
+              }}
+            >
               Continue →
             </button>
           </div>
@@ -533,7 +557,7 @@ function BookContent() {
       ) : null}
 
       {step === 2 ? (
-        <section className="book-step-card">
+        <section key={2} className="book-step-card">
           {selectedPackage ? (
             <BookStickySummary name={selectedPackage.name} price={selectedPackage.base_price} />
           ) : null}
@@ -582,7 +606,17 @@ function BookContent() {
             <button type="button" className="book-btn book-btn-secondary" onClick={() => setStep(1)}>
               Back
             </button>
-            <button type="button" className="book-btn book-btn-primary" disabled={!startTime} onClick={() => setStep(3)}>
+            <button
+              type="button"
+              className={`book-btn book-btn-primary${continueShake ? ' cl-shake-once' : ''}`}
+              onClick={() => {
+                if (!startTime) {
+                  triggerContinueShake()
+                  return
+                }
+                setStep(3)
+              }}
+            >
               Continue →
             </button>
           </div>
@@ -590,7 +624,7 @@ function BookContent() {
       ) : null}
 
       {step === 3 ? (
-        <section ref={detailsFormRef} className="book-step-card">
+        <section key={3} ref={detailsFormRef} className="book-step-card">
           {selectedPackage ? (
             <BookStickySummary name={selectedPackage.name} price={selectedPackage.base_price} />
           ) : null}

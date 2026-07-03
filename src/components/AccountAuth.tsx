@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import AppLogo from '@/components/AppLogo'
 import SocialAuthButtons from '@/components/auth/SocialAuthButtons'
 import { SetupRowField } from '@/components/forms'
+import { AUTH_PB_NOT_CONFIGURED, formatAuthApiError } from '@/lib/auth-messages'
 import { loginWithPassword, requestPasswordReset } from '@/lib/pb-auth'
+import { isPocketBaseConfigured } from '@/lib/pocketbase'
 import { markTourPending } from '@/lib/product-tour'
 import { onboardingStepUrl } from '@/lib/onboarding'
 import { slugifyBusinessName } from '@/lib/tenant'
@@ -39,6 +41,11 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
     setInfo('')
     setLoading(true)
     try {
+      if (!cloudAuthEnabled) {
+        setError(AUTH_PB_NOT_CONFIGURED)
+        return
+      }
+
       if (mode === 'forgot') {
         const result = await requestPasswordReset(email)
         if (!result.ok) {
@@ -57,7 +64,7 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
         })
         const data = await res.json()
         if (!res.ok) {
-          setError(data.error ?? 'Signup failed')
+          setError(formatAuthApiError(String(data.error ?? 'Signup failed')))
           return
         }
       }
@@ -82,6 +89,7 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
   }
 
   const slugPreview = businessName.trim() ? slugifyBusinessName(businessName) : ''
+  const cloudAuthEnabled = isPocketBaseConfigured()
 
   const title =
     mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Reset password'
@@ -97,23 +105,30 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
       <div className="auth-screen__logo">
         <AppLogo size={56} priority />
       </div>
-      <h1 className="auth-screen__title">{title}</h1>
-      <p className="auth-screen__subtitle">{subtitle}</p>
+      <div key={mode} className="auth-step">
+        <h1 className="auth-screen__title">{title}</h1>
+        <p className="auth-screen__subtitle">{subtitle}</p>
 
-      {mode === 'signup' ? (
-        <ul className="auth-value-props">
-          <li>Share your booking link</li>
-          <li>Track leads in your pipeline</li>
-          <li>Send invoices and get paid</li>
-        </ul>
-      ) : null}
+        {!cloudAuthEnabled ? (
+          <p className="auth-info auth-info--setup" role="status">
+            {AUTH_PB_NOT_CONFIGURED}
+          </p>
+        ) : null}
 
-      {mode !== 'forgot' ? (
-        <SocialAuthButtons disabled={loading} onError={setError} />
-      ) : null}
+        {mode === 'signup' ? (
+          <ul className="auth-value-props">
+            <li>Share your booking link</li>
+            <li>Track leads in your pipeline</li>
+            <li>Send invoices and get paid</li>
+          </ul>
+        ) : null}
 
-      <form className="auth-form page-form" onSubmit={handleSubmit}>
-        <div className="ob-field-group">
+        {mode !== 'forgot' && cloudAuthEnabled ? (
+          <SocialAuthButtons disabled={loading} onError={setError} />
+        ) : null}
+
+        <form className="auth-form page-form" onSubmit={handleSubmit}>
+          <div className="ob-field-group">
           {mode === 'signup' ? (
             <SetupRowField
               id="auth-business-name"
@@ -147,69 +162,70 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
               placeholder={mode === 'signup' ? '8+ characters' : undefined}
             />
           ) : null}
-        </div>
+          </div>
 
-        {mode === 'signup' && slugPreview ? (
-          <p className="auth-slug-preview">
-            Booking link: <strong>/book/{slugPreview}</strong>
-          </p>
+          {mode === 'signup' && slugPreview ? (
+            <p className="auth-slug-preview">
+              Booking link: <strong>/book/{slugPreview}</strong>
+            </p>
+          ) : null}
+
+          {error ? (
+            <p className="auth-error" role="alert" aria-live="assertive">
+              {error}
+            </p>
+          ) : null}
+          {info ? (
+            <p className="auth-info" role="status">
+              {info}
+            </p>
+          ) : null}
+
+          <button type="submit" className="setup-btn-primary" disabled={loading}>
+            {loading
+              ? 'Please wait…'
+              : mode === 'login'
+                ? 'Sign in'
+                : mode === 'signup'
+                  ? 'Create account'
+                  : 'Send reset link'}
+          </button>
+        </form>
+
+        {mode === 'login' ? (
+          <button
+            type="button"
+            className="auth-link"
+            onClick={() => {
+              setMode('forgot')
+              setError('')
+              setInfo('')
+            }}
+          >
+            Forgot password?
+          </button>
         ) : null}
 
-        {error ? (
-          <p className="auth-error" role="alert" aria-live="assertive">
-            {error}
-          </p>
-        ) : null}
-        {info ? (
-          <p className="auth-info" role="status">
-            {info}
-          </p>
-        ) : null}
-
-        <button type="submit" className="setup-btn-primary" disabled={loading}>
-          {loading
-            ? 'Please wait…'
-            : mode === 'login'
-              ? 'Sign in'
-              : mode === 'signup'
-                ? 'Create account'
-                : 'Send reset link'}
-        </button>
-      </form>
-
-      {mode === 'login' ? (
         <button
           type="button"
           className="auth-link"
           onClick={() => {
-            setMode('forgot')
+            if (mode === 'forgot') {
+              setMode('login')
+            } else {
+              setMode(mode === 'login' ? 'signup' : 'login')
+            }
             setError('')
             setInfo('')
           }}
         >
-          Forgot password?
+          {mode === 'login'
+            ? 'New here? Create an account'
+            : mode === 'signup'
+              ? 'Already have an account? Sign in'
+              : 'Back to sign in'}
         </button>
-      ) : null}
-
-      <button
-        type="button"
-        className="auth-link"
-        onClick={() => {
-          if (mode === 'forgot') {
-            setMode('login')
-          } else {
-            setMode(mode === 'login' ? 'signup' : 'login')
-          }
-          setError('')
-          setInfo('')
-        }}
-      >
-        {mode === 'login'
-          ? 'New here? Create an account'
-          : mode === 'signup'
-            ? 'Already have an account? Sign in'
-            : 'Back to sign in'}
-      </button>
+      </div>
     </div>
   )
 }

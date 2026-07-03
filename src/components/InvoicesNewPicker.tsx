@@ -51,7 +51,7 @@ export default function InvoicesNewPicker({ jobs: initialJobs }: Props) {
   }
 
   return (
-    <div className="screen page-content body screen--dock-nav">
+    <div className="screen page-content body screen--dock-nav invoices-screen">
       <header className="page-header">
         <div>
           <h1>Create invoice</h1>

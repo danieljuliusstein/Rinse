@@ -103,6 +103,21 @@ export default function OnboardingYourInvoiceStep({
       onContinue={() => void handleContinue()}
     >
       <div className="onboarding-invoice-step">
+        <p className="onboarding-account-hero" role="status">
+          <Check size={18} weight="bold" aria-hidden="true" />
+          You&apos;re set — here&apos;s your first invoice
+        </p>
+
+        <div className="onboarding-first-invoice-phases" aria-hidden="true">
+          <span className="onboarding-first-invoice-phases__item onboarding-first-invoice-phases__item--on">
+            Menu
+          </span>
+          <span className="onboarding-first-invoice-phases__item onboarding-first-invoice-phases__item--on">
+            Preview
+          </span>
+          <span className="onboarding-first-invoice-phases__item">Share</span>
+        </div>
+
         <p className="onboarding-preview-banner" role="status">
           Preview only — nothing is sent.
         </p>
@@ -138,7 +153,7 @@ export default function OnboardingYourInvoiceStep({
         )}
 
         <p className="ob-section-label">Preview</p>
-        <div className="onboarding-invoice-preview">
+        <div className="onboarding-invoice-preview onboarding-invoice-preview--hero">
           <InvoiceTemplateMock
             template={template}
             accent={accent}

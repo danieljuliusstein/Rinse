@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function EmbedLayout({ children }: { children: React.ReactNode }) {
-  return <div className="embed-root">{children}</div>
+  return <div className="embed-root client-light-root">{children}</div>
 }

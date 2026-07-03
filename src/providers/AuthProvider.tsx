@@ -34,8 +34,13 @@ function isPublicPath(pathname: string): boolean {
   return (
     pathname === '/auth' ||
     pathname === '/welcome' ||
+    pathname === '/privacy' ||
+    pathname === '/offline' ||
+    pathname.startsWith('/auth/') ||
     pathname.startsWith('/portal') ||
-    pathname.startsWith('/book/')
+    pathname.startsWith('/book/') ||
+    pathname.startsWith('/embed/') ||
+    pathname.startsWith('/demo')
   )
 }
 
@@ -140,9 +145,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [mounted, isLoggedIn, pathname])
 
   useEffect(() => {
-    if (!ready || isPublicRoute || !isOnboardingRoute || isLoggedIn) return
+    if (!ready || isLoggedIn) return
+    if (isPublicRoute) return
+    safeReplace(router, '/welcome')
+  }, [ready, isLoggedIn, router, isPublicRoute, pathname])
+
+  useEffect(() => {
+    if (!ready || !isLoggedIn || pathname !== '/welcome') return
     safeReplace(router, '/')
-  }, [ready, isLoggedIn, router, isPublicRoute, isOnboardingRoute])
+  }, [ready, isLoggedIn, pathname, router])
 
   const syncPocketBaseInBackground = useCallback(() => {
     void (async () => {
@@ -189,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void clearLocalDeviceDataSync()
     resetBackend()
     bumpAuth()
-    safeReplace(router, '/')
+    safeReplace(router, '/welcome')
   }, [router, bumpAuth])
 
   const contextValue: AuthContextValue = {
@@ -202,9 +213,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
   }
 
+  const needsGuestRedirect = !isLoggedIn && !isPublicRoute
   const showBlockingRedirect =
     !ready ||
-    (isOnboardingRoute && !isLoggedIn) ||
+    needsGuestRedirect ||
     (isLoggedIn && needsOnboardingState && !isOnboardingRoute && !isPublicRoute)
 
   return (

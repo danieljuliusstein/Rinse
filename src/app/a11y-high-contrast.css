@@ -1,4 +1,4 @@
-/* High-contrast enhancements for critical client + auth flows (Wave 32). */
+/* High-contrast enhancements — Wave 32 client/auth; Wave 54 operator + motion close-out */
 
 @media (prefers-contrast: more) {
   .book-btn-primary,
@@ -6,22 +6,44 @@
   .client-light-root .cl-btn-primary,
   .portal-btn-primary,
   .auth-screen .btn-primary,
-  .btn-primary {
+  .btn-primary,
+  .sheet-submit--ready,
+  .pipeline-sheet__submit--ready,
+  .settings-footer__save--ready,
+  .rinse-tour__btn--primary,
+  .offline-banner__sync {
     border: 2px solid #000;
+    box-shadow: none;
+  }
+
+  [data-theme="dark"] .btn-primary,
+  [data-theme="dark"] .sheet-submit--ready,
+  [data-theme="dark"] .settings-footer__save--ready,
+  [data-theme="dark"] .rinse-tour__btn--primary {
+    border: 2px solid #fff;
     box-shadow: none;
   }
 
   .book-error-banner,
   .auth-error,
   .error-banner,
-  .form-field-hint--error {
+  .form-field-hint--error,
+  .offline-banner {
     border: 2px solid currentColor;
   }
 
   .book-slot,
   .book-slot--selected,
   .chip.active,
-  .form-pill--on {
+  .form-pill--on,
+  .card,
+  .card-pressable,
+  .ui-list-group,
+  .ui-empty,
+  .client-card,
+  .job-card,
+  .stat-card,
+  .pwa-install-banner {
     border-width: 2px;
   }
 
@@ -32,23 +54,56 @@
   .auth-form .f-input:focus {
     outline: 3px solid currentColor;
     outline-offset: 2px;
+    box-shadow: none;
   }
 
-  .skip-link:focus {
+  .skip-link:focus,
+  .rinse-tour__btn:focus-visible,
+  .offline-banner__sync:focus-visible {
     outline: 3px solid currentColor;
     outline-offset: 2px;
+  }
+
+  .rinse-tour__ring {
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px currentColor;
   }
 }
 
 @media (forced-colors: active) {
   .book-btn-primary,
   .portal-btn-primary,
-  .btn-primary {
+  .btn-primary,
+  .sheet-submit--ready,
+  .settings-footer__save--ready {
     border: 2px solid ButtonText;
   }
 
   .book-error-banner,
-  .auth-error {
+  .auth-error,
+  .offline-banner {
     border: 1px solid CanvasText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-attention-pulse,
+  .motion-empty-enter,
+  .motion-success-pop,
+  .motion-sheet-done,
+  .offline-banner,
+  .offline-banner__sync--pulse,
+  .pwa-install-banner,
+  .ui-empty .ui-empty__art,
+  .ui-empty--illustrated .ui-empty-illustration,
+  .ui-empty--illustrated .ui-empty-illustration__accent,
+  .ui-empty .ui-empty__title,
+  .ui-empty .ui-empty__desc,
+  .ui-empty .ui-empty__action,
+  .rinse-tour__ring,
+  .rinse-tour:not(.rinse-tour--prep) .rinse-tour__card,
+  .tour-welcome-card {
+    animation: none;
   }
 }

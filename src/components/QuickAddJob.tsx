@@ -18,7 +18,6 @@ import JobExpensesSheet, { type JobExpenseDraft } from '@/components/jobs/JobExp
 import JobSuppliesConfirmSheet from '@/components/jobs/JobSuppliesConfirmSheet'
 import { useActionToast } from '@/providers/ActionToastProvider'
 import { getSupplies } from '@/lib/api'
-import './QuickAddJob.css'
 import { fmt } from '@/lib/calculations'
 import { deriveInitials } from '@/lib/client-relationship-logic'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
@@ -185,19 +184,18 @@ export default function QuickAddJob({
   const headerDate = formatHeaderDate(new Date())
 
   return (
-    <div className="new-job">
-      <header className="new-job-header">
-        <div className="new-job-header-left">
-          <BackButton onClick={() => router.back()} />
-          <h1 className="new-job-title">New job</h1>
+    <div className="screen page-content body new-job">
+      <header className="page-header page-header--compact">
+        <BackButton onClick={() => router.back()} />
+        <div className="page-header__title-block">
+          <h1>New job</h1>
         </div>
-        <span className="new-job-header-date">{headerDate}</span>
+        <span className="page-header__meta">{headerDate}</span>
       </header>
 
-      <div className="new-job-body">
-        {/* 1. Client */}
-        <section id="nj-client" className="new-job-section">
-          <div className="new-job-label">Client</div>
+      {/* 1. Client */}
+      <section id="nj-client" className="new-job-section">
+        <div className="section-title">Client</div>
           {selectedClient ? (
             <button
               type="button"
@@ -262,7 +260,7 @@ export default function QuickAddJob({
 
         {/* 2. Date & Time */}
         <section id="nj-datetime" className="new-job-section">
-          <div className="new-job-label">Date &amp; Time</div>
+          <div className="section-title">Date &amp; Time</div>
           <div className="new-job-datetime-grid">
             <label className="new-job-datetime-box" htmlFor="nj-date">
               <CalendarBlank size={16} color="var(--text-muted)" aria-hidden="true" />
@@ -289,7 +287,7 @@ export default function QuickAddJob({
 
         {/* 3. Service & Vehicle */}
         <section id="nj-service" className="new-job-section">
-          <div className="new-job-label">Package</div>
+          <div className="section-title">Package</div>
           {packages.length === 0 ? (
             <p className="new-job-empty-hint">
               No packages yet.{' '}
@@ -319,7 +317,7 @@ export default function QuickAddJob({
                       {selected ? (
                         <CheckCircle size={18} weight="fill" color="var(--green-text)" />
                       ) : (
-                        <Circle size={18} color="#2a2a2a" />
+                        <Circle size={18} className="new-job-package-card__ring" aria-hidden="true" />
                       )}
                     </span>
                   </button>
@@ -330,15 +328,13 @@ export default function QuickAddJob({
                 className="new-job-add-package"
                 onClick={() => router.push('/settings/packages')}
               >
-                <Plus size={14} color="#555" aria-hidden="true" />
+                <Plus size={14} aria-hidden="true" />
                 Add new package
               </button>
             </div>
           )}
 
-          <div className="new-job-label new-job-label--tight">
-            Vehicle type
-          </div>
+          <div className="section-title new-job-section-title--tight">Vehicle type</div>
           <div className="new-job-vehicle-grid">
             {VEHICLE_TYPES.map((v) => {
               const active = vehicleType === v.id
@@ -357,7 +353,7 @@ export default function QuickAddJob({
             })}
           </div>
 
-          <div className="new-job-label">Location</div>
+          <div className="section-title">Location</div>
           <div className="new-job-location-toggle">
             <button
               type="button"
@@ -428,10 +424,17 @@ export default function QuickAddJob({
         </div>
 
         {saveError && <p className="new-job-error" role="alert" aria-live="assertive">{saveError}</p>}
-      </div>
 
-      <footer className="new-job-footer">
-        <div className="new-job-footer__primary">
+      <div className="package-form-actions new-job-actions">
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={() => setExpenseSheetOpen(true)}
+        >
+          <Plus size={14} aria-hidden="true" />
+          Expenses
+        </button>
+        <div className="page-form-save">
           <SheetSubmitButton
             label={saving ? 'Saving…' : 'Save job'}
             ready={isValid}
@@ -439,15 +442,7 @@ export default function QuickAddJob({
             onClick={() => void handleSave()}
           />
         </div>
-        <button
-          type="button"
-          className="btn-ghost new-job-expenses-btn"
-          onClick={() => setExpenseSheetOpen(true)}
-        >
-          <Plus size={14} aria-hidden="true" />
-          Expenses
-        </button>
-      </footer>
+      </div>
 
       {expenseSheetOpen && (
         <JobExpensesSheet

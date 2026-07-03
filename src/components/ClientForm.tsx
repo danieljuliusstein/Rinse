@@ -78,10 +78,12 @@ export default function ClientForm({ client }: Props) {
   }
 
   return (
-    <div className="screen page-content">
-      <header className="job-form-header">
+    <div className="screen page-content body">
+      <header className="page-header page-header--compact">
         <BackButton onClick={() => router.back()} />
-        <div className="job-form-header__title">{isEdit ? 'Edit client' : 'New client'}</div>
+        <div className="page-header__title-block">
+          <h1>{isEdit ? 'Edit client' : 'New client'}</h1>
+        </div>
       </header>
 
       <div ref={formRef} className="page-form-card page-form">

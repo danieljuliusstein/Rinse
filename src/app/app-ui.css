@@ -59,6 +59,25 @@
   margin: 0;
 }
 
+.page-header__title-block--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.page-header__title-block--stacked h1 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.page-header__meta {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 /* ── Icon buttons ── */
 .icon-btn {
   width: 34px;
@@ -73,13 +92,22 @@
   cursor: pointer;
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  transition:
+    background var(--duration-fast) ease,
+    color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    transform var(--duration-fast) ease;
 }
 
 .icon-btn:hover {
   background: var(--bg-surface-hover);
   color: var(--text-primary);
   border-color: var(--border-strong);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+  background: var(--bg-surface-active);
 }
 
 .icon-btn.green {
@@ -90,9 +118,9 @@
 
 .icon-btn--milestone {
   position: relative;
-  background: #1a2e1a;
-  border-color: rgba(34, 197, 94, 0.35);
-  color: #4ade80;
+  background: var(--green-dim);
+  border-color: var(--border-green);
+  color: var(--green-text);
 }
 
 .milestone-dot {
@@ -118,7 +146,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #f59e0b;
+  background: var(--amber);
   border: 2px solid var(--bg-base);
   pointer-events: none;
 }
@@ -170,7 +198,7 @@
 
 .profile-complete-card__progress {
   fill: none;
-  stroke: #f59e0b;
+  stroke: var(--amber);
   stroke-width: 3;
   stroke-linecap: round;
 }
@@ -183,7 +211,7 @@
   justify-content: center;
   font-size: 9px;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--amber-text);
 }
 
 .profile-complete-card__body {
@@ -207,12 +235,12 @@
 
 .profile-complete-card__chevron {
   flex-shrink: 0;
-  color: #f59e0b;
+  color: var(--amber);
 }
 
 .settings-menu-profile-badge {
   background: rgba(245, 158, 11, 0.14);
-  color: #fbbf24;
+  color: var(--amber-text);
   font-size: 10px;
   font-weight: 700;
   border-radius: 5px;
@@ -250,7 +278,7 @@
 
 .search svg {
   flex-shrink: 0;
-  color: #444;
+  color: var(--text-muted);
 }
 
 .search input {
@@ -424,8 +452,8 @@
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 13px 14px;
-  border: 0.5px solid var(--border-card);
-  box-shadow: var(--shadow-card);
+  border: 0.5px solid var(--depth-card-border);
+  box-shadow: var(--depth-card-shadow);
 }
 
 .stat-card--tail {
@@ -447,7 +475,7 @@
   margin-top: 3px;
 }
 
-/* Offline fallback (PWA) */
+/* Offline fallback (PWA) — Wave 53 */
 .offline-screen {
   display: flex;
   flex-direction: column;
@@ -467,6 +495,63 @@
   display: flex;
   justify-content: center;
   margin-top: 8px;
+  animation: empty-enter var(--duration-slow) var(--ease-out) both;
+  animation-delay: calc(var(--stagger-step) * 8);
+}
+
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--amber-dim);
+  border-bottom: 0.5px solid var(--amber);
+  animation: empty-enter var(--duration-medium) var(--ease-out) both;
+}
+
+.offline-banner__message {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.offline-banner__sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--amber);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--amber-on-fill);
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform var(--duration-fast) var(--ease-spring), opacity var(--duration-fast) ease;
+}
+
+.offline-banner__sync:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.offline-banner__sync--pulse:not(:disabled) {
+  animation: attention-pulse var(--motion-attention-duration) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offline-screen__hint,
+  .offline-banner,
+  .offline-banner__sync--pulse {
+    animation: none;
+  }
+
+  .offline-banner__sync:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 /* ── Week strip ── */
@@ -499,7 +584,7 @@
 .day-num {
   font-size: 14px;
   font-weight: 500;
-  color: #777;
+  color: var(--text-muted);
 }
 
 .day-dot {
@@ -558,17 +643,23 @@
   border-radius: var(--radius-lg);
   padding: 14px 14px;
   margin-bottom: 10px;
-  border: 0.5px solid var(--border-card);
+  border: 0.5px solid var(--depth-card-border);
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  transition: background .12s;
+  box-shadow: var(--depth-card-shadow);
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .job-card:hover {
   background: var(--bg-card-2);
+}
+
+.job-card:active {
+  background: var(--bg-surface-active);
+  transform: scale(0.99);
 }
 
 .job-icon {
@@ -621,6 +712,65 @@
   font-size: 11px;
   color: var(--text-secondary);
   margin-top: 2px;
+}
+
+/* ── Jobs list motion (Wave 44) ── */
+
+.jobs-screen .ui-section .ui-list-row {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.jobs-screen .ui-section .ui-list-row:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.jobs-screen .ui-section .ui-list-row:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.jobs-screen .ui-section .ui-list-row:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.jobs-screen .ui-section .ui-list-row:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.jobs-screen .ui-section .ui-list-row:nth-child(5) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.jobs-screen .ui-section .ui-list-row:nth-child(6) {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.jobs-screen .ui-list-row--pressable {
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+.jobs-screen .ui-list-row--pressable:active {
+  transform: scale(0.99);
+}
+
+.jobs-screen .more-pill {
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+.jobs-screen .more-pill:active {
+  transform: scale(0.98);
+  background: var(--bg-surface-active);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jobs-screen .ui-section .ui-list-row {
+    animation: none;
+  }
+
+  .jobs-screen .ui-list-row--pressable:active,
+  .jobs-screen .more-pill:active,
+  .job-card:active {
+    transform: none;
+  }
 }
 
 /* ── Today job card (dashboard) ── */
@@ -717,7 +867,7 @@
 
 .today-job-card__btn--directions {
   background: rgba(59, 130, 246, 0.12);
-  color: #60a5fa;
+  color: var(--blue-text);
 }
 
 .today-job-card__btn--start {
@@ -747,6 +897,108 @@
 .today-job-card--empty .today-job-card__btn {
   flex: none;
   padding: 10px 20px;
+}
+
+/* ── Home dashboard motion (Wave 43) — IF ref 275146 list-stagger ── */
+
+@keyframes home-block-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-dashboard .stat-card {
+  box-shadow: var(--depth-card-shadow);
+  border-color: var(--depth-card-border);
+}
+
+.home-dashboard .stat-grid--dashboard .stat-card {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.home-dashboard .stat-grid--dashboard .stat-card:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.home-dashboard .stat-grid--dashboard .stat-card:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.home-dashboard .stat-grid--dashboard .stat-card:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.home-dashboard .stat-card--tail {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.home-dashboard .today-job-card {
+  box-shadow: var(--depth-elevated-shadow);
+  border-color: var(--depth-card-border);
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.home-dashboard .today-job-card__btn {
+  transition: transform var(--duration-fast) ease, opacity var(--duration-fast) ease;
+}
+
+.home-dashboard .today-job-card__btn:active {
+  transform: scale(0.98);
+  opacity: 1;
+}
+
+.home-dashboard .ui-list-group {
+  box-shadow: var(--depth-card-shadow);
+  border-color: var(--depth-card-border);
+}
+
+.home-dashboard .ui-section .ui-list-row {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.home-dashboard .ui-section .ui-list-row:nth-child(1) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.home-dashboard .ui-section .ui-list-row:nth-child(2) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.home-dashboard .ui-section .ui-list-row:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.home-dashboard .ui-section .ui-list-row:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 6);
+}
+
+.home-dashboard .ui-section .ui-list-row:nth-child(5) {
+  animation-delay: calc(var(--stagger-step) * 7);
+}
+
+.home-dashboard .profile-complete-card {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-dashboard .stat-grid--dashboard .stat-card,
+  .home-dashboard .stat-card--tail,
+  .home-dashboard .today-job-card,
+  .home-dashboard .ui-section .ui-list-row,
+  .home-dashboard .profile-complete-card {
+    animation: none;
+  }
+
+  .home-dashboard .today-job-card__btn:active {
+    transform: none;
+  }
 }
 
 /* ── Upcoming card ── */
@@ -851,8 +1103,8 @@
   border-radius: var(--radius-lg);
   padding: 12px 12px 12px 14px;
   margin-bottom: 8px;
-  border: 0.5px solid var(--border-card);
-  box-shadow: var(--shadow-card);
+  border: 0.5px solid var(--depth-card-border);
+  box-shadow: var(--depth-card-shadow);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -867,8 +1119,8 @@
 
 .client-card:hover {
   background: var(--bg-muted);
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-elevated);
+  border-color: var(--depth-card-border);
+  box-shadow: var(--depth-elevated-shadow);
 }
 
 @media (hover: hover) {
@@ -878,16 +1130,19 @@
 
   .client-card:active {
     transform: translateY(0);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--depth-card-shadow);
   }
 }
 
 .client-card.vip {
   border-color: var(--border-green);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(34, 197, 94, 0.06) 100%);
+  box-shadow: var(--depth-card-shadow), 0 0 0 1px rgba(34, 197, 94, 0.1);
 }
 
 .client-card.vip:hover {
   border-color: var(--green);
+  box-shadow: var(--depth-elevated-shadow), 0 0 0 1px rgba(34, 197, 94, 0.18);
 }
 
 .client-card-main {
@@ -990,6 +1245,93 @@
   margin-top: 2px;
 }
 
+/* ── Clients list motion (Wave 45) ── */
+
+.clients-screen .clients-list-section > .client-card,
+.clients-screen .clients-list-section > .followup-card {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.clients-screen .clients-list-section > .client-card:nth-child(1),
+.clients-screen .clients-list-section > .followup-card:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.clients-screen .clients-list-section > .client-card:nth-child(2),
+.clients-screen .clients-list-section > .followup-card:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.clients-screen .clients-list-section > .client-card:nth-child(3),
+.clients-screen .clients-list-section > .followup-card:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.clients-screen .clients-list-section > .client-card:nth-child(4),
+.clients-screen .clients-list-section > .followup-card:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.clients-screen .clients-list-section > .client-card:nth-child(5),
+.clients-screen .clients-list-section > .followup-card:nth-child(5) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.clients-screen .clients-list-section > .client-card:nth-child(6),
+.clients-screen .clients-list-section > .followup-card:nth-child(6) {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.clients-screen .client-card {
+  transition:
+    background var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease,
+    transform var(--duration-fast) ease;
+}
+
+.clients-screen .client-card:has(.client-card-main:active) {
+  transform: scale(0.99);
+  box-shadow: var(--depth-card-shadow);
+}
+
+.clients-screen .followup-card {
+  transition: transform var(--duration-fast) ease;
+}
+
+.clients-screen .followup-card:active {
+  transform: scale(0.99);
+}
+
+.clients-screen .followup-action {
+  transition: transform var(--duration-fast) ease, background var(--duration-fast) ease;
+}
+
+.clients-screen .followup-action:active {
+  transform: scale(0.96);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.clients-screen .more-pill {
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+.clients-screen .more-pill:active {
+  transform: scale(0.98);
+  background: var(--bg-surface-active);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clients-screen .clients-list-section > .client-card,
+  .clients-screen .clients-list-section > .followup-card,
+  .clients-screen .client-card:has(.client-card-main:active),
+  .clients-screen .followup-card:active,
+  .clients-screen .followup-action:active,
+  .clients-screen .more-pill:active {
+    transform: none;
+  }
+}
+
 /* ── Badges (app-ui) ── */
 .badge.green   { background: var(--bg-green);  color: var(--green);  }
 .badge.amber   { background: var(--bg-amber);  color: var(--amber);  border: 0.5px solid var(--border-amber); }
@@ -1030,7 +1372,7 @@
 }
 
 .empty-state svg {
-  color: #333;
+  color: var(--text-dim);
   display: block;
   margin: 0 auto 8px;
 }
@@ -1141,7 +1483,7 @@
 
 .money-hero--loss {
   background: var(--bg-red);
-  border-color: #3a1515;
+  border-color: var(--border-strong);
 }
 
 .money-hero--profit {
@@ -1182,6 +1524,179 @@
   color: var(--text-muted);
   margin-top: 6px;
   line-height: 1.4;
+}
+
+/* ── Money screen motion (Wave 46) ── */
+
+.money-screen .money-hero {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.money-screen .stat-grid .stat-card {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+  box-shadow: var(--depth-card-shadow);
+  border-color: var(--depth-card-border);
+}
+
+.money-screen .stat-grid .stat-card:nth-child(1) {
+  animation-delay: var(--stagger-step);
+}
+
+.money-screen .stat-grid .stat-card:nth-child(2) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.money-screen .stat-grid .stat-card:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.money-screen .stat-grid .stat-card:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.money-screen .money-context-link {
+  transition: transform var(--duration-fast) ease, background var(--duration-fast) ease;
+}
+
+.money-screen .money-context-link:active {
+  transform: scale(0.98);
+  background: var(--bg-surface-active);
+}
+
+.money-screen .money-hero-value {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .money-screen .money-hero,
+  .money-screen .stat-grid .stat-card,
+  .money-screen .report-section,
+  .money-screen .report-card,
+  .money-screen .reports-chart-panel,
+  .money-screen .business-ar-panel,
+  .money-screen .business-donut-panel {
+    animation: none;
+  }
+
+  .money-screen .money-context-link:active {
+    transform: none;
+  }
+
+  .money-screen .report-revenue-fill {
+    transition: none;
+  }
+
+  .money-screen .report-expense-fill {
+    transition: none;
+  }
+
+  .money-screen .reports-chart-toggle .chip:active,
+  .money-screen .chips .chip:active {
+    transform: none;
+  }
+
+  .money-screen .reports-chart-panel--enter,
+  .money-screen .report-revenue-row,
+  .money-screen .report-expense-row {
+    animation: none;
+  }
+}
+
+/* ── Wave 49 — reports sections (extends money-screen) ── */
+
+.money-screen .report-section {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.money-screen .report-section:nth-of-type(1) {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.money-screen .report-section:nth-of-type(2) {
+  animation-delay: calc(var(--stagger-step) * 6);
+}
+
+.money-screen .report-section:nth-of-type(3) {
+  animation-delay: calc(var(--stagger-step) * 7);
+}
+
+.money-screen .report-section:nth-of-type(4) {
+  animation-delay: calc(var(--stagger-step) * 8);
+}
+
+.money-screen .report-card,
+.money-screen .reports-chart-panel {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+  animation-delay: calc(var(--stagger-step) * 2);
+  box-shadow: var(--depth-card-shadow);
+  border-color: var(--depth-card-border);
+}
+
+.money-screen .business-ar-panel,
+.money-screen .business-donut-panel {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.money-screen .business-ar-panel {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.money-screen .business-donut-panel {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.money-screen .reports-chart-toggle .chip {
+  transition: transform var(--duration-fast) var(--ease-spring), background var(--duration-fast) ease;
+}
+
+.money-screen .reports-chart-toggle .chip:active {
+  transform: scale(0.97);
+}
+
+.money-screen .chips .chip {
+  transition: transform var(--duration-fast) var(--ease-spring), background var(--duration-fast) ease;
+}
+
+.money-screen .chips .chip:active {
+  transform: scale(0.97);
+}
+
+.money-screen .reports-chart-panel--enter {
+  animation: pipeline-stage-in var(--duration-medium) var(--ease-out) both;
+}
+
+.money-screen .report-revenue-row,
+.money-screen .report-expense-row {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.money-screen .report-revenue-row:nth-child(1),
+.money-screen .report-expense-row:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.money-screen .report-revenue-row:nth-child(2),
+.money-screen .report-expense-row:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.money-screen .report-revenue-row:nth-child(3),
+.money-screen .report-expense-row:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.money-screen .report-revenue-row:nth-child(4),
+.money-screen .report-expense-row:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.money-screen .report-revenue-row:nth-child(n + 5),
+.money-screen .report-expense-row:nth-child(n + 5) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.money-screen .report-expense-fill {
+  transition: width var(--duration-slow) var(--ease-out);
 }
 
 .money-export-actions {
@@ -1367,7 +1882,7 @@
   padding: 6px 14px;
   border-radius: var(--radius-full);
   background: var(--green);
-  color: #071407;
+  color: var(--cta-ink);
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
@@ -1436,7 +1951,7 @@
 
 .auth-empty-state__cta--primary {
   background: var(--green);
-  color: #071407;
+  color: var(--cta-ink);
 }
 
 .auth-empty-state__cta--secondary {

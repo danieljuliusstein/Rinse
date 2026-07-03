@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import {
   isPushEnabled,
   isPushSupported,
@@ -19,7 +18,6 @@ import SettingsToggle from './SettingsToggle'
 import { useSettingsDraft } from './SettingsDraftProvider'
 
 export default function SettingsPreferencesPage() {
-  const router = useRouter()
   const { theme, setTheme } = useTheme()
   const { settings, ready, update } = useSettingsDraft()
   const [pushOn, setPushOn] = useState(false)
@@ -58,7 +56,7 @@ export default function SettingsPreferencesPage() {
 
   return (
     <SettingsDetailShell title="App preferences">
-      <div className="settings-panel settings-panel--flush">
+      <div className="settings-panel">
         <div className="settings-toggle-row">
           <div>
             <div className="settings-toggle-row__label">Dark mode</div>
@@ -149,7 +147,6 @@ export default function SettingsPreferencesPage() {
           title="Replay app tour"
           onClick={() => {
             requestTourReplay()
-            router.push('/')
             window.dispatchEvent(new Event(TOUR_REPLAY_EVENT))
           }}
         />

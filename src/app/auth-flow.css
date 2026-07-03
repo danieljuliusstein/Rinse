@@ -1,9 +1,5 @@
 /* Auth, PIN, and onboarding — aligned with operator dark theme */
 
-.app-shell--auth-flow {
-  max-width: var(--cl-max-width, 430px);
-}
-
 .auth-screen {
   min-height: 100dvh;
   display: flex;
@@ -33,6 +29,9 @@
   margin-bottom: 24px;
   text-align: center;
   line-height: 1.5;
+}
+
+.auth-screen:not(.client-light-root) .auth-screen__subtitle {
   max-width: 300px;
 }
 
@@ -41,6 +40,9 @@
   color: var(--green);
   margin: -12px 0 20px;
   text-align: center;
+}
+
+.auth-screen:not(.client-light-root) .auth-screen__notice {
   max-width: 300px;
 }
 
@@ -50,6 +52,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.auth-screen.client-light-root .auth-form {
+  max-width: none;
 }
 
 .auth-field-label {
@@ -121,6 +127,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.auth-screen.client-light-root .auth-value-props {
+  max-width: none;
 }
 
 .auth-value-props li {

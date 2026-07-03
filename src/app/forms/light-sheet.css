@@ -76,6 +76,11 @@
   color: var(--text-primary);
 }
 
+.light-sheet .form-pill:active,
+.light-sheet .pipeline-pill:active {
+  transform: scale(0.94);
+}
+
 .light-sheet .form-pill--on,
 .light-sheet .pipeline-pill--on {
   background: var(--green-dim);
@@ -89,6 +94,12 @@
   background: var(--bg-elevated);
   color: var(--text-muted);
   border: 1.5px solid var(--border);
+  transition:
+    background var(--duration-medium) var(--ease-out),
+    color var(--duration-fast) ease,
+    border-color var(--duration-medium) var(--ease-out),
+    box-shadow var(--duration-medium) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
 }
 
 .light-sheet .sheet-submit--ready,
@@ -104,11 +115,17 @@
   filter: brightness(1.03);
 }
 
+.light-sheet .sheet-submit--ready:active:not(:disabled),
+.light-sheet .pipeline-sheet__submit--ready:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .light-sheet .sheet-submit--done,
 .light-sheet .pipeline-sheet__submit--done {
   background: var(--green-dim);
   color: var(--green-text);
   border-color: var(--green);
+  animation: success-pop var(--duration-medium) var(--ease-pop) both;
 }
 
 .light-sheet .sheet-footer__cancel {
@@ -187,4 +204,72 @@
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light-sheet .sheet-submit--done,
+  .light-sheet .pipeline-sheet__submit--done,
+  .light-sheet .form-pill--pop,
+  .light-sheet .pipeline-pill--pop,
+  .light-sheet .f-field--filled .f-check {
+    animation: none;
+  }
+
+  .light-sheet .sheet-submit--ready:active:not(:disabled),
+  .light-sheet .pipeline-sheet__submit--ready:active:not(:disabled),
+  .light-sheet .form-pill:active,
+  .light-sheet .pipeline-pill:active {
+    transform: none;
+  }
+}
+
+/* Receipt line items (business expense sheet) */
+.light-sheet .receipt-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.light-sheet .receipt-lines__scan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.light-sheet .receipt-lines__preview {
+  width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.light-sheet .receipt-lines__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.light-sheet .receipt-lines__remove {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.light-sheet .receipt-lines__empty {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
 }

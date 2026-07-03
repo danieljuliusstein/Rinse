@@ -62,17 +62,23 @@ export default function ProductTour() {
 
   useEffect(() => {
     const onReplay = () => {
-      if (needsOnboarding || startingRef.current || isTourCompleted()) return
-      if (pathname !== '/') {
-        router.push('/')
-        return
-      }
+      if (needsOnboarding || startingRef.current) return
       if (!shouldAutoStartTour()) return
-      if (shouldShowTourWelcome()) {
-        setWelcomeOpen(true)
-        return
-      }
-      runTour()
+
+      void (async () => {
+        if (pathname !== '/') {
+          router.push('/')
+          const ready = await waitForRouteReady('/')
+          if (!ready) return
+        }
+
+        if (shouldShowTourWelcome()) {
+          setWelcomeOpen(true)
+          return
+        }
+
+        runTour()
+      })()
     }
 
     window.addEventListener(TOUR_REPLAY_EVENT, onReplay)

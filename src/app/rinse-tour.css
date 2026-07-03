@@ -17,33 +17,65 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.52);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
   pointer-events: auto;
 }
 
 .rinse-tour__shade-panel {
   position: fixed;
+  pointer-events: auto;
+}
+
+.rinse-tour__shade-panel--block {
+  background: transparent;
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring);
+}
+
+.rinse-tour__shade-panel--segment {
   background: rgba(0, 0, 0, 0.52);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  pointer-events: auto;
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring);
 }
 
 .rinse-tour__shade-full {
   inset: 0;
+  background: rgba(0, 0, 0, 0.52);
+}
+
+.rinse-tour__spotlight-block {
+  position: fixed;
+  z-index: 0;
+  pointer-events: auto;
+  background: transparent;
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring),
+    border-radius var(--duration-slow) var(--ease-spring);
 }
 
 .rinse-tour__hole {
   position: fixed;
   pointer-events: none;
   z-index: 1;
+  background: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.52);
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring),
+    border-radius var(--duration-slow) var(--ease-spring),
+    opacity var(--duration-slow) var(--ease-out);
 }
 
 .rinse-tour__ring {
@@ -52,41 +84,48 @@
   pointer-events: none;
   box-shadow:
     0 0 0 2px rgba(255, 255, 255, 0.95),
-    0 0 0 3px rgba(34, 197, 94, 0.35);
-  transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+    0 0 0 3px color-mix(in srgb, var(--green) 35%, transparent);
+  animation: tour-ring-pulse var(--motion-attention-duration) ease-in-out infinite;
 }
 
-.rinse-tour-spotlight {
-  position: relative;
-  z-index: 100051 !important;
-  isolation: isolate;
-}
-
-body.rinse-tour-active .bottom-nav-fab.rinse-tour-spotlight {
-  z-index: 100051 !important;
-}
-
-.rinse-tour__ring--pulse {
-  animation: rinse-tour-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes rinse-tour-pulse {
+@keyframes tour-ring-pulse {
   0%,
   100% {
     box-shadow:
       0 0 0 2px rgba(255, 255, 255, 0.95),
-      0 0 0 3px rgba(34, 197, 94, 0.35);
+      0 0 0 3px color-mix(in srgb, var(--green) 35%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 2px rgba(255, 255, 255, 1),
-      0 0 0 6px rgba(34, 197, 94, 0.28);
+      0 0 0 2px rgba(255, 255, 255, 0.95),
+      0 0 0 6px color-mix(in srgb, var(--green) 18%, transparent);
   }
+}
+
+.rinse-tour--prep .rinse-tour__hole,
+.rinse-tour--prep .rinse-tour__card,
+.rinse-tour--prep .rinse-tour__spotlight-block,
+.rinse-tour--prep .rinse-tour__shade-panel--block {
+  opacity: 0;
+  transition-duration: var(--duration-fast);
+}
+
+.rinse-tour--exit .rinse-tour__hole {
+  opacity: 0;
+}
+
+.rinse-tour--exit .rinse-tour__card {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out);
+}
+
+.rinse-tour:not(.rinse-tour--prep) .rinse-tour__card {
+  animation: empty-enter var(--duration-medium) var(--ease-out) both;
 }
 
 .rinse-tour__card {
@@ -94,20 +133,14 @@ body.rinse-tour-active .bottom-nav-fab.rinse-tour-spotlight {
   z-index: 2;
   pointer-events: auto;
   background: var(--bg-surface);
-  border: 0.5px solid var(--border);
+  border: 0.5px solid var(--depth-card-border);
   border-radius: 16px;
   padding: 16px 16px 14px;
-  box-shadow: var(--shadow-elevated);
+  box-shadow: var(--depth-elevated-shadow);
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 0.28s ease,
-    transform 0.28s ease;
-}
-
-.rinse-tour__card--enter {
-  opacity: 0;
-  transform: translateY(8px) scale(0.98);
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    opacity var(--duration-slow) var(--ease-out);
 }
 
 .rinse-tour__card-head {
@@ -193,11 +226,21 @@ body.rinse-tour-active .bottom-nav-fab.rinse-tour-spotlight {
   background: var(--green);
   color: #071407;
   margin-left: auto;
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.rinse-tour__btn--primary:active {
+  transform: scale(0.97);
 }
 
 .rinse-tour__btn--ghost {
   background: var(--bg-muted);
   color: var(--text-secondary);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.rinse-tour__btn--ghost:active {
+  transform: scale(0.97);
 }
 
 .rinse-tour__skip-row {
@@ -251,10 +294,11 @@ body.rinse-tour-active .bottom-nav {
   position: relative;
   width: min(360px, 100%);
   background: var(--bg-surface);
-  border: 0.5px solid var(--border);
+  border: 0.5px solid var(--depth-card-border);
   border-radius: 16px;
   padding: 24px 22px 20px;
-  box-shadow: var(--shadow-elevated);
+  box-shadow: var(--depth-elevated-shadow);
+  animation: empty-enter var(--duration-slow) var(--ease-out) both;
 }
 
 .tour-welcome-eyebrow {
@@ -298,11 +342,24 @@ body.rinse-tour-active .bottom-nav {
 @media (prefers-reduced-motion: reduce) {
   .rinse-tour__card,
   .rinse-tour__hole,
+  .rinse-tour__spotlight-block,
+  .rinse-tour__shade-panel--block,
+  .rinse-tour__shade-panel--segment,
   .rinse-tour__ring {
     transition: none;
+    animation: none;
   }
 
-  .rinse-tour__ring--pulse {
+  .rinse-tour--exit .rinse-tour__card {
+    transform: none;
+  }
+
+  .rinse-tour__btn--primary:active,
+  .rinse-tour__btn--ghost:active {
+    transform: none;
+  }
+
+  .tour-welcome-card {
     animation: none;
   }
 }

@@ -12,7 +12,7 @@ interface Props {
 
 export default function MessageDetailView({ message, onBack }: Props) {
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body messages-screen message-detail-screen">
       <header className="page-header page-header--compact">
         <BackButton onClick={onBack} />
         <div className="page-header__title-block">

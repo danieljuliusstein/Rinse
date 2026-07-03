@@ -68,7 +68,7 @@ export default function JobsList({ jobs }: { jobs: JobWithRelations[] }) {
   }
 
   return (
-    <div className="screen page-content body">
+    <div className="screen page-content body jobs-screen">
       <header className="page-header">
         <div>
           <h1>{focusDate ? 'Jobs' : 'Jobs'}</h1>

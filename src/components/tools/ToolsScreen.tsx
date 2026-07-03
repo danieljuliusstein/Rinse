@@ -10,7 +10,7 @@ export default function ToolsScreen() {
   const router = useRouter()
 
   return (
-    <div className="screen page-content body screen--dock-nav">
+    <div className="screen page-content body screen--dock-nav tools-screen">
       <header className="page-header">
         <div>
           <h1>Tools</h1>

@@ -1,4 +1,5 @@
 import { getPocketBase, isPocketBaseConfigured } from './pocketbase'
+import { AUTH_OAUTH_UNAVAILABLE } from './auth-messages'
 
 export type OAuthProvider = 'google' | 'apple'
 
@@ -28,10 +29,10 @@ export function clearStoredOAuthProvider(): void {
 
 export async function startOAuthLogin(provider: OAuthProvider): Promise<void> {
   if (!isPocketBaseConfigured()) {
-    throw new Error('Cloud login is not configured')
+    throw new Error(AUTH_OAUTH_UNAVAILABLE)
   }
   const pb = getPocketBase()
-  if (!pb) throw new Error('Cloud login is not configured')
+  if (!pb) throw new Error(AUTH_OAUTH_UNAVAILABLE)
 
   storeOAuthProvider(provider)
 

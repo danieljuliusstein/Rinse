@@ -15,10 +15,10 @@
   color: var(--text-muted);
   pointer-events: none;
   transition:
-    top 0.18s ease,
-    transform 0.18s ease,
-    font-size 0.18s ease,
-    color 0.18s ease;
+    top var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    font-size var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) ease;
   z-index: 1;
 }
 
@@ -36,8 +36,9 @@
   font-size: 14px;
   outline: none;
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .f-input,
@@ -63,6 +64,7 @@
 .f-textarea:focus {
   border-color: var(--green);
   background: var(--green-dim);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
 .f-select {
@@ -142,7 +144,7 @@
   color: var(--text-muted);
   pointer-events: none;
   z-index: 2;
-  transition: top 0.18s ease, transform 0.18s ease;
+  transition: top var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
 .f-input--affix {
@@ -191,10 +193,58 @@
   top: 50%;
   transform: translateY(-50%) scale(0);
   color: var(--green);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--duration-medium) var(--ease-pop);
   pointer-events: none;
 }
 
 .f-field--affix.f-field--filled .f-check {
   transform: translateY(-50%) scale(1);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+}
+
+/* ── Wave 51 — filled checkmark (non-affix fields) ── */
+
+.f-field:not(.f-field--affix):not(.f-field--no-check) .f-check {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  color: var(--green);
+  transition: transform var(--duration-medium) var(--ease-pop);
+  pointer-events: none;
+}
+
+.f-field--textarea:not(.f-field--no-check) .f-check {
+  top: 22px;
+  transform: scale(0);
+}
+
+.f-field--filled:not(.f-field--affix):not(.f-field--no-check) .f-check {
+  transform: translateY(-50%) scale(1);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+}
+
+.f-field--textarea.f-field--filled:not(.f-field--no-check) .f-check {
+  top: 22px;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .f-label,
+  .f-input,
+  .f-select,
+  .f-textarea,
+  .f-affix-pre {
+    transition: none;
+  }
+
+  .f-field--affix.f-field--filled .f-check,
+  .f-field--filled:not(.f-field--affix) .f-check {
+    animation: none;
+    transform: translateY(-50%) scale(1);
+  }
+
+  .f-field--textarea.f-field--filled:not(.f-field--no-check) .f-check {
+    transform: scale(1);
+  }
 }

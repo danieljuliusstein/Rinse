@@ -123,7 +123,13 @@ export default function OnboardingBookingStep({ step, settings, onSaved }: Onboa
           <div className="onboarding-booking-actions">
             <button
               type="button"
-              className="setup-btn-secondary onboarding-booking-actions__btn"
+              className={[
+                'setup-btn-secondary',
+                'onboarding-booking-actions__btn',
+                copied ? 'onboarding-booking-actions__btn--success' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
               onClick={() => void handleCopy()}
             >
               <Copy size={18} weight="bold" aria-hidden="true" />

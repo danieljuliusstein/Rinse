@@ -1,6 +1,6 @@
 import type { RinseTourLayout, RinseTourRect, TourCardMode } from './types'
 
-const DEFAULT_SPOTLIGHT_PAD = 10
+const DEFAULT_SPOTLIGHT_PAD = 12
 const CARD_GAP = 16
 const VIEWPORT_PAD = 16
 const DEFAULT_CARD_HEIGHT = 220
@@ -8,9 +8,13 @@ const DEFAULT_SPOTLIGHT_RADIUS = 14
 
 export function getSafeAreaTop(): number {
   if (typeof document === 'undefined') return VIEWPORT_PAD
-  const raw = getComputedStyle(document.documentElement).getPropertyValue('--sat').trim()
-  const parsed = Number.parseFloat(raw)
-  if (Number.isFinite(parsed) && parsed > 0) return parsed + 8
+  try {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--sat').trim()
+    const parsed = Number.parseFloat(raw)
+    if (Number.isFinite(parsed) && parsed > 0) return parsed + 8
+  } catch {
+    /* jsdom / test environments without layout */
+  }
   return VIEWPORT_PAD
 }
 
@@ -20,6 +24,28 @@ export function getDockInset(): number {
   if (!nav) return 80
   const rect = nav.getBoundingClientRect()
   return rect.height + 12
+}
+
+export function getShadePanels(
+  spotlight: RinseTourRect,
+  viewport: { width: number; height: number },
+): {
+  top: { top: number; left: number; width: number; height: number }
+  right: { top: number; left: number; width: number; height: number }
+  bottom: { top: number; left: number; width: number; height: number }
+  left: { top: number; left: number; width: number; height: number }
+} {
+  const { top, left, width, height } = spotlight
+  const { width: vw, height: vh } = viewport
+  const right = left + width
+  const bottom = top + height
+
+  return {
+    top: { top: 0, left: 0, width: vw, height: Math.max(0, top) },
+    bottom: { top: bottom, left: 0, width: vw, height: Math.max(0, vh - bottom) },
+    left: { top, left: 0, width: Math.max(0, left), height },
+    right: { top, left: right, width: Math.max(0, vw - right), height },
+  }
 }
 
 export function cutoutClipPath(rect: RinseTourRect | null, radius = DEFAULT_SPOTLIGHT_RADIUS): string | undefined {
@@ -34,7 +60,7 @@ export function cutoutClipPath(rect: RinseTourRect | null, radius = DEFAULT_SPOT
 
 export function measureTarget(
   selector: string,
-  options: { pad?: number; radius?: number } = {},
+  options: { pad?: number; radius?: number; shape?: 'rect' | 'circle' } = {},
 ): (RinseTourRect & { radius: number }) | null {
   if (typeof document === 'undefined') return null
   const el = document.querySelector(selector)
@@ -42,6 +68,21 @@ export function measureTarget(
   const rect = el.getBoundingClientRect()
   if (rect.width < 1 || rect.height < 1) return null
   const pad = options.pad ?? DEFAULT_SPOTLIGHT_PAD
+  const shape = options.shape ?? (options.radius !== undefined && options.radius >= 999 ? 'circle' : 'rect')
+
+  if (shape === 'circle') {
+    const cx = rect.left + rect.width / 2
+    const cy = rect.top + rect.height / 2
+    const diameter = Math.max(rect.width, rect.height) + pad * 2
+    return {
+      top: cy - diameter / 2,
+      left: cx - diameter / 2,
+      width: diameter,
+      height: diameter,
+      radius: diameter / 2,
+    }
+  }
+
   const measured = {
     top: rect.top - pad,
     left: rect.left - pad,
@@ -94,12 +135,16 @@ export function layoutTourCard(
   }
 
   if (cardMode === 'viewport-top') {
-    return {
-      spotlight,
-      cardTop: safeTop,
-      cardLeft: Math.max(VIEWPORT_PAD, (vw - maxWidth) / 2),
-      cardMaxWidth: maxWidth,
-      cardPlacement: 'top',
+    const spotlightBottom = spotlight.top + spotlight.height
+    const spotlightInLowerHalf = spotlightBottom > vh * 0.52
+    if (spotlightInLowerHalf) {
+      return {
+        spotlight,
+        cardTop: safeTop,
+        cardLeft: Math.max(VIEWPORT_PAD, (vw - maxWidth) / 2),
+        cardMaxWidth: maxWidth,
+        cardPlacement: 'top',
+      }
     }
   }
 

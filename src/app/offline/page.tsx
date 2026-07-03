@@ -7,7 +7,7 @@ export default function OfflinePage() {
   return (
     <div className="screen page-content body offline-screen">
       <EmptyState
-        icon={<WifiSlash size={48} weight="duotone" className="offline-screen__icon" aria-hidden="true" />}
+        icon={<WifiSlash size={48} weight="duotone" className="offline-screen__icon motion-attention-pulse" aria-hidden="true" />}
         title="You're offline"
         description="Reconnect to sync your latest data."
         actionLabel="Try again"

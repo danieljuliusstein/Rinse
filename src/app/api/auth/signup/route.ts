@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { formatAuthApiError } from '@/lib/auth-messages'
 import { registerOrganization } from '@/lib/server/signup'
 import { getClientIp } from '@/lib/server/client-ip'
 import { enforceRateLimit, RATE_LIMITS } from '@/lib/server/rate-limit'
@@ -29,7 +30,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, slug: result.slug, email: result.email })
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Signup failed'
-    return NextResponse.json({ error: message }, { status: 400 })
+    const raw = e instanceof Error ? e.message : 'Signup failed'
+    const error = formatAuthApiError(raw)
+    const isConfig =
+      raw.includes('PocketBase URL not configured') ||
+      raw.includes('PocketBase admin not configured')
+    return NextResponse.json({ error }, { status: isConfig ? 503 : 400 })
   }
 }

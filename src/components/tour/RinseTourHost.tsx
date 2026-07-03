@@ -1,8 +1,7 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { isRinseTourActive, subscribeRinseTour } from '@/lib/rinse-tour/controller'
-import { useEffect } from 'react'
 import RinseTourOverlay from './RinseTourOverlay'
 
 interface RinseTourHostProps {
@@ -10,20 +9,19 @@ interface RinseTourHostProps {
 }
 
 export default function RinseTourHost({ onTourEnd }: RinseTourHostProps) {
-  const [visible, setVisible] = useState(isRinseTourActive())
+  const [mounted, setMounted] = useState(isRinseTourActive())
 
   useEffect(() => {
     return subscribeRinseTour((state) => {
-      setVisible(state.active)
+      if (state.active) setMounted(true)
     })
   }, [])
 
-  const handleFinished = useCallback(() => {
-    setVisible(false)
-    onTourEnd()
-  }, [onTourEnd])
+  const handleDismiss = useCallback(() => {
+    setMounted(false)
+  }, [])
 
-  if (!visible) return null
+  if (!mounted) return null
 
-  return <RinseTourOverlay onFinished={handleFinished} />
+  return <RinseTourOverlay onFinished={onTourEnd} onDismiss={handleDismiss} />
 }

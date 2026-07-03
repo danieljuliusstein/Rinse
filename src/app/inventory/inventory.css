@@ -818,12 +818,6 @@
   left: 6px;
 }
 
-.product-tile__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .product-tile__monogram {
   width: 100%;
   height: 100%;
@@ -833,6 +827,48 @@
   justify-content: center;
   gap: 4px;
   background: var(--monogram-bg, var(--bg-muted));
+}
+
+.product-tile__monogram--icon-only {
+  gap: 0;
+}
+
+.inv-icon-picker {
+  margin-bottom: 4px;
+}
+
+.inv-icon-picker__label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--inv-text-secondary);
+  margin: 0 0 8px;
+}
+
+.inv-icon-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.inv-icon-picker__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  background: var(--inv-bg-surface);
+  border: 0.5px solid var(--inv-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.inv-icon-picker__btn--on {
+  background: var(--green);
+  border-color: var(--green);
 }
 
 .product-tile__mono-text {
@@ -932,201 +968,26 @@
   border-top: 1px solid var(--inv-border-subtle);
 }
 
-/* 17. Image picker (add-chemical sheet) */
-.inv-image-picker {
-  margin-bottom: 0;
-}
-
-.inv-image-picker__row {
-  display: flex;
-  gap: 10px;
-}
-
-.inv-image-picker__preview {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  background: var(--bg-muted);
-  border: 0.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.inv-image-picker__preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.inv-image-picker__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-}
-
-.inv-image-picker__btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 38px;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  background: var(--bg-surface);
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-family: var(--font-ui);
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s ease;
-}
-
-.inv-image-picker__btn:active {
-  background: var(--bg-surface-active);
-}
-
-.inv-image-picker__remove {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #fca5a5;
-  background: none;
-  border: none;
-  padding: 2px 0;
-  cursor: pointer;
-  font-family: var(--font-ui);
-}
-
-.inv-image-picker__input {
-  display: none;
-}
-
-/* 18. Expense toggle (add-chemical sheet) */
+/* 18. Expense toggle (add-chemical sheet) — uses PillGroup; hint only */
 .inv-acquisition {
   margin-bottom: 16px;
 }
 
-.inv-acquisition__toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.inv-acquisition__opt {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 10px 12px;
-  background: transparent;
-  border: 0.5px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.inv-acquisition__opt:active {
-  background: #2c2c2e;
-}
-
-.inv-acquisition__opt--active {
-  border: 1.5px solid #5aacf5;
-  background: #0c2d4a;
-}
-
-.inv-acquisition__opt-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: #f2f2f7;
-}
-
-.inv-acquisition__opt--active .inv-acquisition__opt-title {
-  color: #5aacf5;
-}
-
-.inv-acquisition__opt-sub {
-  font-size: 12px;
-  color: #8e8e93;
-}
-
-.inv-acquisition__opt--active .inv-acquisition__opt-sub {
-  color: #5aacf5;
-  opacity: 0.8;
-}
-
 .inv-acquisition__hint {
   font-size: 12px;
-  color: #8e8e93;
+  color: var(--text-muted);
   margin: 8px 0 0;
   line-height: 1.4;
 }
 
-/* 20. Shared toggle cards (equipment + expense) */
-.inv-tog-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.inv-tog {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 13px 14px;
-  background: transparent;
-  border: 0.5px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  cursor: pointer;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.12s ease, background 0.12s ease;
-}
-
-.inv-tog:active {
-  background: #2c2c2e;
-}
-
-.inv-tog__title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #f2f2f7;
-}
-
-.inv-tog__sub {
-  font-size: 12px;
-  color: #8e8e93;
-  margin-top: 2px;
-}
-
-.inv-tog--active-green {
-  border: 1.5px solid #639922;
-  background: #173404;
-}
-
-.inv-tog--active-green .inv-tog__title {
-  color: #97c459;
-}
-
-.inv-tog--active-green .inv-tog__sub {
-  color: #97c459;
-  opacity: 0.75;
-}
+/* 20. Deprecated inv-tog — use PillGroup */
 
 .inv-alert-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #3a2200;
-  color: #f5a623;
+  background: var(--bg-amber);
+  color: var(--amber-text);
   font-size: 11px;
   font-weight: 500;
   padding: 2px 8px;
@@ -1141,8 +1002,8 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(90, 172, 245, 0.15);
-  color: #5aacf5;
+  background: var(--blue-dim);
+  color: var(--blue-text);
   font-size: 10px;
   font-weight: 600;
   padding: 2px 7px;
@@ -1153,8 +1014,8 @@
 }
 
 .inv-expense-link-panel {
-  background: rgba(90, 172, 245, 0.1);
-  border: 0.5px solid rgba(90, 172, 245, 0.25);
+  background: var(--blue-dim);
+  border: 0.5px solid var(--border-blue);
   border-radius: 8px;
   padding: 10px 12px;
   margin-bottom: 16px;
@@ -1163,7 +1024,7 @@
 .inv-expense-link-panel__title {
   font-size: 11px;
   font-weight: 500;
-  color: #5aacf5;
+  color: var(--blue-text);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 0 0 4px;
@@ -1171,7 +1032,7 @@
 
 .inv-expense-link-panel__meta {
   font-size: 13px;
-  color: var(--inv-text-primary, #f2f2f7);
+  color: var(--text-primary);
   margin: 0 0 8px;
 }
 
@@ -1181,7 +1042,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #5aacf5;
+  color: var(--blue-text);
   background: none;
   border: none;
   padding: 0;
@@ -1268,5 +1129,143 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+/* ── Wave 50 — inventory motion ── */
+
+.inventory-section .page-header {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.inventory-section .category-grid .category-grid__cell {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.inventory-section .category-grid .category-grid__cell:nth-child(1) {
+  animation-delay: var(--stagger-step);
+}
+
+.inventory-section .category-grid .category-grid__cell:nth-child(2) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.inventory-section .category-grid .category-grid__cell:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.inventory-section .category-grid .category-grid__cell:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.inventory-section .inventory-list-row {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.inventory-section .ui-section .inventory-list-row:nth-child(1),
+.inventory-section .inventory-swipe-item:nth-child(1) .inventory-list-row {
+  animation-delay: 0ms;
+}
+
+.inventory-section .ui-section .inventory-list-row:nth-child(2),
+.inventory-section .inventory-swipe-item:nth-child(2) .inventory-list-row {
+  animation-delay: var(--stagger-step);
+}
+
+.inventory-section .ui-section .inventory-list-row:nth-child(3),
+.inventory-section .inventory-swipe-item:nth-child(3) .inventory-list-row {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.inventory-section .ui-section .inventory-list-row:nth-child(4),
+.inventory-section .inventory-swipe-item:nth-child(4) .inventory-list-row {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.inventory-section .ui-section .inventory-list-row:nth-child(5),
+.inventory-section .inventory-swipe-item:nth-child(5) .inventory-list-row {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.inventory-section .ui-section .inventory-list-row:nth-child(n + 6),
+.inventory-section .inventory-swipe-item:nth-child(n + 6) .inventory-list-row {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.inventory-section .inventory-list-row--warning .ui-list-row__trailing,
+.inventory-section .inventory-list-row--danger .ui-list-row__trailing,
+.inventory-section .inventory-row--warning .inventory-row__quantity,
+.inventory-section .inventory-row--danger .inventory-row__quantity {
+  animation: attention-pulse var(--motion-attention-duration) ease-in-out infinite;
+}
+
+.inventory-section .category-grid__badge {
+  animation: attention-pulse var(--motion-attention-duration) ease-in-out infinite;
+}
+
+.inventory-section .inventory-list-row.ui-list-row--pressable,
+.inventory-section .category-grid__cell,
+.inventory-section .product-tile {
+  transition:
+    background var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-spring),
+    border-color var(--duration-fast) ease;
+}
+
+.inventory-section .inventory-list-row.ui-list-row--pressable:active,
+.inventory-section .category-grid__cell:active,
+.inventory-section .product-tile:active {
+  transform: scale(0.985);
+}
+
+.inventory-section .product-grid .product-tile {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.inventory-section .product-grid .product-tile:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.inventory-section .product-grid .product-tile:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.inventory-section .product-grid .product-tile:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.inventory-section .product-grid .product-tile:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.inventory-section .product-grid .product-tile:nth-child(n + 5) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.inventory-section .product-tile__bar-fill {
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-section .page-header,
+  .inventory-section .category-grid .category-grid__cell,
+  .inventory-section .inventory-list-row,
+  .inventory-section .product-grid .product-tile,
+  .inventory-section .inventory-list-row--warning .ui-list-row__trailing,
+  .inventory-section .inventory-list-row--danger .ui-list-row__trailing,
+  .inventory-section .inventory-row--warning .inventory-row__quantity,
+  .inventory-section .inventory-row--danger .inventory-row__quantity,
+  .inventory-section .category-grid__badge {
+    animation: none;
+  }
+
+  .inventory-section .inventory-list-row.ui-list-row--pressable:active,
+  .inventory-section .category-grid__cell:active,
+  .inventory-section .product-tile:active {
+    transform: none;
+  }
+
+  .inventory-section .product-tile__bar-fill {
+    transition: none;
+  }
 }
 

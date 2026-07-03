@@ -283,10 +283,11 @@ export default function InventoryPage() {
           onSaveEdit={async (id, input) => {
             const prev = catalog.find((s) => s.id === id)
             const wasLow = prev ? isLowStock(prev) : false
-            await updateSupply(id, input)
-            const updated = await getSupplies()
-            const next = updated.find((s) => s.id === id)
-            if (next && isLowStock(next) && !wasLow) notifyLowStock(next.name)
+            const updated = await updateSupply(id, input)
+            if (updated) {
+              setCatalog((items) => items.map((s) => (s.id === id ? updated : s)))
+            }
+            if (updated && isLowStock(updated) && !wasLow) notifyLowStock(updated.name)
           }}
           onRestock={async (id, quantity, totalCost) => {
             const supply = catalog.find((s) => s.id === id)
@@ -338,7 +339,15 @@ export default function InventoryPage() {
             return created
           }}
           onSaveEdit={async (id, input) => {
-            await updateEquipment(id, input)
+            const updated = await updateEquipment(id, input)
+            if (updated) {
+              setAllEquipment((items) => items.map((e) => (e.id === id ? updated : e)))
+              setEquipment((items) =>
+                (updated.status ?? 'active') !== 'retired'
+                  ? items.map((e) => (e.id === id ? updated : e))
+                  : items.filter((e) => e.id !== id),
+              )
+            }
           }}
           onAfterSave={reload}
           onDelete={handleEquipmentDelete}

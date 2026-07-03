@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Warning } from '@phosphor-icons/react'
 import BottomSheet from '@/components/BottomSheet'
 import AcquisitionToggle, { type AcquisitionMode } from '@/components/inventory/AcquisitionToggle'
-import InventoryImagePicker from '@/components/inventory/InventoryImagePicker'
+import InventoryIconPicker from '@/components/inventory/InventoryIconPicker'
 import {
   FloatingAffixField,
   FloatingField,
@@ -12,7 +12,6 @@ import {
   PillGroup,
   SheetFooter,
 } from '@/components/forms'
-import { clearSupplyPhoto, uploadSupplyPhoto } from '@/lib/api'
 import { costPerUnitFromPurchase } from '@/lib/supplies-logic'
 import { fmtDetailed } from '@/lib/calculations'
 import { computeFormProgress } from '@/lib/form-progress'
@@ -64,8 +63,7 @@ export default function SupplyEditSheet({
   const [reorderAt, setReorderAt] = useState('')
   const [supplier, setSupplier] = useState('')
   const [notes, setNotes] = useState('')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [clearPhoto, setClearPhoto] = useState(false)
+  const [iconKey, setIconKey] = useState<string | undefined>(undefined)
   const [acquisition, setAcquisition] = useState<AcquisitionMode>('bought_new')
   const [costPerUnitManual, setCostPerUnitManual] = useState('')
   const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10))
@@ -90,8 +88,7 @@ export default function SupplyEditSheet({
       setReorderAt('')
       setSupplier('')
       setNotes('')
-      setPhotoFile(null)
-      setClearPhoto(false)
+      setIconKey(undefined)
       setAcquisition('bought_new')
       setCostPerUnitManual('')
       setPurchaseDate(new Date().toISOString().slice(0, 10))
@@ -105,8 +102,7 @@ export default function SupplyEditSheet({
     setReorderAt(supply.reorder_threshold != null ? String(supply.reorder_threshold) : '')
     setSupplier(supply.supplier ?? '')
     setNotes(supply.notes ?? '')
-    setPhotoFile(null)
-    setClearPhoto(false)
+    setIconKey(supply.icon_key || undefined)
     setRestockQty('')
     setRestockCost('')
   }, [supply, mode, kind, defaultUnit])
@@ -158,16 +154,6 @@ export default function SupplyEditSheet({
         ? `Restock ${supply?.name ?? ''}`
         : supply?.name ?? 'Edit item'
 
-  const handlePhotoChange = (file: File | null) => {
-    setPhotoFile(file)
-    if (file) setClearPhoto(false)
-  }
-
-  const persistPhoto = async (id: string) => {
-    if (clearPhoto) await clearSupplyPhoto(id)
-    else if (photoFile) await uploadSupplyPhoto(id, photoFile)
-  }
-
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -187,6 +173,7 @@ export default function SupplyEditSheet({
           supplier: supplier.trim() || undefined,
           kind,
           notes: notes.trim() || undefined,
+          icon_key: iconKey,
         }
         const includeExpense = acquisition === 'bought_new'
         const options: SupplyAddOptions = includeExpense
@@ -196,8 +183,7 @@ export default function SupplyEditSheet({
               purchaseDate,
             }
           : { logExpense: false }
-        const created = await onSaveAdd(input, options)
-        await persistPhoto(created.id)
+        await onSaveAdd(input, options)
       } else if (mode === 'edit' && supply) {
         const quantity = Number(onHand)
         if (!Number.isFinite(quantity) || quantity < 0) return
@@ -208,8 +194,8 @@ export default function SupplyEditSheet({
           reorder_threshold: Number(reorderAt) || undefined,
           supplier: supplier.trim() || undefined,
           notes: notes.trim() || undefined,
+          icon_key: iconKey ?? '',
         })
-        await persistPhoto(supply.id)
       } else if (mode === 'restock' && supply) {
         const quantity = Number(restockQty)
         const cost = Number(restockCost)
@@ -256,16 +242,6 @@ export default function SupplyEditSheet({
         />
       }
     >
-        {mode !== 'restock' && (
-          <div className="inv-sheet-section">
-            <InventoryImagePicker
-              previewUrl={clearPhoto ? null : (supply?.image_url ?? null)}
-              onChange={handlePhotoChange}
-              onClearExisting={() => setClearPhoto(true)}
-            />
-          </div>
-        )}
-
         {supply && mode !== 'add' && onModeChange && (
           <div className="inv-sheet-section">
             <PillGroup
@@ -327,6 +303,8 @@ export default function SupplyEditSheet({
                   placeholder=" "
                 />
               </FloatingField>
+
+              <InventoryIconPicker variant="supply" value={iconKey} onChange={setIconKey} />
 
               <PillGroup
                 label={`Measure in (${activeUnit})`}

@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# E2E smoke gate before git push (skip: PREPUSH_SKIP=1 git push)
+node scripts/prepush.mjs

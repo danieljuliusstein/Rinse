@@ -16,6 +16,18 @@
   --cl-radius-control: 12px;
   --cl-max-width: 430px;
 
+  /* Wave 52 — client motion lane (not operator --green) */
+  --cl-duration-fast: 150ms;
+  --cl-duration-medium: 280ms;
+  --cl-duration-slow: 400ms;
+  --cl-ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --cl-ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --cl-ease-step: cubic-bezier(0.22, 1, 0.36, 1);
+  --cl-stagger-step: 50ms;
+  --cl-depth-card-shadow: 0 1px 2px rgba(20, 20, 20, 0.04);
+  --cl-depth-card-border: 0.5px solid var(--cl-border);
+  --cl-depth-elevated-shadow: 0 4px 16px rgba(20, 20, 20, 0.08);
+
   /* Phase 4: per-org branding hooks — override --cl-accent, --cl-bg, etc. */
 }
 
@@ -30,9 +42,10 @@
 
 .client-light-root .cl-card {
   background: var(--cl-surface);
-  border: 0.5px solid var(--cl-border);
+  border: var(--cl-depth-card-border);
   border-radius: var(--cl-radius-card);
   padding: 16px;
+  box-shadow: var(--cl-depth-card-shadow);
 }
 
 .client-light-root .cl-btn-primary {
@@ -70,4 +83,76 @@
 .client-light-root h1,
 .client-light-root .cl-title {
   font-family: var(--font-syne), ui-sans-serif, sans-serif;
+}
+
+/* ── Wave 52 — shared client keyframes ── */
+
+@keyframes cl-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cl-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes cl-success-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.client-light-root .cl-shake-once {
+  animation: cl-shake var(--cl-duration-fast) ease;
+}
+
+.client-light-root .cl-btn-primary,
+.client-light-root .cl-btn-secondary {
+  transition:
+    transform var(--cl-duration-fast) var(--cl-ease-spring),
+    opacity var(--cl-duration-fast) ease,
+    background var(--cl-duration-fast) ease,
+    border-color var(--cl-duration-fast) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.client-light-root .cl-btn-primary:active:not(:disabled),
+.client-light-root .cl-btn-secondary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-light-root .cl-btn-primary:active:not(:disabled),
+  .client-light-root .cl-btn-secondary:active:not(:disabled) {
+    transform: none;
+  }
+
+  .client-light-root .cl-shake-once,
+  .client-light-root .book-step-card,
+  .client-light-root .portal-body > *,
+  .client-light-root .detail-cal-widget,
+  .client-light-root .legal-page {
+    animation: none !important;
+  }
 }

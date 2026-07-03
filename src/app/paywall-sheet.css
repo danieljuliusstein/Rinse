@@ -7,18 +7,23 @@
 
 .paywall-sheet__icon {
   color: var(--green);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
 }
 
 .paywall-sheet__lead {
   margin: 0;
   color: var(--text-secondary);
   font-size: 14px;
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+  animation-delay: var(--stagger-step);
 }
 
 .paywall-sheet__trial {
   margin: 0;
   font-size: 13px;
   color: var(--green-text);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+  animation-delay: calc(var(--stagger-step) * 2);
 }
 
 .paywall-sheet__plans {
@@ -36,6 +41,24 @@
   border-radius: 12px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
+  transition:
+    border-color var(--duration-fast) ease,
+    background var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-spring);
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+}
+
+.paywall-sheet__plans .paywall-sheet__plan:nth-child(1) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.paywall-sheet__plans .paywall-sheet__plan:nth-child(2) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.paywall-sheet__plan:active {
+  transform: scale(0.985);
+  background: var(--bg-surface-active);
 }
 
 .paywall-sheet__plan strong {
@@ -60,4 +83,20 @@
   color: var(--text-muted);
   background: var(--bg-surface);
   border: 1px dashed var(--border);
+  animation: setup-step-in var(--duration-medium) var(--ease-step) both;
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paywall-sheet__icon,
+  .paywall-sheet__lead,
+  .paywall-sheet__trial,
+  .paywall-sheet__plan,
+  .paywall-sheet__coming-soon {
+    animation: none;
+  }
+
+  .paywall-sheet__plan:active {
+    transform: none;
+  }
 }

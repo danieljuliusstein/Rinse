@@ -21,8 +21,8 @@ export function buildRinseTourSteps(): RinseTourStep[] {
         'Your dashboard shows today’s work and weekly stats. The green + button adds jobs, leads, quotes, invoices, and expenses.',
       cardMode: 'viewport-top',
       placement: 'top',
-      spotlightRadius: 999,
-      spotlightPad: 6,
+      spotlightShape: 'circle',
+      spotlightPad: 14,
     },
     {
       id: 'jobs',
@@ -32,8 +32,9 @@ export function buildRinseTourSteps(): RinseTourStep[] {
       title: 'Jobs',
       description:
         'Search and filter every job from scheduled through paid. Tap + on this screen to schedule new work.',
-      cardMode: 'viewport-top',
-      spotlightRadius: 12,
+      placement: 'bottom',
+      spotlightRadius: 14,
+      spotlightPad: 14,
     },
     {
       id: 'clients',
@@ -43,8 +44,9 @@ export function buildRinseTourSteps(): RinseTourStep[] {
       title: 'Clients',
       description:
         'Your client list with follow-ups, top clients, and history. Tap + to add someone new.',
-      cardMode: 'viewport-top',
-      spotlightRadius: 12,
+      placement: 'bottom',
+      spotlightRadius: 14,
+      spotlightPad: 14,
     },
     {
       id: 'money',
@@ -53,8 +55,9 @@ export function buildRinseTourSteps(): RinseTourStep[] {
       selector: coachSelector('money-hero'),
       title: 'Money',
       description: 'Revenue, expenses, net profit, and exports for any period you choose.',
-      cardMode: 'viewport-top',
+      placement: 'bottom',
       spotlightRadius: 16,
+      spotlightPad: 16,
     },
     {
       id: 'pipeline',
@@ -64,8 +67,9 @@ export function buildRinseTourSteps(): RinseTourStep[] {
       title: 'Lead pipeline',
       description:
         'Track inquiries from first contact to booked. Move leads across stages as deals progress — you’re all set.',
-      cardMode: 'viewport-top',
+      placement: 'auto',
       spotlightRadius: 16,
+      spotlightPad: 14,
     },
   ]
 }

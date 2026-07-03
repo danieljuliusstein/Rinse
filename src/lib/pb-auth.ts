@@ -1,7 +1,14 @@
 import { getPocketBase, isPocketBaseConfigured } from './pocketbase'
 import { withTimeout } from './timeout'
 
+import { AUTH_OAUTH_UNAVAILABLE, AUTH_PB_NOT_CONFIGURED, formatAuthApiError } from './auth-messages'
+
 const AUTH_FLAG_KEY = 'pb_auth_active'
+
+/** @deprecated Use AUTH_OAUTH_UNAVAILABLE or AUTH_PB_NOT_CONFIGURED */
+export const AUTH_CLOUD_UNAVAILABLE = AUTH_OAUTH_UNAVAILABLE
+
+export { AUTH_OAUTH_UNAVAILABLE, AUTH_PB_NOT_CONFIGURED, formatAuthApiError }
 
 export function isPocketBaseAuthenticated(): boolean {
   const pb = getPocketBase()
@@ -132,7 +139,7 @@ export async function requestPasswordReset(
   email: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const pb = getPocketBase()
-  if (!pb) return { ok: false, error: 'Cloud login is not configured' }
+  if (!pb) return { ok: false, error: AUTH_PB_NOT_CONFIGURED }
   const trimmed = email.trim()
   if (!trimmed) return { ok: false, error: 'Enter your email address' }
   try {
@@ -153,7 +160,7 @@ export async function confirmPasswordReset(input: {
   passwordConfirm: string
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const pb = getPocketBase()
-  if (!pb) return { ok: false, error: 'Cloud login is not configured' }
+  if (!pb) return { ok: false, error: AUTH_PB_NOT_CONFIGURED }
   if (!input.token.trim()) return { ok: false, error: 'Reset link is invalid or expired' }
   try {
     await withTimeout(

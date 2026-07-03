@@ -45,8 +45,15 @@ export async function updateEquipment(
     const current = await getEquipmentItem(id)
     if (!current) return null
     const merged = { ...current, ...input }
-    const record = await pb().collection('equipment').update<PbRecord>(id, appEquipmentToPb(merged))
-    return pbEquipmentToApp(record, equipmentPhotoUrl(record))
+    try {
+      const record = await pb().collection('equipment').update<PbRecord>(id, appEquipmentToPb(merged))
+      return pbEquipmentToApp(record, equipmentPhotoUrl(record))
+    } catch {
+      if (input.icon_key === undefined) return null
+      const { icon_key: _iconKey, ...rest } = merged
+      const record = await pb().collection('equipment').update<PbRecord>(id, appEquipmentToPb(rest))
+      return pbEquipmentToApp(record, equipmentPhotoUrl(record))
+    }
   } catch {
     return null
   }

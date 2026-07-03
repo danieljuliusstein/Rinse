@@ -19,7 +19,7 @@ export default function SettingsFooter({ showSave = true }: { showSave?: boolean
       {showSave && isLoggedIn ? (
         <button
           type="button"
-          className="settings-footer__save"
+          className={`settings-footer__save${savedFlash ? ' settings-footer__save--done' : dirty ? ' settings-footer__save--ready' : ''}`}
           disabled={!dirty && !savedFlash}
           onClick={() => {
             void (async () => {

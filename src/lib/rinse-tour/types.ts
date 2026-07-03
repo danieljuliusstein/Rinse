@@ -24,6 +24,8 @@ export interface RinseTourStep {
   spotlightRadius?: number
   /** Extra padding around the measured target rect. */
   spotlightPad?: number
+  /** Circular cutout (FAB, icon buttons). Forces a square spotlight with full corner radius. */
+  spotlightShape?: 'rect' | 'circle'
   beforeShow?: () => void | Promise<void>
   afterLeave?: () => void | Promise<void>
 }
