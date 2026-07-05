@@ -51,7 +51,7 @@ async function geocodePlaceName(name: string): Promise<GeoCoords | null> {
   url.searchParams.set('format', 'json')
 
   try {
-    const res = await fetch(url.toString(), { cache: 'force-cache' })
+    const res = await fetch(url.toString(), { next: { revalidate: 86400 } })
     if (!res.ok) return null
     const data = (await res.json()) as {
       results?: Array<{ latitude?: number; longitude?: number }>
@@ -118,7 +118,7 @@ export async function fetchDayForecast(
   url.searchParams.set('end_date', date)
 
   try {
-    const res = await fetch(url.toString(), { cache: 'force-cache' })
+    const res = await fetch(url.toString(), { next: { revalidate: 1800 } })
     if (!res.ok) return null
     const data = (await res.json()) as {
       daily?: {
@@ -157,8 +157,10 @@ export async function fetchDayForecast(
 export async function resolveForecastsForJobs(
   jobs: WeatherJobInput[],
   now = new Date(),
+  todayStr = isoDate(now),
 ): Promise<Map<string, DayForecast>> {
-  const dates = new Set(nextThreeDayDates(now))
+  // Anchor the window to the operator's calendar day (client-supplied), not UTC.
+  const dates = new Set(nextThreeDayDates(new Date(`${todayStr}T12:00:00`)))
   const byJobId = new Map<string, DayForecast>()
 
   const addresses = new Set<string>()
@@ -206,14 +208,16 @@ export async function resolveForecastsForJobs(
 /**
  * Build readiness for Home. Jobs without a geocodable address are skipped for forecasts;
  * if none remain weather-sensitive with data, returns null (render nothing).
+ * `todayStr` should be the operator device's local YYYY-MM-DD when available.
  */
 export async function buildWeatherReadinessForJobs(
   jobs: WeatherJobInput[],
+  todayStr?: string,
   now = new Date(),
 ): Promise<WeatherReadinessResult | null> {
-  const todayStr = isoDate(now)
-  const forecasts = await resolveForecastsForJobs(jobs, now)
-  return buildWeatherReadiness(jobs, forecasts, todayStr)
+  const today = todayStr && /^\d{4}-\d{2}-\d{2}$/.test(todayStr) ? todayStr : isoDate(now)
+  const forecasts = await resolveForecastsForJobs(jobs, now, today)
+  return buildWeatherReadiness(jobs, forecasts, today)
 }
 
 /** Test helpers — clear process-local caches. */

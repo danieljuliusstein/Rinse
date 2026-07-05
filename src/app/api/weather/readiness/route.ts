@@ -13,6 +13,14 @@ function clientKey(request: Request): string {
   )
 }
 
+function parseToday(body: unknown): string | undefined {
+  if (!body || typeof body !== 'object') return undefined
+  const today = (body as { today?: unknown }).today
+  if (typeof today !== 'string') return undefined
+  const trimmed = today.trim()
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : undefined
+}
+
 function parseJobs(body: unknown): WeatherJobInput[] | null {
   if (!body || typeof body !== 'object') return null
   const jobs = (body as { jobs?: unknown }).jobs
@@ -59,7 +67,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await buildWeatherReadinessForJobs(jobs)
+    const result = await buildWeatherReadinessForJobs(jobs, parseToday(body))
     return NextResponse.json({ readiness: result })
   } catch (e) {
     return NextResponse.json(

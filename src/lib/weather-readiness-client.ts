@@ -5,6 +5,7 @@ import type { WeatherJobInput, WeatherReadinessResult } from '@/lib/weather-risk
 import {
   fallbackWeatherPlace,
   isWeatherSensitiveJob,
+  isoDate,
   nextThreeDayDates,
   selectWeatherSensitiveJobs,
 } from '@/lib/weather-risk'
@@ -61,6 +62,9 @@ export async function fetchWeatherReadiness(
     (j) => isWeatherSensitiveJob(j) && window.has(j.date),
   )
 
+  // Device-local calendar day — Vercel runs UTC and must not shift the 3-day window.
+  const today = isoDate(new Date())
+
   try {
     const res = await fetch('/api/weather/readiness', {
       method: 'POST',
@@ -68,7 +72,7 @@ export async function fetchWeatherReadiness(
         'Content-Type': 'application/json',
         ...getAuthFetchHeaders(),
       },
-      body: JSON.stringify({ jobs: payload }),
+      body: JSON.stringify({ jobs: payload, today }),
     })
 
     if (!res.ok) {

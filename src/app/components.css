@@ -693,8 +693,23 @@
   line-height: 1.35;
 }
 
+/*
+ * Weather rows mount after an async fetch. Do not use opacity:0 entrance
+ * (home-block-in + fill-mode both) — iOS Safari often skips the animation on
+ * late-inserted nodes and leaves rows invisible.
+ */
+@keyframes weather-readiness-in {
+  from {
+    transform: translateY(6px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 .home-dashboard .weather-readiness-row {
-  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+  opacity: 1;
+  animation: weather-readiness-in var(--duration-medium) var(--ease-out) both;
 }
 
 .home-dashboard .weather-readiness-row:nth-child(1) {
