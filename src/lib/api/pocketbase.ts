@@ -1,3 +1,4 @@
+import { defaultQuickJobStatus } from '../job-create'
 import { normalizeInvoice } from '../invoices'
 import { rangeDateSpanLabel, rangePeriodLabel } from '../jobs-revenue'
 import { loadSettings } from '../settings'
@@ -240,7 +241,7 @@ export async function createJob(input: QuickJobData): Promise<Job> {
     package_id: input.packageId,
     vehicle_type: input.vehicleType,
     client_id: client.id,
-    status: 'completed',
+    status: defaultQuickJobStatus(input.date),
     revenue: input.revenue,
     tip: input.tip,
     start_time: input.start_time,

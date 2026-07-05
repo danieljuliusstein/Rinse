@@ -661,6 +661,24 @@
   border-color: var(--amber);
 }
 
+.weather-readiness-row--unresolved {
+  border-width: 1.5px;
+  border-color: var(--text-muted);
+  background: var(--bg-card);
+}
+
+.weather-readiness-row--note {
+  padding: 10px 16px;
+  border-style: dashed;
+  box-shadow: none;
+  background: transparent;
+}
+
+.weather-readiness-row--note .weather-readiness-row__secondary {
+  margin: 0;
+  color: var(--text-muted);
+}
+
 /* Mock: weather icons use warning-role amber on every row (sun + rain). */
 .weather-readiness-row__icon {
   flex-shrink: 0;

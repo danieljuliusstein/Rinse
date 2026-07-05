@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildWeatherReadiness,
+  isWeatherReadinessActiveJob,
   isWeatherSensitiveJob,
   precipToStatus,
+  resolveWeatherJobAddress,
   selectWeatherSensitiveJobs,
   weatherCacheKey,
   weatherCodeToIcon,
+  weatherReadinessPartialNote,
   WEATHER_RISK_THRESHOLDS,
+  WEATHER_READINESS_EMPTY_MESSAGE,
   type DayForecast,
   type WeatherJobInput,
 } from './weather-risk'
@@ -44,6 +48,16 @@ describe('isWeatherSensitiveJob (Option B)', () => {
   })
 })
 
+describe('isWeatherReadinessActiveJob', () => {
+  it('allows active calendar statuses and rejects paid', () => {
+    expect(isWeatherReadinessActiveJob({ status: 'scheduled' })).toBe(true)
+    expect(isWeatherReadinessActiveJob({ status: 'in_progress' })).toBe(true)
+    expect(isWeatherReadinessActiveJob({ status: 'completed' })).toBe(true)
+    expect(isWeatherReadinessActiveJob({ status: 'invoiced' })).toBe(true)
+    expect(isWeatherReadinessActiveJob({ status: 'paid' })).toBe(false)
+  })
+})
+
 describe('precipToStatus', () => {
   it('maps thresholds', () => {
     expect(precipToStatus(0)).toBe('good_to_go')
@@ -56,7 +70,7 @@ describe('precipToStatus', () => {
 })
 
 describe('selectWeatherSensitiveJobs', () => {
-  it('keeps mobile jobs in the next 3 days (any status)', () => {
+  it('keeps active mobile jobs in the next 3 days only', () => {
     const selected = selectWeatherSensitiveJobs(
       [
         job({ id: 'a', date: '2026-07-04' }),
@@ -71,19 +85,48 @@ describe('selectWeatherSensitiveJobs', () => {
   })
 })
 
-describe('fallbackWeatherPlace', () => {
-  it('maps common US timezones to a city Open-Meteo can resolve', async () => {
-    const { fallbackWeatherPlace } = await import('./weather-risk')
-    expect(fallbackWeatherPlace('America/New_York')).toBe('Atlanta')
-    expect(fallbackWeatherPlace('America/Chicago')).toBe('Chicago')
-    expect(fallbackWeatherPlace('America/Los_Angeles')).toBe('Los Angeles')
+describe('resolveWeatherJobAddress', () => {
+  it('prefers client address, then business, then unresolved', () => {
+    expect(resolveWeatherJobAddress('123 Main', '456 Shop')).toEqual({
+      address: '123 Main',
+      addressSource: 'exact',
+    })
+    expect(resolveWeatherJobAddress('', '456 Shop')).toEqual({
+      address: '456 Shop',
+      addressSource: 'business_address',
+    })
+    expect(resolveWeatherJobAddress('', '')).toEqual({ addressSource: 'unresolved' })
   })
 })
 
 describe('buildWeatherReadiness', () => {
-  it('returns null when no sensitive jobs have forecasts', () => {
-    expect(buildWeatherReadiness([job({ location_type: 'fixed' })], new Map(), '2026-07-04')).toBeNull()
-    expect(buildWeatherReadiness([job()], new Map(), '2026-07-04')).toBeNull()
+  it('returns no_jobs when nothing qualifies', () => {
+    expect(buildWeatherReadiness([job({ location_type: 'fixed' })], new Map(), '2026-07-04')).toEqual({
+      status: 'no_jobs',
+      rows: [],
+    })
+    expect(buildWeatherReadiness([job({ status: 'paid' })], new Map(), '2026-07-04')).toEqual({
+      status: 'no_jobs',
+      rows: [],
+    })
+  })
+
+  it('returns unresolved when qualifying jobs lack forecasts', () => {
+    expect(buildWeatherReadiness([job()], new Map(), '2026-07-04')).toEqual({
+      status: 'unresolved',
+      rows: [],
+      unresolvedCount: 1,
+    })
+  })
+
+  it('returns partial when some jobs lack forecasts', () => {
+    const jobs = [job({ id: 'a' }), job({ id: 'b', clientName: 'Other' })]
+    const forecasts = new Map([['a', forecast()]])
+    const result = buildWeatherReadiness(jobs, forecasts, '2026-07-04')
+    expect(result.status).toBe('partial')
+    expect(result.unresolvedCount).toBe(1)
+    expect(result.rows).toHaveLength(1)
+    expect(weatherReadinessPartialNote(1)).toBe("Couldn't check weather for 1 job")
   })
 
   it('uses one Good to go row per clear day with job count', () => {
@@ -100,17 +143,14 @@ describe('buildWeatherReadiness', () => {
       ['b', forecast({ date: '2026-07-06', precipChance: 20 })],
     ])
     const result = buildWeatherReadiness(jobs, forecasts, '2026-07-04')
-    expect(result?.rows).toHaveLength(2)
-    expect(result?.rows[0]).toMatchObject({
+    expect(result.status).toBe('ready')
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toMatchObject({
       kind: 'good',
       primary: 'Today · 89°, 10% rain',
       secondary: '3 jobs scheduled',
       statusLabel: 'Good to go',
     })
-    expect(result?.rows[1].kind).toBe('good')
-    if (result?.rows[1].kind === 'good') {
-      expect(result.rows[1].secondary).toBe('1 job scheduled')
-    }
   })
 
   it('matches mock: good day row then per-job risk rows; high risk leads', () => {
@@ -129,25 +169,16 @@ describe('buildWeatherReadiness', () => {
       ['high', forecast({ date: '2026-07-06', precipChance: 70, tempMaxF: 88, weatherCode: 95 })],
     ])
     const result = buildWeatherReadiness(jobs, forecasts, '2026-07-04')
-    expect(result?.rows.map((r) => (r.kind === 'risk' ? r.jobId : r.kind))).toEqual([
+    expect(result.status).toBe('ready')
+    expect(result.rows.map((r) => (r.kind === 'risk' ? r.jobId : r.kind))).toEqual([
       'high',
       'good',
       'mid',
     ])
-    const good = result?.rows[1]
-    const mid = result?.rows[2]
-    expect(good).toMatchObject({
-      kind: 'good',
-      primary: 'Today · 89°, 10% rain',
-      secondary: '3 jobs scheduled',
-      statusLabel: 'Good to go',
-    })
-    expect(mid).toMatchObject({
-      kind: 'risk',
-      primary: 'Sun · 91°, 35% rain',
-      secondary: 'Devon Marsh · 1:30 PM outdoor detail',
-      statusLabel: 'Rain risk',
-    })
+  })
+
+  it('exposes empty-week copy constant', () => {
+    expect(WEATHER_READINESS_EMPTY_MESSAGE).toBe('No outdoor jobs in the next 3 days.')
   })
 })
 

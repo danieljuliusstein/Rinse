@@ -1,12 +1,31 @@
-import type { LocationType } from './types'
+import type { JobStatus, LocationType } from './types'
 
 /**
  * Option B outdoor signal: mobile jobs are weather-sensitive (on-site);
  * fixed/shop jobs are not. No PocketBase `is_outdoor` field.
- * Anything other than explicit `fixed` counts as mobile (default / legacy rows).
+ *
+ * Known v1 approximation: "mobile" ≠ always outdoor (e.g. garage / covered carport).
+ * Revisit only if false positives become a recurring annoyance.
  */
 export function isWeatherSensitiveJob(job: { location_type: LocationType | string }): boolean {
   return job.location_type !== 'fixed'
+}
+
+/**
+ * Job statuses eligible for the 3-day readiness window (allow-list).
+ * Includes completed/invoiced so Quick Add jobs and same-day work still appear;
+ * paid jobs are excluded (closed). Date window prevents stale rows from polluting counts.
+ */
+export const WEATHER_READINESS_ACTIVE_STATUSES: readonly JobStatus[] = [
+  'scheduled',
+  'in_progress',
+  'completed',
+  'invoiced',
+] as const
+
+export function isWeatherReadinessActiveJob(job: { status?: string }): boolean {
+  const status = job.status ?? ''
+  return (WEATHER_READINESS_ACTIVE_STATUSES as readonly string[]).includes(status)
 }
 
 /** Precipitation chance thresholds for job readiness pills. */
@@ -28,9 +47,12 @@ export interface WeatherJobInput {
   location_type: LocationType
   clientName: string
   address?: string
-  /** When set, only scheduled / in_progress jobs are considered. */
+  /** How the forecast location was resolved (debug / partial-state). */
+  addressSource?: WeatherAddressSource
   status?: string
 }
+
+export type WeatherAddressSource = 'exact' | 'business_address' | 'unresolved'
 
 export interface DayForecast {
   date: string
@@ -71,8 +93,22 @@ export interface WeatherReadinessRiskRow {
 
 export type WeatherReadinessRow = WeatherReadinessGoodRow | WeatherReadinessRiskRow
 
+export type WeatherReadinessStatus = 'no_jobs' | 'unresolved' | 'partial' | 'ready'
+
 export interface WeatherReadinessResult {
+  status: WeatherReadinessStatus
   rows: WeatherReadinessRow[]
+  /** Qualifying jobs that could not be geocoded / forecasted. */
+  unresolvedCount?: number
+}
+
+export const WEATHER_READINESS_EMPTY_MESSAGE = 'No outdoor jobs in the next 3 days.'
+export const WEATHER_READINESS_UNRESOLVED_MESSAGE = "Couldn't check the forecast right now"
+
+export function weatherReadinessPartialNote(count: number): string {
+  return count === 1
+    ? "Couldn't check weather for 1 job"
+    : `Couldn't check weather for ${count} jobs`
 }
 
 export function precipToStatus(precipChance: number): WeatherRiskStatus {
@@ -159,9 +195,8 @@ export function formatJobCountLine(count: number): string {
 }
 
 /**
- * Mobile jobs dated in the next 3 days.
- * Includes completed/invoiced — Quick Add saves jobs as `completed`, and weather
- * still matters for outdoor work on that calendar day.
+ * Outdoor mobile jobs in eligible statuses, dated in the next 3 days.
+ * Status filter runs before the date window so paid jobs never inflate counts.
  */
 export function selectWeatherSensitiveJobs(
   jobs: WeatherJobInput[],
@@ -169,20 +204,27 @@ export function selectWeatherSensitiveJobs(
 ): WeatherJobInput[] {
   const window = new Set(nextThreeDayDates(new Date(todayStr + 'T12:00:00')))
   return jobs
-    .filter((j) => isWeatherSensitiveJob(j) && window.has(j.date))
+    .filter(
+      (j) =>
+        isWeatherReadinessActiveJob(j) &&
+        isWeatherSensitiveJob(j) &&
+        window.has(j.date),
+    )
     .sort((a, b) => {
       if (a.date !== b.date) return a.date.localeCompare(b.date)
       return (a.start_time ?? '99:99').localeCompare(b.start_time ?? '99:99')
     })
 }
 
-/** Place-name fallback when client/business address is missing (Open-Meteo city search). */
-export function fallbackWeatherPlace(timeZone?: string): string {
-  const tz = timeZone ?? (typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : '')
-  if (/Chicago|Menominee|Winnipeg|Mexico_City/i.test(tz)) return 'Chicago'
-  if (/Denver|Phoenix|Boise|Edmonton/i.test(tz)) return 'Denver'
-  if (/Los_Angeles|Vancouver|Tijuana/i.test(tz)) return 'Los Angeles'
-  return 'Atlanta'
+export function resolveWeatherJobAddress(
+  clientAddress: string | undefined,
+  businessAddress: string | undefined,
+): { address?: string; addressSource: WeatherAddressSource } {
+  const client = clientAddress?.trim()
+  if (client) return { address: client, addressSource: 'exact' }
+  const business = businessAddress?.trim()
+  if (business) return { address: business, addressSource: 'business_address' }
+  return { addressSource: 'unresolved' }
 }
 
 /**
@@ -190,16 +232,23 @@ export function fallbackWeatherPlace(timeZone?: string): string {
  * - Clear day → one row, secondary "N jobs scheduled", Good to go pill
  * - Risk day → one row per job, client · time outdoor detail, Rain risk pill
  * - High rain risk rows sort before other risk rows; then chronological
- * Returns null when there are no weather-sensitive jobs with forecasts.
  */
 export function buildWeatherReadiness(
   jobs: WeatherJobInput[],
   forecastsByJobId: Map<string, DayForecast>,
   todayStr = isoDate(new Date()),
-): WeatherReadinessResult | null {
+): WeatherReadinessResult {
   const sensitive = selectWeatherSensitiveJobs(jobs, todayStr)
+  if (sensitive.length === 0) {
+    return { status: 'no_jobs', rows: [] }
+  }
+
   const withForecast = sensitive.filter((j) => forecastsByJobId.has(j.id))
-  if (withForecast.length === 0) return null
+  const unresolvedCount = sensitive.length - withForecast.length
+
+  if (withForecast.length === 0) {
+    return { status: 'unresolved', rows: [], unresolvedCount }
+  }
 
   const byDate = new Map<string, WeatherJobInput[]>()
   for (const job of withForecast) {
@@ -257,7 +306,12 @@ export function buildWeatherReadiness(
   }
 
   // High rain risk leads; remaining rows stay chronological (mock: Today good → risk days).
-  return { rows: [...highRisk, ...chronological] }
+  const status: WeatherReadinessStatus = unresolvedCount > 0 ? 'partial' : 'ready'
+  return {
+    status,
+    rows: [...highRisk, ...chronological],
+    ...(unresolvedCount > 0 ? { unresolvedCount } : {}),
+  }
 }
 
 /** Round lat/lon for shared weather cache keys (nearby jobs share one call). */

@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
 import { buildWeatherReadinessForJobs } from '@/lib/server/weather-forecast'
+import {
+  loadBusinessAddressForOrg,
+  loadUpcomingWeatherJobsForOrg,
+  pbJobsToWeatherInputs,
+} from '@/lib/server/weather-readiness-jobs'
+import { authenticateRequestUser } from '@/lib/server/request-auth'
 import { enforceRateLimit, RATE_LIMITS } from '@/lib/server/rate-limit'
-import type { WeatherJobInput } from '@/lib/weather-risk'
+import { isoDate } from '@/lib/weather-risk'
 
 export const runtime = 'nodejs'
 
@@ -21,55 +27,54 @@ function parseToday(body: unknown): string | undefined {
   return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : undefined
 }
 
-function parseJobs(body: unknown): WeatherJobInput[] | null {
-  if (!body || typeof body !== 'object') return null
-  const jobs = (body as { jobs?: unknown }).jobs
-  if (!Array.isArray(jobs)) return null
-
-  const out: WeatherJobInput[] = []
-  for (const item of jobs) {
-    if (!item || typeof item !== 'object') continue
-    const row = item as Record<string, unknown>
-    const id = typeof row.id === 'string' ? row.id.trim() : ''
-    const date = typeof row.date === 'string' ? row.date.trim() : ''
-    const clientName = typeof row.clientName === 'string' ? row.clientName.trim() : ''
-    const location_type = row.location_type === 'fixed' ? 'fixed' : 'mobile'
-    if (!id || !date || !clientName) continue
-    out.push({
-      id,
-      date,
-      clientName,
-      location_type,
-      start_time: typeof row.start_time === 'string' ? row.start_time : undefined,
-      address: typeof row.address === 'string' ? row.address : undefined,
-      status: typeof row.status === 'string' ? row.status : undefined,
-    })
-  }
-  return out
-}
-
 export async function POST(request: Request) {
-  // Rate-limit only — payload is client-supplied addresses (no tenant data read).
-  // Auth was blocking local/demo Home when PB_URL is set but the session is local.
-  const limited = enforceRateLimit(`weather-readiness:${clientKey(request)}`, RATE_LIMITS.publicRead)
+  const auth = await authenticateRequestUser(request)
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const limited = enforceRateLimit(
+    `weather-readiness:${auth.userId}:${clientKey(request)}`,
+    RATE_LIMITS.publicRead,
+  )
   if (limited) return limited
 
-  let body: unknown
+  let body: unknown = {}
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    // Empty body is fine — today defaults to server date below.
   }
 
-  const jobs = parseJobs(body)
-  if (!jobs) {
-    return NextResponse.json({ error: 'jobs array required' }, { status: 400 })
-  }
+  const today = parseToday(body) ?? isoDate(new Date())
 
   try {
-    const result = await buildWeatherReadinessForJobs(jobs, parseToday(body))
-    return NextResponse.json({ readiness: result })
+    const [jobRecords, businessAddress] = await Promise.all([
+      loadUpcomingWeatherJobsForOrg(auth.pb, auth.organizationId, today),
+      loadBusinessAddressForOrg(auth.pb, auth.organizationId),
+    ])
+
+    const jobs = pbJobsToWeatherInputs(jobRecords, businessAddress)
+    const readiness = await buildWeatherReadinessForJobs(jobs, today)
+
+    if (readiness.status === 'unresolved') {
+      console.warn('[weather-readiness] all qualifying jobs unresolved', {
+        organizationId: auth.organizationId,
+        today,
+        qualifyingCount: readiness.unresolvedCount ?? 0,
+      })
+    } else if (readiness.status === 'partial') {
+      console.warn('[weather-readiness] partial forecast resolution', {
+        organizationId: auth.organizationId,
+        today,
+        unresolvedCount: readiness.unresolvedCount,
+        resolvedRows: readiness.rows.length,
+      })
+    }
+
+    return NextResponse.json({ readiness })
   } catch (e) {
+    console.error('[weather-readiness] lookup failed', e)
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Weather lookup failed' },
       { status: 500 },

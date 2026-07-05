@@ -346,7 +346,7 @@ export async function listSentMessagesForOrg(orgId: string, limit = 50) {
   const orgEsc = orgId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   const records = await pb.collection('sent_messages').getFullList({
     filter: `organization_id = "${orgEsc}"`,
-    sort: '-created',
+    sort: '-sent_at',
     limit,
     expand: 'client_id',
   })

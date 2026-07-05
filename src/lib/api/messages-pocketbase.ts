@@ -68,7 +68,7 @@ export async function loadSentMessagesFromPocketBase(limit = 50): Promise<SentMe
   try {
     const page = await pb().collection('sent_messages').getList<PbRecord>(1, limit, {
       filter: tenantFilter(),
-      sort: '-created',
+      sort: '-sent_at',
       expand: 'client_id',
     })
     const records = page.items

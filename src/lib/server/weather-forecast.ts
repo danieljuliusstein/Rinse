@@ -10,37 +10,23 @@ import {
   type WeatherJobInput,
   type WeatherReadinessResult,
 } from '@/lib/weather-risk'
+import {
+  __clearWeatherCachesForTests,
+  readForecastCache,
+  readGeocodeCache,
+  writeForecastCache,
+  writeGeocodeCache,
+} from './weather-cache-store'
+
+export { __clearWeatherCachesForTests }
 
 interface GeoCoords {
   lat: number
   lon: number
 }
 
-interface CacheEntry<T> {
-  day: string
-  value: T
-}
-
-/** In-memory caches: at most one geocode per address and one forecast per day+coords (2dp). */
-const geocodeCache = new Map<string, CacheEntry<GeoCoords | null>>()
-const forecastCache = new Map<string, CacheEntry<DayForecast>>()
-
 function todayKey(now = new Date()): string {
   return isoDate(now)
-}
-
-function getCached<T>(map: Map<string, CacheEntry<T>>, key: string, day: string): T | undefined {
-  const entry = map.get(key)
-  if (!entry) return undefined
-  if (entry.day !== day) {
-    map.delete(key)
-    return undefined
-  }
-  return entry.value
-}
-
-function setCached<T>(map: Map<string, CacheEntry<T>>, key: string, day: string, value: T): void {
-  map.set(key, { day, value })
 }
 
 async function geocodePlaceName(name: string): Promise<GeoCoords | null> {
@@ -67,7 +53,7 @@ async function geocodePlaceName(name: string): Promise<GeoCoords | null> {
 /**
  * Geocode via Open-Meteo (no API key). Street lines are reduced to city/place
  * candidates — Open-Meteo does not resolve full US street addresses.
- * Cached once per day per original address string.
+ * Cached per calendar day in PocketBase (plus L1 within the invocation).
  */
 export async function geocodeAddress(address: string, now = new Date()): Promise<GeoCoords | null> {
   const trimmed = address.trim()
@@ -75,7 +61,7 @@ export async function geocodeAddress(address: string, now = new Date()): Promise
 
   const day = todayKey(now)
   const key = addressCacheKey(trimmed)
-  const cached = getCached(geocodeCache, key, day)
+  const cached = await readGeocodeCache(key, day)
   if (cached !== undefined) return cached
 
   let coords: GeoCoords | null = null
@@ -84,13 +70,13 @@ export async function geocodeAddress(address: string, now = new Date()): Promise
     if (coords) break
   }
 
-  setCached(geocodeCache, key, day, coords)
+  await writeGeocodeCache(key, day, coords)
   return coords
 }
 
 /**
- * Daily forecast for a lat/lon. Cached once per calendar day per rounded coords.
- * Uses Open-Meteo (no API key).
+ * Daily forecast for a lat/lon. Cached per calendar day per rounded coords (2dp)
+ * in PocketBase so nearby jobs share one Open-Meteo call across invocations.
  */
 export async function fetchDayForecast(
   lat: number,
@@ -100,7 +86,7 @@ export async function fetchDayForecast(
 ): Promise<DayForecast | null> {
   const day = todayKey(now)
   const key = weatherCacheKey(date, lat, lon)
-  const cached = getCached(forecastCache, key, day)
+  const cached = await readForecastCache(key, day)
   if (cached) return cached
 
   const rLat = roundCoord(lat)
@@ -143,7 +129,7 @@ export async function fetchDayForecast(
       tempMaxF: temp,
       weatherCode: code,
     }
-    setCached(forecastCache, key, day, forecast)
+    await writeForecastCache(key, day, forecast)
     return forecast
   } catch {
     return null
@@ -207,21 +193,15 @@ export async function resolveForecastsForJobs(
 
 /**
  * Build readiness for Home. Jobs without a geocodable address are skipped for forecasts;
- * if none remain weather-sensitive with data, returns null (render nothing).
+ * status reflects no_jobs / unresolved / partial / ready (see buildWeatherReadiness).
  * `todayStr` should be the operator device's local YYYY-MM-DD when available.
  */
 export async function buildWeatherReadinessForJobs(
   jobs: WeatherJobInput[],
   todayStr?: string,
   now = new Date(),
-): Promise<WeatherReadinessResult | null> {
+): Promise<WeatherReadinessResult> {
   const today = todayStr && /^\d{4}-\d{2}-\d{2}$/.test(todayStr) ? todayStr : isoDate(now)
   const forecasts = await resolveForecastsForJobs(jobs, now, today)
   return buildWeatherReadiness(jobs, forecasts, today)
-}
-
-/** Test helpers — clear process-local caches. */
-export function __clearWeatherCachesForTests(): void {
-  geocodeCache.clear()
-  forecastCache.clear()
 }

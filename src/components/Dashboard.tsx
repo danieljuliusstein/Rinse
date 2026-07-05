@@ -32,7 +32,13 @@ import { openMapsDirections } from '@/lib/maps-url'
 import { loadSentMessagesAsync } from '@/lib/messages'
 import { loadSettingsAsync } from '@/lib/settings'
 import { fetchWeatherReadiness } from '@/lib/weather-readiness-client'
-import type { WeatherReadinessResult } from '@/lib/weather-risk'
+import {
+  isWeatherReadinessActiveJob,
+  isWeatherSensitiveJob,
+  isoDate,
+  nextThreeDayDates,
+  type WeatherReadinessResult,
+} from '@/lib/weather-risk'
 import type { Invoice, JobWithRelations, LeadWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
 
 function formatHeaderCount(n: number): string {
@@ -95,6 +101,21 @@ export default function Dashboard({
     [todayJobRows, todayJob],
   )
   const arSummary = useMemo(() => computeArSummary(invoices), [invoices])
+  const weatherFetchKey = useMemo(() => {
+    const today = isoDate(new Date())
+    const window = new Set(nextThreeDayDates())
+    const jobKey = jobs
+      .filter(
+        (j) =>
+          isWeatherReadinessActiveJob(j) &&
+          isWeatherSensitiveJob(j) &&
+          window.has(j.date),
+      )
+      .map((j) => `${j.id}:${j.date}`)
+      .sort()
+      .join('|')
+    return `${today}|${jobKey}`
+  }, [jobs])
   const invoiceMonthCarousel = useMemo(
     () => (isLoggedOut ? [] : buildInvoiceMonthCarouselItems(invoices)),
     [invoices, isLoggedOut],
@@ -137,22 +158,22 @@ export default function Dashboard({
   }, [])
 
   useEffect(() => {
-    if (jobs.length === 0) {
+    if (isLoggedOut || !isHomeModuleEnabled(homeModules, 'job_readiness')) {
       setWeatherReadiness(null)
       return
     }
     let alive = true
-    void fetchWeatherReadiness(jobs)
+    void fetchWeatherReadiness()
       .then((result) => {
         if (alive) setWeatherReadiness(result)
       })
       .catch(() => {
-        if (alive) setWeatherReadiness(null)
+        if (alive) setWeatherReadiness({ status: 'unresolved', rows: [] })
       })
     return () => {
       alive = false
     }
-  }, [jobs])
+  }, [isLoggedOut, homeModules, weatherFetchKey])
 
   useEffect(() => {
     if (isLoggedOut) {
@@ -251,10 +272,8 @@ export default function Dashboard({
         <ArSummaryCard summary={arSummary} />
       ) : null}
 
-      {isHomeModuleEnabled(homeModules, 'job_readiness') &&
-      weatherReadiness &&
-      weatherReadiness.rows.length > 0 ? (
-        <WeatherReadinessCard rows={weatherReadiness.rows} />
+      {isHomeModuleEnabled(homeModules, 'job_readiness') && weatherReadiness ? (
+        <WeatherReadinessCard result={weatherReadiness} />
       ) : null}
 
       {!isLoggedOut &&

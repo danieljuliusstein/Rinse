@@ -100,7 +100,7 @@ Used by: `/` (`Dashboard.tsx`).
 | **UI** | `components/home/WeatherReadinessCard.tsx` | Phosphor duotone icons; `Badge` amber for risk |
 | **CSS** | `components.css` | `.weather-readiness*`; tokens only (`--bg-surface`, `--border-amber`, `--amber`) |
 | **Thresholds** | `lib/weather-risk.ts` | `WEATHER_RISK_THRESHOLDS`, `isWeatherSensitiveJob` (Option B: `location_type === 'mobile'`) |
-| **Server cache** | `lib/server/weather-forecast.ts` | Open-Meteo; geocode by address hash; forecast by day + lat/lon 2dp |
+| **Server cache** | `lib/server/weather-cache-store.ts`, `lib/server/weather-forecast.ts` | Open-Meteo; geocode + forecast in PB `weather_cache` (L1 in-process); keys: address hash / day + lat-lon 2dp |
 | **API** | `app/api/weather/readiness/route.ts` | POST jobs → readiness rows; no client-side weather calls |
 
 Outdoor signal: **Option B** — mobile = weather-sensitive; fixed = not. No PocketBase schema change.

@@ -12,7 +12,7 @@ import {
   isCompletingJob,
   resolveSuppliesUsed,
 } from '../supplies-logic'
-import { enrichClientWithStats } from '../client-stats'
+import { defaultQuickJobStatus } from '../job-create'
 import { buildDashboardInsights } from '../dashboard-insights'
 import { loadData, newId, saveData } from '../storage'
 import type {
@@ -195,7 +195,7 @@ export function createJob(input: QuickJobData): Job {
     package_id: input.packageId,
     vehicle_type: input.vehicleType,
     client_id: client.id,
-    status: 'completed',
+    status: defaultQuickJobStatus(input.date),
     revenue: input.revenue,
     tip: input.tip,
     notes: input.notes,
