@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useOptimistic, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Car, Plus } from '@phosphor-icons/react'
 import AuthEmptyState from '@/components/AuthEmptyState'
@@ -13,6 +13,7 @@ import { useQuickAction } from '@/providers/QuickActionContext'
 import { getLeads } from '@/lib/api'
 import { isLeadsCollectionMissing, LEADS_MIGRATION_BANNER } from '@/lib/api/leads-migration'
 import { LEAD_STAGES } from '@/lib/lead-sources'
+import { optimisticLeadReducer, type LeadOptimisticAction } from '@/lib/optimistic-reducers'
 import type { LeadStage, LeadWithRelations } from '@/lib/types'
 
 const STAGE_PRIORITY: LeadStage[] = ['booked', 'quoted', 'inquiry']
@@ -29,6 +30,10 @@ export default function PipelineScreen() {
   const { isLoggedOut } = useAuthEmptyState()
   const { openLeadSheet } = useQuickAction()
   const [leads, setLeads] = useState<LeadWithRelations[] | null>(null)
+  const [optimisticLeads, addOptimisticLead] = useOptimistic(
+    leads ?? [],
+    (state, action: LeadOptimisticAction) => optimisticLeadReducer(state, action),
+  )
   const [error, setError] = useState<string | null>(null)
   const [migrationNeeded, setMigrationNeeded] = useState(false)
   const [activeStage, setActiveStage] = useState<LeadStage>('inquiry')
@@ -59,15 +64,15 @@ export default function PipelineScreen() {
 
   const grouped = useMemo(() => {
     const map: Record<LeadStage, LeadWithRelations[]> = { inquiry: [], quoted: [], booked: [] }
-    for (const lead of leads ?? []) map[lead.stage].push(lead)
+    for (const lead of optimisticLeads) map[lead.stage].push(lead)
     return map
-  }, [leads])
+  }, [optimisticLeads])
 
   useEffect(() => {
-    if (!leads?.length || stageInitialized) return
-    setActiveStage(firstStageWithLeads(leads))
+    if (!optimisticLeads.length || stageInitialized) return
+    setActiveStage(firstStageWithLeads(optimisticLeads))
     setStageInitialized(true)
-  }, [leads, stageInitialized])
+  }, [optimisticLeads, stageInitialized])
 
   const handleRefresh = () => {
     load()
@@ -158,6 +163,7 @@ export default function PipelineScreen() {
                   onEdit={() => openLeadSheet(lead)}
                   onRefresh={handleRefresh}
                   onAdvanced={handleAdvanced}
+                  onOptimistic={addOptimisticLead}
                 />
               ))}
             </SectionGroup>

@@ -11,9 +11,14 @@ import {
 } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { useParams, useSearchParams } from 'next/navigation'
-import { FloatingField } from '@/components/forms'
+import { Controller } from 'react-hook-form'
+import { FloatingField, FloatingPhoneField } from '@/components/forms'
+import { RinseDayPicker } from '@/components/ui'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { brandCssVars } from '@/lib/brand-color'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { normalizeUSPhone } from '@/lib/phone-format'
+import { bookingContactSchema, type BookingContactFormValues } from '@/lib/validation'
 import type { VehicleType } from '@/lib/types'
 import { VEHICLE_TYPE_OPTIONS } from '@/lib/vehicle-type-icons'
 
@@ -261,11 +266,7 @@ function BookContent() {
   const [startTime, setStartTime] = useState('')
   const [locationType, setLocationType] = useState<'mobile' | 'fixed'>('mobile')
   const [vehicleType, setVehicleType] = useState<VehicleType>('sedan')
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
   const [address, setAddress] = useState('')
-  const [notes, setNotes] = useState('')
   const [showMoreOptions, setShowMoreOptions] = useState(false)
   const [error, setError] = useState('')
   const [notFound, setNotFound] = useState(false)
@@ -279,6 +280,21 @@ function BookContent() {
     customerEmail?: string
   } | null>(null)
   const detailsFormRef = useRef<HTMLDivElement>(null)
+
+  const { control, watch, submitWithToast } = useRinseForm<BookingContactFormValues>({
+    schema: bookingContactSchema,
+    defaultValues: {
+      name: '',
+      phone: '',
+      email: '',
+      notes: '',
+    },
+  })
+
+  const contactName = watch('name')
+  const contactPhone = watch('phone')
+  const contactEmail = watch('email')
+  const contactNotes = watch('notes')
 
   const apiBase = `/api/public/${encodeURIComponent(slug)}`
   const selectedPackage = useMemo(() => packages.find((p) => p.id === packageId), [packages, packageId])
@@ -377,7 +393,7 @@ function BookContent() {
 
   useEffect(() => {
     syncPrefilledFloatingLabels(detailsFormRef.current)
-  }, [name, phone, email, address, notes, step, showMoreOptions])
+  }, [contactName, contactPhone, contactEmail, contactNotes, address, step, showMoreOptions])
 
   useEffect(() => {
     setContinueShake(false)
@@ -388,7 +404,7 @@ function BookContent() {
     window.setTimeout(() => setContinueShake(false), 200)
   }
 
-  async function handleSubmit() {
+  const handleSubmit = submitWithToast(async (values) => {
     setError('')
     setSubmitting(true)
     try {
@@ -401,11 +417,11 @@ function BookContent() {
           startTime,
           locationType,
           vehicleType,
-          name,
-          phone,
-          email: email || undefined,
+          name: values.name,
+          phone: normalizeUSPhone(values.phone),
+          email: values.email || undefined,
           address: address || undefined,
-          notes: notes || undefined,
+          notes: values.notes || undefined,
         }),
       })
       const data = await res.json()
@@ -414,14 +430,14 @@ function BookContent() {
         packageName: data.booking.packageName,
         date: data.booking.date,
         startTime: data.booking.startTime,
-        customerEmail: email.trim() || undefined,
+        customerEmail: values.email?.trim() || undefined,
       })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Booking failed')
     } finally {
       setSubmitting(false)
     }
-  }
+  })
 
   if (notFound) {
     return (
@@ -564,7 +580,18 @@ function BookContent() {
 
           <p className="book-label">Date</p>
           {dateBounds ? (
-            <BookDayChips value={date} min={minDate} max={maxDate} onChange={setDate} />
+            <>
+              <BookDayChips value={date} min={minDate} max={maxDate} onChange={setDate} />
+              <div className="book-calendar-picker">
+                <RinseDayPicker
+                  variant="client"
+                  selectedIso={date}
+                  onSelectIso={setDate}
+                  fromDate={new Date(`${minDate}T12:00:00`)}
+                  toDate={new Date(`${maxDate}T12:00:00`)}
+                />
+              </div>
+            </>
           ) : (
             <p className="book-lead">Loading dates…</p>
           )}
@@ -635,51 +662,68 @@ function BookContent() {
 
           <p className="book-label">Contact</p>
           <div className="book-field">
-              <FloatingField id="book-name" label="Name" filled={name.trim().length > 0}>
-                <input
+            <Controller
+              control={control}
+              name="name"
+              render={({ field, fieldState }) => (
+                <FloatingField
                   id="book-name"
-                  className={`f-input${name.trim() ? ' hv' : ''}`}
-                  placeholder=" "
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </FloatingField>
-            </div>
-            <div className="book-field">
-              <FloatingField id="book-phone" label="Phone" filled={phone.trim().length > 0}>
-                <input
-                  id="book-phone"
-                  type="tel"
-                  className={`f-input${phone.trim() ? ' hv' : ''}`}
-                  placeholder=" "
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </FloatingField>
-            </div>
-            <div className="book-field">
-              <FloatingField id="book-email" label="Email" filled={email.trim().length > 0} optional>
-                <input
+                  label="Name"
+                  filled={field.value.trim().length > 0}
+                  error={fieldState.error?.message}
+                >
+                  <input
+                    id="book-name"
+                    className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                    placeholder=" "
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    aria-invalid={fieldState.error ? true : undefined}
+                    aria-describedby={fieldState.error ? 'book-name-error' : undefined}
+                  />
+                </FloatingField>
+              )}
+            />
+          </div>
+          <div className="book-field">
+            <FloatingPhoneField control={control} name="phone" id="book-phone" label="Phone" />
+          </div>
+          <div className="book-field">
+            <Controller
+              control={control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <FloatingField
                   id="book-email"
-                  type="email"
-                  className={`f-input${email.trim() ? ' hv' : ''}`}
-                  placeholder=" "
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </FloatingField>
-            </div>
-            <div className="book-field">
-              <FloatingField id="book-address" label="Service address" filled={address.trim().length > 0}>
-                <input
-                  id="book-address"
-                  className={`f-input${address.trim() ? ' hv' : ''}`}
-                  placeholder=" "
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
+                  label="Email"
+                  filled={Boolean(field.value?.trim())}
+                  optional
+                  error={fieldState.error?.message}
+                >
+                  <input
+                    id="book-email"
+                    type="email"
+                    className={`f-input${field.value?.trim() ? ' hv' : ''}`}
+                    placeholder=" "
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    aria-invalid={fieldState.error ? true : undefined}
+                  />
+                </FloatingField>
+              )}
+            />
+          </div>
+          <div className="book-field">
+            <FloatingField id="book-address" label="Service address" filled={address.trim().length > 0}>
+              <input
+                id="book-address"
+                className={`f-input${address.trim() ? ' hv' : ''}`}
+                placeholder=" "
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
             </FloatingField>
           </div>
 
@@ -735,16 +779,30 @@ function BookContent() {
           </div>
 
           <div className="book-field book-field--notes">
-            <FloatingField id="book-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-              <textarea
-                id="book-notes"
-                className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-                rows={3}
-                placeholder=" "
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </FloatingField>
+            <Controller
+              control={control}
+              name="notes"
+              render={({ field, fieldState }) => (
+                <FloatingField
+                  id="book-notes"
+                  label="Notes"
+                  filled={Boolean(field.value?.trim())}
+                  optional
+                  textarea
+                  error={fieldState.error?.message}
+                >
+                  <textarea
+                    id="book-notes"
+                    className={`f-textarea${field.value?.trim() ? ' hv' : ''}`}
+                    rows={3}
+                    placeholder=" "
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
+                </FloatingField>
+              )}
+            />
           </div>
             </>
           ) : null}
@@ -756,7 +814,7 @@ function BookContent() {
             <button
               type="button"
               className="book-btn book-btn-primary"
-              disabled={submitting || !name.trim() || !phone.trim() || !packageId}
+              disabled={submitting || !contactName.trim() || !contactPhone.trim() || !packageId}
               onClick={() => void handleSubmit()}
             >
               {submitting ? 'Booking…' : 'Confirm booking →'}

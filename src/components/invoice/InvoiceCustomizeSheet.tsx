@@ -1,14 +1,17 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { VaulSheet } from '@/components/ui'
-import { FloatingField, SheetSubmitButton } from '@/components/forms'
+import { FloatingField, ReorderableList, SheetSubmitButton } from '@/components/forms'
 import InvoiceAdjustmentsSheet, {
   invoiceToAdjustments,
   type InvoiceAdjustments,
 } from '@/components/invoice/InvoiceAdjustmentsSheet'
 import InvoiceDocumentBody from '@/components/invoice/InvoiceDocumentBody'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { invoiceCustomizeSchema, type InvoiceCustomizeFormValues } from '@/lib/validation'
 import type { InvoiceLineTemplate } from '@/lib/types'
 import type { AppSettings } from '@/lib/settings'
 import type { Invoice, JobWithRelations } from '@/lib/types'
@@ -59,29 +62,45 @@ export default function InvoiceCustomizeSheet({
   const formRef = useRef<HTMLDivElement>(null)
   const [adjustOpen, setAdjustOpen] = useState(false)
 
+  const { control, watch, reset, submitWithToast } = useRinseForm<InvoiceCustomizeFormValues>({
+    schema: invoiceCustomizeSchema,
+    defaultValues: {
+      termsFooter: '',
+    },
+  })
+
+  const termsFooter = watch('termsFooter') ?? ''
+
+  useEffect(() => {
+    if (!open) return
+    reset({
+      termsFooter: values.termsFooter,
+    })
+  }, [open, values.termsFooter, reset])
+
   useEffect(() => {
     if (!open) return
     syncPrefilledFloatingLabels(formRef.current)
-  }, [open, values])
+  }, [open, termsFooter])
 
   const previewInvoice = useMemo(
     (): Invoice => ({
       ...invoice,
-      terms: values.termsFooter,
+      terms: termsFooter,
       discount_amount: values.adjustments.discount_amount,
       tax_rate: values.adjustments.tax_rate,
       po_number: values.adjustments.po_number,
       extra_line_items: values.extraLineItems,
     }),
-    [invoice, values]
+    [invoice, termsFooter, values]
   )
 
   const previewSettings = useMemo(
     (): AppSettings => ({
       ...settings,
-      invoice_terms_footer: values.termsFooter,
+      invoice_terms_footer: termsFooter,
     }),
-    [settings, values.termsFooter]
+    [settings, termsFooter]
   )
 
   const addTemplateLine = (template: InvoiceLineTemplate) => {
@@ -103,6 +122,16 @@ export default function InvoiceCustomizeSheet({
     onChange({ extraLineItems: values.extraLineItems.filter((_, i) => i !== index) })
   }
 
+  const handleSave = submitWithToast((formValues) => {
+    onChange({ termsFooter: formValues.termsFooter ?? '' })
+    onSave()
+  })
+
+  const handleSaveAndSend = submitWithToast((formValues) => {
+    onChange({ termsFooter: formValues.termsFooter ?? '' })
+    onSend()
+  })
+
   return (
     <>
       <VaulSheet open={open} onOpenChange={onOpenChange} title="Customize invoice">
@@ -118,20 +147,29 @@ export default function InvoiceCustomizeSheet({
             </div>
           ) : null}
 
-          <FloatingField
-            id="inv-custom-terms"
-            label="Terms footer"
-            filled={values.termsFooter.trim().length > 0}
-          >
-            <textarea
-              id="inv-custom-terms"
-              className={`f-input f-input--textarea${values.termsFooter.trim() ? ' hv' : ''}`}
-              placeholder=" "
-              rows={3}
-              value={values.termsFooter}
-              onChange={(e) => onChange({ termsFooter: e.target.value })}
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="termsFooter"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="inv-custom-terms"
+                label="Terms footer"
+                filled={Boolean(field.value?.trim())}
+                error={fieldState.error?.message}
+                optional
+              >
+                <textarea
+                  id="inv-custom-terms"
+                  className={`f-input f-input--textarea${field.value?.trim() ? ' hv' : ''}`}
+                  placeholder=" "
+                  rows={3}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              </FloatingField>
+            )}
+          />
 
           <button type="button" className="invoice-customize-sheet__link" onClick={() => setAdjustOpen(true)}>
             Discount, tax & PO…
@@ -156,17 +194,23 @@ export default function InvoiceCustomizeSheet({
           ) : null}
 
           {values.extraLineItems.length > 0 ? (
-            <ul className="invoice-customize-sheet__extra">
-              {values.extraLineItems.map((line, index) => (
-                <li key={`${line.id}-${index}`}>
+            <ReorderableList
+              className="invoice-customize-sheet__extra"
+              droppableId="invoice-extra-lines"
+              items={values.extraLineItems}
+              getItemId={(line, index) => `${line.id}-${index}`}
+              onReorder={(next) => onChange({ extraLineItems: next })}
+              itemClassName="invoice-customize-sheet__extra-item reorderable-list__item"
+              renderItem={(line, index) => (
+                <>
                   <span>{line.description}</span>
                   <span>${line.default_amount}</span>
                   <button type="button" aria-label="Remove line" onClick={() => removeExtraLine(index)}>
                     ×
                   </button>
-                </li>
-              ))}
-            </ul>
+                </>
+              )}
+            />
           ) : null}
 
           <div className="invoice-customize-sheet__preview">
@@ -179,8 +223,8 @@ export default function InvoiceCustomizeSheet({
           </div>
 
           <div className="invoice-customize-sheet__actions">
-            <SheetSubmitButton label="Save" ready disabled={busy} onClick={onSave} />
-            <button type="button" className="btn-secondary" disabled={busy} onClick={onSend}>
+            <SheetSubmitButton label="Save" ready disabled={busy} onClick={() => void handleSave()} />
+            <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleSaveAndSend()}>
               Save & send
             </button>
             <button type="button" className="btn-ghost" onClick={() => onOpenChange(false)}>

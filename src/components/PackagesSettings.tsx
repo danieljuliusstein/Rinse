@@ -1,17 +1,61 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { PencilSimple, Plus, Package as PackageIcon } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import { FloatingAffixField, FloatingField, SheetSubmitButton } from '@/components/forms'
 import { ListRow, SectionGroup } from '@/components/ui'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { createPackage, getAllPackages, updatePackage } from '@/lib/api'
 import { fmt } from '@/lib/calculations'
 import { CADENCE_PRESETS, cadencePresetLabel, DEFAULT_RETURN_DAYS } from '@/lib/package-cadence'
 import { PACKAGE_DURATION_PRESETS, durationPresetLabel } from '@/lib/package-duration'
 import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
+import { packageFormSchema, type PackageFormValues } from '@/lib/validation'
 import type { Package } from '@/lib/types'
+
+function packageToFormValues(pkg?: Package): PackageFormValues {
+  if (!pkg) {
+    return {
+      name: '',
+      description: '',
+      base_price: 0,
+      expected_return_days: DEFAULT_RETURN_DAYS,
+      duration_minutes: 120,
+      custom_duration_minutes: undefined,
+    }
+  }
+  const preset = PACKAGE_DURATION_PRESETS.find((p) => p.minutes === pkg.duration_minutes)
+  if (preset) {
+    return {
+      name: pkg.name,
+      description: pkg.description ?? '',
+      base_price: pkg.base_price,
+      expected_return_days: pkg.expected_return_days,
+      duration_minutes: pkg.duration_minutes,
+      custom_duration_minutes: undefined,
+    }
+  }
+  return {
+    name: pkg.name,
+    description: pkg.description ?? '',
+    base_price: pkg.base_price,
+    expected_return_days: pkg.expected_return_days,
+    duration_minutes: 0,
+    custom_duration_minutes: pkg.duration_minutes,
+  }
+}
+
+function resolvedDuration(values: PackageFormValues): number {
+  if (values.duration_minutes === 0) {
+    return values.custom_duration_minutes && values.custom_duration_minutes > 0
+      ? values.custom_duration_minutes
+      : 120
+  }
+  return values.duration_minutes
+}
 
 export default function PackagesSettings() {
   const goBack = useSettingsBack()
@@ -21,12 +65,23 @@ export default function PackagesSettings() {
   const [packages, setPackages] = useState<Package[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [name, setName] = useState('')
-  const [price, setPrice] = useState(0)
-  const [description, setDescription] = useState('')
-  const [returnDays, setReturnDays] = useState(DEFAULT_RETURN_DAYS)
-  const [durationMinutes, setDurationMinutes] = useState(120)
-  const [customDuration, setCustomDuration] = useState('')
+
+  const {
+    control,
+    watch,
+    reset,
+    submitWithToast,
+  } = useRinseForm<PackageFormValues>({
+    schema: packageFormSchema,
+    defaultValues: packageToFormValues(),
+  })
+
+  const name = watch('name')
+  const price = watch('base_price')
+  const description = watch('description')
+  const returnDays = watch('expected_return_days')
+  const durationMinutes = watch('duration_minutes')
+  const customDuration = watch('custom_duration_minutes')
 
   const load = async () => setPackages(await getAllPackages())
   useEffect(() => {
@@ -40,37 +95,13 @@ export default function PackagesSettings() {
     syncSelectFloatingLabel(durationRef.current)
   }, [showAdd, editingId, name, price, description, returnDays, durationMinutes, customDuration])
 
-  const resolvedDuration = (): number => {
-    if (durationMinutes === 0) {
-      const custom = Number(customDuration)
-      return custom > 0 ? custom : 120
-    }
-    return durationMinutes
-  }
-
   const resetForm = () => {
-    setName('')
-    setPrice(0)
-    setDescription('')
-    setReturnDays(DEFAULT_RETURN_DAYS)
-    setDurationMinutes(120)
-    setCustomDuration('')
+    reset(packageToFormValues())
   }
 
   const startEdit = (pkg: Package) => {
     setEditingId(pkg.id)
-    setName(pkg.name)
-    setPrice(pkg.base_price)
-    setDescription(pkg.description ?? '')
-    setReturnDays(pkg.expected_return_days)
-    const preset = PACKAGE_DURATION_PRESETS.find((p) => p.minutes === pkg.duration_minutes)
-    if (preset) {
-      setDurationMinutes(pkg.duration_minutes)
-      setCustomDuration('')
-    } else {
-      setDurationMinutes(0)
-      setCustomDuration(String(pkg.duration_minutes))
-    }
+    reset(packageToFormValues(pkg))
     setShowAdd(false)
   }
 
@@ -84,33 +115,35 @@ export default function PackagesSettings() {
     await load()
   }
 
-  const handleSaveEdit = async () => {
-    if (!editingId || !name.trim()) return
+  const handleSaveEdit = submitWithToast(async (values) => {
+    if (!editingId) return
     await updatePackage(editingId, {
-      name: name.trim(),
-      base_price: price,
-      description: description.trim() || undefined,
-      expected_return_days: returnDays,
-      duration_minutes: resolvedDuration(),
+      name: values.name,
+      base_price: values.base_price,
+      description: values.description,
+      expected_return_days: values.expected_return_days,
+      duration_minutes: resolvedDuration(values),
     })
     cancelEdit()
     await load()
-  }
+  })
 
-  const handleAdd = async () => {
-    if (!name.trim()) return
+  const handleAdd = submitWithToast(async (values) => {
     await createPackage({
-      name: name.trim(),
-      base_price: price,
-      description: description.trim() || undefined,
-      expected_return_days: returnDays,
-      duration_minutes: resolvedDuration(),
+      name: values.name,
+      base_price: values.base_price,
+      description: values.description,
+      expected_return_days: values.expected_return_days,
+      duration_minutes: resolvedDuration(values),
       active: true,
     })
     setShowAdd(false)
     resetForm()
     await load()
-  }
+  })
+
+  const customDurationDisplay =
+    customDuration !== undefined && customDuration !== null ? String(customDuration) : ''
 
   return (
     <div className="screen page-content settings-screen">
@@ -139,89 +172,159 @@ export default function PackagesSettings() {
         <div ref={formRef} className="page-form-card page-form job-form-section">
           <div className="section-title">{editingId ? 'Edit service' : 'New service'}</div>
 
-          <FloatingField id="pkg-name" label="Service name" filled={name.trim().length > 0}>
-            <input
-              id="pkg-name"
-              className={`f-input${name.trim() ? ' hv' : ''}`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
-
-          <FloatingAffixField
-            id="pkg-price"
-            label="Price"
-            filled={price > 0}
-            type="number"
-            min={0}
-            step={1}
-            value={price || ''}
-            onChange={(e) => setPrice(Number(e.target.value))}
+          <Controller
+            control={control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="pkg-name"
+                label="Service name"
+                filled={field.value.trim().length > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="pkg-name"
+                  className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  aria-invalid={fieldState.error ? true : undefined}
+                />
+              </FloatingField>
+            )}
           />
 
-          <FloatingField id="pkg-description" label="Description" filled={description.trim().length > 0} optional>
-            <input
-              id="pkg-description"
-              className={`f-input${description.trim() ? ' hv' : ''}`}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="base_price"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="pkg-price"
+                label="Price"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
 
-          <FloatingField id="pkg-return-days" label="Expected revisit" filled={Boolean(returnDays)}>
-            <select
-              ref={returnDaysRef}
-              id="pkg-return-days"
-              className={`f-select${returnDays ? ' hv' : ''}`}
-              value={returnDays}
-              onChange={(e) => {
-                setReturnDays(Number(e.target.value))
-                syncSelectFloatingLabel(returnDaysRef.current)
-              }}
-            >
-              {CADENCE_PRESETS.map((preset) => (
-                <option key={preset.days} value={preset.days}>
-                  {preset.label} — {preset.hint}
-                </option>
-              ))}
-            </select>
-          </FloatingField>
+          <Controller
+            control={control}
+            name="description"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="pkg-description"
+                label="Description"
+                filled={(field.value?.trim().length ?? 0) > 0}
+                error={fieldState.error?.message}
+                optional
+              >
+                <input
+                  id="pkg-description"
+                  className={`f-input${field.value?.trim() ? ' hv' : ''}`}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                />
+              </FloatingField>
+            )}
+          />
 
-          <FloatingField id="pkg-duration" label="Booking duration" filled={Boolean(durationMinutes || customDuration)}>
-            <select
-              ref={durationRef}
-              id="pkg-duration"
-              className={`f-select${durationMinutes || customDuration ? ' hv' : ''}`}
-              value={durationMinutes}
-              onChange={(e) => {
-                setDurationMinutes(Number(e.target.value))
-                syncSelectFloatingLabel(durationRef.current)
-              }}
-            >
-              {PACKAGE_DURATION_PRESETS.map((preset) => (
-                <option key={preset.minutes} value={preset.minutes}>
-                  {preset.label}
-                </option>
-              ))}
-              <option value={0}>Custom</option>
-            </select>
-          </FloatingField>
+          <Controller
+            control={control}
+            name="expected_return_days"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="pkg-return-days"
+                label="Expected revisit"
+                filled={Boolean(field.value)}
+                error={fieldState.error?.message}
+              >
+                <select
+                  ref={returnDaysRef}
+                  id="pkg-return-days"
+                  className={`f-select${field.value ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={(e) => {
+                    field.onChange(Number(e.target.value))
+                    syncSelectFloatingLabel(returnDaysRef.current)
+                  }}
+                  onBlur={field.onBlur}
+                >
+                  {CADENCE_PRESETS.map((preset) => (
+                    <option key={preset.days} value={preset.days}>
+                      {preset.label} — {preset.hint}
+                    </option>
+                  ))}
+                </select>
+              </FloatingField>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="duration_minutes"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="pkg-duration"
+                label="Booking duration"
+                filled={Boolean(field.value || customDurationDisplay)}
+                error={fieldState.error?.message}
+              >
+                <select
+                  ref={durationRef}
+                  id="pkg-duration"
+                  className={`f-select${field.value || customDurationDisplay ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={(e) => {
+                    field.onChange(Number(e.target.value))
+                    syncSelectFloatingLabel(durationRef.current)
+                  }}
+                  onBlur={field.onBlur}
+                >
+                  {PACKAGE_DURATION_PRESETS.map((preset) => (
+                    <option key={preset.minutes} value={preset.minutes}>
+                      {preset.label}
+                    </option>
+                  ))}
+                  <option value={0}>Custom</option>
+                </select>
+              </FloatingField>
+            )}
+          />
 
           {durationMinutes === 0 && (
-            <FloatingField id="pkg-duration-custom" label="Custom minutes" filled={customDuration.trim().length > 0}>
-              <input
-                id="pkg-duration-custom"
-                type="number"
-                min={15}
-                step={15}
-                className={`f-input${customDuration.trim() ? ' hv' : ''}`}
-                value={customDuration}
-                onChange={(e) => setCustomDuration(e.target.value)}
-                placeholder=" "
-              />
-            </FloatingField>
+            <Controller
+              control={control}
+              name="custom_duration_minutes"
+              render={({ field, fieldState }) => (
+                <FloatingField
+                  id="pkg-duration-custom"
+                  label="Custom minutes"
+                  filled={customDurationDisplay.trim().length > 0}
+                  error={fieldState.error?.message}
+                >
+                  <input
+                    id="pkg-duration-custom"
+                    type="number"
+                    min={15}
+                    step={15}
+                    className={`f-input${customDurationDisplay.trim() ? ' hv' : ''}`}
+                    value={customDurationDisplay}
+                    onChange={(e) => {
+                      const raw = e.target.value
+                      field.onChange(raw === '' ? undefined : Number(raw))
+                    }}
+                    onBlur={field.onBlur}
+                    placeholder=" "
+                  />
+                </FloatingField>
+              )}
+            />
           )}
 
           <p className="form-field-hint-block">Used to block your calendar when clients book online.</p>

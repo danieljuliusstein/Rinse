@@ -11,6 +11,7 @@ import { DEFAULT_BOOKING_SCHEDULE, type BookingSchedule } from '@/lib/booking-av
 import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
 import type { TimeBlock } from '@/lib/types'
 import SettingsDetailShell from './SettingsDetailShell'
+import { ScreenLoading, RinseDayPicker } from '@/components/ui'
 import SettingsToggle from './SettingsToggle'
 import { useSettingsDraft } from './SettingsDraftProvider'
 
@@ -135,11 +136,7 @@ export default function SettingsSchedulePage() {
   }
 
   if (!ready || !settings) {
-    return (
-      <div className="screen page-content settings-screen settings-screen--loading">
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body variant="settings" />
   }
 
   return (
@@ -294,7 +291,7 @@ export default function SettingsSchedulePage() {
         </div>
 
         {blocksLoading ? (
-          <p className="settings-field-hint">Loading…</p>
+          <ScreenLoading inline />
         ) : blocks.length === 0 ? (
           <p className="settings-field-hint">No upcoming time off.</p>
         ) : (
@@ -339,17 +336,12 @@ export default function SettingsSchedulePage() {
           }
         >
           <div className="premium-sheet__form">
-            <FloatingField id="block-date" label="Date" filled={Boolean(blockDate)}>
-              <input
-                id="block-date"
-                type="date"
-                className={`f-input${blockDate ? ' hv' : ''}`}
-                value={blockDate}
-                min={todayIso()}
-                onChange={(e) => setBlockDate(e.target.value)}
-                placeholder=" "
-              />
-            </FloatingField>
+            <RinseDayPicker
+              variant="operator"
+              selectedIso={blockDate}
+              onSelectIso={setBlockDate}
+              fromDate={new Date(`${todayIso()}T12:00:00`)}
+            />
 
             <div className="settings-toggle-row job-form-section">
               <span className="settings-toggle-row__label">All day</span>

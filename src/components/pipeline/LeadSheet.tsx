@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import BottomSheet from '@/components/BottomSheet'
 import {
+  FloatingAffixField,
   FloatingField,
+  FloatingPhoneField,
   FormProgressBar,
   PillGroup,
   SheetSubmitButton,
@@ -11,7 +14,10 @@ import {
 import { createLead, updateLead } from '@/lib/api'
 import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
 import { computeLeadFormProgress, isLeadFormSubmittable } from '@/lib/lead-form-progress'
+import { normalizeUSPhone } from '@/lib/phone-format'
 import { LEAD_SOURCES } from '@/lib/lead-sources'
+import { leadFormSchema, type LeadFormValues } from '@/lib/validation'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { useActionToast } from '@/providers/ActionToastProvider'
 import { usePremiumGate } from '@/hooks/usePremiumGate'
 import type { Lead, LeadInput, LeadSource, Package, VehicleType } from '@/lib/types'
@@ -44,26 +50,47 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
   const formRef = useRef<HTMLDivElement>(null)
   const packageRef = useRef<HTMLSelectElement>(null)
 
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [source, setSource] = useState<LeadSource>('other')
-  const [vehicleType, setVehicleType] = useState<VehicleType>('sedan')
   const [packageId, setPackageId] = useState('')
-  const [serviceInterest, setServiceInterest] = useState('')
-  const [quoteAmount, setQuoteAmount] = useState('')
-  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const {
+    control,
+    watch,
+    setValue,
+    reset,
+    submitWithToast,
+  } = useRinseForm<LeadFormValues>({
+    schema: leadFormSchema,
+    defaultValues: {
+      name: '',
+      phone: '',
+      email: '',
+      source: 'other',
+      vehicle_type: 'sedan',
+      service_interest: '',
+      estimated_value: 0,
+      notes: '',
+    },
+  })
+
+  const name = watch('name')
+  const phone = watch('phone')
+  const email = watch('email')
+  const source = watch('source')
+  const vehicleType = watch('vehicle_type')
+  const serviceInterest = watch('service_interest')
+  const estimatedValue = watch('estimated_value')
+  const notes = watch('notes')
 
   const progress = computeLeadFormProgress({
     name,
-    phone,
-    email,
-    quoteAmount,
-    serviceInterest,
-    notes,
+    phone: phone ?? '',
+    email: email ?? '',
+    quoteAmount: estimatedValue && estimatedValue > 0 ? String(estimatedValue) : '',
+    serviceInterest: serviceInterest ?? '',
+    notes: notes ?? '',
     hasVehicle: true,
     hasSource: true,
   })
@@ -72,66 +99,62 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
 
   useEffect(() => {
     if (!lead) {
-      setName('')
-      setPhone('')
-      setEmail('')
-      setSource('other')
-      setVehicleType('sedan')
+      reset({
+        name: '',
+        phone: '',
+        email: '',
+        source: 'other',
+        vehicle_type: 'sedan',
+        service_interest: '',
+        estimated_value: 0,
+        notes: '',
+      })
       setPackageId('')
-      setServiceInterest('')
-      setQuoteAmount('')
-      setNotes('')
       setSaved(false)
       return
     }
-    setName(lead.name)
-    setPhone(lead.phone ?? '')
-    setEmail(lead.email ?? '')
-    setSource(lead.source)
-    setVehicleType(lead.vehicle_type)
+    reset({
+      name: lead.name,
+      phone: lead.phone ?? '',
+      email: lead.email ?? '',
+      source: lead.source,
+      vehicle_type: lead.vehicle_type,
+      service_interest: lead.service_interest ?? '',
+      estimated_value: lead.quote_amount ?? 0,
+      notes: lead.notes ?? '',
+    })
     setPackageId(lead.package_id ?? '')
-    setServiceInterest(lead.service_interest ?? '')
-    setQuoteAmount(lead.quote_amount ? String(lead.quote_amount) : '')
-    setNotes(lead.notes ?? '')
     setSaved(false)
-  }, [lead])
+  }, [lead, reset])
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
     syncSelectFloatingLabel(packageRef.current)
-  }, [name, phone, email, source, vehicleType, packageId, serviceInterest, quoteAmount, notes, lead])
+  }, [name, phone, email, source, vehicleType, packageId, serviceInterest, estimatedValue, notes, lead])
 
-  const buildInput = (): LeadInput | null => {
-    const trimmed = name.trim()
-    if (!trimmed) return null
-    const parsedAmount = quoteAmount.trim() ? Number(quoteAmount) : undefined
-    return {
-      name: trimmed,
-      phone: phone.trim() || undefined,
-      email: email.trim() || undefined,
-      source,
-      vehicle_type: vehicleType,
-      package_id: packageId || undefined,
-      service_interest: serviceInterest.trim() || undefined,
-      quote_amount: parsedAmount && parsedAmount > 0 ? parsedAmount : undefined,
-      notes: notes.trim() || undefined,
-      stage: lead?.stage ?? 'inquiry',
-      client_id: lead?.client_id,
-      quote_id: lead?.quote_id,
-      job_id: lead?.job_id,
-    }
-  }
+  const buildInput = (values: LeadFormValues): LeadInput => ({
+    name: values.name,
+    phone: values.phone ? normalizeUSPhone(values.phone) : undefined,
+    email: values.email,
+    source: (values.source ?? 'other') as LeadSource,
+    vehicle_type: (values.vehicle_type ?? 'sedan') as VehicleType,
+    package_id: packageId || undefined,
+    service_interest: values.service_interest,
+    quote_amount: values.estimated_value && values.estimated_value > 0 ? values.estimated_value : undefined,
+    notes: values.notes,
+    stage: lead?.stage ?? 'inquiry',
+    client_id: lead?.client_id,
+    quote_id: lead?.quote_id,
+    job_id: lead?.job_id,
+  })
 
-  const handleSave = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSave = submitWithToast(async (values) => {
     if (!canSubmit && !isEdit) return
-    const input = buildInput()
-    if (!input) {
-      setError('Name is required')
-      return
-    }
+    const input = buildInput(values)
+
     if (isEdit && lead) {
       setSaving(true)
-      setError(null)
+      setSubmitError(null)
       try {
         await updateLead(lead.id, input)
         onSaved?.()
@@ -142,7 +165,7 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
           setSaved(false)
           return
         }
-        setError(err instanceof Error ? err.message : 'Could not save lead')
+        setSubmitError(err instanceof Error ? err.message : 'Could not save lead')
         setSaving(false)
         setSaved(false)
       }
@@ -152,7 +175,7 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
     runNewLeadGated(() => {
       void (async () => {
         setSaving(true)
-        setError(null)
+        setSubmitError(null)
         try {
           await createLead({ ...input, stage: 'inquiry' })
           setSaving(false)
@@ -167,13 +190,13 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
             setSaved(false)
             return
           }
-          setError(err instanceof Error ? err.message : 'Could not save lead')
+          setSubmitError(err instanceof Error ? err.message : 'Could not save lead')
           setSaving(false)
           setSaved(false)
         }
       })()
     })
-  }
+  })
 
   const submitLabel = saved
     ? '✓ Added to pipeline'
@@ -195,72 +218,102 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
           ready={canSubmit || isEdit}
           done={saved}
           disabled={saving || saved || !isLeadFormSubmittable(progress, name, isEdit)}
-          onClick={(e) => void handleSave(e)}
+          onClick={() => void handleSave()}
         />
       }
     >
-      {error ? <div className="error-banner premium-sheet__section">{error}</div> : null}
+      {submitError ? (
+        <div className="error-banner premium-sheet__section" role="alert" aria-live="assertive">
+          {submitError}
+        </div>
+      ) : null}
 
       {!isEdit ? <FormProgressBar progress={progress} /> : null}
 
       <div ref={formRef} className="premium-sheet__form">
         <div className="premium-sheet__grid2">
-          <FloatingField id="lead-name" label="Name" filled={name.trim().length > 0}>
-            <input
-              id="lead-name"
-              className={`f-input${name.trim() ? ' hv' : ''}`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder=" "
-              autoFocus
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="lead-name"
+                label="Name"
+                filled={field.value.trim().length > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="lead-name"
+                  className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  autoFocus
+                  aria-invalid={fieldState.error ? true : undefined}
+                />
+              </FloatingField>
+            )}
+          />
 
-          <FloatingField id="lead-phone" label="Phone" filled={phone.trim().length > 0}>
-            <input
-              id="lead-phone"
-              className={`f-input${phone.trim() ? ' hv' : ''}`}
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <FloatingPhoneField control={control} name="phone" id="lead-phone" label="Phone" optional />
         </div>
 
         <div className="premium-sheet__grid2">
-          <FloatingField id="lead-email" label="Email" filled={email.trim().length > 0}>
-            <input
-              id="lead-email"
-              className={`f-input${email.trim() ? ' hv' : ''}`}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="email"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="lead-email"
+                label="Email"
+                filled={(field.value ?? '').trim().length > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="lead-email"
+                  className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                  type="email"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  aria-invalid={fieldState.error ? true : undefined}
+                />
+              </FloatingField>
+            )}
+          />
 
-          <FloatingField id="lead-quote-amount" label="Quote ($)" filled={quoteAmount.trim().length > 0}>
-            <input
-              id="lead-quote-amount"
-              className={`f-input${quoteAmount.trim() ? ' hv' : ''}`}
-              value={quoteAmount}
-              onChange={(e) => setQuoteAmount(e.target.value)}
-              placeholder=" "
-              inputMode="decimal"
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="estimated_value"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="lead-quote-amount"
+                label="Quote ($)"
+                currency
+                value={field.value ?? 0}
+                onValueChange={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
         </div>
 
         <div className="f-form-divider" />
 
-        <PillGroup label="Vehicle type" options={VEHICLE_PILLS} value={vehicleType} onChange={setVehicleType} />
+        <PillGroup
+          label="Vehicle type"
+          options={VEHICLE_PILLS}
+          value={(vehicleType ?? 'sedan') as VehicleType}
+          onChange={(v) => setValue('vehicle_type', v)}
+        />
 
         <PillGroup
           label="Source"
           options={isEdit ? LEAD_SOURCES : SOURCE_PILLS}
-          value={source}
-          onChange={setSource}
+          value={(source ?? 'other') as LeadSource}
+          onChange={(v) => setValue('source', v)}
         />
 
         {packages.length > 0 ? (
@@ -285,26 +338,51 @@ export default function LeadSheet({ lead, packages, onClose, onSaved }: LeadShee
           </FloatingField>
         ) : null}
 
-        <FloatingField id="lead-service" label="Service interest" filled={serviceInterest.trim().length > 0}>
-          <input
-            id="lead-service"
-            className={`f-input${serviceInterest.trim() ? ' hv' : ''}`}
-            value={serviceInterest}
-            onChange={(e) => setServiceInterest(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="service_interest"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="lead-service"
+              label="Service interest"
+              filled={(field.value ?? '').trim().length > 0}
+              error={fieldState.error?.message}
+            >
+              <input
+                id="lead-service"
+                className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
 
-        <FloatingField id="lead-notes" label="Notes" filled={notes.trim().length > 0} textarea>
-          <textarea
-            id="lead-notes"
-            className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder=" "
-            rows={3}
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="lead-notes"
+              label="Notes"
+              filled={(field.value ?? '').trim().length > 0}
+              error={fieldState.error?.message}
+              textarea
+            >
+              <textarea
+                id="lead-notes"
+                className={`f-textarea${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                rows={3}
+              />
+            </FloatingField>
+          )}
+        />
       </div>
     </BottomSheet>
   )

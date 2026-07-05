@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Plus, Trash } from '@phosphor-icons/react'
-import { FloatingAffixField, FloatingField } from '@/components/forms'
+import { FloatingAffixField, FloatingField, ReorderableList } from '@/components/forms'
 import { Button } from '@/components/ui'
 import {
   deleteInvoiceLineTemplate,
@@ -79,17 +79,23 @@ export default function InvoiceLineTemplateManager() {
       </div>
 
       {templates.length > 0 ? (
-        <ul className="invoice-line-template-list">
-          {templates.map((t) => (
-            <li key={t.id}>
+        <ReorderableList
+          className="invoice-line-template-list"
+          droppableId="invoice-line-templates"
+          items={templates}
+          getItemId={(t) => t.id}
+          onReorder={setTemplates}
+          itemClassName="invoice-line-template-list__item reorderable-list__item"
+          renderItem={(t) => (
+            <>
               <span>{t.description}</span>
               <span>${t.default_amount}</span>
               <button type="button" aria-label={`Delete ${t.description}`} onClick={() => void handleDelete(t.id)}>
                 <Trash size={16} />
               </button>
-            </li>
-          ))}
-        </ul>
+            </>
+          )}
+        />
       ) : (
         <p className="settings-field-hint">No saved lines yet.</p>
       )}

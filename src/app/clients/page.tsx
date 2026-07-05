@@ -14,7 +14,7 @@ export default function ClientsPage() {
   }, [])
 
   if (!clients) {
-    return <ScreenLoading />
+    return <ScreenLoading body />
   }
 
   return <ClientsList clients={clients} onClientRemoved={(id) => setClients((prev) => (prev ? prev.filter((c) => c.id !== id) : prev))} />

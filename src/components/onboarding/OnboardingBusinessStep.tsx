@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { motion } from 'motion/react'
 import { Image as ImageIcon } from '@phosphor-icons/react'
 import { SetupRowField } from '@/components/forms'
@@ -17,6 +18,9 @@ import {
   type OnboardingStepSlug,
 } from '@/lib/onboarding'
 import type { AppSettings } from '@/lib/settings'
+import { useRinseForm } from '@/hooks/useRinseForm'
+import { formatPhoneAsYouType, formatUSPhoneDisplay, normalizeUSPhone } from '@/lib/phone-format'
+import { onboardingBusinessSchema, type OnboardingBusinessFormValues } from '@/lib/validation'
 
 interface OnboardingBusinessStepProps {
   step: OnboardingStepSlug
@@ -26,10 +30,6 @@ interface OnboardingBusinessStepProps {
 }
 
 export default function OnboardingBusinessStep({ step, settings, onSaved, demo = false }: OnboardingBusinessStepProps) {
-  const [businessName, setBusinessName] = useState(settings.business_name ?? '')
-  const [phone, setPhone] = useState(settings.business_phone ?? '')
-  const [email, setEmail] = useState(settings.business_email ?? '')
-  const [address, setAddress] = useState(settings.business_address ?? '')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(
     settings.logo_url && settings.logo_url !== '/logo.png' ? settings.logo_url : null,
@@ -40,6 +40,18 @@ export default function OnboardingBusinessStep({ step, settings, onSaved, demo =
   const cameraRef = useRef<HTMLInputElement>(null)
   const galleryRef = useRef<HTMLInputElement>(null)
 
+  const { control, watch, submitWithToast } = useRinseForm<OnboardingBusinessFormValues>({
+    schema: onboardingBusinessSchema,
+    defaultValues: {
+      business_name: settings.business_name ?? '',
+      business_phone: settings.business_phone ?? '',
+      business_email: settings.business_email ?? '',
+      business_address: settings.business_address ?? '',
+    },
+  })
+
+  const businessName = watch('business_name')
+  const phone = watch('business_phone')
   const canContinue = businessName.trim().length > 0 && phone.trim().length > 0
   const displayName = businessName.trim() || 'Your business'
   const logoComplete = Boolean(logoPreview)
@@ -50,22 +62,24 @@ export default function OnboardingBusinessStep({ step, settings, onSaved, demo =
     if (file) setLogoPreview(URL.createObjectURL(file))
   }
 
-  const handleContinue = async () => {
-    if (!canContinue) return
-
+  const handleContinue = submitWithToast(async (values) => {
     setSaving(true)
     setError('')
     try {
+      const business_phone = normalizeUSPhone(values.business_phone)
+      const business_email = values.business_email ?? ''
+      const business_address = values.business_address ?? ''
+
       if (demo) {
         const next = nextStepSlug(step)
         if (!next) throw new Error('Invalid step')
         onSaved(
           {
             ...settings,
-            business_name: businessName.trim(),
-            business_phone: phone.trim(),
-            business_email: email.trim(),
-            business_address: address.trim(),
+            business_name: values.business_name,
+            business_phone,
+            business_email,
+            business_address,
             logo_url: logoPreview ?? settings.logo_url,
           },
           next,
@@ -77,10 +91,10 @@ export default function OnboardingBusinessStep({ step, settings, onSaved, demo =
       const saved = await saveSettingsAsync(
         {
           ...settings,
-          business_name: businessName.trim(),
-          business_phone: phone.trim(),
-          business_email: email.trim(),
-          business_address: address.trim(),
+          business_name: values.business_name,
+          business_phone,
+          business_email,
+          business_address,
         },
         logoFile,
       )
@@ -94,7 +108,7 @@ export default function OnboardingBusinessStep({ step, settings, onSaved, demo =
     } finally {
       setSaving(false)
     }
-  }
+  })
 
   return (
     <>
@@ -169,37 +183,77 @@ export default function OnboardingBusinessStep({ step, settings, onSaved, demo =
 
         <p className="ob-section-label">Business details</p>
         <div className="ob-field-group setup-form-group">
-          <SetupRowField
-            id="ob-name"
-            label="Business name"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            autoComplete="organization"
+          <Controller
+            control={control}
+            name="business_name"
+            render={({ field, fieldState }) => (
+              <SetupRowField
+                id="ob-name"
+                label="Business name"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                autoComplete="organization"
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          <SetupRowField
-            id="ob-phone"
-            label="Business phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            autoComplete="tel"
+          <Controller
+            control={control}
+            name="business_phone"
+            render={({ field, fieldState }) => {
+              const display =
+                field.value && !fieldState.isDirty
+                  ? formatUSPhoneDisplay(String(field.value))
+                  : formatPhoneAsYouType(String(field.value ?? ''))
+
+              return (
+                <SetupRowField
+                  id="ob-phone"
+                  label="Business phone"
+                  type="tel"
+                  inputMode="tel"
+                  value={display}
+                  onChange={(e) => field.onChange(formatPhoneAsYouType(e.target.value))}
+                  onBlur={field.onBlur}
+                  autoComplete="tel"
+                  error={fieldState.error?.message}
+                />
+              )
+            }}
           />
-          <SetupRowField
-            id="ob-email"
-            label="Business email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            optional
+          <Controller
+            control={control}
+            name="business_email"
+            render={({ field, fieldState }) => (
+              <SetupRowField
+                id="ob-email"
+                label="Business email"
+                type="email"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                autoComplete="email"
+                optional
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          <SetupRowField
-            id="ob-address"
-            label="Business address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            autoComplete="street-address"
-            optional
+          <Controller
+            control={control}
+            name="business_address"
+            render={({ field, fieldState }) => (
+              <SetupRowField
+                id="ob-address"
+                label="Business address"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                autoComplete="street-address"
+                optional
+                error={fieldState.error?.message}
+              />
+            )}
           />
         </div>
 

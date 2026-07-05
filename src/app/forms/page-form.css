@@ -71,9 +71,21 @@
   transform: scale(1);
 }
 
-.page-form-save {
+.page-form .f-field-error {
+  margin: 4px 2px 0;
+}
+
+/* Wave B — virtual list (long operator lists) */
+.virtual-list__item {
   width: 100%;
-  margin-top: 8px;
+}
+
+.virtual-list__section-header {
+  margin-bottom: 8px;
+}
+
+.setup-row--error .setup-row__input {
+  border-color: var(--red);
 }
 
 .page-form-save .sheet-submit {

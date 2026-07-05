@@ -17,7 +17,7 @@ export default function FaqPage() {
         <p className="legal-page__updated">Quick answers for {APP_DISPLAY_NAME} operators</p>
       </header>
 
-      <div className="legal-page__body card">
+      <div className="legal-page__body card rinse-prose">
         {SUPPORT_FAQ.map((item) => (
           <section key={item.id} id={item.id}>
             <h2>{item.question}</h2>

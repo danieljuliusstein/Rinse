@@ -1,15 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { Plus, Wallet } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import { FloatingAffixField, FloatingField, SheetSubmitButton } from '@/components/forms'
 import { EmptyState, ListRow, SectionGroup } from '@/components/ui'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { createOverheadExpense, deleteOverheadExpense, getMonthlyOverheadTotal, getOverheadExpenses } from '@/lib/api'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import { fmtDetailed } from '@/lib/calculations'
 import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
+import { overheadExpenseSchema, type OverheadExpenseFormValues } from '@/lib/validation'
 import type { BillingCycle, OverheadCategory, OverheadExpense } from '@/lib/types'
 
 const CATEGORIES: OverheadCategory[] = ['vehicle', 'insurance', 'equipment', 'software', 'marketing', 'other']
@@ -30,10 +33,26 @@ export default function OverheadTracker() {
   const [expenses, setExpenses] = useState<OverheadExpense[]>([])
   const [monthlyTotal, setMonthlyTotal] = useState(0)
   const [showAdd, setShowAdd] = useState(false)
-  const [name, setName] = useState('')
-  const [amount, setAmount] = useState(0)
-  const [category, setCategory] = useState<OverheadCategory>('other')
   const [cycle, setCycle] = useState<BillingCycle>('monthly')
+  const [submitError, setSubmitError] = useState('')
+
+  const {
+    control,
+    watch,
+    reset,
+    submitWithToast,
+  } = useRinseForm<OverheadExpenseFormValues>({
+    schema: overheadExpenseSchema,
+    defaultValues: {
+      name: '',
+      amount: 0,
+      category: 'other',
+    },
+  })
+
+  const name = watch('name')
+  const amount = watch('amount')
+  const category = watch('category')
 
   const load = async () => {
     const [list, total] = await Promise.all([getOverheadExpenses(), getMonthlyOverheadTotal()])
@@ -51,14 +70,23 @@ export default function OverheadTracker() {
     syncSelectFloatingLabel(cycleRef.current)
   }, [showAdd, name, amount, category, cycle])
 
-  const handleAdd = async () => {
-    if (!name.trim() || amount <= 0) return
-    await createOverheadExpense({ name: name.trim(), amount, category, billing_cycle: cycle })
-    setShowAdd(false)
-    setName('')
-    setAmount(0)
-    await load()
-  }
+  const handleAdd = submitWithToast(async (values) => {
+    setSubmitError('')
+    try {
+      await createOverheadExpense({
+        name: values.name,
+        amount: values.amount,
+        category: values.category as OverheadCategory,
+        billing_cycle: cycle,
+      })
+      setShowAdd(false)
+      reset({ name: '', amount: 0, category: 'other' })
+      setCycle('monthly')
+      await load()
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Could not add expense.')
+    }
+  })
 
   const handleDelete = async (id: string) => {
     const ok = await confirm({
@@ -99,44 +127,81 @@ export default function OverheadTracker() {
         <div ref={formRef} className="page-form-card page-form" style={{ marginBottom: 16 }}>
           <div className="section-title">New expense</div>
 
-          <FloatingField id="overhead-name" label="Name" filled={name.trim().length > 0}>
-            <input
-              id="overhead-name"
-              className={`f-input${name.trim() ? ' hv' : ''}`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          {submitError ? (
+            <div className="error-banner" role="alert" aria-live="assertive" style={{ marginBottom: 12 }}>
+              {submitError}
+            </div>
+          ) : null}
 
-          <FloatingAffixField
-            id="overhead-amount"
-            label="Amount"
-            filled={amount > 0}
-            type="number"
-            value={amount || ''}
-            onChange={(e) => setAmount(Number(e.target.value))}
+          <Controller
+            control={control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="overhead-name"
+                label="Name"
+                filled={field.value.trim().length > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="overhead-name"
+                  className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  aria-invalid={fieldState.error ? true : undefined}
+                />
+              </FloatingField>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="amount"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="overhead-amount"
+                label="Amount"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
           />
 
           <div className="overhead-form-grid">
-            <FloatingField id="overhead-category" label="Category" filled={Boolean(category)}>
-              <select
-                ref={categoryRef}
-                id="overhead-category"
-                className={`f-select${category ? ' hv' : ''}`}
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value as OverheadCategory)
-                  syncSelectFloatingLabel(categoryRef.current)
-                }}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </FloatingField>
+            <Controller
+              control={control}
+              name="category"
+              render={({ field, fieldState }) => (
+                <FloatingField
+                  id="overhead-category"
+                  label="Category"
+                  filled={Boolean(field.value)}
+                  error={fieldState.error?.message}
+                >
+                  <select
+                    ref={categoryRef}
+                    id="overhead-category"
+                    className={`f-select${field.value ? ' hv' : ''}`}
+                    value={field.value}
+                    onChange={(e) => {
+                      field.onChange(e.target.value)
+                      syncSelectFloatingLabel(categoryRef.current)
+                    }}
+                    onBlur={field.onBlur}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </FloatingField>
+              )}
+            />
 
             <FloatingField id="overhead-cycle" label="Billing cycle" filled={Boolean(cycle)}>
               <select

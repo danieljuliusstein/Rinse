@@ -111,7 +111,7 @@ export default function MessagesScreen() {
 
       {tab === 'all' ? (
         loadingSent ? (
-          <ScreenLoading label="Loading messages…" inline />
+          <ScreenLoading inline />
         ) : (
           <div key="all" className="messages-tab-panel">
             <AllMessagesTab messages={sentMessages} onSelect={setSelected} />

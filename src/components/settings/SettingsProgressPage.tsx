@@ -9,6 +9,7 @@ import {
   Trophy,
 } from '@phosphor-icons/react'
 import SettingsDetailShell from '@/components/settings/SettingsDetailShell'
+import { ScreenLoading } from '@/components/ui'
 import { useMilestones } from '@/hooks/useMilestones'
 import { formatLifetimeEarned, MILESTONE_COUNT } from '@/lib/milestones'
 import type { Milestone, MilestoneIcon } from '@/lib/milestones/types'
@@ -65,7 +66,7 @@ export default function SettingsProgressPage() {
   return (
     <SettingsDetailShell title="Your progress" showSave={false}>
       {loading ? (
-        <p className="settings-progress-loading">Loading…</p>
+        <ScreenLoading inline />
       ) : (
         <>
           <p className="settings-progress-intro">

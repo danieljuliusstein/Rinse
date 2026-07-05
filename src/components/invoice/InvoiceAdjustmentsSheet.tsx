@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { Controller } from 'react-hook-form'
 import { VaulSheet } from '@/components/ui'
 import { FloatingAffixField, FloatingField, SheetSubmitButton } from '@/components/forms'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { invoiceAdjustmentsSchema, type InvoiceAdjustmentsFormValues } from '@/lib/validation'
 import type { Invoice } from '@/lib/types'
 
 export interface InvoiceAdjustments {
@@ -31,42 +34,99 @@ export default function InvoiceAdjustmentsSheet({
 }: InvoiceAdjustmentsSheetProps) {
   const formRef = useRef<HTMLDivElement>(null)
 
+  const { control, watch, reset, submitWithToast } = useRinseForm<InvoiceAdjustmentsFormValues>({
+    schema: invoiceAdjustmentsSchema,
+    defaultValues: {
+      discount_amount: 0,
+      tax_rate: 0,
+      po_number: '',
+    },
+  })
+
+  const discount = watch('discount_amount')
+  const taxRate = watch('tax_rate')
+  const poNumber = watch('po_number')
+
+  useEffect(() => {
+    if (!open) return
+    reset({
+      discount_amount: values.discount_amount,
+      tax_rate: values.tax_rate,
+      po_number: values.po_number,
+    })
+  }, [open, values, reset])
+
   useEffect(() => {
     if (!open) return
     syncPrefilledFloatingLabels(formRef.current)
-  }, [open, values])
+  }, [open, discount, taxRate, poNumber])
+
+  const handleSave = submitWithToast((formValues) => {
+    onChange({
+      discount_amount: formValues.discount_amount,
+      tax_rate: formValues.tax_rate,
+      po_number: formValues.po_number ?? '',
+    })
+    onSave()
+  })
 
   return (
     <VaulSheet open={open} onOpenChange={onOpenChange} title="Adjustments">
       <div ref={formRef} className="invoice-payment-sheet">
-        <FloatingAffixField
-          id="inv-discount"
-          label="Discount"
-          filled={values.discount_amount > 0}
-          type="number"
-          value={values.discount_amount || ''}
-          onChange={(e) => onChange({ discount_amount: Number(e.target.value) })}
+        <Controller
+          control={control}
+          name="discount_amount"
+          render={({ field, fieldState }) => (
+            <FloatingAffixField
+              id="inv-discount"
+              label="Discount"
+              currency
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <FloatingAffixField
-          id="inv-tax"
-          label="Tax rate (%)"
-          prefix="%"
-          filled={values.tax_rate > 0}
-          type="number"
-          value={values.tax_rate || ''}
-          onChange={(e) => onChange({ tax_rate: Number(e.target.value) })}
+        <Controller
+          control={control}
+          name="tax_rate"
+          render={({ field, fieldState }) => (
+            <FloatingAffixField
+              id="inv-tax"
+              label="Tax rate (%)"
+              prefix="%"
+              value={field.value || ''}
+              filled={field.value > 0}
+              onChange={(e) => field.onChange(Number(e.target.value))}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <FloatingField id="inv-po" label="PO number" filled={Boolean(values.po_number.trim())}>
-          <input
-            id="inv-po"
-            className={`f-input${values.po_number.trim() ? ' hv' : ''}`}
-            placeholder=" "
-            value={values.po_number}
-            onChange={(e) => onChange({ po_number: e.target.value })}
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="po_number"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="inv-po"
+              label="PO number"
+              filled={Boolean(field.value?.trim())}
+              error={fieldState.error?.message}
+            >
+              <input
+                id="inv-po"
+                className={`f-input${field.value?.trim() ? ' hv' : ''}`}
+                placeholder=" "
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FloatingField>
+          )}
+        />
         <div className="invoice-payment-sheet__submit">
-          <SheetSubmitButton label="Save" ready disabled={busy} onClick={onSave} />
+          <SheetSubmitButton label="Save" ready disabled={busy} onClick={() => void handleSave()} />
         </div>
       </div>
     </VaulSheet>

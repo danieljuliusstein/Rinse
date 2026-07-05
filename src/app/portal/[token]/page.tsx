@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import PortalView from '@/components/portal/PortalView'
 import PortalErrorScreen from '@/components/portal/PortalErrorScreen'
+import ScreenLoading from '@/components/ui/ScreenLoading'
 import { buildPortalPayload, loadPortalBusiness } from '@/lib/server/portal-data'
 import { getRequestAppBaseUrl, validatePortalToken } from '@/lib/server/portal-tokens'
 
@@ -33,7 +34,15 @@ export default async function PortalPage({
   }
 
   return (
-    <Suspense fallback={<div className="portal-root client-light-root"><div className="portal-body">Loading…</div></div>}>
+    <Suspense
+      fallback={
+        <div className="portal-root client-light-root">
+          <div className="portal-body">
+            <ScreenLoading variant="detail" />
+          </div>
+        </div>
+      }
+    >
       <PortalView payload={payload} token={token} />
     </Suspense>
   )

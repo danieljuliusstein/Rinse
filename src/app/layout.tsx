@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import { DM_Sans, Syne } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { ActionToastProvider } from '@/providers/ActionToastProvider'
 import { ConfirmProvider } from '@/providers/ConfirmProvider'
@@ -71,6 +72,7 @@ export default function RootLayout({
           </SetupMotionProvider>
         </ThemeProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

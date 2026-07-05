@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui'
+import { Button, ScreenLoading } from '@/components/ui'
 import { getPocketBaseAuthToken } from '@/lib/pb-auth'
 import type { OrgSubscription } from '@/lib/subscription'
 
@@ -64,7 +64,7 @@ export default function AdminPage() {
   }
 
   if (loading) {
-    return <div className="screen page-content settings-screen settings-screen--loading">Loading…</div>
+    return <ScreenLoading body variant="settings" />
   }
 
   if (error) {

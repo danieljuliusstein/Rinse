@@ -17,7 +17,7 @@ export default function EditClientPage() {
   }, [id])
 
   if (client === undefined) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!client) {

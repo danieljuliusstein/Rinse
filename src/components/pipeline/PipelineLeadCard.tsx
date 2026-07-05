@@ -23,6 +23,7 @@ import {
 import { useConfirm } from '@/providers/ConfirmProvider'
 import { useActionToast } from '@/providers/ActionToastProvider'
 import { usePremiumGate } from '@/hooks/usePremiumGate'
+import type { LeadOptimisticAction } from '@/lib/optimistic-reducers'
 import type { LeadStage, LeadWithRelations } from '@/lib/types'
 
 function serviceLabel(lead: LeadWithRelations): string {
@@ -144,9 +145,10 @@ interface Props {
   onRefresh: () => void
   /** Switch the pipeline tab after a successful stage advance. */
   onAdvanced: (stage: LeadStage) => void
+  onOptimistic?: (action: LeadOptimisticAction) => void
 }
 
-export default function PipelineLeadCard({ lead, onEdit, onRefresh, onAdvanced }: Props) {
+export default function PipelineLeadCard({ lead, onEdit, onRefresh, onAdvanced, onOptimistic }: Props) {
   const router = useRouter()
   const confirm = useConfirm()
   const { showMessage } = useActionToast()
@@ -221,9 +223,15 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh, onAdvanced }
   }
 
   const handleMove = async (stage: LeadStage) => {
-    await updateLeadStage(lead.id, stage)
-    onAdvanced(stage)
-    onRefresh()
+    onOptimistic?.({ type: 'stage', id: lead.id, stage })
+    try {
+      await updateLeadStage(lead.id, stage)
+      onAdvanced(stage)
+      onRefresh()
+    } catch (e) {
+      showMessage(e instanceof Error ? e.message : 'Could not move lead')
+      onRefresh()
+    }
   }
 
   const handleDelete = async () => {
@@ -235,8 +243,14 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh, onAdvanced }
       destructive: true,
     })
     if (!ok) return
-    await deleteLead(lead.id)
-    onRefresh()
+    onOptimistic?.({ type: 'remove', id: lead.id })
+    try {
+      await deleteLead(lead.id)
+      onRefresh()
+    } catch (e) {
+      showMessage(e instanceof Error ? e.message : 'Could not remove lead')
+      onRefresh()
+    }
   }
 
   const quoteSubtitle = lead.quote?.quote_number

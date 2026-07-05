@@ -367,6 +367,8 @@ Resolve before **Wave 40**:
 
 ## Active wave
 
+**Premium UX:** Wave A (Foundation & Feedback) — **in progress**
+
 **Motion arc:** Wave 56 complete ✅
 
 **Setup layout arc:** [`SETUP_UX_PLAN.md`](./SETUP_UX_PLAN.md) — Waves 1–14 complete ✅ · Wave 15 or 17 next
@@ -376,3 +378,45 @@ Resolve before **Wave 40**:
 **Other:** Wave 57+ ScreenDesigns expansion
 
 _Update this line when starting each wave._
+
+---
+
+## Premium UX — Wave A (Foundation & Feedback)
+
+| Item | Status | Owner |
+|------|--------|-------|
+| A0 Cursor rule `premium-ux-toolkit.mdc` | ☑ | `.cursor/rules/` |
+| A1 Skeleton loading | ☑ | `components.css`, `ScreenLoading`, `ScreenSkeletons` |
+| A2 Rolling totals (`counter`) | ☑ | `CurrencyAmount` + `motion-number` |
+| A3 Route transition (`nextjs-toploader`) | ☑ | `AppShell.tsx`, `globals.css` `#nprogress` |
+| A4 Search debounce (300ms) | ☑ | `useDebouncedSearch` |
+
+**Exit criteria:** skeleton default on list/detail; money rolls on change; operator top progress (not book/portal/auth); debounced search; docs + rule shipped.
+
+---
+
+## Premium UX — Wave B (Forms, Data Integrity & List Performance)
+
+| Item | Status | Owner |
+|------|--------|-------|
+| B1 Form validation (zod + RHF) | ☑ | `@/lib/validation`, `useRinseForm`, `f-field--error` |
+| B2 Phone + currency masking | ☑ | `phone-format.ts`, `FloatingAffixField` `currency`, `FloatingPhoneField` |
+| B3 List virtualization (>50) | ☑ | `VirtualList.tsx` — invoices, clients, jobs |
+| B4 Optimistic UI (`useOptimistic`) | ☑ | `optimistic-reducers.ts` — invoice/lead/job/supply actions |
+
+**Exit criteria:** forms validate inline + toast; phone/currency format correctly; long lists virtualize with swipe intact; status taps update instantly and revert + toast on failure.
+
+---
+
+## Premium UX — Wave C (Spatial Continuity & Rich Interactions)
+
+| Item | Status | Owner |
+|------|--------|-------|
+| C1 Shared-element transitions (`layoutId`) | ☑ | `DetailOverlayProvider`, `MorphSurface`, `ListRow` `morphLayoutId` |
+| C2 Reorderable line items (`@hello-pangea/dnd@18.0.1`) | ☑ | `ReorderableList` — customize, receipt, template library |
+| C3 QR codes (`qrcode.react`) | ☑ | `@/components/ui/QrCode` — invoice preview/send, portal pay, share |
+| C4 Calendar (`react-day-picker` v9) | ☑ | `RinseDayPicker` — book, schedule blocks, home month; day jobs on Home |
+| C5 Prose typography (`.rinse-prose`) | ☑ | `@tailwindcss/typography` + `rinse-prose.css` |
+
+**Exit criteria:** card→detail morph via overlay (deep links intact); line items reorder; QR scans to pay URL; calendar unified and Home stays on Home; prose pages use `rinse-prose` tokens.
+

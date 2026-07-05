@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { Controller } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { CalendarBlank } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
@@ -13,10 +14,12 @@ import { buildJobIcs, downloadIcs } from '@/lib/calendar-ics'
 import { isCompletingJob } from '@/lib/supplies-logic'
 import { loadSettingsAsync } from '@/lib/settings'
 import { useActionToast } from '@/providers/ActionToastProvider'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { VehicleTypePicker } from '@/lib/vehicle-type-icons'
 import { RECURRENCE_CADENCE_OPTIONS } from '@/lib/recurrence'
 import { successHaptic } from '@/lib/haptics'
-import type { JobEditData, JobStatus, JobWithRelations, Package, RecurrenceCadence, Supply, SupplyUsage } from '@/lib/types'
+import { jobEditFormSchema, type JobEditFormValues } from '@/lib/validation'
+import type { JobEditData, JobStatus, JobWithRelations, Package, Supply, SupplyUsage } from '@/lib/types'
 
 const LOCATION_PILLS = [
   { value: 'mobile' as const, label: 'Mobile' },
@@ -42,27 +45,48 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
   const router = useRouter()
   const { handleWriteError } = useActionToast()
   const formRef = useRef<HTMLDivElement>(null)
-  const [date, setDate] = useState(job.date)
   const [packageId, setPackageId] = useState(job.package_id)
   const [vehicleType, setVehicleType] = useState(job.vehicle_type)
   const [locationType, setLocationType] = useState(job.location_type)
-  const [revenue, setRevenue] = useState(job.revenue)
-  const [tip, setTip] = useState(job.tip)
-  const [hoursWorked, setHoursWorked] = useState(job.hours_worked)
-  const [startTime, setStartTime] = useState(job.start_time ?? '')
-  const [status, setStatus] = useState<JobStatus>(job.status)
-  const [notes, setNotes] = useState(job.notes ?? '')
-  const [travelCost, setTravelCost] = useState(job.travel_cost)
-  const [marketingCost, setMarketingCost] = useState(job.marketing_cost)
-  const [equipmentCost, setEquipmentCost] = useState(job.equipment_depreciation)
-  const [recurrenceCadence, setRecurrenceCadence] = useState<RecurrenceCadence | 'none'>(
-    job.recurrence_cadence ?? 'none'
-  )
   const [suppliesUsed, setSuppliesUsed] = useState<SupplyUsage[]>(job.supplies_used)
   const [suppliesSheetOpen, setSuppliesSheetOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
+
+  const {
+    control,
+    watch,
+    setValue,
+    submitWithToast,
+  } = useRinseForm<JobEditFormValues>({
+    schema: jobEditFormSchema,
+    defaultValues: {
+      date: job.date,
+      revenue: job.revenue,
+      tip: job.tip,
+      hours_worked: job.hours_worked,
+      start_time: job.start_time ?? '',
+      status: job.status,
+      notes: job.notes ?? '',
+      travel_cost: job.travel_cost,
+      marketing_cost: job.marketing_cost,
+      equipment_depreciation: job.equipment_depreciation,
+      recurrence_cadence: job.recurrence_cadence ?? 'none',
+    },
+  })
+
+  const date = watch('date')
+  const revenue = watch('revenue')
+  const tip = watch('tip')
+  const hoursWorked = watch('hours_worked')
+  const startTime = watch('start_time')
+  const notes = watch('notes')
+  const travelCost = watch('travel_cost')
+  const marketingCost = watch('marketing_cost')
+  const equipmentCost = watch('equipment_depreciation')
+  const status = watch('status')
+  const recurrenceCadence = watch('recurrence_cadence')
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
@@ -70,39 +94,42 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
 
   const handlePackageSelect = useCallback((pkg: Package) => {
     setPackageId(pkg.id)
-    setRevenue(pkg.base_price)
+    setValue('revenue', pkg.base_price)
     if (pkg.default_supplies?.length) {
       setSuppliesUsed(pkg.default_supplies.map((d) => ({
         supply_id: d.supply_id,
         quantity_used: d.default_qty,
       })))
     }
-  }, [])
+  }, [setValue])
 
-  const saveJob = async (used: SupplyUsage[]) => {
+  const saveJob = async (values: JobEditFormValues, used: SupplyUsage[]) => {
     setSaving(true)
     setSaveError('')
     try {
       await onSave({
-        date,
+        date: values.date,
         packageId,
         vehicleType,
         locationType,
-        revenue,
-        tip,
-        hours_worked: hoursWorked,
-        start_time: startTime || undefined,
-        status,
-        notes: notes || undefined,
+        revenue: values.revenue,
+        tip: values.tip,
+        hours_worked: values.hours_worked,
+        start_time: values.start_time || undefined,
+        status: values.status,
+        notes: values.notes || undefined,
         supplies_used: used,
-        travel_cost: travelCost,
-        marketing_cost: marketingCost,
-        equipment_depreciation: equipmentCost,
-        recurrence_cadence: recurrenceCadence === 'none' ? undefined : recurrenceCadence,
-        recurrence_anchor_date:
-          recurrenceCadence === 'none'
+        travel_cost: values.travel_cost,
+        marketing_cost: values.marketing_cost,
+        equipment_depreciation: values.equipment_depreciation,
+        recurrence_cadence:
+          values.recurrence_cadence === 'none' || !values.recurrence_cadence
             ? undefined
-            : job.recurrence_anchor_date ?? date,
+            : values.recurrence_cadence,
+        recurrence_anchor_date:
+          values.recurrence_cadence === 'none'
+            ? undefined
+            : job.recurrence_anchor_date ?? values.date,
       })
       successHaptic()
       setSaved(true)
@@ -115,16 +142,16 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
     }
   }
 
-  const handleSave = async () => {
-    if (isCompletingJob(job.status, status)) {
+  const handleSave = submitWithToast(async (values) => {
+    if (isCompletingJob(job.status, values.status)) {
       const appSettings = await loadSettingsAsync()
       if (appSettings.track_job_supplies) {
         setSuppliesSheetOpen(true)
         return
       }
     }
-    await saveJob(suppliesUsed)
-  }
+    await saveJob(values, suppliesUsed)
+  })
 
   const handleAddToCalendar = () => {
     const pkg = packages.find((p) => p.id === packageId)
@@ -151,16 +178,29 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
       <div className="card job-form-client-card">{job.client?.name ?? 'Unknown'}</div>
 
       <div ref={formRef} className="page-form-card page-form">
-        <FloatingField id="job-edit-date" label="Job date" filled={date.trim().length > 0}>
-          <input
-            id="job-edit-date"
-            className={`f-input${date.trim() ? ' hv' : ''}`}
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="date"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="job-edit-date"
+              label="Job date"
+              filled={field.value.trim().length > 0}
+              error={fieldState.error?.message}
+            >
+              <input
+                id="job-edit-date"
+                className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                type="date"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                aria-invalid={fieldState.error ? true : undefined}
+              />
+            </FloatingField>
+          )}
+        />
 
         {status === 'scheduled' && (
           <button type="button" className="btn-ghost job-form-calendar-btn" onClick={handleAddToCalendar}>
@@ -178,56 +218,92 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
         <PillGroup label="Location" options={LOCATION_PILLS} value={locationType} onChange={setLocationType} />
 
         <div className="job-form-grid-2">
-          <FloatingAffixField
-            id="job-edit-revenue"
-            label="Revenue"
-            filled={revenue > 0}
-            type="number"
-            inputMode="decimal"
-            value={revenue || ''}
-            onChange={(e) => setRevenue(e.target.value === '' ? 0 : Number(e.target.value))}
+          <Controller
+            control={control}
+            name="revenue"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="job-edit-revenue"
+                label="Revenue"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          <FloatingAffixField
-            id="job-edit-tip"
-            label="Tip"
-            filled={tip > 0}
-            type="number"
-            inputMode="decimal"
-            value={tip || ''}
-            onChange={(e) => setTip(e.target.value === '' ? 0 : Number(e.target.value))}
+          <Controller
+            control={control}
+            name="tip"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="job-edit-tip"
+                label="Tip"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
           />
         </div>
 
         <div className="job-form-grid-2">
-          <FloatingField id="job-edit-hours" label="Hours worked" filled={hoursWorked > 0}>
-            <input
-              id="job-edit-hours"
-              className={`f-input${hoursWorked > 0 ? ' hv' : ''}`}
-              type="number"
-              step="0.5"
-              value={hoursWorked || ''}
-              onChange={(e) => setHoursWorked(e.target.value === '' ? 0 : Number(e.target.value))}
-              placeholder=" "
-            />
-          </FloatingField>
-          <FloatingField id="job-edit-start-time" label="Start time" filled={startTime.trim().length > 0}>
-            <input
-              id="job-edit-start-time"
-              className={`f-input${startTime.trim() ? ' hv' : ''}`}
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="hours_worked"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="job-edit-hours"
+                label="Hours worked"
+                filled={field.value > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="job-edit-hours"
+                  className={`f-input${field.value > 0 ? ' hv' : ''}`}
+                  type="number"
+                  step="0.5"
+                  value={field.value || ''}
+                  onChange={(e) => field.onChange(e.target.value === '' ? 0 : Number(e.target.value))}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                />
+              </FloatingField>
+            )}
+          />
+          <Controller
+            control={control}
+            name="start_time"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="job-edit-start-time"
+                label="Start time"
+                filled={(field.value?.trim().length ?? 0) > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="job-edit-start-time"
+                  className={`f-input${field.value?.trim() ? ' hv' : ''}`}
+                  type="time"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                />
+              </FloatingField>
+            )}
+          />
         </div>
 
         <div className="section-title">Repeat schedule</div>
         <PillGroup
           label="Repeat"
-          value={recurrenceCadence}
+          value={recurrenceCadence ?? 'none'}
           options={RECURRENCE_CADENCE_OPTIONS}
-          onChange={setRecurrenceCadence}
+          onChange={(v) => setValue('recurrence_cadence', v)}
         />
 
         <div className="section-title">Status</div>
@@ -236,11 +312,11 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
             <span
               key={s.id}
               className={`badge ${s.badge}${status === s.id ? '' : ' badge--dim'}`}
-              onClick={() => setStatus(s.id)}
+              onClick={() => setValue('status', s.id)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') setStatus(s.id)
+                if (e.key === 'Enter' || e.key === ' ') setValue('status', s.id)
               }}
             >
               {s.label}
@@ -249,32 +325,50 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
         </div>
 
         <div className="job-form-grid-3">
-          <FloatingAffixField
-            id="job-edit-travel"
-            label="Travel"
-            filled={travelCost > 0}
-            type="number"
-            inputMode="decimal"
-            value={travelCost || ''}
-            onChange={(e) => setTravelCost(e.target.value === '' ? 0 : Number(e.target.value))}
+          <Controller
+            control={control}
+            name="travel_cost"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="job-edit-travel"
+                label="Travel"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          <FloatingAffixField
-            id="job-edit-marketing"
-            label="Marketing"
-            filled={marketingCost > 0}
-            type="number"
-            inputMode="decimal"
-            value={marketingCost || ''}
-            onChange={(e) => setMarketingCost(e.target.value === '' ? 0 : Number(e.target.value))}
+          <Controller
+            control={control}
+            name="marketing_cost"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="job-edit-marketing"
+                label="Marketing"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          <FloatingAffixField
-            id="job-edit-equipment"
-            label="Equipment"
-            filled={equipmentCost > 0}
-            type="number"
-            inputMode="decimal"
-            value={equipmentCost || ''}
-            onChange={(e) => setEquipmentCost(e.target.value === '' ? 0 : Number(e.target.value))}
+          <Controller
+            control={control}
+            name="equipment_depreciation"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="job-edit-equipment"
+                label="Equipment"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
           />
         </div>
 
@@ -283,16 +377,30 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
           <JobSuppliesPicker supplies={supplies} value={suppliesUsed} onChange={setSuppliesUsed} />
         </div>
 
-        <FloatingField id="job-edit-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-          <textarea
-            id="job-edit-notes"
-            className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="job-edit-notes"
+              label="Notes"
+              filled={(field.value?.trim().length ?? 0) > 0}
+              error={fieldState.error?.message}
+              optional
+              textarea
+            >
+              <textarea
+                id="job-edit-notes"
+                className={`f-textarea${field.value?.trim() ? ' hv' : ''}`}
+                rows={3}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
       </div>
 
       {saveError ? <div className="error-banner job-form-section">{saveError}</div> : null}
@@ -316,7 +424,7 @@ export default function JobEdit({ job, packages, supplies, onSave }: JobEditProp
           onConfirm={(used) => {
             setSuppliesUsed(used)
             setSuppliesSheetOpen(false)
-            void saveJob(used)
+            void saveJob(watch(), used)
           }}
           onClose={() => setSuppliesSheetOpen(false)}
         />

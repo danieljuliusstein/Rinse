@@ -6,10 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { loadSettingsAsync, saveSettingsAsync, type AppSettings } from '@/lib/settings'
+
+type SaveGuard = () => boolean | Promise<boolean>
 
 interface SettingsDraftContextValue {
   settings: AppSettings | null
@@ -19,6 +22,7 @@ interface SettingsDraftContextValue {
   logoFile: File | null
   setLogoFile: (file: File | null) => void
   update: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void
+  registerSaveGuard: (guard: SaveGuard | null) => void
   save: () => Promise<boolean>
   reload: () => Promise<void>
 }
@@ -31,6 +35,11 @@ export function SettingsDraftProvider({ children }: { children: ReactNode }) {
   const [dirty, setDirty] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
   const [logoFile, setLogoFileState] = useState<File | null>(null)
+  const saveGuardRef = useRef<SaveGuard | null>(null)
+
+  const registerSaveGuard = useCallback((guard: SaveGuard | null) => {
+    saveGuardRef.current = guard
+  }, [])
 
   const reload = useCallback(async () => {
     const loaded = await loadSettingsAsync()
@@ -56,6 +65,11 @@ export function SettingsDraftProvider({ children }: { children: ReactNode }) {
 
   const save = useCallback(async () => {
     if (!settings) return false
+    const guard = saveGuardRef.current
+    if (guard) {
+      const ok = await guard()
+      if (!ok) return false
+    }
     try {
       const savedSettings = await saveSettingsAsync(settings, logoFile)
       setSettings(savedSettings)
@@ -78,10 +92,11 @@ export function SettingsDraftProvider({ children }: { children: ReactNode }) {
       logoFile,
       setLogoFile,
       update,
+      registerSaveGuard,
       save,
       reload,
     }),
-    [settings, ready, dirty, savedFlash, logoFile, setLogoFile, update, save, reload]
+    [settings, ready, dirty, savedFlash, logoFile, setLogoFile, update, registerSaveGuard, save, reload]
   )
 
   return <SettingsDraftContext.Provider value={value}>{children}</SettingsDraftContext.Provider>

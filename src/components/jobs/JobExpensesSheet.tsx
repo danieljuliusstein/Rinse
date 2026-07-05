@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import BottomSheet from '@/components/BottomSheet'
 import { FloatingAffixField, FloatingField, SheetFooter } from '@/components/forms'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { jobExpensesSchema, type JobExpensesFormValues } from '@/lib/validation'
 
 export interface JobExpenseDraft {
   travel_cost: number
@@ -30,10 +33,25 @@ export default function JobExpensesSheet({
 }: JobExpensesSheetProps) {
   const formRef = useRef<HTMLDivElement>(null)
   const [miles, setMiles] = useState('')
-  const [travel, setTravel] = useState(String(value.travel_cost || ''))
-  const [marketing, setMarketing] = useState(String(value.marketing_cost || ''))
-  const [equipment, setEquipment] = useState(String(value.equipment_depreciation || ''))
   const [travelManual, setTravelManual] = useState(value.travel_cost > 0)
+
+  const {
+    control,
+    watch,
+    setValue,
+    submitWithToast,
+  } = useRinseForm<JobExpensesFormValues>({
+    schema: jobExpensesSchema,
+    defaultValues: {
+      travel_cost: value.travel_cost,
+      marketing_cost: value.marketing_cost,
+      equipment_depreciation: value.equipment_depreciation,
+    },
+  })
+
+  const travel = watch('travel_cost')
+  const marketing = watch('marketing_cost')
+  const equipment = watch('equipment_depreciation')
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
@@ -43,17 +61,17 @@ export default function JobExpensesSheet({
     if (travelManual || !travelRatePerMile || travelRatePerMile <= 0) return
     const m = Number(miles)
     if (!m || m <= 0) return
-    setTravel(String(roundMoney(m * travelRatePerMile)))
-  }, [miles, travelRatePerMile, travelManual])
+    setValue('travel_cost', roundMoney(m * travelRatePerMile))
+  }, [miles, travelRatePerMile, travelManual, setValue])
 
-  const handleSave = () => {
+  const handleSave = submitWithToast((values) => {
     onSave({
-      travel_cost: Number(travel) || 0,
-      marketing_cost: Number(marketing) || 0,
-      equipment_depreciation: Number(equipment) || 0,
+      travel_cost: values.travel_cost,
+      marketing_cost: values.marketing_cost,
+      equipment_depreciation: values.equipment_depreciation,
     })
     onClose()
-  }
+  })
 
   return (
     <BottomSheet
@@ -67,7 +85,7 @@ export default function JobExpensesSheet({
           saveLabel="Done"
           ready
           layout="split"
-          onSave={handleSave}
+          onSave={() => void handleSave()}
           onCancel={onClose}
         />
       }
@@ -92,36 +110,55 @@ export default function JobExpensesSheet({
           </FloatingField>
         ) : null}
 
-        <FloatingAffixField
-          id="job-exp-travel"
-          label="Travel / gas"
-          type="number"
-          inputMode="decimal"
-          value={travel}
-          filled={travel.trim().length > 0}
-          onChange={(e) => {
-            setTravel(e.target.value)
-            setTravelManual(true)
-          }}
+        <Controller
+          control={control}
+          name="travel_cost"
+          render={({ field, fieldState }) => (
+            <FloatingAffixField
+              id="job-exp-travel"
+              label="Travel / gas"
+              currency
+              value={field.value}
+              onValueChange={(v) => {
+                field.onChange(v)
+                setTravelManual(true)
+              }}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+            />
+          )}
         />
 
-        <FloatingAffixField
-          id="job-exp-marketing"
-          label="Marketing"
-          type="number"
-          inputMode="decimal"
-          value={marketing}
-          filled={marketing.trim().length > 0}
-          onChange={(e) => setMarketing(e.target.value)}
+        <Controller
+          control={control}
+          name="marketing_cost"
+          render={({ field, fieldState }) => (
+            <FloatingAffixField
+              id="job-exp-marketing"
+              label="Marketing"
+              currency
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <FloatingAffixField
-          id="job-exp-equipment"
-          label="Equipment depreciation"
-          type="number"
-          inputMode="decimal"
-          value={equipment}
-          filled={equipment.trim().length > 0}
-          onChange={(e) => setEquipment(e.target.value)}
+
+        <Controller
+          control={control}
+          name="equipment_depreciation"
+          render={({ field, fieldState }) => (
+            <FloatingAffixField
+              id="job-exp-equipment"
+              label="Equipment depreciation"
+              currency
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+            />
+          )}
         />
       </div>
     </BottomSheet>

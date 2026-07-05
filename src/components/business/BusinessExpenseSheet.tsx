@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { ArrowSquareOut } from '@phosphor-icons/react'
 import BottomSheet from '@/components/BottomSheet'
 import {
@@ -18,6 +19,8 @@ import {
 } from '@/lib/api'
 import { computeFormProgress } from '@/lib/form-progress'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { businessExpenseSchema, type BusinessExpenseFormValues } from '@/lib/validation'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { useActionToast } from '@/providers/ActionToastProvider'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import type { BusinessExpense, BusinessExpenseCategory, BusinessExpenseInput, ExpenseLine } from '@/lib/types'
@@ -55,65 +58,84 @@ export default function BusinessExpenseSheet({
 }: BusinessExpenseSheetProps) {
   const isEdit = Boolean(expense)
   const formRef = useRef<HTMLDivElement>(null)
-  const [date, setDate] = useState(todayIso())
-  const [name, setName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<BusinessExpenseCategory>('legal')
-  const [vendor, setVendor] = useState('')
-  const [notes, setNotes] = useState('')
   const [receiptMode, setReceiptMode] = useState(false)
   const [receiptLines, setReceiptLines] = useState<ExpenseLine[]>([
     { category: 'supplies', description: '', amount: 0 },
   ])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
   const { handleWriteError } = useActionToast()
   const confirm = useConfirm()
 
-  const progress = computeFormProgress([date, name, amount, vendor, notes], 1, 1)
+  const {
+    control,
+    watch,
+    setValue,
+    reset,
+    submitWithToast,
+  } = useRinseForm<BusinessExpenseFormValues>({
+    schema: businessExpenseSchema,
+    defaultValues: {
+      date: todayIso(),
+      name: '',
+      amount: 0,
+      category: 'legal',
+      vendor: '',
+      notes: '',
+    },
+  })
+
+  const date = watch('date')
+  const name = watch('name')
+  const amount = watch('amount')
+  const category = watch('category')
+  const vendor = watch('vendor')
+  const notes = watch('notes')
+
+  const progress = computeFormProgress(
+    [date, name, amount > 0 ? String(amount) : '', vendor ?? '', notes ?? ''],
+    1,
+    1,
+  )
 
   useEffect(() => {
     if (!expense) {
-      setDate(todayIso())
-      setName('')
-      setAmount('')
-      setCategory('legal')
-      setVendor('')
-      setNotes('')
+      reset({
+        date: todayIso(),
+        name: '',
+        amount: 0,
+        category: 'legal',
+        vendor: '',
+        notes: '',
+      })
       return
     }
-    setDate(expense.date)
-    setName(expense.name)
-    setAmount(String(expense.amount))
-    setCategory(expense.category ?? 'other')
-    setVendor(expense.vendor ?? '')
-    setNotes(expense.notes ?? '')
-  }, [expense])
+    reset({
+      date: expense.date,
+      name: expense.name,
+      amount: expense.amount,
+      category: expense.category ?? 'other',
+      vendor: expense.vendor ?? '',
+      notes: expense.notes ?? '',
+    })
+  }, [expense, reset])
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
   }, [date, name, amount, vendor, notes, expense])
 
-  const buildInput = (): BusinessExpenseInput | null => {
-    const trimmed = name.trim()
-    const parsed = Number(amount)
-    if (!trimmed || !parsed || parsed <= 0) return null
-    return {
-      date,
-      name: trimmed,
-      amount: parsed,
-      category,
-      vendor: vendor.trim() || undefined,
-      notes: notes.trim() || undefined,
+  const handleSave = submitWithToast(async (values) => {
+    const input: BusinessExpenseInput = {
+      date: values.date,
+      name: values.name,
+      amount: values.amount,
+      category: values.category as BusinessExpenseCategory,
+      vendor: values.vendor,
+      notes: values.notes,
     }
-  }
-
-  const handleSave = async () => {
-    const input = buildInput()
-    if (!input) return
     setSaving(true)
-    setError('')
+    setSubmitError('')
     try {
       if (isEdit && expense) {
         await updateBusinessExpense(expense.id, input)
@@ -125,11 +147,11 @@ export default function BusinessExpenseSheet({
       setTimeout(onClose, 1500)
     } catch (err) {
       if (handleWriteError(err)) return
-      setError(err instanceof Error ? err.message : 'Could not save expense.')
+      setSubmitError(err instanceof Error ? err.message : 'Could not save expense.')
     } finally {
       setSaving(false)
     }
-  }
+  })
 
   const handleDelete = async () => {
     if (!expense) return
@@ -142,20 +164,20 @@ export default function BusinessExpenseSheet({
     })
     if (!ok) return
     setSaving(true)
-    setError('')
+    setSubmitError('')
     try {
       await deleteBusinessExpense(expense.id)
       onSaved?.()
       onClose()
     } catch (err) {
       if (handleWriteError(err)) return
-      setError(err instanceof Error ? err.message : 'Could not delete expense.')
+      setSubmitError(err instanceof Error ? err.message : 'Could not delete expense.')
     } finally {
       setSaving(false)
     }
   }
 
-  const canSave = Boolean(name.trim() && Number(amount) > 0)
+  const canSave = Boolean(name.trim() && amount > 0)
 
   return (
     <BottomSheet
@@ -177,7 +199,11 @@ export default function BusinessExpenseSheet({
         />
       }
     >
-      {error ? <div className="error-banner" style={{ marginBottom: 12 }}>{error}</div> : null}
+      {submitError ? (
+        <div className="error-banner" role="alert" aria-live="assertive" style={{ marginBottom: 12 }}>
+          {submitError}
+        </div>
+      ) : null}
 
       {isEdit && expense?.equipment_id && linkedEquipmentName && onViewEquipment ? (
         <div className="premium-sheet__section">
@@ -208,68 +234,131 @@ export default function BusinessExpenseSheet({
         <ReceiptLineItemsEditor
           lines={receiptLines}
           onChange={setReceiptLines}
-          onTotalChange={(total) => setAmount(total > 0 ? String(total) : '')}
+          onTotalChange={(total) => setValue('amount', total > 0 ? total : 0)}
         />
       ) : null}
 
       <div ref={formRef} className="premium-sheet__form">
         <div className="premium-sheet__grid2">
-          <FloatingField id="expense-date" label="Date" filled={Boolean(date)}>
-            <input
-              id="expense-date"
-              type="date"
-              className={`f-input${date ? ' hv' : ''}`}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="date"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="expense-date"
+                label="Date"
+                filled={Boolean(field.value)}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="expense-date"
+                  type="date"
+                  className={`f-input${field.value ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  aria-invalid={fieldState.error ? true : undefined}
+                />
+              </FloatingField>
+            )}
+          />
 
-          <FloatingAffixField
-            id="expense-amount"
-            label="Amount"
-            type="number"
-            inputMode="decimal"
-            value={amount}
-            filled={amount.trim().length > 0}
-            onChange={(e) => setAmount(e.target.value)}
+          <Controller
+            control={control}
+            name="amount"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="expense-amount"
+                label="Amount"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
           />
         </div>
 
-        <FloatingField id="expense-name" label="Name" filled={name.trim().length > 0}>
-          <input
-            id="expense-name"
-            className={`f-input${name.trim() ? ' hv' : ''}`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="expense-name"
+              label="Name"
+              filled={field.value.trim().length > 0}
+              error={fieldState.error?.message}
+            >
+              <input
+                id="expense-name"
+                className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                aria-invalid={fieldState.error ? true : undefined}
+              />
+            </FloatingField>
+          )}
+        />
 
-        <PillGroup label="Category" options={CATEGORY_PILLS} value={category} onChange={setCategory} />
+        <PillGroup
+          label="Category"
+          options={CATEGORY_PILLS}
+          value={category as BusinessExpenseCategory}
+          onChange={(v) => setValue('category', v)}
+        />
 
         <div className="f-form-divider" />
 
-        <FloatingField id="expense-vendor" label="Vendor" filled={vendor.trim().length > 0} optional>
-          <input
-            id="expense-vendor"
-            className={`f-input${vendor.trim() ? ' hv' : ''}`}
-            value={vendor}
-            onChange={(e) => setVendor(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="vendor"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="expense-vendor"
+              label="Vendor"
+              filled={(field.value ?? '').trim().length > 0}
+              error={fieldState.error?.message}
+              optional
+            >
+              <input
+                id="expense-vendor"
+                className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
 
-        <FloatingField id="expense-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-          <textarea
-            id="expense-notes"
-            className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder=" "
-            rows={3}
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="expense-notes"
+              label="Notes"
+              filled={(field.value ?? '').trim().length > 0}
+              error={fieldState.error?.message}
+              optional
+              textarea
+            >
+              <textarea
+                id="expense-notes"
+                className={`f-textarea${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                rows={3}
+              />
+            </FloatingField>
+          )}
+        />
       </div>
     </BottomSheet>
   )

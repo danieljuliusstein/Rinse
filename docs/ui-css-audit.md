@@ -2,7 +2,7 @@
 
 Owner map for shared patterns across the detailing app. Use this when adding surfaces or consolidating CSS.
 
-**Last updated:** Slice W (Job readiness / weather on Home)
+**Last updated:** Premium UX Wave C (overlay morph, calendar, QR, prose, reorder)
 
 ---
 
@@ -19,6 +19,131 @@ Owner map for shared patterns across the detailing app. Use this when adding sur
 ---
 
 ## Pattern owners
+
+---
+
+### Skeleton loading (Premium UX Wave A)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Blocks + shimmer** | `components.css` | `.skeleton`, `.skeleton--stagger`, `@keyframes skeleton-shimmer` |
+| **Screen shells** | `@/components/ui/ScreenLoading` + `ScreenSkeletons.tsx` | Variants: `list`, `detail`, `settings`, `home`, `inline`, `inventory` |
+| **Primitives** | `@/components/ui/Skeleton.tsx` | Token surfaces only (`--bg-muted`, `--bg-surface-active`) |
+| **Reduced motion** | `components.css` | Static blocks, no shimmer/stagger |
+
+`ScreenLoading` defaults to skeleton; `mode="text"` keeps legacy label fallback.
+
+Used by: list/detail routes, settings pages, pipeline/messages inline, inventory home, portal Suspense.
+
+---
+
+### Route progress (Premium UX Wave A)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Mount** | `AppShell.tsx` | Operator routes only (excludes book/portal/embed/auth/demo) |
+| **Bar chrome** | `globals.css` | `#nprogress` — muted in progress, `--green` at completion |
+| **Package** | `nextjs-toploader` | z-index 120 (below sheets, above content) |
+
+---
+
+### Search debounce (Premium UX Wave A)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Hook** | `@/hooks/useDebouncedSearch.ts` | 300ms via `use-debounce` |
+
+Used by: clients, jobs, invoices, settings hub, inventory category, supply picker, quick-add client search.
+
+---
+
+### Form validation (Premium UX Wave B)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Schemas** | `@/lib/validation/` | zod field helpers + per-form schemas |
+| **Hook** | `@/hooks/useRinseForm.ts` | RHF + zodResolver + `submitWithToast` on invalid |
+| **Field errors** | `floating-labels.css` | `.f-field--error`, `.f-field-error` |
+| **Phone** | `@/lib/phone-format.ts`, `FloatingPhoneField` | US only via `libphonenumber-js` |
+| **Currency input** | `FloatingAffixField` `currency` prop | Whole dollars while typing; cents on blur |
+
+Validation wires behind existing `f-*` chrome — no markup replacement.
+
+---
+
+### List virtualization (Premium UX Wave B)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Component** | `@/components/ui/VirtualList.tsx` | `@tanstack/react-virtual`; window scroll; threshold >50 |
+| **Reduced motion** | N/A | Virtualization is perf-only |
+
+Used by: `InvoicesList`, `ClientsList`, `JobsList` when row count exceeds threshold.
+
+---
+
+### Optimistic UI (Premium UX Wave B)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Reducers** | `@/lib/optimistic-reducers.ts` | Invoice, lead, job status, supply restock |
+| **Pattern** | React 19 `useOptimistic` | Composes with `@/lib/api` + offline-queue; rollback + toast on failure |
+
+Used by: `InvoicesList`, `PipelineScreen`/`PipelineLeadCard`, `JobDetail`, `InventoryPage`.
+
+---
+
+### Detail overlay morph (Premium UX Wave C)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Provider** | `@/providers/DetailOverlayProvider` | In-place overlay; Escape to close |
+| **Panel** | `@/components/detail/DetailOverlayPanel.tsx` | Motion `layoutId`; reduced motion = instant |
+| **Navigation hook** | `@/hooks/useDetailNavigation` | `openJob` / `openClient` / `openInvoice` |
+| **Morph anchor** | `@/components/ui/MorphSurface`, `ListRow` `morphLayoutId` | List rows share `layoutId` with overlay |
+| **CSS** | `detail-overlay.css` | z-index 200; max-width 420px |
+
+Deep-link routes (`/jobs/[id]`, etc.) unchanged.
+
+---
+
+### QR codes (Premium UX Wave C)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Component** | `@/components/ui/QrCode.tsx` | `qrcode.react`; operator + `variant="client"` |
+
+Used by: `InvoicePreview`, `InvoiceSendSheet`, `PortalPayButton`, `ShareLinkActions`.
+
+---
+
+### Calendar (Premium UX Wave C)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Component** | `@/components/ui/RinseDayPicker.tsx` | `react-day-picker` v9; `variant` operator/client |
+| **CSS** | `rinse-day-picker.css` | Token-mapped `classNames` |
+| **Home day panel** | `@/components/home/HomeDayJobsPanel.tsx` | Jobs for selected day stay on Home |
+
+---
+
+### Reorderable lists (Premium UX Wave C)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Component** | `@/components/forms/ReorderableList.tsx` | `@hello-pangea/dnd@18.0.1`; haptics on drag end |
+
+---
+
+### Prose (Premium UX Wave C)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **Class** | `.rinse-prose` in `rinse-prose.css` | `@tailwindcss/typography`; token overrides |
+
+Used by: privacy policy, invoice terms display.
+
+---
 
 ### `.card` — generic elevated surface
 

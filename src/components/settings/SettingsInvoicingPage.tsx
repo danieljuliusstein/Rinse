@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Badge, Button } from '@/components/ui'
+import { Badge, Button, ScreenLoading } from '@/components/ui'
 import InvoiceTemplateGallery from '@/components/invoice/InvoiceTemplateGallery'
 import InvoiceTemplateMock from '@/components/invoice/InvoiceTemplateMock'
 import InvoiceLineTemplateManager from '@/components/invoice/InvoiceLineTemplateManager'
@@ -101,11 +101,7 @@ export default function SettingsInvoicingPage() {
   }, [ready, connectReturn, handleConnect])
 
   if (!ready || !settings) {
-    return (
-      <div className="screen page-content settings-screen settings-screen--loading">
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body variant="settings" />
   }
 
   const connectReady = connect?.ready === true

@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Car, ClipboardText, MagnifyingGlass, Plus, X } from '@phosphor-icons/react'
 import AuthEmptyState from '@/components/AuthEmptyState'
-import { EmptyState, ListRow, SectionGroup } from '@/components/ui'
+import { EmptyState, ListRow, SectionGroup, VirtualList } from '@/components/ui'
 import { useAuthEmptyState } from '@/hooks/useAuthEmptyState'
+import { useDetailNavigation } from '@/hooks/useDetailNavigation'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import {
   filterJobsList,
@@ -44,11 +46,13 @@ export default function JobsList({ jobs }: { jobs: JobWithRelations[] }) {
   const searchParams = useSearchParams()
   const focusDate = isValidJobDateParam(searchParams.get('date')) ? searchParams.get('date')! : null
   const { isLoggedOut } = useAuthEmptyState()
+  const { openJob } = useDetailNavigation()
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedSearch(search)
   const [chip, setChip] = useState<JobsListFilter>('all')
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
-  const filtered = useMemo(() => filterJobsList(jobs, search, chip), [jobs, search, chip])
+  const filtered = useMemo(() => filterJobsList(jobs, debouncedSearch, chip), [jobs, debouncedSearch, chip])
   const sections = useMemo(() => {
     if (focusDate) return groupJobsForDay(filtered, focusDate)
     return groupJobsByPeriod(filtered)
@@ -63,9 +67,39 @@ export default function JobsList({ jobs }: { jobs: JobWithRelations[] }) {
     else router.push(focusDate ? `/jobs/new?date=${focusDate}` : '/jobs/new')
   }
 
+  const flatJobRows = useMemo(() => {
+    const rows: { key: string; sectionLabel: string; job: JobWithRelations }[] = []
+    for (const section of sections) {
+      const visibleJobs = expanded[section.key] ? section.jobs : section.jobs.slice(0, VISIBLE_PER_SECTION)
+      for (const job of visibleJobs) {
+        rows.push({ key: job.id, sectionLabel: section.label, job })
+      }
+    }
+    return rows
+  }, [sections, expanded])
+
   const clearDayFilter = () => {
     router.push('/jobs')
   }
+
+  const renderJobRow = (job: JobWithRelations) => (
+    <ListRow
+      key={job.id}
+      icon={<Car size={18} weight="duotone" />}
+      iconTone={ICON_TONE[jobListIconTone(job)] ?? 'blue'}
+      title={job.client?.name ?? 'Client'}
+      subtitle={`${job.package?.name ?? 'Detail'} · ${capitalize(job.vehicle_type ?? 'vehicle')}`}
+      badgeStatus={job.invoice?.status === 'overdue' ? 'overdue' : job.status}
+      trailing={
+        <>
+          <CurrencyAmount value={job.revenue} className="ui-list-row__amount" />
+          <span className="ui-list-row__subtitle">{jobListRightTime(job)}</span>
+        </>
+      }
+      onClick={() => openJob(job.id)}
+      morphLayoutId={`job-${job.id}`}
+    />
+  )
 
   return (
     <div className="screen page-content body jobs-screen">
@@ -101,7 +135,7 @@ export default function JobsList({ jobs }: { jobs: JobWithRelations[] }) {
         </button>
       ) : null}
 
-      <div className="search premium-search" data-coach="jobs-search">
+      <div className="premium-search" data-coach="jobs-search">
         <MagnifyingGlass size={16} className="premium-search__icon" aria-hidden="true" />
         <input
           className="premium-search__input"
@@ -143,6 +177,13 @@ export default function JobsList({ jobs }: { jobs: JobWithRelations[] }) {
           actionLabel={focusDate ? 'Add job this day' : 'Add a job'}
           onAction={handleAddJob}
         />
+      ) : filtered.length > 50 ? (
+        <VirtualList
+          items={flatJobRows}
+          estimateSize={72}
+          getItemKey={(row) => row.key}
+          renderItem={(row) => renderJobRow(row.job)}
+        />
       ) : (
         sections.map((section) => {
           const isExpanded = expanded[section.key]
@@ -151,23 +192,7 @@ export default function JobsList({ jobs }: { jobs: JobWithRelations[] }) {
 
           return (
             <SectionGroup key={section.key} title={section.label}>
-              {visible.map((job) => (
-                <ListRow
-                  key={job.id}
-                  icon={<Car size={18} weight="duotone" />}
-                  iconTone={ICON_TONE[jobListIconTone(job)] ?? 'blue'}
-                  title={job.client?.name ?? 'Client'}
-                  subtitle={`${job.package?.name ?? 'Detail'} · ${capitalize(job.vehicle_type ?? 'vehicle')}`}
-                  badgeStatus={job.invoice?.status === 'overdue' ? 'overdue' : job.status}
-                  trailing={
-                    <>
-                      <CurrencyAmount value={job.revenue} className="ui-list-row__amount" />
-                      <span className="ui-list-row__subtitle">{jobListRightTime(job)}</span>
-                    </>
-                  }
-                  onClick={() => router.push(`/jobs/${job.id}`)}
-                />
-              ))}
+              {visible.map((job) => renderJobRow(job))}
               {hidden > 0 ? (
                 <button
                   type="button"

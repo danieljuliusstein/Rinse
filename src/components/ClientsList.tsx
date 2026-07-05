@@ -7,9 +7,10 @@ import AuthEmptyState from '@/components/AuthEmptyState'
 import ClientCard from '@/components/clients/ClientCard'
 import ClientImportSheet from '@/components/clients/ClientImportSheet'
 import FollowUpClientCard from '@/components/clients/FollowUpClientCard'
-import { EmptyState, VaulSheet } from '@/components/ui'
+import { EmptyState, VaulSheet, VirtualList } from '@/components/ui'
 import { clientsToCsv, downloadCsv } from '@/lib/client-csv'
 import { useAuthEmptyState } from '@/hooks/useAuthEmptyState'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import {
   buildDerivedMap,
   filterBySegment,
@@ -65,6 +66,7 @@ export default function ClientsList({
   const router = useRouter()
   const { isLoggedOut } = useAuthEmptyState()
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedSearch(search)
   const [segment, setSegment] = useState<ClientSegment>('all')
   const [showAllRest, setShowAllRest] = useState(false)
   const [sort, setSort] = useState<ClientSort>('revenue')
@@ -76,12 +78,12 @@ export default function ClientsList({
   const topClients = useMemo(() => topClientsByRevenue(clients, 3), [clients])
 
   const filtered = useMemo(() => {
-    const q = search.trim()
+    const q = debouncedSearch.trim()
     let list = filterBySegment(clients, segment, derivedMap)
     list = sortForSegment(list, segment, derivedMap)
     if (q) list = list.filter((c) => matchesSearch(c, q))
     return sortClients(list, sort)
-  }, [clients, segment, search, derivedMap, sort])
+  }, [clients, segment, debouncedSearch, derivedMap, sort])
 
   const allRest = useMemo(() => {
     const topIds = new Set(topClients.map((c) => c.id))
@@ -93,6 +95,7 @@ export default function ClientsList({
 
   const visibleRest = showAllRest ? allRest : allRest.slice(0, CLIENTS_VISIBLE)
   const hiddenRest = allRest.length - visibleRest.length
+  const searching = debouncedSearch.trim().length > 0
 
   const renderSegmentList = () =>
     filtered.map((client) => {
@@ -149,7 +152,7 @@ export default function ClientsList({
         ) : null}
       </header>
 
-      <div className="search premium-search">
+      <div className="premium-search">
         <MagnifyingGlass size={16} className="premium-search__icon" aria-hidden="true" />
         <input
           className="premium-search__input"
@@ -206,9 +209,22 @@ export default function ClientsList({
         />
       ) : (
         <div data-coach="clients-list">
-          {segment !== 'all' ? (
+          {searching || segment !== 'all' ? (
             filtered.length === 0 ? (
               <EmptyState title="No clients found" description="Try another segment or search term." />
+            ) : filtered.length > 50 ? (
+              <VirtualList
+                className="clients-list-section"
+                items={filtered}
+                estimateSize={88}
+                getItemKey={(client) => client.id}
+                renderItem={(client) => {
+                  const derived = derivedMap.get(client.id)!
+                  return (
+                    <ClientCard client={client} derived={derived} onClientRemoved={onClientRemoved} />
+                  )
+                }}
+              />
             ) : (
               <div className="clients-list-section">{renderSegmentList()}</div>
             )
@@ -245,14 +261,29 @@ export default function ClientsList({
                 <>
                   <p className="sec">All clients</p>
                   <div className="clients-list-section">
-                    {visibleRest.map((client) => (
-                      <ClientCard
-                        key={client.id}
-                        client={client}
-                        derived={derivedMap.get(client.id)!}
-                        onClientRemoved={onClientRemoved}
+                    {allRest.length > 50 ? (
+                      <VirtualList
+                        items={visibleRest}
+                        estimateSize={88}
+                        getItemKey={(client) => client.id}
+                        renderItem={(client) => (
+                          <ClientCard
+                            client={client}
+                            derived={derivedMap.get(client.id)!}
+                            onClientRemoved={onClientRemoved}
+                          />
+                        )}
                       />
-                    ))}
+                    ) : (
+                      visibleRest.map((client) => (
+                        <ClientCard
+                          key={client.id}
+                          client={client}
+                          derived={derivedMap.get(client.id)!}
+                          onClientRemoved={onClientRemoved}
+                        />
+                      ))
+                    )}
                     {hiddenRest > 0 && (
                       <button type="button" className="more-pill" onClick={() => setShowAllRest(true)}>
                         + {hiddenRest} more client{hiddenRest > 1 ? 's' : ''}

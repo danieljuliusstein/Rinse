@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import BottomSheet from '@/components/BottomSheet'
 import { FloatingAffixField, FloatingField, PillGroup, SheetFooter } from '@/components/forms'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
 import {
   categoryLabel,
@@ -11,6 +13,7 @@ import {
   type InventoryCategory,
   type InventoryStatus,
 } from '@/lib/home-inventory'
+import { inventoryEditFormSchema, type InventoryEditFormValues } from '@/lib/validation'
 
 const STATUS_PILLS: { value: InventoryStatus; label: string }[] = [
   { value: 'ok', label: 'OK' },
@@ -40,21 +43,33 @@ export default function InventoryEditSheet({
   onClose,
 }: InventoryEditSheetProps) {
   const formRef = useRef<HTMLDivElement>(null)
-  const [name, setName] = useState('')
   const [status, setStatus] = useState<InventoryStatus>('ok')
-  const [notes, setNotes] = useState('')
-  const [priceEstimate, setPriceEstimate] = useState('')
 
   const hasStatus = category === 'chemicals' || category === 'supplies'
   const isWishlist = category === 'wishlist'
 
+  const { control, watch, reset, submitWithToast } = useRinseForm<InventoryEditFormValues>({
+    schema: inventoryEditFormSchema,
+    defaultValues: {
+      name: '',
+      price_estimate: 0,
+      notes: '',
+    },
+  })
+
+  const name = watch('name')
+  const priceEstimate = watch('price_estimate')
+  const notes = watch('notes')
+
   useEffect(() => {
     if (!item && !isNew) return
-    setName(item?.name ?? '')
+    reset({
+      name: item?.name ?? '',
+      price_estimate: item?.priceEstimate ?? 0,
+      notes: item?.notes ?? '',
+    })
     setStatus(item?.status ?? 'ok')
-    setNotes(item?.notes ?? '')
-    setPriceEstimate(item?.priceEstimate != null ? String(item.priceEstimate) : '')
-  }, [item, isNew])
+  }, [item, isNew, reset])
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
@@ -62,16 +77,14 @@ export default function InventoryEditSheet({
 
   if (!item && !isNew) return null
 
-  const handleSave = () => {
-    const trimmed = name.trim()
-    if (!trimmed) return
+  const handleSave = submitWithToast((values) => {
     onSave({
-      name: trimmed,
+      name: values.name,
       status: hasStatus ? status : undefined,
-      notes: notes.trim(),
-      priceEstimate: isWishlist ? Number(priceEstimate) || 0 : undefined,
+      notes: values.notes ?? '',
+      priceEstimate: isWishlist ? values.price_estimate ?? 0 : undefined,
     })
-  }
+  })
 
   const subtitle = isNew
     ? `New ${categoryLabel(category).toLowerCase()} item`
@@ -88,50 +101,82 @@ export default function InventoryEditSheet({
           saveLabel={isNew ? 'Add item' : 'Save changes'}
           ready={name.trim().length > 0}
           layout="split"
-          onSave={handleSave}
+          onSave={() => void handleSave()}
           onCancel={onClose}
           onDelete={!isNew ? onDelete : undefined}
         />
       }
     >
       <div ref={formRef} className="premium-sheet__form">
-        <FloatingField id="inv-edit-name" label="Name" filled={name.trim().length > 0}>
-          <input
-            id="inv-edit-name"
-            className={`f-input${name.trim() ? ' hv' : ''}`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder=" "
-            autoFocus
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="inv-edit-name"
+              label="Name"
+              filled={field.value.trim().length > 0}
+              error={fieldState.error?.message}
+            >
+              <input
+                id="inv-edit-name"
+                className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                autoFocus
+              />
+            </FloatingField>
+          )}
+        />
 
         {hasStatus ? (
           <PillGroup label="Status" options={STATUS_PILLS} value={status} onChange={setStatus} />
         ) : null}
 
         {isWishlist ? (
-          <FloatingAffixField
-            id="inv-edit-price"
-            label="Price"
-            type="number"
-            min={0}
-            value={priceEstimate}
-            filled={priceEstimate.trim().length > 0}
-            onChange={(e) => setPriceEstimate(e.target.value)}
+          <Controller
+            control={control}
+            name="price_estimate"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="inv-edit-price"
+                label="Price"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
           />
         ) : null}
 
-        <FloatingField id="inv-edit-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-          <textarea
-            id="inv-edit-notes"
-            className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder=" "
-            rows={3}
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="inv-edit-notes"
+              label="Notes"
+              filled={(field.value ?? '').trim().length > 0}
+              optional
+              textarea
+              error={fieldState.error?.message}
+            >
+              <textarea
+                id="inv-edit-notes"
+                className={`f-textarea${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                rows={3}
+              />
+            </FloatingField>
+          )}
+        />
       </div>
     </BottomSheet>
   )

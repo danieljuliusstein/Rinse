@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, ListRow, SectionGroup } from '@/components/ui'
+import { Button, ListRow, SectionGroup, ScreenLoading } from '@/components/ui'
 import {
   clearLocalDeviceData,
   clearOfflineQueue,
@@ -353,11 +353,7 @@ export default function SettingsAccessPage() {
   }
 
   if (!ready || !settings) {
-    return (
-      <div className="screen page-content settings-screen settings-screen--loading">
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body variant="settings" />
   }
 
   return (

@@ -3,6 +3,167 @@
    Use these classes via shared components only.
    ============================================ */
 
+/* ── Skeleton loading (Wave A — premium UX) ── */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes skeleton-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.skeleton {
+  display: inline-block;
+  background-color: var(--bg-muted);
+  background-image: linear-gradient(
+    90deg,
+    var(--bg-muted) 0%,
+    var(--bg-surface-active) 50%,
+    var(--bg-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+.skeleton--stagger,
+.skeleton-job-card,
+.skeleton-client-card,
+.skeleton-list-row,
+.skeleton-screen__card,
+.skeleton-inventory-grid__cell {
+  animation: skeleton-fade-in 0.28s ease-out both;
+  animation-delay: var(--skeleton-stagger, 0ms);
+}
+
+.skeleton-screen-header__sub {
+  display: block;
+  margin-top: 8px;
+}
+
+.skeleton-screen__search {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.skeleton-screen__chips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.skeleton-screen__section-label {
+  display: block;
+  margin: 0 4px 8px;
+}
+
+.skeleton-screen__card {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.skeleton-screen__group + .skeleton-screen__group {
+  margin-top: 20px;
+}
+
+.skeleton-screen__card-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.skeleton-job-card,
+.skeleton-client-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.skeleton-job-card + .skeleton-job-card,
+.skeleton-client-card + .skeleton-client-card {
+  margin-top: 8px;
+}
+
+.skeleton-job-card__body,
+.skeleton-client-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.skeleton-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.skeleton-list-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-screen__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-screen--inline {
+  padding: 8px 0;
+}
+
+.skeleton-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.skeleton-inventory-grid__cell {
+  display: block;
+  width: 100%;
+}
+
+.screen-loading-shell--inline {
+  padding: 8px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+    background-color: var(--bg-surface-active);
+  }
+
+  .skeleton--stagger,
+  .skeleton-job-card,
+  .skeleton-client-card,
+  .skeleton-list-row,
+  .skeleton-screen__card,
+  .skeleton-inventory-grid__cell {
+    animation: none;
+  }
+}
+
 /* ── Grouped list (IF-style section + rows) ── */
 .ui-section {
   margin-bottom: 20px;
@@ -752,6 +913,10 @@
 
 .home-dashboard .weather-readiness-row:nth-child(6) {
   animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.weather-readiness--settled .weather-readiness-row {
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

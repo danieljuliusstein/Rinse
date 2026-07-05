@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useOptimistic, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import BusinessExpenseSheet from '@/components/business/BusinessExpenseSheet'
 import EquipmentEditSheet, { type EquipmentSheetMode } from '@/components/home/EquipmentEditSheet'
@@ -34,6 +34,8 @@ import {
   type HomeInventoryItem,
 } from '@/lib/home-inventory'
 import { isLowStock } from '@/lib/supplies-logic'
+import { optimisticSupplyReducer, type SupplyOptimisticAction } from '@/lib/optimistic-reducers'
+import { useActionToast } from '@/providers/ActionToastProvider'
 import type { BusinessExpense, Equipment, Supply, SupplyKind } from '@/lib/types'
 
 type InventoryView = 'home' | SectionKey
@@ -51,7 +53,11 @@ function notifyLowStock(name: string) {
 export default function InventoryPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { showMessage } = useActionToast()
   const [catalog, setCatalog] = useState<Supply[]>([])
+  const [optimisticCatalog, addOptimisticCatalog] = useOptimistic(catalog, (state, action: SupplyOptimisticAction) =>
+    optimisticSupplyReducer(state, action),
+  )
   const [allEquipment, setAllEquipment] = useState<Equipment[]>([])
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [businessExpenses, setBusinessExpenses] = useState<BusinessExpense[]>([])
@@ -116,8 +122,8 @@ export default function InventoryPage() {
     router.replace('/inventory')
   }, [searchParams, loading, allEquipment, router])
 
-  const lowCount = useMemo(() => catalog.filter(isLowStock).length, [catalog])
-  const totalItems = catalog.length + equipment.length + wishlist.length
+  const lowCount = useMemo(() => optimisticCatalog.filter(isLowStock).length, [optimisticCatalog])
+  const totalItems = optimisticCatalog.length + equipment.length + wishlist.length
 
   const openCategory = (key: SectionKey) => {
     setSwipedRowId(null)
@@ -218,7 +224,7 @@ export default function InventoryPage() {
       {view === 'home' ? (
         <InventoryHome
           loading={loading}
-          catalog={catalog}
+          catalog={optimisticCatalog}
           equipment={equipment}
           wishlist={wishlist}
           totalItems={totalItems}
@@ -229,7 +235,7 @@ export default function InventoryPage() {
       ) : (
         <InventoryCategoryView
           sectionKey={view}
-          catalog={catalog}
+          catalog={optimisticCatalog}
           equipment={equipment}
           equipmentExpenseMap={equipmentExpenseMap}
           supplyExpenseIds={supplyExpenseIds}
@@ -290,18 +296,25 @@ export default function InventoryPage() {
             if (updated && isLowStock(updated) && !wasLow) notifyLowStock(updated.name)
           }}
           onRestock={async (id, quantity, totalCost) => {
-            const supply = catalog.find((s) => s.id === id)
-            if (totalCost > 0 && supply) {
-              await createSupplyPurchase({
-                date: new Date().toISOString().slice(0, 10),
-                name: supply.name,
-                amount: totalCost,
-                quantity,
-                supply_id: id,
-                vendor: supply.supplier,
-              })
-            } else {
-              await restockSupply(id, { quantity, total_cost: totalCost || undefined })
+            const supply = optimisticCatalog.find((s) => s.id === id)
+            addOptimisticCatalog({ type: 'restock', id, quantity })
+            try {
+              if (totalCost > 0 && supply) {
+                await createSupplyPurchase({
+                  date: new Date().toISOString().slice(0, 10),
+                  name: supply.name,
+                  amount: totalCost,
+                  quantity,
+                  supply_id: id,
+                  vendor: supply.supplier,
+                })
+              } else {
+                await restockSupply(id, { quantity, total_cost: totalCost || undefined })
+              }
+              await reload()
+            } catch (e) {
+              showMessage(e instanceof Error ? e.message : 'Could not restock supply')
+              await reload()
             }
           }}
           onAfterSave={reload}

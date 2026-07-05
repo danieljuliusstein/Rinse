@@ -1,0 +1,135 @@
+/* Wave C — rendered prose (rinse-prose token overrides) */
+
+.rinse-prose {
+  @apply prose max-w-none;
+  --tw-prose-body: var(--text-primary);
+  --tw-prose-headings: var(--text-primary);
+  --tw-prose-lead: var(--text-secondary);
+  --tw-prose-links: var(--green-text);
+  --tw-prose-bold: var(--text-primary);
+  --tw-prose-counters: var(--text-muted);
+  --tw-prose-bullets: var(--text-muted);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--text-secondary);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--text-muted);
+  --tw-prose-code: var(--text-primary);
+  --tw-prose-pre-code: var(--text-primary);
+  --tw-prose-pre-bg: var(--bg-muted);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+  max-width: 65ch;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.client-light-root .rinse-prose,
+.portal-root .rinse-prose {
+  --tw-prose-body: var(--cl-text);
+  --tw-prose-headings: var(--cl-text);
+  --tw-prose-lead: var(--cl-text-muted);
+  --tw-prose-links: var(--cl-accent);
+  --tw-prose-bold: var(--cl-text);
+  --tw-prose-counters: var(--cl-text-muted);
+  --tw-prose-bullets: var(--cl-text-muted);
+  --tw-prose-hr: var(--cl-border);
+  --tw-prose-quotes: var(--cl-text-muted);
+  --tw-prose-quote-borders: var(--cl-border);
+  --tw-prose-captions: var(--cl-text-muted);
+}
+
+.rinse-prose :where(h1, h2, h3, h4):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.rinse-prose :where(a):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* QR code */
+.qr-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.qr-code[data-variant='client'] {
+  background: var(--cl-surface);
+  border-color: var(--cl-border);
+}
+
+.qr-code__label {
+  font-size: 12px;
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.qr-code[data-variant='client'] .qr-code__label {
+  color: var(--cl-text-muted);
+}
+
+/* Reorderable lists */
+.reorderable-list__item--dragging {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reorderable-list__item--dragging {
+    transform: none;
+  }
+}
+
+.invoice-customize-sheet__extra-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+.invoice-customize-sheet__extra-item span:first-child {
+  flex: 1;
+  font-size: 14px;
+}
+
+.receipt-lines__row.reorderable-list__item {
+  position: relative;
+}
+
+.invoice-line-template-list__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.invoice-preview-qr,
+.invoice-send-qr {
+  margin-top: 12px;
+}
+
+.book-calendar-picker {
+  margin-top: 12px;
+}
+
+.receipt-lines__drag-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}

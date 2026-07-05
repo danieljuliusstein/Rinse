@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { fmt } from '@/lib/calculations'
+import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import {
   aggregateJobsRevenue,
   donutArcPath,
@@ -51,7 +51,9 @@ export default function HomeRevenueChart({ jobs }: HomeRevenueChartProps) {
     <div className="home-revenue-chart card">
       <div className="home-revenue-chart__head">
         <p className="home-revenue-chart__title">Service mix</p>
-        <p className="home-revenue-chart__meta">{fmt(stats.totalRevenue)} this month</p>
+        <p className="home-revenue-chart__meta">
+          <CurrencyAmount value={stats.totalRevenue} variant="revenue" /> this month
+        </p>
       </div>
       <div className="home-revenue-chart__body">
         <svg viewBox="0 0 108 108" className="home-revenue-chart__svg" aria-hidden="true">
@@ -65,7 +67,9 @@ export default function HomeRevenueChart({ jobs }: HomeRevenueChartProps) {
             <li key={s.label}>
               <span className="home-revenue-chart__swatch" style={{ background: s.color }} />
               <span className="home-revenue-chart__label">{s.label}</span>
-              <span className="home-revenue-chart__amount">{fmt(s.amount)}</span>
+              <span className="home-revenue-chart__amount">
+                <CurrencyAmount value={s.amount} variant="neutral" />
+              </span>
             </li>
           ))}
         </ul>

@@ -18,7 +18,7 @@ export default function EditVehiclePage() {
   }, [vehicleId])
 
   if (vehicle === undefined) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!vehicle) {

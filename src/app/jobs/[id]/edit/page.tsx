@@ -23,7 +23,7 @@ export default function JobEditPage() {
   }, [id])
 
   if (job === undefined || packages.length === 0) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!job) {

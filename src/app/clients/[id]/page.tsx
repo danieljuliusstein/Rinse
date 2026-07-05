@@ -27,7 +27,7 @@ export default function ClientDetailPage() {
   }, [id])
 
   if (client === undefined) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!client) {

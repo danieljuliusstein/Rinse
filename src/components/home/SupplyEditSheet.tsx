@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { Warning } from '@phosphor-icons/react'
 import BottomSheet from '@/components/BottomSheet'
 import AcquisitionToggle, { type AcquisitionMode } from '@/components/inventory/AcquisitionToggle'
@@ -12,10 +13,12 @@ import {
   PillGroup,
   SheetFooter,
 } from '@/components/forms'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { costPerUnitFromPurchase } from '@/lib/supplies-logic'
 import { fmtDetailed } from '@/lib/calculations'
 import { computeFormProgress } from '@/lib/form-progress'
-import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
+import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { supplyFormSchema, type SupplyFormValues } from '@/lib/validation'
 import type { Supply, SupplyAddOptions, SupplyInput, SupplyKind } from '@/lib/types'
 
 export type SupplySheetMode = 'add' | 'edit' | 'restock'
@@ -40,6 +43,41 @@ function unitOptions(kind: SupplyKind): readonly string[] {
   return kind === 'consumable' ? CONSUMABLE_UNITS : CHEMICAL_UNITS
 }
 
+function defaultValuesForMode(
+  mode: SupplySheetMode,
+  supply: Supply | null,
+  kind: SupplyKind,
+): SupplyFormValues {
+  const defaultUnit = kind === 'consumable' ? 'each' : 'oz'
+  if (mode === 'add') {
+    return {
+      mode: 'add',
+      name: '',
+      qty: 0,
+      total_cost: 0,
+      cost_per_unit_manual: 0,
+      reorder_threshold: undefined,
+      supplier: '',
+      notes: '',
+    }
+  }
+  if (mode === 'restock') {
+    return {
+      mode: 'restock',
+      restock_qty: 0,
+      restock_cost: 0,
+    }
+  }
+  return {
+    mode: 'edit',
+    name: supply?.name ?? '',
+    quantity_on_hand: supply?.quantity_on_hand ?? 0,
+    reorder_threshold: supply?.reorder_threshold,
+    supplier: supply?.supplier ?? '',
+    notes: supply?.notes ?? '',
+  }
+}
+
 export default function SupplyEditSheet({
   supply,
   kind,
@@ -53,23 +91,29 @@ export default function SupplyEditSheet({
   onModeChange,
 }: SupplyEditSheetProps) {
   const formRef = useRef<HTMLDivElement>(null)
-  const unitRef = useRef<HTMLSelectElement>(null)
   const defaultUnit = kind === 'consumable' ? 'each' : 'oz'
-  const [name, setName] = useState('')
   const [unit, setUnit] = useState(defaultUnit)
-  const [onHand, setOnHand] = useState('')
-  const [qty, setQty] = useState('')
-  const [totalCost, setTotalCost] = useState('')
-  const [reorderAt, setReorderAt] = useState('')
-  const [supplier, setSupplier] = useState('')
-  const [notes, setNotes] = useState('')
   const [iconKey, setIconKey] = useState<string | undefined>(undefined)
   const [acquisition, setAcquisition] = useState<AcquisitionMode>('bought_new')
-  const [costPerUnitManual, setCostPerUnitManual] = useState('')
   const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10))
-  const [restockQty, setRestockQty] = useState('')
-  const [restockCost, setRestockCost] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const { control, watch, reset, submitWithToast } = useRinseForm<SupplyFormValues>({
+    schema: supplyFormSchema,
+    defaultValues: defaultValuesForMode(mode, supply, kind),
+  })
+
+  const formMode = watch('mode')
+  const name = formMode === 'restock' ? '' : watch('name')
+  const qty = formMode === 'add' ? watch('qty') : 0
+  const totalCost = formMode === 'add' ? watch('total_cost') : 0
+  const costPerUnitManual = formMode === 'add' ? watch('cost_per_unit_manual') : 0
+  const onHand = formMode === 'edit' ? watch('quantity_on_hand') : 0
+  const reorderAt = formMode !== 'restock' ? watch('reorder_threshold') : undefined
+  const supplier = formMode !== 'restock' ? watch('supplier') : ''
+  const notes = formMode !== 'restock' ? watch('notes') : ''
+  const restockQty = formMode === 'restock' ? watch('restock_qty') : 0
+  const restockCost = formMode === 'restock' ? watch('restock_cost') : 0
 
   const activeUnit = unit.trim() || defaultUnit
   const baseUnits = unitOptions(kind)
@@ -79,43 +123,38 @@ export default function SupplyEditSheet({
       : baseUnits
 
   useEffect(() => {
+    reset(defaultValuesForMode(mode, supply, kind))
     if (mode === 'add') {
-      setName('')
       setUnit(defaultUnit)
-      setOnHand('')
-      setQty('')
-      setTotalCost('')
-      setReorderAt('')
-      setSupplier('')
-      setNotes('')
       setIconKey(undefined)
       setAcquisition('bought_new')
-      setCostPerUnitManual('')
       setPurchaseDate(new Date().toISOString().slice(0, 10))
       return
     }
     if (!supply) return
     const opts = unitOptions(kind)
-    setName(supply.name)
     setUnit(opts.includes(supply.unit as (typeof opts)[number]) ? supply.unit : defaultUnit)
-    setOnHand(String(supply.quantity_on_hand))
-    setReorderAt(supply.reorder_threshold != null ? String(supply.reorder_threshold) : '')
-    setSupplier(supply.supplier ?? '')
-    setNotes(supply.notes ?? '')
     setIconKey(supply.icon_key || undefined)
-    setRestockQty('')
-    setRestockCost('')
-  }, [supply, mode, kind, defaultUnit])
+  }, [supply, mode, kind, defaultUnit, reset])
 
   const progress = computeFormProgress(
-    [name, onHand, qty, totalCost, reorderAt, supplier, notes, restockQty, restockCost],
+    [
+      name,
+      formMode === 'edit' ? String(onHand) : '',
+      formMode === 'add' ? String(qty) : '',
+      formMode === 'add' ? String(totalCost) : '',
+      reorderAt != null ? String(reorderAt) : '',
+      supplier ?? '',
+      notes ?? '',
+      formMode === 'restock' ? String(restockQty) : '',
+      formMode === 'restock' ? String(restockCost) : '',
+    ],
     1,
     1,
   )
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
-    syncSelectFloatingLabel(unitRef.current)
   }, [
     name,
     unit,
@@ -131,20 +170,17 @@ export default function SupplyEditSheet({
     purchaseDate,
     supply,
     mode,
+    formMode,
   ])
 
   const computedCostPerUnit = useMemo(() => {
-    const q = Number(qty)
-    const c = Number(totalCost)
-    if (mode !== 'add' || acquisition !== 'bought_new' || !q || !c) return 0
-    return costPerUnitFromPurchase(q, c)
+    if (mode !== 'add' || acquisition !== 'bought_new' || !qty || !totalCost) return 0
+    return costPerUnitFromPurchase(qty, totalCost)
   }, [mode, qty, totalCost, acquisition])
 
   const restockCostPerUnit = useMemo(() => {
-    const q = Number(restockQty)
-    const c = Number(restockCost)
-    if (mode !== 'restock' || !q || !c) return 0
-    return costPerUnitFromPurchase(q, c)
+    if (mode !== 'restock' || !restockQty || !restockCost) return 0
+    return costPerUnitFromPurchase(restockQty, restockCost)
   }, [mode, restockQty, restockCost])
 
   const title =
@@ -154,60 +190,52 @@ export default function SupplyEditSheet({
         ? `Restock ${supply?.name ?? ''}`
         : supply?.name ?? 'Edit item'
 
-  const handleSave = async () => {
+  const handleSave = submitWithToast(async (values) => {
     setSaving(true)
     try {
-      if (mode === 'add') {
-        const trimmed = name.trim()
-        const quantity = Number(qty)
-        if (!trimmed || !quantity) return
+      if (values.mode === 'add') {
         const input: SupplyInput = {
-          name: trimmed,
+          name: values.name,
           unit: activeUnit,
-          quantity_on_hand: quantity,
-          reorder_threshold: Number(reorderAt) || undefined,
+          quantity_on_hand: values.qty,
+          reorder_threshold: values.reorder_threshold,
           cost_per_unit:
             acquisition === 'bought_new'
               ? computedCostPerUnit || undefined
-              : Number(costPerUnitManual) || undefined,
-          supplier: supplier.trim() || undefined,
+              : values.cost_per_unit_manual || undefined,
+          supplier: values.supplier?.trim() || undefined,
           kind,
-          notes: notes.trim() || undefined,
+          notes: values.notes?.trim() || undefined,
           icon_key: iconKey,
         }
         const includeExpense = acquisition === 'bought_new'
         const options: SupplyAddOptions = includeExpense
           ? {
               logExpense: true,
-              totalPaid: Number(totalCost) || undefined,
+              totalPaid: values.total_cost || undefined,
               purchaseDate,
             }
           : { logExpense: false }
         await onSaveAdd(input, options)
-      } else if (mode === 'edit' && supply) {
-        const quantity = Number(onHand)
-        if (!Number.isFinite(quantity) || quantity < 0) return
+      } else if (values.mode === 'edit' && supply) {
         await onSaveEdit(supply.id, {
-          name: name.trim(),
+          name: values.name,
           unit: activeUnit,
-          quantity_on_hand: quantity,
-          reorder_threshold: Number(reorderAt) || undefined,
-          supplier: supplier.trim() || undefined,
-          notes: notes.trim() || undefined,
+          quantity_on_hand: values.quantity_on_hand,
+          reorder_threshold: values.reorder_threshold,
+          supplier: values.supplier?.trim() || undefined,
+          notes: values.notes?.trim() || undefined,
           icon_key: iconKey ?? '',
         })
-      } else if (mode === 'restock' && supply) {
-        const quantity = Number(restockQty)
-        const cost = Number(restockCost)
-        if (!quantity || quantity <= 0) return
-        await onRestock(supply.id, quantity, cost > 0 ? cost : 0)
+      } else if (values.mode === 'restock' && supply) {
+        await onRestock(supply.id, values.restock_qty, values.restock_cost > 0 ? values.restock_cost : 0)
       }
       await onAfterSave?.()
       onClose()
     } finally {
       setSaving(false)
     }
-  }
+  })
 
   const subtitle =
     mode === 'add'
@@ -215,6 +243,13 @@ export default function SupplyEditSheet({
       : mode === 'edit'
         ? 'Update stock counts and alert levels — use Restock after a purchase'
         : 'Log a purchase to add stock and update cost per unit'
+
+  const ready =
+    mode === 'add'
+      ? name.trim().length > 0 && qty > 0
+      : mode === 'restock'
+        ? restockQty > 0
+        : name.trim().length > 0
 
   return (
     <BottomSheet
@@ -227,13 +262,7 @@ export default function SupplyEditSheet({
           saveLabel={
             mode === 'add' ? 'Add to catalog' : mode === 'restock' ? 'Restock' : 'Save changes'
           }
-          ready={
-            mode === 'add'
-              ? name.trim().length > 0 && Number(qty) > 0
-              : mode === 'restock'
-                ? Number(restockQty) > 0
-                : name.trim().length > 0
-          }
+          ready={ready}
           saving={saving}
           layout="split"
           onSave={() => void handleSave()}
@@ -294,15 +323,27 @@ export default function SupplyEditSheet({
             <div className="f-form-divider" />
             {mode === 'add' ? <FormProgressBar progress={progress} /> : null}
             <div ref={formRef} className="premium-sheet__form">
-              <FloatingField id="supply-name" label="Name" filled={name.trim().length > 0}>
-                <input
-                  id="supply-name"
-                  className={`f-input${name.trim() ? ' hv' : ''}`}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder=" "
-                />
-              </FloatingField>
+              <Controller
+                control={control}
+                name="name"
+                render={({ field, fieldState }) => (
+                  <FloatingField
+                    id="supply-name"
+                    label="Name"
+                    filled={field.value.trim().length > 0}
+                    error={fieldState.error?.message}
+                  >
+                    <input
+                      id="supply-name"
+                      className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder=" "
+                    />
+                  </FloatingField>
+                )}
+              />
 
               <InventoryIconPicker variant="supply" value={iconKey} onChange={setIconKey} />
 
@@ -319,18 +360,30 @@ export default function SupplyEditSheet({
 
         {mode === 'edit' && (
           <div className="premium-sheet__form">
-            <FloatingField id="supply-on-hand" label={`Quantity on hand (${activeUnit})`} filled={onHand.trim().length > 0}>
-              <input
-                id="supply-on-hand"
-                className={`f-input${onHand.trim() ? ' hv' : ''}`}
-                type="number"
-                min={0}
-                step={activeUnit === 'each' ? 1 : 0.5}
-                value={onHand}
-                onChange={(e) => setOnHand(e.target.value)}
-                placeholder=" "
-              />
-            </FloatingField>
+            <Controller
+              control={control}
+              name="quantity_on_hand"
+              render={({ field, fieldState }) => (
+                <FloatingField
+                  id="supply-on-hand"
+                  label={`Quantity on hand (${activeUnit})`}
+                  filled={field.value > 0 || field.value === 0}
+                  error={fieldState.error?.message}
+                >
+                  <input
+                    id="supply-on-hand"
+                    className={`f-input${String(field.value).trim() ? ' hv' : ''}`}
+                    type="number"
+                    min={0}
+                    step={activeUnit === 'each' ? 1 : 0.5}
+                    value={field.value}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onBlur={field.onBlur}
+                    placeholder=" "
+                  />
+                </FloatingField>
+              )}
+            />
           </div>
         )}
 
@@ -340,42 +393,72 @@ export default function SupplyEditSheet({
             <div className="premium-sheet__form">
               <AcquisitionToggle value={acquisition} onChange={setAcquisition} />
 
-              <FloatingField id="supply-qty" label={`Starting amount (${activeUnit})`} filled={qty.trim().length > 0}>
-                <input
-                  id="supply-qty"
-                  className={`f-input${qty.trim() ? ' hv' : ''}`}
-                  type="number"
-                  min={0}
-                  step={activeUnit === 'each' ? 1 : 0.5}
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
-                  placeholder=" "
-                />
-              </FloatingField>
+              <Controller
+                control={control}
+                name="qty"
+                render={({ field, fieldState }) => (
+                  <FloatingField
+                    id="supply-qty"
+                    label={`Starting amount (${activeUnit})`}
+                    filled={field.value > 0}
+                    error={fieldState.error?.message}
+                  >
+                    <input
+                      id="supply-qty"
+                      className={`f-input${field.value > 0 ? ' hv' : ''}`}
+                      type="number"
+                      min={0}
+                      step={activeUnit === 'each' ? 1 : 0.5}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      onBlur={field.onBlur}
+                      placeholder=" "
+                    />
+                  </FloatingField>
+                )}
+              />
 
               {acquisition === 'bought_new' ? (
                 <>
-                  <FloatingAffixField
-                    id="supply-paid"
-                    label="Amount paid"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={totalCost}
-                    filled={totalCost.trim().length > 0}
-                    onChange={(e) => setTotalCost(e.target.value)}
+                  <Controller
+                    control={control}
+                    name="total_cost"
+                    render={({ field, fieldState }) => (
+                      <FloatingAffixField
+                        id="supply-paid"
+                        label="Amount paid"
+                        currency
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        onBlur={field.onBlur}
+                        error={fieldState.error?.message}
+                      />
+                    )}
                   />
 
                   <div className="premium-sheet__grid2">
-                    <FloatingField id="supply-vendor" label="Vendor" filled={supplier.trim().length > 0} optional>
-                      <input
-                        id="supply-vendor"
-                        className={`f-input${supplier.trim() ? ' hv' : ''}`}
-                        value={supplier}
-                        onChange={(e) => setSupplier(e.target.value)}
-                        placeholder=" "
-                      />
-                    </FloatingField>
+                    <Controller
+                      control={control}
+                      name="supplier"
+                      render={({ field, fieldState }) => (
+                        <FloatingField
+                          id="supply-vendor"
+                          label="Vendor"
+                          filled={(field.value ?? '').trim().length > 0}
+                          optional
+                          error={fieldState.error?.message}
+                        >
+                          <input
+                            id="supply-vendor"
+                            className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                            value={field.value ?? ''}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder=" "
+                          />
+                        </FloatingField>
+                      )}
+                    />
                     <FloatingField id="supply-date" label="Purchase date" filled={Boolean(purchaseDate)}>
                       <input
                         id="supply-date"
@@ -396,27 +479,45 @@ export default function SupplyEditSheet({
                 </>
               ) : (
                 <>
-                  <FloatingAffixField
-                    id="supply-cpu"
-                    label={`Cost per ${activeUnit}`}
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={costPerUnitManual}
-                    filled={costPerUnitManual.trim().length > 0}
-                    onChange={(e) => setCostPerUnitManual(e.target.value)}
+                  <Controller
+                    control={control}
+                    name="cost_per_unit_manual"
+                    render={({ field, fieldState }) => (
+                      <FloatingAffixField
+                        id="supply-cpu"
+                        label={`Cost per ${activeUnit}`}
+                        currency
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        onBlur={field.onBlur}
+                        error={fieldState.error?.message}
+                      />
+                    )}
                   />
                   <p className="form-field-hint">For job costing only — not logged as expense</p>
 
-                  <FloatingField id="supply-supplier-no-exp" label="Supplier" filled={supplier.trim().length > 0} optional>
-                    <input
-                      id="supply-supplier-no-exp"
-                      className={`f-input${supplier.trim() ? ' hv' : ''}`}
-                      value={supplier}
-                      onChange={(e) => setSupplier(e.target.value)}
-                      placeholder=" "
-                    />
-                  </FloatingField>
+                  <Controller
+                    control={control}
+                    name="supplier"
+                    render={({ field, fieldState }) => (
+                      <FloatingField
+                        id="supply-supplier-no-exp"
+                        label="Supplier"
+                        filled={(field.value ?? '').trim().length > 0}
+                        optional
+                        error={fieldState.error?.message}
+                      >
+                        <input
+                          id="supply-supplier-no-exp"
+                          className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          placeholder=" "
+                        />
+                      </FloatingField>
+                    )}
+                  />
                 </>
               )}
             </div>
@@ -430,28 +531,45 @@ export default function SupplyEditSheet({
               {supply.cost_per_unit ? ` · ${fmtDetailed(supply.cost_per_unit)}/${supply.unit}` : ''}
             </p>
 
-            <FloatingField id="restock-qty" label={`Add to stock (${supply.unit})`} filled={restockQty.trim().length > 0}>
-              <input
-                id="restock-qty"
-                className={`f-input${restockQty.trim() ? ' hv' : ''}`}
-                type="number"
-                min={0}
-                step={supply.unit === 'each' ? 1 : 0.5}
-                value={restockQty}
-                onChange={(e) => setRestockQty(e.target.value)}
-                placeholder=" "
-              />
-            </FloatingField>
+            <Controller
+              control={control}
+              name="restock_qty"
+              render={({ field, fieldState }) => (
+                <FloatingField
+                  id="restock-qty"
+                  label={`Add to stock (${supply.unit})`}
+                  filled={field.value > 0}
+                  error={fieldState.error?.message}
+                >
+                  <input
+                    id="restock-qty"
+                    className={`f-input${field.value > 0 ? ' hv' : ''}`}
+                    type="number"
+                    min={0}
+                    step={supply.unit === 'each' ? 1 : 0.5}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onBlur={field.onBlur}
+                    placeholder=" "
+                  />
+                </FloatingField>
+              )}
+            />
 
-            <FloatingAffixField
-              id="restock-paid"
-              label="Total paid"
-              type="number"
-              min={0}
-              step="0.01"
-              value={restockCost}
-              filled={restockCost.trim().length > 0}
-              onChange={(e) => setRestockCost(e.target.value)}
+            <Controller
+              control={control}
+              name="restock_cost"
+              render={({ field, fieldState }) => (
+                <FloatingAffixField
+                  id="restock-paid"
+                  label="Total paid"
+                  currency
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
+                />
+              )}
             />
             {restockCostPerUnit > 0 ? (
               <p className="inv-computed-cost">
@@ -465,44 +583,86 @@ export default function SupplyEditSheet({
           <>
             <div className="f-form-divider" />
             <div className="premium-sheet__form">
-              <FloatingField id="supply-reorder" label={`Low stock alert (${activeUnit})`} filled={reorderAt.trim().length > 0}>
-                <input
-                  id="supply-reorder"
-                  className={`f-input${reorderAt.trim() ? ' hv' : ''}`}
-                  type="number"
-                  min={0}
-                  step={activeUnit === 'each' ? 1 : 0.5}
-                  value={reorderAt}
-                  onChange={(e) => setReorderAt(e.target.value)}
-                  placeholder=" "
-                />
-              </FloatingField>
+              <Controller
+                control={control}
+                name="reorder_threshold"
+                render={({ field, fieldState }) => (
+                  <FloatingField
+                    id="supply-reorder"
+                    label={`Low stock alert (${activeUnit})`}
+                    filled={field.value != null && field.value > 0}
+                    error={fieldState.error?.message}
+                  >
+                    <input
+                      id="supply-reorder"
+                      className={`f-input${field.value != null && field.value > 0 ? ' hv' : ''}`}
+                      type="number"
+                      min={0}
+                      step={activeUnit === 'each' ? 1 : 0.5}
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value
+                        field.onChange(raw === '' ? undefined : Number(raw))
+                      }}
+                      onBlur={field.onBlur}
+                      placeholder=" "
+                    />
+                  </FloatingField>
+                )}
+              />
               <p className="form-field-hint">
                 <Warning size={10} weight="fill" aria-hidden /> Shows LOW when on hand drops below this amount
               </p>
 
               {mode === 'edit' ? (
-                <FloatingField id="supply-supplier-edit" label="Supplier" filled={supplier.trim().length > 0} optional>
-                  <input
-                    id="supply-supplier-edit"
-                    className={`f-input${supplier.trim() ? ' hv' : ''}`}
-                    value={supplier}
-                    onChange={(e) => setSupplier(e.target.value)}
-                    placeholder=" "
-                  />
-                </FloatingField>
+                <Controller
+                  control={control}
+                  name="supplier"
+                  render={({ field, fieldState }) => (
+                    <FloatingField
+                      id="supply-supplier-edit"
+                      label="Supplier"
+                      filled={(field.value ?? '').trim().length > 0}
+                      optional
+                      error={fieldState.error?.message}
+                    >
+                      <input
+                        id="supply-supplier-edit"
+                        className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder=" "
+                      />
+                    </FloatingField>
+                  )}
+                />
               ) : null}
 
-              <FloatingField id="supply-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-                <textarea
-                  id="supply-notes"
-                  className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder=" "
-                  rows={3}
-                />
-              </FloatingField>
+              <Controller
+                control={control}
+                name="notes"
+                render={({ field, fieldState }) => (
+                  <FloatingField
+                    id="supply-notes"
+                    label="Notes"
+                    filled={(field.value ?? '').trim().length > 0}
+                    optional
+                    textarea
+                    error={fieldState.error?.message}
+                  >
+                    <textarea
+                      id="supply-notes"
+                      className={`f-textarea${(field.value ?? '').trim() ? ' hv' : ''}`}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder=" "
+                      rows={3}
+                    />
+                  </FloatingField>
+                )}
+              />
             </div>
           </>
         )}

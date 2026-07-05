@@ -1,12 +1,17 @@
 'use client'
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { Controller } from 'react-hook-form'
 import { FloatingField } from '@/components/forms'
+import { ScreenLoading } from '@/components/ui'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { hasCustomBusinessLogo } from '@/lib/business-logo'
 import { validateLogoFile } from '@/lib/logo-upload'
 import { isValidHexColor, normalizeAccentColor } from '@/lib/brand-color'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
 import { saveSettingsAsync } from '@/lib/settings'
+import { settingsBusinessSchema, type SettingsBusinessFormValues } from '@/lib/validation'
+import { useActionToast } from '@/providers/ActionToastProvider'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import { loadOrganizationSlug } from '@/lib/tenant'
 import WebsiteBookingGuide from './WebsiteBookingGuide'
@@ -15,8 +20,9 @@ import SettingsDetailShell from './SettingsDetailShell'
 import { useSettingsDraft } from './SettingsDraftProvider'
 
 export default function SettingsBusinessPage() {
-  const { settings, ready, update, reload } = useSettingsDraft()
+  const { settings, ready, update, reload, registerSaveGuard } = useSettingsDraft()
   const confirm = useConfirm()
+  const { showMessage } = useActionToast()
   const formRef = useRef<HTMLDivElement>(null)
   const [orgSlug, setOrgSlug] = useState('')
   const [removingLogo, setRemovingLogo] = useState(false)
@@ -25,14 +31,57 @@ export default function SettingsBusinessPage() {
   const [logoError, setLogoError] = useState<string | null>(null)
   const [logoMeta, setLogoMeta] = useState<LogoMeta | null>(null)
 
+  const { control, watch, reset, trigger } = useRinseForm<SettingsBusinessFormValues>({
+    schema: settingsBusinessSchema,
+    defaultValues: {
+      business_name: '',
+      business_phone: '',
+      business_email: '',
+      business_address: '',
+    },
+  })
+
+  const businessName = watch('business_name')
+  const businessPhone = watch('business_phone')
+  const businessEmail = watch('business_email')
+  const businessAddress = watch('business_address')
+
+  useEffect(() => {
+    if (!settings) return
+    reset({
+      business_name: settings.business_name,
+      business_phone: settings.business_phone,
+      business_email: settings.business_email,
+      business_address: settings.business_address,
+    })
+  }, [
+    settings?.business_name,
+    settings?.business_phone,
+    settings?.business_email,
+    settings?.business_address,
+    reset,
+    settings,
+  ])
+
+  useEffect(() => {
+    registerSaveGuard(async () => {
+      const valid = await trigger()
+      if (!valid) {
+        showMessage('Please fix the highlighted fields.')
+        return false
+      }
+      return true
+    })
+    return () => registerSaveGuard(null)
+  }, [registerSaveGuard, trigger, showMessage])
+
   useEffect(() => {
     void loadOrganizationSlug().then((slug) => setOrgSlug(slug ?? ''))
   }, [])
 
   useEffect(() => {
-    if (!settings) return
     syncPrefilledFloatingLabels(formRef.current)
-  }, [settings?.business_name, settings?.business_phone, settings?.business_email, settings?.business_address])
+  }, [businessName, businessPhone, businessEmail, businessAddress])
 
   const bookingUrl =
     typeof window !== 'undefined' && orgSlug ? `${window.location.origin}/book/${orgSlug}` : ''
@@ -119,11 +168,7 @@ export default function SettingsBusinessPage() {
   }
 
   if (!ready || !settings) {
-    return (
-      <div className="screen page-content settings-screen settings-screen--loading">
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body variant="settings" />
   }
 
   return (
@@ -181,50 +226,113 @@ export default function SettingsBusinessPage() {
         </div>
 
         <div ref={formRef} className="page-form-card page-form" style={{ marginTop: 0 }}>
-          <FloatingField id="settings-business_name" label="Business name" filled={settings.business_name.trim().length > 0}>
-            <input
-              id="settings-business_name"
-              className={`f-input${settings.business_name.trim() ? ' hv' : ''}`}
-              value={settings.business_name}
-              onChange={(e) => update('business_name', e.target.value)}
-              placeholder=" "
-              autoComplete="organization"
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="business_name"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="settings-business_name"
+                label="Business name"
+                filled={field.value.trim().length > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="settings-business_name"
+                  className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    update('business_name', e.target.value)
+                  }}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  autoComplete="organization"
+                />
+              </FloatingField>
+            )}
+          />
 
           <div className="settings-divider" />
 
-          <FloatingField id="settings-business_phone" label="Phone" filled={settings.business_phone.trim().length > 0} optional>
-            <input
-              id="settings-business_phone"
-              className={`f-input${settings.business_phone.trim() ? ' hv' : ''}`}
-              type="tel"
-              value={settings.business_phone}
-              onChange={(e) => update('business_phone', e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="business_phone"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="settings-business_phone"
+                label="Phone"
+                filled={(field.value ?? '').trim().length > 0}
+                optional
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="settings-business_phone"
+                  className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                  type="tel"
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    update('business_phone', e.target.value)
+                  }}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                />
+              </FloatingField>
+            )}
+          />
 
-          <FloatingField id="settings-business_email" label="Email" filled={settings.business_email.trim().length > 0} optional>
-            <input
-              id="settings-business_email"
-              className={`f-input${settings.business_email.trim() ? ' hv' : ''}`}
-              type="email"
-              value={settings.business_email}
-              onChange={(e) => update('business_email', e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="business_email"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="settings-business_email"
+                label="Email"
+                filled={(field.value ?? '').trim().length > 0}
+                optional
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="settings-business_email"
+                  className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                  type="email"
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    update('business_email', e.target.value)
+                  }}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                />
+              </FloatingField>
+            )}
+          />
 
-          <FloatingField id="settings-business_address" label="Address" filled={settings.business_address.trim().length > 0} optional>
-            <input
-              id="settings-business_address"
-              className={`f-input${settings.business_address.trim() ? ' hv' : ''}`}
-              value={settings.business_address}
-              onChange={(e) => update('business_address', e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="business_address"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="settings-business_address"
+                label="Address"
+                filled={(field.value ?? '').trim().length > 0}
+                optional
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="settings-business_address"
+                  className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    update('business_address', e.target.value)
+                  }}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                />
+              </FloatingField>
+            )}
+          />
         </div>
 
         <div className="settings-divider" />

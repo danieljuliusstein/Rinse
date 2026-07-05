@@ -148,7 +148,7 @@ export default function InvoiceDocumentBody({
           <div className="invoice-doc-totals__divider" />
           <div className="invoice-doc-totals__row invoice-doc-totals__row--grand">
             <span>Total</span>
-            <span>{formatInvoiceMoney(vm.total)}</span>
+            <CurrencyAmount value={vm.total} precision="detailed" variant="neutral" />
           </div>
           <div className="invoice-doc-totals__row">
             <span className="invoice-doc-totals__muted">Balance due</span>
@@ -186,7 +186,11 @@ export default function InvoiceDocumentBody({
       ) : null}
 
       <div className="invoice-doc-footer-rinse">
-        {vm.termsFooter && <p>{vm.termsFooter}</p>}
+        {vm.termsFooter ? (
+          <div className="rinse-prose invoice-doc-terms">
+            <p>{vm.termsFooter}</p>
+          </div>
+        ) : null}
         {vm.questionsLine && <p>{vm.questionsLine}</p>}
         {vm.portalUrl && (
           <a

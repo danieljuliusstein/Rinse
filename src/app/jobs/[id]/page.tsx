@@ -17,7 +17,7 @@ export default function JobDetailPage() {
   }, [id])
 
   if (job === undefined) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!job) {

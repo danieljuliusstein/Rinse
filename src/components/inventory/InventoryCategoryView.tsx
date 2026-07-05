@@ -25,6 +25,7 @@ import {
 import { filterInventoryByExpenseTracking } from '@/lib/inventory-expense-logic'
 import SwipeableRow from '@/components/SwipeableRow'
 import { ActionDock, Button, EmptyState, SectionGroup } from '@/components/ui'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { filterSuppliesByKind } from '@/lib/supplies-logic'
 import type { HomeInventoryItem } from '@/lib/home-inventory'
 import type { BusinessExpense, Equipment, Supply } from '@/lib/types'
@@ -151,6 +152,7 @@ export default function InventoryCategoryView({
 }: InventoryCategoryViewProps) {
   const section = SECTION_CONFIG.find((s) => s.key === sectionKey)!
   const [query, setQuery] = useState('')
+  const debouncedQuery = useDebouncedSearch(query)
   const [chip, setChip] = useState<SupplyFilterChip>('all')
   const [viewMode, setViewMode] = useState<CategoryViewMode>(() => defaultViewMode(sectionKey))
 
@@ -163,26 +165,26 @@ export default function InventoryCategoryView({
   const supplyItems = useMemo(() => {
     if (!section.supplyKind) return []
     const base = filterSuppliesByKind(catalog, section.supplyKind)
-    const filtered = filterSuppliesList(base, query, chip)
+    const filtered = filterSuppliesList(base, debouncedQuery, chip)
     return filterInventoryByExpenseTracking(
       filtered,
       supplyExpenseIds,
       chip === 'not_in_expenses'
     )
-  }, [catalog, section.supplyKind, query, chip, supplyExpenseIds])
+  }, [catalog, section.supplyKind, debouncedQuery, chip, supplyExpenseIds])
 
   const equipmentItems = useMemo(() => {
-    const searched = filterBySearch(equipment, query)
+    const searched = filterBySearch(equipment, debouncedQuery)
     return filterInventoryByExpenseTracking(
       searched,
       new Set(equipmentExpenseMap.keys()),
       chip === 'not_in_expenses'
     )
-  }, [equipment, query, chip, equipmentExpenseMap])
+  }, [equipment, debouncedQuery, chip, equipmentExpenseMap])
 
   const wishlistItems = useMemo(
-    () => filterBySearch(wishlist, query),
-    [wishlist, query]
+    () => filterBySearch(wishlist, debouncedQuery),
+    [wishlist, debouncedQuery]
   )
 
   const { attention, stocked } = useMemo(() => groupSupplies(supplyItems), [supplyItems])
@@ -193,13 +195,13 @@ export default function InventoryCategoryView({
   const isGrid = viewMode === 'grid'
   const filterChips = section.isEquipment ? EQUIPMENT_FILTER_CHIPS : SUPPLY_FILTER_CHIPS
   const showExpenseFilters = showSupplyFilters || showEquipmentFilters
-  const hasActiveFilters = query.trim() !== '' || chip !== 'all'
+  const hasActiveFilters = debouncedQuery.trim() !== '' || chip !== 'all'
   const listIsEmpty =
     !section.isWishlist &&
     ((section.supplyKind && supplyItems.length === 0) ||
       (section.isEquipment && equipmentItems.length === 0))
-  const wishlistFilteredEmpty = section.isWishlist && wishlistItems.length === 0 && query.trim() !== ''
-  const wishlistTrueEmpty = section.isWishlist && wishlist.length === 0 && !query.trim()
+  const wishlistFilteredEmpty = section.isWishlist && wishlistItems.length === 0 && debouncedQuery.trim() !== ''
+  const wishlistTrueEmpty = section.isWishlist && wishlist.length === 0 && !debouncedQuery.trim()
   const showAddDock = Boolean(
     (section.supplyKind && !listIsEmpty) ||
       (section.isEquipment && !listIsEmpty) ||
@@ -249,7 +251,7 @@ export default function InventoryCategoryView({
         {showViewToggle ? <ViewModeToggle mode={viewMode} onChange={setViewMode} /> : null}
       </header>
 
-      <div className="search premium-search inventory-search">
+      <div className="premium-search inventory-search">
         <MagnifyingGlass className="premium-search__icon" size={16} weight="bold" aria-hidden="true" />
         <input
           type="search"

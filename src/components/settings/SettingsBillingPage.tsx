@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Badge, Button } from '@/components/ui'
+import { Badge, Button, ScreenLoading } from '@/components/ui'
 import { getPocketBase } from '@/lib/pocketbase'
 import { getPocketBaseAuthToken } from '@/lib/pb-auth'
 import { getCurrentOrganizationId } from '@/lib/tenant'
@@ -127,11 +127,7 @@ export default function SettingsBillingPage() {
   }
 
   if (loading) {
-    return (
-      <div className="screen page-content settings-screen settings-screen--loading">
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body variant="settings" />
   }
 
   return (

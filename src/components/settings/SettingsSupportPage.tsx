@@ -14,7 +14,7 @@ import {
   getSupportEmail,
 } from '@/lib/support-config'
 import { loadOrganizationSlug } from '@/lib/tenant'
-import { Button, ListRow, SectionGroup } from '@/components/ui'
+import { Button, ListRow, SectionGroup, ScreenLoading } from '@/components/ui'
 import SettingsDetailShell from './SettingsDetailShell'
 import { useSettingsDraft } from './SettingsDraftProvider'
 
@@ -73,11 +73,7 @@ export default function SettingsSupportPage() {
   }
 
   if (!ready) {
-    return (
-      <div className="screen page-content settings-screen settings-screen--loading">
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body variant="settings" />
   }
 
   return (

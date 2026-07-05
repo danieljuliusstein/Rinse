@@ -14,7 +14,7 @@ export default function JobsPage() {
   }, [])
 
   if (!jobs) {
-    return <ScreenLoading />
+    return <ScreenLoading body />
   }
 
   return <JobsList jobs={jobs} />

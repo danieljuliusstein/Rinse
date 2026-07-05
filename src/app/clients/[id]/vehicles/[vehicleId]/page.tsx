@@ -27,7 +27,7 @@ export default function VehicleProfilePage() {
   }, [reload])
 
   if (vehicle === undefined) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!vehicle) {

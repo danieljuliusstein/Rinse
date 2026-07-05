@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Receipt } from '@phosphor-icons/react'
-import { fmt } from '@/lib/calculations'
+import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import type { ArSummary } from '@/lib/ar-metrics'
 
 interface ArSummaryCardProps {
@@ -36,19 +36,26 @@ export default function ArSummaryCard({
         </span>
         <span className="ar-summary-card__body">
           <span className="ar-summary-card__label">Outstanding</span>
-          <span className="ar-summary-card__value">{fmt(summary.unpaid)} unpaid</span>
+          <span className="ar-summary-card__value">
+            <CurrencyAmount value={summary.unpaid} variant="balance" /> unpaid
+          </span>
           <span className="ar-summary-card__meta">
             {summary.openCount} open
             {summary.overdueCount > 0 ? ` · ${summary.overdueCount} overdue` : ''}
-            {!compact && summary.collectedThisMonth > 0
-              ? ` · ${fmt(summary.collectedThisMonth)} collected this month`
-              : ''}
+            {!compact && summary.collectedThisMonth > 0 ? (
+              <>
+                {' · '}
+                <CurrencyAmount value={summary.collectedThisMonth} variant="revenue" /> collected this month
+              </>
+            ) : null}
           </span>
         </span>
         {!compact && (
           <span className="ar-summary-card__total">
             <span className="ar-summary-card__total-label">Invoiced</span>
-            <span className="ar-summary-card__total-value">{fmt(summary.totalInvoiced)}</span>
+            <span className="ar-summary-card__total-value">
+              <CurrencyAmount value={summary.totalInvoiced} variant="neutral" />
+            </span>
           </span>
         )}
       </button>

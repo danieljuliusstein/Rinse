@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useOptimistic, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CalendarPlus, ChatText, CheckCircle, FileText, MapPin, PencilSimple, Receipt, Trash } from '@phosphor-icons/react'
 import JobPhotosEntry from '@/components/jobs/JobPhotosEntry'
@@ -27,6 +27,7 @@ import { loadSettingsAsync } from '@/lib/settings'
 import { DEFAULT_AUTO_TEMPLATES, mergeTemplateBodyForContext } from '@/lib/messages'
 import { buildSmsComposeUrl } from '@/lib/sms-compose'
 import { isCompletingJob } from '@/lib/supplies-logic'
+import { optimisticJobReducer } from '@/lib/optimistic-reducers'
 import type { ExpenseLine, JobStatus, JobWithRelations } from '@/lib/types'
 
 const statusToJobBadge = (displayStatus: JobStatus | 'overdue'): string => {
@@ -56,6 +57,7 @@ export default function JobDetail({ job: initialJob }: JobDetailProps) {
   const confirm = useConfirm()
   const { showMessage } = useActionToast()
   const [job, setJob] = useState(initialJob)
+  const [displayJob, addOptimisticJob] = useOptimistic(job, optimisticJobReducer)
   const [cancelling, setCancelling] = useState(false)
   const [completing, setCompleting] = useState(false)
   const [linkedQuoteId, setLinkedQuoteId] = useState<string | null>(null)
@@ -81,9 +83,9 @@ export default function JobDetail({ job: initialJob }: JobDetailProps) {
   const margin = marginPct(job)
 
   const displayStatus =
-    job.invoice?.status === 'overdue'
+    displayJob.invoice?.status === 'overdue'
       ? 'overdue'
-      : job.status
+      : displayJob.status
 
   const payments = job.invoice?.payments ?? []
   const totalPaid = payments.reduce((s, p) => s + p.amount, 0)
@@ -105,7 +107,7 @@ export default function JobDetail({ job: initialJob }: JobDetailProps) {
   const returnDays = normalizeReturnDays(job.package?.expected_return_days)
   const nextServiceDate = showNextService ? suggestNextServiceDate(job.date, returnDays) : null
 
-  const isUpcoming = job.status === 'scheduled' || job.status === 'in_progress'
+  const isUpcoming = displayJob.status === 'scheduled' || displayJob.status === 'in_progress'
 
   const smsTemplateId = isPostService ? 'job_completion' : 'appointment_reminder'
   const smsTemplate = DEFAULT_AUTO_TEMPLATES.find((t) => t.id === smsTemplateId)
@@ -128,27 +130,32 @@ export default function JobDetail({ job: initialJob }: JobDetailProps) {
       : null
 
   const handleMarkComplete = async () => {
-    if (isCompletingJob(job.status, 'completed')) {
+    if (isCompletingJob(displayJob.status, 'completed')) {
       const appSettings = await loadSettingsAsync()
       if (appSettings.track_job_supplies) {
-        router.push(`/jobs/${job.id}/edit`)
+        router.push(`/jobs/${displayJob.id}/edit`)
         showMessage('Log supplies used, then set status to Complete')
         return
       }
     }
 
+    addOptimisticJob({ type: 'status', id: displayJob.id, status: 'completed' })
     setCompleting(true)
     try {
-      const updated = await updateJob(job.id, buildJobEditData(job, { status: 'completed' }))
+      const updated = await updateJob(displayJob.id, buildJobEditData(displayJob, { status: 'completed' }))
       if (!updated) {
         showMessage('Could not mark job complete')
+        const refreshed = await getJob(displayJob.id)
+        if (refreshed) setJob(refreshed)
         return
       }
-      const refreshed = await getJob(job.id)
+      const refreshed = await getJob(displayJob.id)
       if (refreshed) setJob(refreshed)
       showMessage('Job marked complete — you can invoice from here')
     } catch {
       showMessage('Could not mark job complete')
+      const refreshed = await getJob(displayJob.id)
+      if (refreshed) setJob(refreshed)
     } finally {
       setCompleting(false)
     }

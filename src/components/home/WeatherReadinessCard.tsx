@@ -11,6 +11,8 @@ import {
 
 interface WeatherReadinessCardProps {
   result: WeatherReadinessResult
+  /** Skip row entrance when showing cached data (avoids flash on revisit). */
+  skipEnterAnimation?: boolean
 }
 
 function WeatherIcon({ kind }: { kind: WeatherIconKind }) {
@@ -71,9 +73,15 @@ function ForecastRows({ rows }: { rows: WeatherReadinessRow[] }) {
   )
 }
 
-export default function WeatherReadinessCard({ result }: WeatherReadinessCardProps) {
+export default function WeatherReadinessCard({
+  result,
+  skipEnterAnimation = false,
+}: WeatherReadinessCardProps) {
   return (
-    <section className="weather-readiness" aria-label="Job readiness">
+    <section
+      className={`weather-readiness${skipEnterAnimation ? ' weather-readiness--settled' : ''}`}
+      aria-label="Job readiness"
+    >
       <p className="sec">Job readiness</p>
       <ul className="weather-readiness__list">
         {result.status === 'no_jobs' ? (

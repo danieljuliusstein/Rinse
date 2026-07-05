@@ -18,7 +18,7 @@ export default function InvoicesPage() {
   }, [])
 
   if (!invoices) {
-    return <ScreenLoading />
+    return <ScreenLoading body />
   }
 
   return <InvoicesList invoices={invoices} clients={clients} />

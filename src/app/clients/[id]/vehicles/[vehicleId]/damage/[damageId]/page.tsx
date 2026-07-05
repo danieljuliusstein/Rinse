@@ -20,7 +20,7 @@ export default function DamageDetailPage() {
   }, [damageId])
 
   if (damage === undefined) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!damage) {

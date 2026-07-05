@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Camera, Plus, Trash } from '@phosphor-icons/react'
-import { FloatingAffixField, FloatingField } from '@/components/forms'
+import { FloatingAffixField, FloatingField, ReorderableList } from '@/components/forms'
 import { Button } from '@/components/ui'
 import { useProGate } from '@/hooks/useProGate'
 import { getAuthFetchHeaders } from '@/lib/pb-auth'
@@ -118,44 +118,57 @@ export default function ReceiptLineItemsEditor({
         <img src={previewUrl} alt="Receipt preview" className="receipt-lines__preview" />
       ) : null}
 
-      {lines.map((line, index) => (
-        <div key={index} className="receipt-lines__row">
-          <FloatingField
-            id={`receipt-desc-${index}`}
-            label="Description"
-            filled={line.description.trim().length > 0}
-          >
-            <input
+      <p className="receipt-lines__drag-hint">Drag rows to reorder line items.</p>
+
+      <ReorderableList
+        className="receipt-lines__list"
+        droppableId="receipt-lines"
+        items={lines}
+        getItemId={(_, index) => `receipt-line-${index}`}
+        onReorder={(next) => {
+          onChange(next)
+          onTotalChange(next.reduce((s, l) => s + (Number(l.amount) || 0), 0))
+        }}
+        itemClassName="receipt-lines__row reorderable-list__item"
+        renderItem={(line, index) => (
+          <>
+            <FloatingField
               id={`receipt-desc-${index}`}
-              className={`f-input${line.description.trim() ? ' hv' : ''}`}
-              value={line.description}
-              onChange={(e) => updateLine(index, { description: e.target.value })}
-              placeholder=" "
-            />
-          </FloatingField>
-          <FloatingAffixField
-            id={`receipt-amt-${index}`}
-            label="Amount"
-            filled={line.amount > 0}
-            type="number"
-            inputMode="decimal"
-            value={line.amount || ''}
-            onChange={(e) =>
-              updateLine(index, { amount: e.target.value === '' ? 0 : Number(e.target.value) })
-            }
-          />
-          {lines.length > 1 ? (
-            <button
-              type="button"
-              className="receipt-lines__remove"
-              aria-label="Remove line"
-              onClick={() => removeLine(index)}
+              label="Description"
+              filled={line.description.trim().length > 0}
             >
-              <Trash size={18} />
-            </button>
-          ) : null}
-        </div>
-      ))}
+              <input
+                id={`receipt-desc-${index}`}
+                className={`f-input${line.description.trim() ? ' hv' : ''}`}
+                value={line.description}
+                onChange={(e) => updateLine(index, { description: e.target.value })}
+                placeholder=" "
+              />
+            </FloatingField>
+            <FloatingAffixField
+              id={`receipt-amt-${index}`}
+              label="Amount"
+              filled={line.amount > 0}
+              type="number"
+              inputMode="decimal"
+              value={line.amount || ''}
+              onChange={(e) =>
+                updateLine(index, { amount: e.target.value === '' ? 0 : Number(e.target.value) })
+              }
+            />
+            {lines.length > 1 ? (
+              <button
+                type="button"
+                className="receipt-lines__remove"
+                aria-label="Remove line"
+                onClick={() => removeLine(index)}
+              >
+                <Trash size={18} />
+              </button>
+            ) : null}
+          </>
+        )}
+      />
 
       <Button type="button" variant="ghost" onClick={addLine}>
         <Plus size={16} /> Add line

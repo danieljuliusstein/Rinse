@@ -10,7 +10,7 @@ import {
 import { requestTourReplay, TOUR_REPLAY_EVENT } from '@/lib/product-tour'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import IosInstallSheet from '@/components/IosInstallSheet'
-import { ListRow, SectionGroup } from '@/components/ui'
+import { ListRow, SectionGroup, ScreenLoading } from '@/components/ui'
 import { useTheme } from '@/providers/ThemeProvider'
 import { HOME_MODULES, isHomeModuleEnabled } from '@/lib/home-modules'
 import SettingsDetailShell from './SettingsDetailShell'
@@ -47,11 +47,7 @@ export default function SettingsPreferencesPage() {
   }
 
   if (!ready || !settings) {
-    return (
-      <div className="screen page-content settings-screen settings-screen--loading">
-        Loading…
-      </div>
-    )
+    return <ScreenLoading body variant="settings" />
   }
 
   return (

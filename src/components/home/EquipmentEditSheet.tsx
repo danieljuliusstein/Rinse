@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { ArrowSquareOut } from '@phosphor-icons/react'
 import BottomSheet from '@/components/BottomSheet'
 import AcquisitionToggle, { type AcquisitionMode } from '@/components/inventory/AcquisitionToggle'
@@ -12,9 +13,11 @@ import {
   FormProgressBar,
   SheetFooter,
 } from '@/components/forms'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { fmtDetailed } from '@/lib/calculations'
 import { computeFormProgress } from '@/lib/form-progress'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { equipmentFormSchema, type EquipmentFormValues } from '@/lib/validation'
 import type { BusinessExpense, Equipment, EquipmentAddOptions, EquipmentInput, EquipmentStatus } from '@/lib/types'
 
 export type EquipmentSheetMode = 'add' | 'edit'
@@ -43,62 +46,77 @@ export default function EquipmentEditSheet({
   onAfterSave,
 }: EquipmentEditSheetProps) {
   const formRef = useRef<HTMLDivElement>(null)
-  const [name, setName] = useState('')
-  const [purchasePrice, setPurchasePrice] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10))
-  const [supplier, setSupplier] = useState('')
-  const [notes, setNotes] = useState('')
   const [iconKey, setIconKey] = useState<string | undefined>(undefined)
-  const [status, setStatus] = useState<EquipmentStatus>('active')
   const [acquisition, setAcquisition] = useState<AcquisitionMode>('already_owned')
   const [saving, setSaving] = useState(false)
 
-  const progress = computeFormProgress([name, purchasePrice, purchaseDate, supplier, notes], 1, 1)
+  const { control, watch, reset, submitWithToast, setValue } = useRinseForm<EquipmentFormValues>({
+    schema: equipmentFormSchema,
+    defaultValues: {
+      name: '',
+      purchase_price: 0,
+      purchase_date: new Date().toISOString().slice(0, 10),
+      supplier: '',
+      notes: '',
+      status: 'active',
+    },
+  })
+
+  const name = watch('name')
+  const purchasePrice = watch('purchase_price')
+  const purchaseDate = watch('purchase_date')
+  const supplier = watch('supplier')
+  const notes = watch('notes')
+  const status = watch('status')
+
+  const progress = computeFormProgress([name, purchasePrice > 0 ? String(purchasePrice) : '', purchaseDate ?? '', supplier ?? '', notes ?? ''], 1, 1)
 
   useEffect(() => {
     if (mode === 'add') {
-      setName('')
-      setPurchasePrice('')
-      setPurchaseDate(new Date().toISOString().slice(0, 10))
-      setSupplier('')
-      setNotes('')
+      reset({
+        name: '',
+        purchase_price: 0,
+        purchase_date: new Date().toISOString().slice(0, 10),
+        supplier: '',
+        notes: '',
+        status: 'active',
+      })
       setIconKey(undefined)
-      setStatus('active')
       setAcquisition('already_owned')
       return
     }
     if (!item) return
-    setName(item.name)
-    setPurchasePrice(item.purchase_price != null ? String(item.purchase_price) : '')
-    setPurchaseDate(item.purchase_date ?? new Date().toISOString().slice(0, 10))
-    setSupplier(item.supplier ?? '')
-    setNotes(item.notes ?? '')
+    reset({
+      name: item.name,
+      purchase_price: item.purchase_price ?? 0,
+      purchase_date: item.purchase_date ?? new Date().toISOString().slice(0, 10),
+      supplier: item.supplier ?? '',
+      notes: item.notes ?? '',
+      status: item.status ?? 'active',
+    })
     setIconKey(item.icon_key || undefined)
-    setStatus(item.status ?? 'active')
-  }, [item, mode])
+  }, [item, mode, reset])
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
   }, [name, purchasePrice, purchaseDate, supplier, notes, item, mode])
 
-  const handleSave = async () => {
-    const trimmed = name.trim()
-    if (!trimmed) return
+  const handleSave = submitWithToast(async (values) => {
     setSaving(true)
     try {
       const includeExpense = mode === 'add' && acquisition === 'bought_new'
       const payload: EquipmentInput = {
-        name: trimmed,
-        purchase_price: Number(purchasePrice) || undefined,
-        purchase_date: purchaseDate || undefined,
-        supplier: supplier.trim() || undefined,
-        notes: notes.trim() || undefined,
-        status,
+        name: values.name,
+        purchase_price: values.purchase_price || undefined,
+        purchase_date: values.purchase_date || undefined,
+        supplier: values.supplier?.trim() || undefined,
+        notes: values.notes?.trim() || undefined,
+        status: values.status,
         icon_key: iconKey ?? '',
       }
       if (mode === 'add') {
         const options: EquipmentAddOptions = includeExpense
-          ? { logExpense: true, purchaseDate }
+          ? { logExpense: true, purchaseDate: values.purchase_date || undefined }
           : { logExpense: false }
         await onSaveAdd(payload, options)
       } else if (item) {
@@ -109,7 +127,7 @@ export default function EquipmentEditSheet({
     } finally {
       setSaving(false)
     }
-  }
+  })
 
   return (
     <BottomSheet
@@ -153,67 +171,124 @@ export default function EquipmentEditSheet({
       {mode === 'add' ? <FormProgressBar progress={progress} /> : null}
 
       <div ref={formRef} className="premium-sheet__form">
-        <FloatingField id="equipment-name" label="Name" filled={name.trim().length > 0}>
-          <input
-            id="equipment-name"
-            className={`f-input${name.trim() ? ' hv' : ''}`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="equipment-name"
+              label="Name"
+              filled={field.value.trim().length > 0}
+              error={fieldState.error?.message}
+            >
+              <input
+                id="equipment-name"
+                className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
 
         <InventoryIconPicker variant="equipment" value={iconKey} onChange={setIconKey} />
 
         {mode === 'add' ? <AcquisitionToggle value={acquisition} onChange={setAcquisition} /> : null}
 
         <div className="premium-sheet__grid2">
-          <FloatingAffixField
-            id="equipment-price"
-            label="Purchase price"
-            type="number"
-            min={0}
-            step="0.01"
-            value={purchasePrice}
-            filled={purchasePrice.trim().length > 0}
-            onChange={(e) => setPurchasePrice(e.target.value)}
+          <Controller
+            control={control}
+            name="purchase_price"
+            render={({ field, fieldState }) => (
+              <FloatingAffixField
+                id="equipment-price"
+                label="Purchase price"
+                currency
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+              />
+            )}
           />
-          <FloatingField id="equipment-date" label="Purchase date" filled={Boolean(purchaseDate)} optional>
-            <input
-              id="equipment-date"
-              type="date"
-              className={`f-input${purchaseDate ? ' hv' : ''}`}
-              value={purchaseDate}
-              onChange={(e) => setPurchaseDate(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="purchase_date"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="equipment-date"
+                label="Purchase date"
+                filled={Boolean(field.value)}
+                optional
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="equipment-date"
+                  type="date"
+                  className={`f-input${field.value ? ' hv' : ''}`}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                />
+              </FloatingField>
+            )}
+          />
         </div>
 
-        <FloatingField id="equipment-supplier" label="Supplier" filled={supplier.trim().length > 0} optional>
-          <input
-            id="equipment-supplier"
-            className={`f-input${supplier.trim() ? ' hv' : ''}`}
-            value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="supplier"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="equipment-supplier"
+              label="Supplier"
+              filled={(field.value ?? '').trim().length > 0}
+              optional
+              error={fieldState.error?.message}
+            >
+              <input
+                id="equipment-supplier"
+                className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
 
         <div className="f-form-divider" />
 
-        <EquipmentStatusToggle value={status} onChange={setStatus} />
+        <EquipmentStatusToggle value={status} onChange={(next: EquipmentStatus) => setValue('status', next)} />
 
-        <FloatingField id="equipment-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-          <textarea
-            id="equipment-notes"
-            className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder=" "
-            rows={3}
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="equipment-notes"
+              label="Notes"
+              filled={(field.value ?? '').trim().length > 0}
+              optional
+              textarea
+              error={fieldState.error?.message}
+            >
+              <textarea
+                id="equipment-notes"
+                className={`f-textarea${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                rows={3}
+              />
+            </FloatingField>
+          )}
+        />
       </div>
     </BottomSheet>
   )

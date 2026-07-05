@@ -1,8 +1,8 @@
 import type { PortalPayload } from '@/lib/server/portal-data'
+import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import {
   capitalize,
   formatPortalDateShort,
-  portalMoney,
   portalQuoteBadgeClass,
 } from '@/lib/portal-display'
 
@@ -12,7 +12,9 @@ export default function PortalQuoteCard({ quote }: { quote: NonNullable<PortalPa
       <div className="portal-quote-hero__header">
         <div>
           <div className="portal-quote-number">{quote.quoteNumber}</div>
-          <div className="portal-quote-price">{portalMoney(quote.subtotal)}</div>
+          <div className="portal-quote-price">
+            <CurrencyAmount value={quote.subtotal} precision="detailed" variant="revenue" />
+          </div>
           <div className="portal-quote-pkg">
             {quote.packageName} · {capitalize(quote.vehicleType)}
           </div>

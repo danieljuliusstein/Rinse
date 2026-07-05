@@ -1,15 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { FloatingField, SheetSubmitButton } from '@/components/forms'
 import { Button, ListRow, SectionGroup } from '@/components/ui'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import {
   changePassword,
   getCurrentUserEmail,
   requestPasswordReset,
 } from '@/lib/pb-auth'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { settingsAccountSchema, type SettingsAccountFormValues } from '@/lib/validation'
 import { useAuth } from '@/providers/AuthProvider'
 import SettingsDetailShell from './SettingsDetailShell'
 
@@ -18,14 +21,24 @@ export default function SettingsAccountPage() {
   const { isLoggedIn } = useAuth()
   const formRef = useRef<HTMLDivElement>(null)
   const [email, setEmail] = useState<string | null>(null)
-  const [oldPassword, setOldPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordBusy, setPasswordBusy] = useState(false)
   const [passwordMsg, setPasswordMsg] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [resetBusy, setResetBusy] = useState(false)
   const [resetMsg, setResetMsg] = useState<string | null>(null)
+
+  const { control, watch, reset, submitWithToast } = useRinseForm<SettingsAccountFormValues>({
+    schema: settingsAccountSchema,
+    defaultValues: {
+      current_password: '',
+      new_password: '',
+      confirm_password: '',
+    },
+  })
+
+  const currentPassword = watch('current_password')
+  const newPassword = watch('new_password')
+  const confirmPassword = watch('confirm_password')
 
   useEffect(() => {
     setEmail(getCurrentUserEmail())
@@ -33,35 +46,30 @@ export default function SettingsAccountPage() {
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
-  }, [oldPassword, newPassword, confirmPassword, email])
+  }, [currentPassword, newPassword, confirmPassword, email])
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = submitWithToast(async (values) => {
     setPasswordError(null)
     setPasswordMsg(null)
-    if (newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters')
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match')
-      return
-    }
+    if (!values.new_password?.trim()) return
     setPasswordBusy(true)
     const result = await changePassword({
-      oldPassword,
-      password: newPassword,
-      passwordConfirm: confirmPassword,
+      oldPassword: values.current_password ?? '',
+      password: values.new_password,
+      passwordConfirm: values.confirm_password ?? '',
     })
     setPasswordBusy(false)
     if (!result.ok) {
       setPasswordError(result.error)
       return
     }
-    setOldPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
+    reset({
+      current_password: '',
+      new_password: '',
+      confirm_password: '',
+    })
     setPasswordMsg('Password updated')
-  }
+  })
 
   const handleSendResetEmail = async () => {
     if (!email) return
@@ -115,46 +123,83 @@ export default function SettingsAccountPage() {
         <section className="settings-panel">
           <h2 className="settings-account__heading">Change password</h2>
           <p className="settings-panel__lead">Enter your current password, then choose a new one.</p>
-          <FloatingField id="account-old-password" label="Current password" filled={oldPassword.length > 0} showCheck={false}>
-            <input
-              id="account-old-password"
-              type="password"
-              className={`f-input${oldPassword ? ' hv' : ''}`}
-              placeholder=" "
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </FloatingField>
-          <FloatingField id="account-new-password" label="New password" filled={newPassword.length > 0} showCheck={false}>
-            <input
-              id="account-new-password"
-              type="password"
-              className={`f-input${newPassword ? ' hv' : ''}`}
-              placeholder=" "
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              autoComplete="new-password"
-              minLength={8}
-            />
-          </FloatingField>
-          <FloatingField id="account-confirm-password" label="Confirm new password" filled={confirmPassword.length > 0} showCheck={false}>
-            <input
-              id="account-confirm-password"
-              type="password"
-              className={`f-input${confirmPassword ? ' hv' : ''}`}
-              placeholder=" "
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              autoComplete="new-password"
-              minLength={8}
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="current_password"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="account-old-password"
+                label="Current password"
+                filled={(field.value ?? '').length > 0}
+                showCheck={false}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="account-old-password"
+                  type="password"
+                  className={`f-input${field.value ? ' hv' : ''}`}
+                  placeholder=" "
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  autoComplete="current-password"
+                />
+              </FloatingField>
+            )}
+          />
+          <Controller
+            control={control}
+            name="new_password"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="account-new-password"
+                label="New password"
+                filled={(field.value ?? '').length > 0}
+                showCheck={false}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="account-new-password"
+                  type="password"
+                  className={`f-input${field.value ? ' hv' : ''}`}
+                  placeholder=" "
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  autoComplete="new-password"
+                />
+              </FloatingField>
+            )}
+          />
+          <Controller
+            control={control}
+            name="confirm_password"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="account-confirm-password"
+                label="Confirm new password"
+                filled={(field.value ?? '').length > 0}
+                showCheck={false}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="account-confirm-password"
+                  type="password"
+                  className={`f-input${field.value ? ' hv' : ''}`}
+                  placeholder=" "
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  autoComplete="new-password"
+                />
+              </FloatingField>
+            )}
+          />
           {passwordError ? <p className="settings-msg settings-msg--error">{passwordError}</p> : null}
           {passwordMsg ? <p className="settings-msg">{passwordMsg}</p> : null}
           <SheetSubmitButton
             label="Update password"
-            ready={Boolean(oldPassword && newPassword && confirmPassword) && !passwordBusy}
+            ready={Boolean(currentPassword && newPassword && confirmPassword) && !passwordBusy}
             disabled={passwordBusy}
             done={passwordMsg === 'Password updated'}
             onClick={() => void handleChangePassword()}

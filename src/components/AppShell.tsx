@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import NextTopLoader from 'nextjs-toploader'
 import BottomNav from './BottomNav'
 import BusinessExpenseSheet from './business/BusinessExpenseSheet'
 import SupplyPurchaseSheet from './business/SupplyPurchaseSheet'
@@ -16,6 +17,7 @@ import TrialPlanBadge from './TrialPlanBadge'
 import SubscriptionLapsedBanner from './SubscriptionLapsedBanner'
 import { QuickActionProvider, useQuickAction } from '@/providers/QuickActionContext'
 import SyncProvider from '@/providers/SyncProvider'
+import { DetailOverlayProvider } from '@/providers/DetailOverlayProvider'
 import { PaywallGateProvider } from '@/providers/PaywallGateProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { handleTourFinished } from '@/lib/product-tour'
@@ -75,7 +77,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname === '/onboarding' ||
     pathname.startsWith('/auth/')
   const isPublicClient = isPortal || isBook || isEmbed
-  const showProductTour = !isPublicClient && !isAuthFlow && isLoggedIn && !isDemo
+  const showOperatorChrome = !isPublicClient && !isAuthFlow && !isDemo
+  const showProductTour = showOperatorChrome && isLoggedIn
 
   const shellClass = [
     'app-shell',
@@ -92,6 +95,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <SyncProvider>
       <QuickActionProvider>
         <PaywallGateProvider>
+        <DetailOverlayProvider>
+        {showOperatorChrome ? (
+          <NextTopLoader
+            color="var(--text-dim)"
+            height={3}
+            showSpinner={false}
+            zIndex={120}
+            shadow="0 0 8px var(--text-dim), 0 0 4px var(--text-dim)"
+          />
+        ) : null}
         <ServiceWorkerCleanup />
         <div className={shellClass}>
           {!isPublicClient && !isAuthFlow ? (
@@ -111,6 +124,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {showProductTour ? <RinseTourHost onTourEnd={handleTourFinished} /> : null}
           {!isPublicClient && !isDemo && <QuickActionOverlays />}
         </div>
+        </DetailOverlayProvider>
         </PaywallGateProvider>
       </QuickActionProvider>
     </SyncProvider>

@@ -257,7 +257,7 @@ export default function Reports() {
           <div className="stat-card">
             <div className="stat-label">Revenue</div>
             <div className="stat-value">
-              {fmt(current.revenue)}
+              <CurrencyAmount value={current.revenue} variant="revenue" />
               {revenueGrowth != null ? (
                 <span
                   className={`business-growth-pill${
@@ -273,18 +273,25 @@ export default function Reports() {
           </div>
           <div className="stat-card">
             <div className="stat-label">Expenses</div>
-            <div className="stat-value money-stat--red">{fmt(current.totalExpenses)}</div>
+            <div className="stat-value money-stat--red">
+              <CurrencyAmount value={current.totalExpenses} variant="expense" unsigned />
+            </div>
             <div className="stat-sub money-stat-sub--red">{expenseCategories} categories</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Net profit</div>
-            <div className="stat-value">{fmt(current.netProfit)}</div>
+            <div className="stat-value">
+              <CurrencyAmount value={current.netProfit} variant="profit" />
+            </div>
             <div className="stat-sub">from jobs</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Avg job value</div>
             <div className="stat-value">
-              {fmt(current.jobCount > 0 ? Math.round(current.revenue / current.jobCount) : 0)}
+              <CurrencyAmount
+                value={current.jobCount > 0 ? Math.round(current.revenue / current.jobCount) : 0}
+                variant="neutral"
+              />
             </div>
             <div className="stat-sub">per job</div>
           </div>

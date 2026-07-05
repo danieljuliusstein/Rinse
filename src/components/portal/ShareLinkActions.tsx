@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Copy, EnvelopeSimple, Link } from '@phosphor-icons/react'
+import QrCode from '@/components/ui/QrCode'
 import { copyShareLink, createShareLink, emailShareLink, openPortalLink, sameOriginPortalPath } from '@/lib/portal-client'
 import { loadSettings } from '@/lib/settings'
 import {
@@ -160,6 +161,7 @@ export default function ShareLinkActions({
         )}
       </div>
       {msg ? <p className="share-link-actions__msg">{msg}</p> : null}
+      {url ? <QrCode value={url} label="Scan to open portal" variant="operator" size={120} /> : null}
       {url ? <p className="share-link-actions__url">{url}</p> : null}
     </div>
   )

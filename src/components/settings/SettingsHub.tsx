@@ -8,6 +8,7 @@ import { SectionGroup } from '@/components/ui'
 import { useMilestones } from '@/hooks/useMilestones'
 import { useProfileCompletion } from '@/hooks/useProfileCompletion'
 import { useSettingsBack } from '@/hooks/useSettingsBack'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { MILESTONE_COUNT } from '@/lib/milestones'
 import { searchSettings, type SettingsSearchResult } from '@/lib/settings-search'
 import SettingsFooter from './SettingsFooter'
@@ -147,10 +148,11 @@ export default function SettingsHub() {
   const { isLoggedIn } = useAuth()
   const goBack = useSettingsBack()
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearchQuery = useDebouncedSearch(searchQuery)
   const { hasUnviewed, unlockedCount } = useMilestones()
   const profileCompletion = useProfileCompletion()
-  const searchResults = useMemo(() => searchSettings(searchQuery), [searchQuery])
-  const searching = searchQuery.trim().length > 0
+  const searchResults = useMemo(() => searchSettings(debouncedSearchQuery), [debouncedSearchQuery])
+  const searching = debouncedSearchQuery.trim().length > 0
   const showingSimilar = searching && searchResults.length > 0 && searchResults.every((r) => r.similar)
 
   const navigate = (href: string) => {

@@ -16,7 +16,7 @@ import {
   sectionForSupply,
   type SectionKey,
 } from '@/components/inventory/inventory-utils'
-import { SectionGroup } from '@/components/ui'
+import { SectionGroup, InventoryHomeSkeleton } from '@/components/ui'
 import type { HomeInventoryItem } from '@/lib/home-inventory'
 import type { Equipment, Supply } from '@/lib/types'
 
@@ -50,13 +50,17 @@ export default function InventoryHome({
 }: InventoryHomeProps) {
   const attention = attentionSupplies(catalog)
 
+  if (loading) {
+    return <InventoryHomeSkeleton />
+  }
+
   return (
     <>
       <header className="page-header">
         <div>
           <h1>Inventory</h1>
           <p>
-            {loading ? 'Loading…' : `${totalItems} item${totalItems === 1 ? '' : 's'}`}
+            {`${totalItems} item${totalItems === 1 ? '' : 's'}`}
             {lowCount > 0 ? ` · ${lowCount} low` : ''}
           </p>
         </div>

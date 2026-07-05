@@ -1,4 +1,5 @@
 import type { PortalPayload } from '@/lib/server/portal-data'
+import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import {
   portalBalancePanelClass,
   portalInvoiceBadgeClass,
@@ -72,7 +73,9 @@ export default function PortalInvoiceCard({
         )}
         <div className="portal-total-row portal-total-border-row">
           <span className="portal-total-label--strong">Total</span>
-          <span className="portal-total-amount portal-total-amount--grand">{portalMoney(invoice.total)}</span>
+          <span className="portal-total-amount portal-total-amount--grand">
+            <CurrencyAmount value={invoice.total} precision="detailed" variant="neutral" />
+          </span>
         </div>
         {invoice.amountPaid > 0 && (
           <div className="portal-total-row">
@@ -86,7 +89,9 @@ export default function PortalInvoiceCard({
         {balanceVariant && (
           <div className={`portal-balance-panel portal-balance-panel--${balanceVariant}`}>
             <span className="portal-balance-label">Balance due</span>
-            <span className="portal-balance-amount">{portalMoney(invoice.balanceDue)}</span>
+            <span className="portal-balance-amount">
+              <CurrencyAmount value={invoice.balanceDue} precision="detailed" variant="balance" />
+            </span>
           </div>
         )}
 

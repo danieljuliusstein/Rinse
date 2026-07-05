@@ -1,7 +1,7 @@
 'use client'
 
 import { Copy, Envelope, FilePdf, Link as LinkIcon } from '@phosphor-icons/react'
-import { VaulSheet } from '@/components/ui'
+import { VaulSheet, QrCode } from '@/components/ui'
 
 interface InvoiceSendSheetProps {
   open: boolean
@@ -12,6 +12,7 @@ interface InvoiceSendSheetProps {
   onPdf: () => void
   busy?: boolean
   linkCopied?: boolean
+  payUrl?: string
 }
 
 export default function InvoiceSendSheet({
@@ -23,9 +24,11 @@ export default function InvoiceSendSheet({
   onPdf,
   busy = false,
   linkCopied = false,
+  payUrl,
 }: InvoiceSendSheetProps) {
   return (
     <VaulSheet open={open} onOpenChange={onOpenChange} title="Send invoice">
+      {payUrl ? <QrCode value={payUrl} label="Scan to view or pay" className="invoice-send-qr" /> : null}
       {canEmail ? (
         <button
           type="button"
@@ -52,9 +55,8 @@ export default function InvoiceSendSheet({
       >
         <span className="invoice-sheet-option">
           <LinkIcon size={20} weight="duotone" />
-          {linkCopied ? 'Link copied' : 'Copy client link'}
+          {linkCopied ? 'Link copied' : 'Copy payment link'}
         </span>
-        {linkCopied ? ' ✓' : null}
       </button>
       <button
         type="button"
@@ -67,21 +69,13 @@ export default function InvoiceSendSheet({
       >
         <span className="invoice-sheet-option">
           <FilePdf size={20} weight="duotone" />
-          Export PDF
+          Download PDF
         </span>
       </button>
-      <button
-        type="button"
-        className="vaul-option"
-        disabled={busy}
-        onClick={() => {
-          onCopyLink()
-          onOpenChange(false)
-        }}
-      >
+      <button type="button" className="vaul-option vaul-option--muted" onClick={() => onOpenChange(false)}>
         <span className="invoice-sheet-option">
           <Copy size={20} weight="duotone" />
-          Mark sent & copy link
+          Close
         </span>
       </button>
     </VaulSheet>

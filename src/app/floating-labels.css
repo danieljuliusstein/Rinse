@@ -248,3 +248,30 @@
     transform: scale(1);
   }
 }
+
+/* Wave B — field validation errors */
+.f-field--error .f-input,
+.f-field--error .f-select,
+.f-field--error .f-textarea,
+.f-field--error .f-affix-wrap .f-input {
+  border-color: var(--red);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.12);
+}
+
+.f-field--error .f-input:focus,
+.f-field--error .f-select:focus,
+.f-field--error .f-textarea:focus,
+.f-field--error .f-affix-wrap .f-input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+
+.f-field--error .f-label {
+  color: var(--red-text);
+}
+
+.f-field-error {
+  margin: 4px 2px 0;
+  padding: 0;
+}

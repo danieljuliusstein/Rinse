@@ -1,13 +1,22 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import BackButton from '@/components/BackButton'
-import { FloatingField, PillGroup, SheetSubmitButton } from '@/components/forms'
+import {
+  FloatingField,
+  FloatingPhoneField,
+  PillGroup,
+  SheetSubmitButton,
+} from '@/components/forms'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { createClient, updateClient } from '@/lib/api'
-import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
+import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { normalizeUSPhone } from '@/lib/phone-format'
+import { clientFormSchema, type ClientFormValues } from '@/lib/validation'
 import { useActionToast } from '@/providers/ActionToastProvider'
-import type { Client, ClientInput } from '@/lib/types'
+import type { Client } from '@/lib/types'
 
 const LEAD_SOURCE_PILLS = [
   { value: 'google', label: 'Google' },
@@ -28,54 +37,67 @@ export default function ClientForm({ client }: Props) {
   const { handleWriteError } = useActionToast()
   const formRef = useRef<HTMLDivElement>(null)
   const isEdit = !!client
-  const [name, setName] = useState(client?.name ?? '')
-  const [phone, setPhone] = useState(client?.phone ?? '')
-  const [email, setEmail] = useState(client?.email ?? '')
-  const [address, setAddress] = useState(client?.address ?? '')
-  const [leadSource, setLeadSource] = useState(client?.lead_source ?? 'other')
-  const [notes, setNotes] = useState(client?.notes ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
+
+  const {
+    control,
+    watch,
+    setValue,
+    submitWithToast,
+  } = useRinseForm<ClientFormValues>({
+    schema: clientFormSchema,
+    defaultValues: {
+      name: client?.name ?? '',
+      phone: client?.phone ?? '',
+      email: client?.email ?? '',
+      address: client?.address ?? '',
+      lead_source: client?.lead_source ?? 'other',
+      notes: client?.notes ?? '',
+    },
+  })
+
+  const name = watch('name')
+  const email = watch('email')
+  const address = watch('address')
+  const notes = watch('notes')
+  const leadSource = watch('lead_source')
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
-  }, [name, phone, email, address, notes])
+  }, [name, email, address, notes])
 
-  const buildInput = (): ClientInput => ({
-    name,
-    phone: phone || undefined,
-    email: email || undefined,
-    address: address || undefined,
-    lead_source: leadSource || undefined,
-    notes: notes || undefined,
-  })
-
-  const handleSave = async () => {
-    if (!name.trim()) {
-      setError('Name is required')
-      return
-    }
+  const handleSave = submitWithToast(async (values) => {
     setSaving(true)
-    setError('')
+    setSubmitError('')
+    const input = {
+      name: values.name,
+      phone: values.phone ? normalizeUSPhone(values.phone) : undefined,
+      email: values.email,
+      address: values.address,
+      lead_source: values.lead_source,
+      notes: values.notes,
+    }
     try {
       if (isEdit && client) {
-        const updated = await updateClient(client.id, buildInput())
+        const updated = await updateClient(client.id, input)
         if (!updated) throw new Error('Update failed')
         setSaved(true)
         window.setTimeout(() => router.push(`/clients/${client.id}`), 1500)
       } else {
-        const created = await createClient(buildInput())
+        const created = await createClient(input)
         setSaved(true)
         window.setTimeout(() => router.push(`/clients/${created.id}`), 1500)
       }
     } catch (err) {
       if (handleWriteError(err)) return
-      setError(err instanceof Error ? err.message : 'Save failed')
+      const message = err instanceof Error ? err.message : 'Save failed'
+      setSubmitError(message)
     } finally {
       setSaving(false)
     }
-  }
+  })
 
   return (
     <div className="screen page-content body">
@@ -88,68 +110,118 @@ export default function ClientForm({ client }: Props) {
 
       <div ref={formRef} className="page-form-card page-form">
         <div className="page-form__grid2">
-          <FloatingField id="client-name" label="Name" filled={name.trim().length > 0}>
-            <input
-              id="client-name"
-              className={`f-input${name.trim() ? ' hv' : ''}`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
-          <FloatingField id="client-phone" label="Phone" filled={phone.trim().length > 0}>
-            <input
-              id="client-phone"
-              className={`f-input${phone.trim() ? ' hv' : ''}`}
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="client-name"
+                label="Name"
+                filled={field.value.trim().length > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="client-name"
+                  className={`f-input${field.value.trim() ? ' hv' : ''}`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  aria-invalid={fieldState.error ? true : undefined}
+                  aria-describedby={fieldState.error ? 'client-name-error' : undefined}
+                />
+              </FloatingField>
+            )}
+          />
+          <FloatingPhoneField control={control} name="phone" id="client-phone" label="Phone" optional />
         </div>
 
-        <FloatingField id="client-email" label="Email" filled={email.trim().length > 0}>
-          <input
-            id="client-email"
-            className={`f-input${email.trim() ? ' hv' : ''}`}
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="email"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="client-email"
+              label="Email"
+              filled={Boolean(field.value?.trim())}
+              error={fieldState.error?.message}
+              optional
+            >
+              <input
+                id="client-email"
+                className={`f-input${field.value?.trim() ? ' hv' : ''}`}
+                type="email"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                aria-invalid={fieldState.error ? true : undefined}
+              />
+            </FloatingField>
+          )}
+        />
 
-        <FloatingField id="client-address" label="Address" filled={address.trim().length > 0} optional>
-          <input
-            id="client-address"
-            className={`f-input${address.trim() ? ' hv' : ''}`}
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="address"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="client-address"
+              label="Address"
+              filled={Boolean(field.value?.trim())}
+              error={fieldState.error?.message}
+              optional
+            >
+              <input
+                id="client-address"
+                className={`f-input${field.value?.trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
 
         <PillGroup
           label="Lead source"
           options={[...LEAD_SOURCE_PILLS]}
-          value={LEAD_SOURCE_PILLS.some((p) => p.value === leadSource) ? leadSource : 'other'}
-          onChange={setLeadSource}
+          value={LEAD_SOURCE_PILLS.some((p) => p.value === leadSource) ? (leadSource ?? 'other') : 'other'}
+          onChange={(v) => setValue('lead_source', v)}
         />
 
-        <FloatingField id="client-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-          <textarea
-            id="client-notes"
-            className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="client-notes"
+              label="Notes"
+              filled={Boolean(field.value?.trim())}
+              error={fieldState.error?.message}
+              optional
+              textarea
+            >
+              <textarea
+                id="client-notes"
+                className={`f-textarea${field.value?.trim() ? ' hv' : ''}`}
+                rows={3}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
       </div>
 
-      {error ? <div className="error-banner" style={{ marginBottom: 12 }}>{error}</div> : null}
+      {submitError ? (
+        <div className="error-banner" role="alert" aria-live="assertive" style={{ marginBottom: 12 }}>
+          {submitError}
+        </div>
+      ) : null}
 
       <div className="page-form-save">
         <SheetSubmitButton

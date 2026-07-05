@@ -29,7 +29,8 @@ Reference frames: `invoice-fly/` (ScreenDesigns replays).
 | `tab-active` | icon `scale(1→1.1)` or dot slide | 150–200ms | spring | `globals.css` bottom-nav |
 | `swipe-reveal` | row `translateX`, actions fade in | 200ms | ease-out | `SwipeableRow`, `InvoiceSwipeableRow` |
 | `empty-enter` | illustration + text fade up | 350–450ms | ease-out | `components.css` empties |
-| `counter` | number roll / count-up | 400–600ms | ease-out | _not yet — KPI cards_ |
+| `counter` | number roll / count-up | 400–600ms | ease-out | `@/components/ui/CurrencyAmount` (`motion-number`) |
+| `layout-morph` | shared `layoutId` list → detail overlay | ~350ms | spring | `DetailOverlayProvider`, `MorphSurface`, `ListRow` |
 | `attention-pulse` | subtle `opacity` or `scale` loop | 1.5–2s loop | ease-in-out | `pipeline.css`, `rinse-tour.css` |
 
 ### Spring / pop curves (iOS-style)
@@ -110,6 +111,16 @@ _Phase 0 mapped 2026-07-02. Full index: `invoice-fly/README.md`._
 - **Rinse target:** `BottomSheet`, `.inv-sheet-root`, send dock on job invoice
 - **Owner file:** `globals.css`
 - **Status:** tagged
+
+### Counter — rolling money totals (Premium UX Wave A)
+
+- **Archetype:** counter
+- **Trigger:** KPI / total `value` changes after mount
+- **What moves:** digit roll via `motion-number` inside `CurrencyAmount`
+- **Feel:** ease-out ~500ms; snap on `prefers-reduced-motion`
+- **Rinse target:** Home AR/revenue, Reports KPIs, invoice totals, portal pay amount
+- **Owner file:** `@/components/ui/CurrencyAmount.tsx`
+- **Status:** shipped
 
 ### Hero 2 — Invoices dashboard ⭐ Wave 43/46
 

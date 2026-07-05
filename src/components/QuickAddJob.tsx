@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import {
   CalendarBlank,
@@ -23,9 +24,12 @@ import { deriveInitials } from '@/lib/client-relationship-logic'
 import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
 import { loadSettingsAsync } from '@/lib/settings'
 import { usePremiumGate } from '@/hooks/usePremiumGate'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { PillGroup } from '@/components/forms'
 import { RECURRENCE_CADENCE_OPTIONS } from '@/lib/recurrence'
-import type { ClientWithStats, Package, QuickJobData, RecurrenceCadence, Supply, SupplyUsage, VehicleType } from '@/lib/types'
+import { quickJobFormSchema, type QuickJobFormValues } from '@/lib/validation'
+import type { ClientWithStats, Package, QuickJobData, Supply, SupplyUsage, VehicleType } from '@/lib/types'
 import { VEHICLE_TYPE_OPTIONS } from '@/lib/vehicle-type-icons'
 
 interface QuickAddJobProps {
@@ -56,20 +60,13 @@ export default function QuickAddJob({
   const { runGated: runCreateJobGated } = usePremiumGate('create_job')
   const formRef = useRef<HTMLDivElement>(null)
 
-  const [clientSearch, setClientSearch] = useState('')
-  const [selectedClient, setSelectedClient] = useState<ClientWithStats | null>(null)
-  const [showClientList, setShowClientList] = useState(false)
-  const [jobDate, setJobDate] = useState(() => initialDate ?? new Date().toISOString().slice(0, 10))
-  const [startTime, setStartTime] = useState('')
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(
-    () => packages.find((p) => p.id === initialPackageId) ?? packages[0] ?? null
-  )
-  const [vehicleType, setVehicleType] = useState<VehicleType>('sedan')
-  const [locationType, setLocationType] = useState<'mobile' | 'fixed'>('mobile')
   const initialPkg = packages.find((p) => p.id === initialPackageId) ?? packages[0]
-  const [revenue, setRevenue] = useState(initialPkg?.base_price ?? 0)
-  const [tip, setTip] = useState(0)
-  const [notes, setNotes] = useState('')
+
+  const [clientSearch, setClientSearch] = useState('')
+  const debouncedClientSearch = useDebouncedSearch(clientSearch)
+  const [selectedClient, setSelectedClient] = useState<ClientWithStats | null>(initialClient ?? null)
+  const [showClientList, setShowClientList] = useState(false)
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(initialPkg ?? null)
   const [expenses, setExpenses] = useState<JobExpenseDraft>({
     travel_cost: 0,
     marketing_cost: 0,
@@ -82,7 +79,42 @@ export default function QuickAddJob({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [travelRatePerMile, setTravelRatePerMile] = useState<number | undefined>()
-  const [recurrenceCadence, setRecurrenceCadence] = useState<RecurrenceCadence | 'none'>('none')
+
+  const {
+    control,
+    watch,
+    setValue,
+    getValues,
+    submitWithToast,
+  } = useRinseForm<QuickJobFormValues>({
+    schema: quickJobFormSchema,
+    defaultValues: {
+      clientId: initialClient?.id ?? '',
+      packageId: initialPackageId ?? initialPkg?.id ?? '',
+      vehicleType: 'sedan',
+      locationType: 'mobile',
+      revenue: initialPkg?.base_price ?? 0,
+      tip: 0,
+      date: initialDate ?? new Date().toISOString().slice(0, 10),
+      start_time: '',
+      notes: '',
+      travel_cost: 0,
+      marketing_cost: 0,
+      equipment_depreciation: 0,
+      recurrence_cadence: 'none',
+    },
+  })
+
+  const clientId = watch('clientId')
+  const packageId = watch('packageId')
+  const vehicleType = watch('vehicleType') as VehicleType
+  const locationType = watch('locationType')
+  const revenue = watch('revenue')
+  const tip = watch('tip')
+  const jobDate = watch('date')
+  const startTime = watch('start_time')
+  const notes = watch('notes')
+  const recurrenceCadence = watch('recurrence_cadence')
 
   useEffect(() => {
     void loadSettingsAsync().then((s) => setTravelRatePerMile(s.travel_rate_per_mile))
@@ -91,58 +123,66 @@ export default function QuickAddJob({
   useEffect(() => {
     if (initialClient) {
       setSelectedClient(initialClient)
+      setValue('clientId', initialClient.id)
       setClientSearch('')
     }
-  }, [initialClient])
+  }, [initialClient, setValue])
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
-  }, [revenue, tip, notes])
+  }, [revenue, tip, notes, startTime])
 
   const filteredClients = clients.filter((c) => {
-    const q = clientSearch.toLowerCase()
+    const q = debouncedClientSearch.toLowerCase()
     if (!q) return true
     return (
       c.name.toLowerCase().includes(q) ||
-      (c.phone?.includes(clientSearch) ?? false) ||
+      (c.phone?.includes(debouncedClientSearch) ?? false) ||
       (c.email?.toLowerCase().includes(q) ?? false)
     )
   })
 
   const isValid =
-    Boolean(selectedClient?.id) &&
-    Boolean(selectedPackage?.id) &&
+    Boolean(clientId) &&
+    Boolean(packageId) &&
     Boolean(vehicleType) &&
     revenue > 0
 
   const handlePackageSelect = useCallback((pkg: Package) => {
     setSelectedPackage(pkg)
-    setRevenue(pkg.base_price)
-  }, [])
+    setValue('packageId', pkg.id)
+    setValue('revenue', pkg.base_price)
+  }, [setValue])
 
-  const buildPayload = (supplies_used?: SupplyUsage[]): QuickJobData => ({
-    clientId: selectedClient!.id,
+  const buildPayload = (values: QuickJobFormValues, supplies_used?: SupplyUsage[]): QuickJobData => ({
+    clientId: values.clientId,
     clientName: selectedClient!.name,
-    packageId: selectedPackage!.id,
-    vehicleType,
-    locationType,
-    revenue,
-    tip,
-    date: jobDate,
-    start_time: startTime || undefined,
-    notes: notes.trim() || undefined,
+    packageId: values.packageId,
+    vehicleType: values.vehicleType as VehicleType,
+    locationType: values.locationType,
+    revenue: values.revenue,
+    tip: values.tip,
+    date: values.date,
+    start_time: values.start_time || undefined,
+    notes: values.notes?.trim() || undefined,
     travel_cost: expenses.travel_cost,
     marketing_cost: expenses.marketing_cost,
     equipment_depreciation: expenses.equipment_depreciation,
     supplies_used,
-    recurrence_cadence: recurrenceCadence === 'none' ? undefined : recurrenceCadence,
-    recurrence_anchor_date: recurrenceCadence === 'none' ? undefined : jobDate,
+    recurrence_cadence:
+      values.recurrence_cadence === 'none' || !values.recurrence_cadence
+        ? undefined
+        : values.recurrence_cadence,
+    recurrence_anchor_date:
+      values.recurrence_cadence === 'none' || !values.recurrence_cadence
+        ? undefined
+        : values.date,
   })
 
-  const performSave = async (supplies_used?: SupplyUsage[]) => {
+  const performSave = async (values: QuickJobFormValues, supplies_used?: SupplyUsage[]) => {
     setSaving(true)
     try {
-      const job = await onSave(buildPayload(supplies_used))
+      const job = await onSave(buildPayload(values, supplies_used))
       router.push(`/jobs/${job.id}`)
     } catch (err) {
       if (handleWriteError(err)) return
@@ -152,25 +192,13 @@ export default function QuickAddJob({
     }
   }
 
-  const handleSave = async () => {
+  const handleSave = submitWithToast((values) => {
     setSaveError(null)
-    if (!selectedClient) {
-      setSaveError('Select a client.')
-      return
-    }
-    if (!selectedPackage) {
-      setSaveError('Select a service package.')
-      return
-    }
-    if (revenue <= 0) {
-      setSaveError('Enter revenue greater than zero.')
-      return
-    }
     runCreateJobGated(() => {
       void (async () => {
         const appSettings = await loadSettingsAsync()
         if (!appSettings.track_job_supplies) {
-          await performSave()
+          await performSave(values)
           return
         }
         const supplies = await getSupplies()
@@ -179,7 +207,7 @@ export default function QuickAddJob({
         setSuppliesSheetOpen(true)
       })()
     })
-  }
+  })
 
   const headerDate = formatHeaderDate(new Date())
 
@@ -202,6 +230,7 @@ export default function QuickAddJob({
               className="new-job-client-selected"
               onClick={() => {
                 setSelectedClient(null)
+                setValue('clientId', '')
                 setClientSearch('')
                 setShowClientList(true)
               }}
@@ -239,6 +268,7 @@ export default function QuickAddJob({
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
                         setSelectedClient(c)
+                        setValue('clientId', c.id)
                         setClientSearch('')
                         setShowClientList(false)
                       }}
@@ -269,7 +299,7 @@ export default function QuickAddJob({
                 type="date"
                 className="new-job-datetime-native"
                 value={jobDate}
-                onChange={(e) => setJobDate(e.target.value)}
+                onChange={(e) => setValue('date', e.target.value)}
               />
             </label>
             <label className="new-job-datetime-box" htmlFor="nj-time">
@@ -278,8 +308,8 @@ export default function QuickAddJob({
                 id="nj-time"
                 type="time"
                 className="new-job-datetime-native"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                value={startTime ?? ''}
+                onChange={(e) => setValue('start_time', e.target.value)}
               />
             </label>
           </div>
@@ -298,7 +328,7 @@ export default function QuickAddJob({
           ) : (
             <div className="new-job-package-list">
               {packages.map((pkg) => {
-                const selected = selectedPackage?.id === pkg.id
+                const selected = packageId === pkg.id
                 return (
                   <button
                     key={pkg.id}
@@ -344,7 +374,7 @@ export default function QuickAddJob({
                   key={v.id}
                   type="button"
                   className={`new-job-vehicle-btn${active ? ' new-job-vehicle-btn--selected' : ''}`}
-                  onClick={() => setVehicleType(v.id)}
+                  onClick={() => setValue('vehicleType', v.id)}
                 >
                   <Icon size={22} weight={active ? 'fill' : 'regular'} aria-hidden="true" />
                   <span>{v.label}</span>
@@ -358,7 +388,7 @@ export default function QuickAddJob({
             <button
               type="button"
               className={`new-job-location-opt${locationType === 'mobile' ? ' new-job-location-opt--selected' : ''}`}
-              onClick={() => setLocationType('mobile')}
+              onClick={() => setValue('locationType', 'mobile')}
             >
               <MapPin size={15} aria-hidden="true" />
               Mobile
@@ -366,7 +396,7 @@ export default function QuickAddJob({
             <button
               type="button"
               className={`new-job-location-opt${locationType === 'fixed' ? ' new-job-location-opt--selected' : ''}`}
-              onClick={() => setLocationType('fixed')}
+              onClick={() => setValue('locationType', 'fixed')}
             >
               <House size={15} aria-hidden="true" />
               Fixed
@@ -378,47 +408,73 @@ export default function QuickAddJob({
           {/* 4. Revenue */}
           <section id="nj-revenue" className="new-job-section">
             <div className="page-form__grid2">
-              <FloatingAffixField
-                id="nj-revenue"
-                label="Revenue"
-                filled={revenue > 0}
-                type="number"
-                inputMode="decimal"
-                value={revenue || ''}
-                onChange={(e) => setRevenue(e.target.value === '' ? 0 : Number(e.target.value))}
+              <Controller
+                control={control}
+                name="revenue"
+                render={({ field, fieldState }) => (
+                  <FloatingAffixField
+                    id="nj-revenue"
+                    label="Revenue"
+                    currency
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    onBlur={field.onBlur}
+                    error={fieldState.error?.message}
+                  />
+                )}
               />
-              <FloatingAffixField
-                id="nj-tip"
-                label="Tip"
-                filled={tip > 0}
-                type="number"
-                inputMode="decimal"
-                value={tip || ''}
-                onChange={(e) => setTip(e.target.value === '' ? 0 : Number(e.target.value))}
+              <Controller
+                control={control}
+                name="tip"
+                render={({ field, fieldState }) => (
+                  <FloatingAffixField
+                    id="nj-tip"
+                    label="Tip"
+                    currency
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    onBlur={field.onBlur}
+                    error={fieldState.error?.message}
+                  />
+                )}
               />
             </div>
           </section>
 
           {/* 5. Notes */}
           <section id="nj-notes" className="new-job-section">
-            <FloatingField id="nj-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-              <textarea
-                id="nj-notes"
-                className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder=" "
-              />
-            </FloatingField>
+            <Controller
+              control={control}
+              name="notes"
+              render={({ field, fieldState }) => (
+                <FloatingField
+                  id="nj-notes"
+                  label="Notes"
+                  filled={Boolean(field.value?.trim())}
+                  error={fieldState.error?.message}
+                  optional
+                  textarea
+                >
+                  <textarea
+                    id="nj-notes"
+                    className={`f-textarea${field.value?.trim() ? ' hv' : ''}`}
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    rows={3}
+                    placeholder=" "
+                  />
+                </FloatingField>
+              )}
+            />
           </section>
 
           <section id="nj-recurrence" className="new-job-section">
             <PillGroup
               label="Repeat"
-              value={recurrenceCadence}
+              value={recurrenceCadence ?? 'none'}
               options={RECURRENCE_CADENCE_OPTIONS}
-              onChange={setRecurrenceCadence}
+              onChange={(v) => setValue('recurrence_cadence', v)}
             />
           </section>
         </div>
@@ -460,7 +516,7 @@ export default function QuickAddJob({
           initialUsed={pendingSupplies ?? undefined}
           onConfirm={(used) => {
             setSuppliesSheetOpen(false)
-            void performSave(used)
+            void performSave(getValues(), used)
           }}
           onClose={() => setSuppliesSheetOpen(false)}
         />

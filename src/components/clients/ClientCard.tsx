@@ -1,9 +1,10 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { MapPin } from '@phosphor-icons/react'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
+import MorphSurface from '@/components/ui/MorphSurface'
 import ClientCardMenu from '@/components/clients/ClientCardMenu'
+import { useDetailNavigation } from '@/hooks/useDetailNavigation'
 import { openMapsDirections } from '@/lib/maps-url'
 import {
   timeAgo,
@@ -31,7 +32,7 @@ interface ClientCardProps {
 }
 
 export default function ClientCard({ client, derived, onClientRemoved }: ClientCardProps) {
-  const router = useRouter()
+  const { openClient } = useDetailNavigation()
   const avatarTone =
     derived.tag === 'followup'
       ? AVATAR_CLASS.followup
@@ -47,11 +48,11 @@ export default function ClientCard({ client, derived, onClientRemoved }: ClientC
       ? timeAgo(client.lastJobDate)
       : 'No jobs yet'
 
-  const openDetail = () => router.push(`/clients/${client.id}`)
+  const openDetail = () => openClient(client.id)
 
   return (
     <div className={`client-card${derived.isVip ? ' vip' : ''}`}>
-      <button type="button" className="client-card-main" onClick={openDetail}>
+      <MorphSurface layoutId={`client-${client.id}`} as="button" className="client-card-main" onClick={openDetail}>
         <div className={`avatar ${avatarTone}`}>{derived.initials}</div>
         <div className="client-body">
           <div className="client-name">{client.name}</div>
@@ -73,7 +74,7 @@ export default function ClientCard({ client, derived, onClientRemoved }: ClientC
             {client.jobCount} job{client.jobCount !== 1 ? 's' : ''}
           </div>
         </div>
-      </button>
+      </MorphSurface>
       {client.address?.trim() ? (
         <button
           type="button"

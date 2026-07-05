@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
 import { CaretDown } from '@phosphor-icons/react'
 import BottomSheet from '@/components/BottomSheet'
 import {
@@ -20,8 +21,11 @@ import {
 } from '@/lib/api'
 import { fmtDetailed } from '@/lib/calculations'
 import { computeFormProgress } from '@/lib/form-progress'
-import { syncPrefilledFloatingLabels, syncSelectFloatingLabel } from '@/lib/floating-label'
+import { syncPrefilledFloatingLabels } from '@/lib/floating-label'
+import { supplyPurchaseSchema, type SupplyPurchaseFormValues } from '@/lib/validation'
+import { useRinseForm } from '@/hooks/useRinseForm'
 import { useActionToast } from '@/providers/ActionToastProvider'
+import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { useConfirm } from '@/providers/ConfirmProvider'
 import type { BusinessExpense, Supply, SupplyKind, SupplyPurchaseInput } from '@/lib/types'
 
@@ -47,15 +51,16 @@ interface SupplyPickerProps {
 function SupplyPicker({ catalog, supplyKey, onSelect }: SupplyPickerProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedSearch(search)
 
   const selected = catalog.find((s) => s.id === supplyKey)
   const isNew = supplyKey === NEW_SUPPLY
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
+    const q = debouncedSearch.trim().toLowerCase()
     if (!q) return catalog
     return catalog.filter((s) => s.name.toLowerCase().includes(q))
-  }, [catalog, search])
+  }, [catalog, debouncedSearch])
 
   const displayLabel = isNew
     ? '+ Add new supply'
@@ -133,29 +138,47 @@ interface SupplyPurchaseSheetProps {
 export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: SupplyPurchaseSheetProps) {
   const isEdit = Boolean(expense)
   const formRef = useRef<HTMLDivElement>(null)
-  const unitRef = useRef<HTMLSelectElement>(null)
   const [catalog, setCatalog] = useState<Supply[]>([])
-  const [date, setDate] = useState(todayIso())
-  const [supplyKey, setSupplyKey] = useState('')
   const [name, setName] = useState('')
   const [kind, setKind] = useState<SupplyKind>('chemical')
   const [unit, setUnit] = useState('oz')
-  const [quantity, setQuantity] = useState('')
-  const [amount, setAmount] = useState('')
-  const [vendor, setVendor] = useState('')
-  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
   const { handleWriteError } = useActionToast()
   const confirm = useConfirm()
+
+  const {
+    control,
+    watch,
+    setValue,
+    reset,
+    submitWithToast,
+  } = useRinseForm<SupplyPurchaseFormValues>({
+    schema: supplyPurchaseSchema,
+    defaultValues: {
+      supply_id: '',
+      date: todayIso(),
+      quantity: 0,
+      total_cost: 0,
+      vendor: '',
+      notes: '',
+    },
+  })
+
+  const supplyKey = watch('supply_id')
+  const date = watch('date')
+  const quantity = watch('quantity')
+  const totalCost = watch('total_cost')
+  const vendor = watch('vendor')
+  const notes = watch('notes')
 
   const isNewSupply = supplyKey === NEW_SUPPLY
   const unitOptions = kind === 'consumable' ? CONSUMABLE_UNITS : CHEMICAL_UNITS
   const unitPills = unitOptions.map((u) => ({ value: u, label: u }))
 
   const progress = computeFormProgress(
-    [date, name, quantity, amount, vendor, notes],
+    [date, name, quantity > 0 ? String(quantity) : '', totalCost > 0 ? String(totalCost) : '', vendor ?? '', notes ?? ''],
     1,
     supplyKey ? 1 : 0,
   )
@@ -168,30 +191,34 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
 
   useEffect(() => {
     if (!expense) {
-      setDate(todayIso())
-      setSupplyKey('')
+      reset({
+        supply_id: '',
+        date: todayIso(),
+        quantity: 0,
+        total_cost: 0,
+        vendor: '',
+        notes: '',
+      })
       setName('')
       setKind('chemical')
       setUnit('oz')
-      setQuantity('')
-      setAmount('')
-      setVendor('')
-      setNotes('')
       return
     }
-    setDate(expense.date)
-    setSupplyKey(expense.supply_id ?? '')
+    reset({
+      supply_id: expense.supply_id ?? '',
+      date: expense.date,
+      quantity: expense.quantity ?? 0,
+      total_cost: expense.amount,
+      vendor: expense.vendor ?? '',
+      notes: expense.notes ?? '',
+    })
     setName(expense.name)
-    setQuantity(expense.quantity != null ? String(expense.quantity) : '')
-    setAmount(String(expense.amount))
-    setVendor(expense.vendor ?? '')
-    setNotes(expense.notes ?? '')
     const linked = catalog.find((s) => s.id === expense.supply_id)
     if (linked) {
       setKind(linked.kind ?? 'chemical')
       setUnit(linked.unit)
     }
-  }, [expense, catalog])
+  }, [expense, catalog, reset])
 
   useEffect(() => {
     if (isNewSupply || !supplyKey) return
@@ -205,72 +232,67 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
 
   useEffect(() => {
     syncPrefilledFloatingLabels(formRef.current)
-    syncSelectFloatingLabel(unitRef.current)
-  }, [date, name, quantity, amount, vendor, notes, unit, expense])
+  }, [date, name, quantity, totalCost, vendor, notes, unit, expense])
 
   const costPreview = useMemo(() => {
-    const q = Number(quantity)
-    const a = Number(amount)
-    if (!q || !a) return 0
-    return costPerUnitFromPurchase(q, a)
-  }, [quantity, amount])
+    if (!quantity || !totalCost) return 0
+    return costPerUnitFromPurchase(quantity, totalCost)
+  }, [quantity, totalCost])
 
-  const buildInput = (): SupplyPurchaseInput | null => {
+  const buildInput = (values: SupplyPurchaseFormValues): SupplyPurchaseInput | null => {
     const trimmed = name.trim()
-    const qty = Number(quantity)
-    const total = Number(amount)
-    if (!trimmed || !qty || qty <= 0 || !total || total <= 0) return null
+    if (!trimmed) return null
 
     if (isEdit && expense?.supply_id) {
       return {
-        date,
+        date: values.date,
         name: trimmed,
-        amount: total,
-        quantity: qty,
-        vendor: vendor.trim() || undefined,
-        notes: notes.trim() || undefined,
+        amount: values.total_cost,
+        quantity: values.quantity,
+        vendor: values.vendor,
+        notes: values.notes,
       }
     }
 
     if (isNewSupply) {
       return {
-        date,
+        date: values.date,
         name: trimmed,
-        amount: total,
-        quantity: qty,
-        vendor: vendor.trim() || undefined,
-        notes: notes.trim() || undefined,
+        amount: values.total_cost,
+        quantity: values.quantity,
+        vendor: values.vendor,
+        notes: values.notes,
         new_supply: {
           name: trimmed,
           unit: unit.trim() || 'oz',
-          quantity_on_hand: qty,
+          quantity_on_hand: values.quantity,
           kind,
-          supplier: vendor.trim() || undefined,
-          notes: notes.trim() || undefined,
+          supplier: values.vendor,
+          notes: values.notes,
         },
       }
     }
 
-    if (!supplyKey) return null
+    if (!values.supply_id) return null
     return {
-      date,
+      date: values.date,
       name: trimmed,
-      amount: total,
-      quantity: qty,
-      vendor: vendor.trim() || undefined,
-      notes: notes.trim() || undefined,
-      supply_id: supplyKey,
+      amount: values.total_cost,
+      quantity: values.quantity,
+      vendor: values.vendor,
+      notes: values.notes,
+      supply_id: values.supply_id,
     }
   }
 
-  const handleSave = async () => {
-    const input = buildInput()
+  const handleSave = submitWithToast(async (values) => {
+    const input = buildInput(values)
     if (!input) {
-      setError('Fill in supply, quantity, and total cost.')
+      setSubmitError('Fill in supply, quantity, and total cost.')
       return
     }
     setSaving(true)
-    setError('')
+    setSubmitError('')
     try {
       if (isEdit && expense) {
         await updateSupplyPurchase(expense.id, input)
@@ -282,11 +304,11 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
       setTimeout(onClose, 1500)
     } catch (err) {
       if (handleWriteError(err)) return
-      setError(err instanceof Error ? err.message : 'Could not save purchase.')
+      setSubmitError(err instanceof Error ? err.message : 'Could not save purchase.')
     } finally {
       setSaving(false)
     }
-  }
+  }, 'Fill in supply, quantity, and total cost.')
 
   const handleDelete = async () => {
     if (!expense) return
@@ -299,20 +321,20 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
     })
     if (!ok) return
     setSaving(true)
-    setError('')
+    setSubmitError('')
     try {
       await deleteSupplyPurchase(expense.id)
       onSaved?.()
       onClose()
     } catch (err) {
       if (handleWriteError(err)) return
-      setError(err instanceof Error ? err.message : 'Could not delete purchase.')
+      setSubmitError(err instanceof Error ? err.message : 'Could not delete purchase.')
     } finally {
       setSaving(false)
     }
   }
 
-  const canSave = Boolean(name.trim() && Number(quantity) > 0 && Number(amount) > 0)
+  const canSave = Boolean(name.trim() && quantity > 0 && totalCost > 0)
 
   return (
     <BottomSheet
@@ -337,21 +359,38 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
       {!isEdit ? <FormProgressBar progress={progress} /> : null}
 
       <div ref={formRef} className="premium-sheet__form">
-        <FloatingField id="purchase-date" label="Date" filled={Boolean(date)}>
-          <input
-            id="purchase-date"
-            type="date"
-            className={`f-input${date ? ' hv' : ''}`}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="date"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="purchase-date"
+              label="Date"
+              filled={Boolean(field.value)}
+              error={fieldState.error?.message}
+            >
+              <input
+                id="purchase-date"
+                type="date"
+                className={`f-input${field.value ? ' hv' : ''}`}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                aria-invalid={fieldState.error ? true : undefined}
+              />
+            </FloatingField>
+          )}
+        />
 
         {!isEdit ? (
           <div className="form-pill-block">
             <p className="form-pill-block__label">Supply</p>
-            <SupplyPicker catalog={catalog} supplyKey={supplyKey} onSelect={setSupplyKey} />
+            <SupplyPicker
+              catalog={catalog}
+              supplyKey={supplyKey}
+              onSelect={(key) => setValue('supply_id', key)}
+            />
           </div>
         ) : null}
 
@@ -386,27 +425,45 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
         <div className="f-form-divider" />
 
         <div className="premium-sheet__grid2">
-          <FloatingField id="purchase-qty" label="Quantity bought" filled={quantity.trim().length > 0}>
-            <input
-              id="purchase-qty"
-              type="number"
-              inputMode="decimal"
-              className={`f-input${quantity.trim() ? ' hv' : ''}`}
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder=" "
-            />
-          </FloatingField>
+          <Controller
+            control={control}
+            name="quantity"
+            render={({ field, fieldState }) => (
+              <FloatingField
+                id="purchase-qty"
+                label="Quantity bought"
+                filled={field.value > 0}
+                error={fieldState.error?.message}
+              >
+                <input
+                  id="purchase-qty"
+                  type="number"
+                  inputMode="decimal"
+                  className={`f-input${field.value > 0 ? ' hv' : ''}`}
+                  value={field.value > 0 ? field.value : ''}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  onBlur={field.onBlur}
+                  placeholder=" "
+                  aria-invalid={fieldState.error ? true : undefined}
+                />
+              </FloatingField>
+            )}
+          />
 
           <div>
-            <FloatingAffixField
-              id="purchase-cost"
-              label="Total cost"
-              type="number"
-              inputMode="decimal"
-              value={amount}
-              filled={amount.trim().length > 0}
-              onChange={(e) => setAmount(e.target.value)}
+            <Controller
+              control={control}
+              name="total_cost"
+              render={({ field, fieldState }) => (
+                <FloatingAffixField
+                  id="purchase-cost"
+                  label="Total cost"
+                  currency
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
+              )}
             />
             {costPreview > 0 ? (
               <p className="inv-computed-cost">
@@ -418,28 +475,59 @@ export default function SupplyPurchaseSheet({ expense, onClose, onSaved }: Suppl
 
         <div className="f-form-divider" />
 
-        <FloatingField id="purchase-vendor" label="Vendor" filled={vendor.trim().length > 0} optional>
-          <input
-            id="purchase-vendor"
-            className={`f-input${vendor.trim() ? ' hv' : ''}`}
-            value={vendor}
-            onChange={(e) => setVendor(e.target.value)}
-            placeholder=" "
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="vendor"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="purchase-vendor"
+              label="Vendor"
+              filled={(field.value ?? '').trim().length > 0}
+              error={fieldState.error?.message}
+              optional
+            >
+              <input
+                id="purchase-vendor"
+                className={`f-input${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+              />
+            </FloatingField>
+          )}
+        />
 
-        <FloatingField id="purchase-notes" label="Notes" filled={notes.trim().length > 0} optional textarea>
-          <textarea
-            id="purchase-notes"
-            className={`f-textarea${notes.trim() ? ' hv' : ''}`}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder=" "
-            rows={3}
-          />
-        </FloatingField>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <FloatingField
+              id="purchase-notes"
+              label="Notes"
+              filled={(field.value ?? '').trim().length > 0}
+              error={fieldState.error?.message}
+              optional
+              textarea
+            >
+              <textarea
+                id="purchase-notes"
+                className={`f-textarea${(field.value ?? '').trim() ? ' hv' : ''}`}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder=" "
+                rows={3}
+              />
+            </FloatingField>
+          )}
+        />
 
-        {error ? <p className="form-field-hint form-field-hint--error">{error}</p> : null}
+        {submitError ? (
+          <p className="form-field-hint form-field-hint--error" role="alert" aria-live="assertive">
+            {submitError}
+          </p>
+        ) : null}
       </div>
     </BottomSheet>
   )

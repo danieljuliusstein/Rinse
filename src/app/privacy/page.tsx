@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <p className="legal-page__updated">Last updated {updated}</p>
       </header>
 
-      <div className="legal-page__body">
+      <div className="legal-page__body rinse-prose">
         <section>
           <h2>Who this applies to</h2>
           <p>

@@ -89,7 +89,7 @@ export default function HomePage() {
   }
 
   if (!ready) {
-    return <ScreenLoading body />
+    return <ScreenLoading body variant="home" />
   }
 
   return (

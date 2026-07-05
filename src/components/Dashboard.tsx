@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Car, ChatCircle, Funnel, Gear, Trophy } from '@phosphor-icons/react'
 import ArSummaryCard from '@/components/business/ArSummaryCard'
 import HomeCtaRow from '@/components/home/HomeCtaRow'
 import HomeMonthCalendar from '@/components/home/HomeMonthCalendar'
+import HomeDayJobsPanel from '@/components/home/HomeDayJobsPanel'
 import InventoryAlertCard from '@/components/home/InventoryAlertCard'
 import ProfileCompleteCard from '@/components/home/ProfileCompleteCard'
 import TodayJobCard from '@/components/home/TodayJobCard'
@@ -32,6 +33,10 @@ import { openMapsDirections } from '@/lib/maps-url'
 import { loadSentMessagesAsync } from '@/lib/messages'
 import { loadSettingsAsync } from '@/lib/settings'
 import { fetchWeatherReadiness } from '@/lib/weather-readiness-client'
+import {
+  peekWeatherReadinessCache,
+  setWeatherReadinessCache,
+} from '@/lib/weather-readiness-cache'
 import {
   isWeatherReadinessActiveJob,
   isWeatherSensitiveJob,
@@ -92,7 +97,9 @@ export default function Dashboard({
   const [trialDismissed, setTrialDismissed] = useState(() => isTrialBannerDismissed())
   const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
   const [weatherReadiness, setWeatherReadiness] = useState<WeatherReadinessResult | null>(null)
+  const [weatherFromCache, setWeatherFromCache] = useState(false)
   const [messageCount, setMessageCount] = useState(0)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null)
   const profileCompletion = useProfileCompletion()
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
   const todayJob = useMemo(() => buildTodayJobCard(todayJobRows), [todayJobRows])
@@ -157,18 +164,33 @@ export default function Dashboard({
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
+  useLayoutEffect(() => {
+    if (isLoggedOut || !isHomeModuleEnabled(homeModules, 'job_readiness')) return
+    const cached = peekWeatherReadinessCache(weatherFetchKey)
+    if (cached) {
+      setWeatherReadiness(cached)
+      setWeatherFromCache(true)
+    }
+  }, [isLoggedOut, homeModules, weatherFetchKey])
+
   useEffect(() => {
     if (isLoggedOut || !isHomeModuleEnabled(homeModules, 'job_readiness')) {
-      setWeatherReadiness(null)
       return
     }
     let alive = true
     void fetchWeatherReadiness()
       .then((result) => {
-        if (alive) setWeatherReadiness(result)
+        if (!alive) return
+        setWeatherReadinessCache(weatherFetchKey, result)
+        setWeatherReadiness(result)
+        setWeatherFromCache(false)
       })
       .catch(() => {
-        if (alive) setWeatherReadiness({ status: 'unresolved', rows: [] })
+        if (!alive) return
+        if (!peekWeatherReadinessCache(weatherFetchKey)) {
+          setWeatherReadiness({ status: 'unresolved', rows: [] })
+          setWeatherFromCache(false)
+        }
       })
     return () => {
       alive = false
@@ -273,7 +295,7 @@ export default function Dashboard({
       ) : null}
 
       {isHomeModuleEnabled(homeModules, 'job_readiness') && weatherReadiness ? (
-        <WeatherReadinessCard result={weatherReadiness} />
+        <WeatherReadinessCard result={weatherReadiness} skipEnterAnimation={weatherFromCache} />
       ) : null}
 
       {!isLoggedOut &&
@@ -297,7 +319,19 @@ export default function Dashboard({
         {!isLoggedOut && isHomeModuleEnabled(homeModules, 'month_calendar') ? (
           <>
             <p className="sec">Calendar</p>
-            <HomeMonthCalendar jobs={jobs} />
+            <HomeMonthCalendar
+              jobs={jobs}
+              selectedDate={selectedCalendarDate}
+              onSelectDate={(iso) => setSelectedCalendarDate(iso)}
+              weatherReadiness={weatherReadiness}
+            />
+            {selectedCalendarDate ? (
+              <HomeDayJobsPanel
+                date={selectedCalendarDate}
+                jobs={jobs}
+                onClear={() => setSelectedCalendarDate(null)}
+              />
+            ) : null}
           </>
         ) : isLoggedOut ? (
           <>

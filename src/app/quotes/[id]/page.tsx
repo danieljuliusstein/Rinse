@@ -17,7 +17,7 @@ export default function QuoteDetailPage() {
   }, [id])
 
   if (!quote) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   return <QuoteDetail quote={quote} />

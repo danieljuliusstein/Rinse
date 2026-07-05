@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { FilePdf, Lock, PaperPlaneTilt, Plus } from '@phosphor-icons/react'
 import BackButton from '@/components/BackButton'
 import ConfirmSheet from '@/components/ConfirmSheet'
-import { ActionDock, Badge, Button } from '@/components/ui'
+import { ActionDock, Badge, Button, QrCode } from '@/components/ui'
 import InvoiceAdjustmentsSheet, {
   invoiceToAdjustments,
   type InvoiceAdjustments,
@@ -374,6 +374,7 @@ export default function InvoicePreview({ job: initialJob }: { job: JobWithRelati
         <div className="card invoice-doc-card invoice-doc-card-wrap">
           <InvoiceDocumentBody job={job} invoice={invoice} settings={settings} portalUrl={portalUrl} />
         </div>
+        {portalUrl ? <QrCode value={portalUrl} label="Scan to view or pay" className="invoice-preview-qr" /> : null}
       </div>
 
       {message && (
@@ -427,6 +428,7 @@ export default function InvoicePreview({ job: initialJob }: { job: JobWithRelati
         canEmail={Boolean(settings.business_email && job.client?.email)}
         busy={busy}
         linkCopied={linkCopied}
+        payUrl={portalUrl}
         onEmail={() =>
           runSendGated(() => {
             setBusy(true)

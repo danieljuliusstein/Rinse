@@ -17,7 +17,7 @@ export default function InvoicePage() {
   }, [id])
 
   if (job === undefined) {
-    return <ScreenLoading />
+    return <ScreenLoading variant="detail" />
   }
 
   if (!job) {
