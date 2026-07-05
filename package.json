@@ -45,6 +45,7 @@
     "@react-pdf/renderer": "^4.5.1",
     "@vercel/analytics": "^2.0.1",
     "chart.js": "^4.5.1",
+    "lucide-react": "^0.511.0",
     "motion": "^12.42.2",
     "next": "16.2.7",
     "pocketbase": "^0.27.0",

@@ -6,12 +6,13 @@ import { AuthProvider } from '@/providers/AuthProvider'
 import { ActionToastProvider } from '@/providers/ActionToastProvider'
 import { ConfirmProvider } from '@/providers/ConfirmProvider'
 import { ThemeProvider } from '@/providers/ThemeProvider'
+import SetupMotionProvider from '@/providers/SetupMotionProvider'
 import AppShell from '@/components/AppShell'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
 import './globals.css'
 
-const syne = Syne({ subsets: ['latin'], variable: '--font-syne' })
-const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
+const syne = Syne({ subsets: ['latin'], weight: ['600', '700', '800'], variable: '--font-syne' })
+const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-dm-sans' })
 
 export const metadata: Metadata = {
   title: 'Rinse',
@@ -59,13 +60,15 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <ThemeProvider>
-          <AuthProvider>
-            <ActionToastProvider>
-              <ConfirmProvider>
-                <AppShell>{children}</AppShell>
-              </ConfirmProvider>
-            </ActionToastProvider>
-          </AuthProvider>
+          <SetupMotionProvider>
+            <AuthProvider>
+              <ActionToastProvider>
+                <ConfirmProvider>
+                  <AppShell>{children}</AppShell>
+                </ConfirmProvider>
+              </ActionToastProvider>
+            </AuthProvider>
+          </SetupMotionProvider>
         </ThemeProvider>
         <Analytics />
       </body>

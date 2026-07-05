@@ -71,6 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthFlow =
     pathname === '/auth' ||
     pathname === '/welcome' ||
+    pathname === '/intro' ||
     pathname === '/onboarding' ||
     pathname.startsWith('/auth/')
   const isPublicClient = isPortal || isBook || isEmbed

@@ -151,6 +151,31 @@
   pointer-events: none;
 }
 
+.icon-btn--count {
+  position: relative;
+}
+
+.icon-btn__count {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  border: 2px solid var(--bg-base);
+  font-family: var(--font-ui), var(--font-body), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
 /* ── Profile completion prompt ── */
 .profile-complete-card {
   display: flex;

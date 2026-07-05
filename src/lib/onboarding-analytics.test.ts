@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { trackOnboardingStepCompleted, trackOnboardingStepViewed } from './onboarding-analytics'
+import {
+  trackIntroSlideViewed,
+  trackOnboardingStepCompleted,
+  trackOnboardingStepViewed,
+} from './onboarding-analytics'
 
 describe('onboarding-analytics', () => {
   afterEach(() => {
@@ -16,5 +20,11 @@ describe('onboarding-analytics', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {})
     trackOnboardingStepCompleted('plans')
     expect(info).toHaveBeenCalledWith('[onboarding] onboarding_step_completed', { slug: 'plans' })
+  })
+
+  it('logs intro slide viewed in development', () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+    trackIntroSlideViewed(1)
+    expect(info).toHaveBeenCalledWith('[onboarding] setup_intro_slide_viewed', { slideIndex: 1 })
   })
 })

@@ -30,7 +30,7 @@ export default function PaywallSheet({
   const lead =
     mode === 'nudge'
       ? feature
-        ? `${feature} stays available on Starter — subscribe before your trial ends.`
+        ? `Keep ${feature} — subscribe before your trial ends.`
         : 'Subscribe before your trial ends to keep full access.'
       : feature
         ? `${feature} requires an active Rinse subscription.`

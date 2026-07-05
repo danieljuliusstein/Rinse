@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'motion/react'
 import { Sparkle } from '@phosphor-icons/react'
 import OnboardingShell from './OnboardingShell'
 import { useAuth } from '@/providers/AuthProvider'
@@ -14,14 +15,29 @@ import { markTourPending } from '@/lib/product-tour'
 import { prevStepSlug, type OnboardingStepSlug } from '@/lib/onboarding'
 import type { AppSettings } from '@/lib/settings'
 
+const PLAN_HIGHLIGHTS = [
+  'Shareable booking link',
+  'Jobs & scheduling',
+  'Invoices & payments',
+  'Client portal',
+  'Revenue tracking',
+] as const
+
 interface OnboardingPlansStepProps {
   step: OnboardingStepSlug
   settings: AppSettings
   onComplete: () => void
   onBack: (settings: AppSettings, prev: OnboardingStepSlug) => void
+  demo?: boolean
 }
 
-export default function OnboardingPlansStep({ step, settings, onComplete, onBack }: OnboardingPlansStepProps) {
+export default function OnboardingPlansStep({
+  step,
+  settings,
+  onComplete,
+  onBack,
+  demo = false,
+}: OnboardingPlansStepProps) {
   const { refreshOnboardingGate } = useAuth()
   const { daysLeft, showTrialBanner } = useOrgSubscription()
   const [busy, setBusy] = useState(false)
@@ -32,6 +48,10 @@ export default function OnboardingPlansStep({ step, settings, onComplete, onBack
     setBusy(true)
     setError('')
     try {
+      if (demo) {
+        onComplete()
+        return
+      }
       await completeOnboarding({ firstInvoiceCreated: Boolean(settings.onboarding_first_invoice_at) })
       trackOnboardingStepCompleted(step)
       markTourPending()
@@ -76,14 +96,15 @@ export default function OnboardingPlansStep({ step, settings, onComplete, onBack
       step={step}
       settings={settings}
       title="Your plan"
-      footnote="14-day trial started at signup. No card required."
-      continueLabel="Get started"
+      footnote="14-day free trial — no card required"
+      continueLabel="Start free trial"
       saving={busy}
       onBack={() => {
         const prev = prevStepSlug(step)
         if (prev) onBack(settings, prev)
       }}
       onContinue={() => void handleContinueTrial()}
+      demo={demo}
       secondaryAction={
         <button
           type="button"
@@ -95,6 +116,23 @@ export default function OnboardingPlansStep({ step, settings, onComplete, onBack
         </button>
       }
     >
+      <motion.div
+        className="onboarding-plans-intro"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="onboarding-plans-intro__head">
+          <span className="onboarding-plans-intro__eyebrow">Get started</span>
+          <span className="onboarding-plans-intro__badge">Unlimited</span>
+        </div>
+        <ul className="onboarding-plans-highlights">
+          {PLAN_HIGHLIGHTS.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </motion.div>
+
       {showTrialBanner && daysLeft != null ? (
         <p className="onboarding-plans-trial">
           <Sparkle size={14} weight="fill" aria-hidden="true" /> {daysLeft} day{daysLeft === 1 ? '' : 's'} left in
@@ -102,16 +140,14 @@ export default function OnboardingPlansStep({ step, settings, onComplete, onBack
         </p>
       ) : null}
 
-      <div className="onboarding-plans-card">
+      <div className="onboarding-plans-card onboarding-plans-card--selected">
         <div className="onboarding-plans-card__head">
           <strong>{STARTER_PLAN.name}</strong>
           <span className="onboarding-plans-card__price">{STARTER_PLAN.priceLabel}</span>
         </div>
-        <p className="onboarding-plans-card__tagline" style={{ margin: '0 0 4px' }}>
-          {STARTER_PLAN.tagline}
-        </p>
+        <p className="onboarding-plans-card__tagline">{STARTER_PLAN.tagline}</p>
         <ul>
-          {STARTER_PLAN.features.slice(0, 8).map((feature) => (
+          {STARTER_PLAN.features.slice(0, 6).map((feature) => (
             <li key={feature}>{feature}</li>
           ))}
         </ul>

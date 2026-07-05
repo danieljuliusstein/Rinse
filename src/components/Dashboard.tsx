@@ -9,6 +9,7 @@ import HomeMonthCalendar from '@/components/home/HomeMonthCalendar'
 import InventoryAlertCard from '@/components/home/InventoryAlertCard'
 import ProfileCompleteCard from '@/components/home/ProfileCompleteCard'
 import TodayJobCard from '@/components/home/TodayJobCard'
+import WeatherReadinessCard from '@/components/home/WeatherReadinessCard'
 import { Badge, ListRow, MonthCarousel, SectionGroup } from '@/components/ui'
 import TrialExpiryBanner from '@/components/TrialExpiryBanner'
 import { useOrgSubscription } from '@/hooks/useOrgSubscription'
@@ -16,23 +17,28 @@ import { useProfileCompletion } from '@/hooks/useProfileCompletion'
 import { useAuthEmptyState } from '@/hooks/useAuthEmptyState'
 import { dismissTrialBanner, isTrialBannerDismissed } from '@/lib/subscription-gates'
 import { computeArSummary } from '@/lib/ar-metrics'
-import { fmt } from '@/lib/calculations'
 import { DEFAULT_BOOKING_SCHEDULE, weekdayFromIsoDate } from '@/lib/booking-availability'
 import { getTimeBlocks } from '@/lib/api'
 import {
-  buildHomeWeekStats,
   buildTodayJobCard,
   formatStartTimeLabel,
   type ComingUpJobData,
   type InventoryAlertData,
 } from '@/lib/home-dashboard'
-import { buildMonthCarouselItems } from '@/lib/month-revenue'
 import { buildInvoiceMonthCarouselItems } from '@/lib/invoice-month-revenue'
 import HomeRevenueChart from '@/components/home/HomeRevenueChart'
 import { isHomeModuleEnabled, type HomeModulePrefs } from '@/lib/home-modules'
 import { openMapsDirections } from '@/lib/maps-url'
+import { loadSentMessagesAsync } from '@/lib/messages'
 import { loadSettingsAsync } from '@/lib/settings'
+import { fetchWeatherReadiness } from '@/lib/weather-readiness-client'
+import type { WeatherReadinessResult } from '@/lib/weather-risk'
 import type { Invoice, JobWithRelations, LeadWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
+
+function formatHeaderCount(n: number): string {
+  if (n > 99) return '99+'
+  return String(n)
+}
 
 function greeting() {
   const h = new Date().getHours()
@@ -81,31 +87,21 @@ export default function Dashboard({
   const { showTrialBanner, daysLeft } = useOrgSubscription()
   const [trialDismissed, setTrialDismissed] = useState(() => isTrialBannerDismissed())
   const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
+  const [weatherReadiness, setWeatherReadiness] = useState<WeatherReadinessResult | null>(null)
+  const [messageCount, setMessageCount] = useState(0)
   const profileCompletion = useProfileCompletion()
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
-  const weekStats = buildHomeWeekStats(jobs, weekDays)
   const todayJob = useMemo(() => buildTodayJobCard(todayJobRows), [todayJobRows])
   const moreTodayJobs = useMemo(
     () => (todayJob ? todayJobRows.filter((j) => j.id !== todayJob.id) : todayJobRows),
     [todayJobRows, todayJob],
   )
   const arSummary = useMemo(() => computeArSummary(invoices), [invoices])
-  const monthCarousel = useMemo(
-    () => (isLoggedOut ? [] : buildMonthCarouselItems(jobs)),
-    [jobs, isLoggedOut],
-  )
   const invoiceMonthCarousel = useMemo(
     () => (isLoggedOut ? [] : buildInvoiceMonthCarouselItems(invoices)),
     [invoices, isLoggedOut],
   )
   const pipelineCount = useMemo(() => pipelineOpenCount(leads), [leads])
-
-  const todayExpectedRevenue = useMemo(() => {
-    const todayStr = new Date().toISOString().split('T')[0]
-    return jobs
-      .filter((j) => j.date === todayStr && j.status !== 'paid')
-      .reduce((s, j) => s + j.revenue + j.tip, 0)
-  }, [jobs])
 
   useEffect(() => {
     if (weekDays.length === 0) return
@@ -142,6 +138,38 @@ export default function Dashboard({
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
+  useEffect(() => {
+    if (jobs.length === 0) {
+      setWeatherReadiness(null)
+      return
+    }
+    let alive = true
+    void fetchWeatherReadiness(jobs)
+      .then((result) => {
+        if (alive) setWeatherReadiness(result)
+      })
+      .catch(() => {
+        if (alive) setWeatherReadiness(null)
+      })
+    return () => {
+      alive = false
+    }
+  }, [jobs])
+
+  useEffect(() => {
+    if (isLoggedOut) {
+      setMessageCount(0)
+      return
+    }
+    let alive = true
+    void loadSentMessagesAsync().then((messages) => {
+      if (alive) setMessageCount(messages.length)
+    })
+    return () => {
+      alive = false
+    }
+  }, [isLoggedOut])
+
   return (
     <div className="screen page-content body home-dashboard">
       <header className="page-header">
@@ -161,20 +189,28 @@ export default function Dashboard({
           </button>
           <button
             type="button"
-            className="icon-btn"
-            aria-label="Lead pipeline"
+            className={`icon-btn${pipelineCount > 0 ? ' icon-btn--count' : ''}`}
+            aria-label={
+              pipelineCount > 0 ? `Lead pipeline, ${pipelineCount} open` : 'Lead pipeline'
+            }
             data-tour="header-pipeline"
             onClick={() => router.push('/pipeline')}
           >
             <Funnel size={18} weight="regular" aria-hidden="true" />
+            {pipelineCount > 0 ? (
+              <span className="icon-btn__count">{formatHeaderCount(pipelineCount)}</span>
+            ) : null}
           </button>
           <button
             type="button"
-            className="icon-btn"
-            aria-label="Messages"
+            className={`icon-btn${messageCount > 0 ? ' icon-btn--count' : ''}`}
+            aria-label={messageCount > 0 ? `Messages, ${messageCount}` : 'Messages'}
             onClick={() => router.push('/messages')}
           >
             <ChatCircle size={18} weight="regular" aria-hidden="true" />
+            {messageCount > 0 ? (
+              <span className="icon-btn__count">{formatHeaderCount(messageCount)}</span>
+            ) : null}
           </button>
           <button
             type="button"
@@ -217,39 +253,10 @@ export default function Dashboard({
         <ArSummaryCard summary={arSummary} />
       ) : null}
 
-      {!isLoggedOut &&
-      isHomeModuleEnabled(homeModules, 'quick_chips') &&
-      (pipelineCount > 0 || arSummary.overdueCount > 0) ? (
-        <div className="home-quick-chips">
-          {pipelineCount > 0 ? (
-            <button type="button" className="home-quick-chip" onClick={() => router.push('/pipeline')}>
-              <Funnel size={16} aria-hidden="true" />
-              Pipeline
-              <span className="home-quick-chip__count">{pipelineCount}</span>
-            </button>
-          ) : null}
-          {arSummary.overdueCount > 0 ? (
-            <button
-              type="button"
-              className="home-quick-chip home-quick-chip--attention"
-              onClick={() => router.push('/invoices?filter=overdue')}
-            >
-              Overdue
-              <span className="home-quick-chip__count">{arSummary.overdueCount}</span>
-            </button>
-          ) : null}
-          <button type="button" className="home-quick-chip" onClick={() => router.push('/messages')}>
-            <ChatCircle size={16} aria-hidden="true" />
-            Messages
-          </button>
-        </div>
-      ) : null}
-
-      {!isLoggedOut && isHomeModuleEnabled(homeModules, 'month_carousel') && monthCarousel.length > 0 ? (
-        <>
-          <p className="sec">Job revenue</p>
-          <MonthCarousel items={monthCarousel} />
-        </>
+      {isHomeModuleEnabled(homeModules, 'job_readiness') &&
+      weatherReadiness &&
+      weatherReadiness.rows.length > 0 ? (
+        <WeatherReadinessCard rows={weatherReadiness.rows} />
       ) : null}
 
       {!isLoggedOut &&
@@ -266,35 +273,6 @@ export default function Dashboard({
       ) : null}
 
       <div data-tour="week-strip">
-        <div className={`stat-grid stat-grid--dashboard${isLoggedOut ? ' stat-grid--logged-out' : ''}`}>
-          <div className="stat-card">
-            <div className="stat-label">This week</div>
-            <div className="stat-value">{isLoggedOut ? '—' : `${weekStats.jobsThisWeek} jobs`}</div>
-            <div className={`stat-sub${isLoggedOut ? ' stat-sub--sign-in' : ''}`}>
-              {isLoggedOut ? 'Sign in' : `${weekStats.jobsRemaining} remaining`}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Earned</div>
-            <div className="stat-value">{isLoggedOut ? '—' : fmt(weekStats.earnedThisWeek)}</div>
-            {isLoggedOut ? (
-              <div className="stat-sub stat-sub--sign-in">Sign in</div>
-            ) : weekStats.earnedDeltaPct != null ? (
-              <div className="stat-sub">
-                {weekStats.earnedDeltaPct >= 0 ? '+' : ''}
-                {weekStats.earnedDeltaPct}% vs last wk
-              </div>
-            ) : null}
-          </div>
-          {!isLoggedOut && isHomeModuleEnabled(homeModules, 'today_revenue') ? (
-            <div className="stat-card">
-              <div className="stat-label">Today expected</div>
-              <div className="stat-value">{fmt(todayExpectedRevenue)}</div>
-              <div className="stat-sub">scheduled revenue</div>
-            </div>
-          ) : null}
-        </div>
-
         {inventoryAlert && isHomeModuleEnabled(homeModules, 'inventory_alert') ? (
           <InventoryAlertCard alert={inventoryAlert} onPress={() => router.push('/inventory')} />
         ) : null}

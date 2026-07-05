@@ -2,7 +2,7 @@
 
 Owner map for shared patterns across the detailing app. Use this when adding surfaces or consolidating CSS.
 
-**Last updated:** Wave 55 (depth sweep + motion QA lab)
+**Last updated:** Slice W (Job readiness / weather on Home)
 
 ---
 
@@ -88,9 +88,22 @@ Used by: `Dashboard`, `JobsList`, `ClientsList`, `Reports`, settings, pipeline, 
 | **Keyframe** | `app-ui.css` | `@keyframes home-block-in` (list-stagger archetype, IF 275146) |
 | **KPI + today job** | `app-ui.css` | `.home-dashboard` scoped stagger, depth tokens, job card entrance |
 | **Attention + chart** | `components.css` | `.home-quick-chip`, `.inventory-alert-card`, `.ar-summary-card`, `.home-revenue-chart` |
+| **Job readiness (Slice W)** | `components.css` | `.weather-readiness-row` list-stagger via `home-block-in`; risk border tokens |
 | **Trigger** | `Dashboard.tsx` | Root `.home-dashboard` wrapper |
 
 Used by: `/` (`Dashboard.tsx`).
+
+### Job readiness / weather (Slice W)
+
+| Owner | File | Notes |
+|-------|------|-------|
+| **UI** | `components/home/WeatherReadinessCard.tsx` | Phosphor duotone icons; `Badge` amber for risk |
+| **CSS** | `components.css` | `.weather-readiness*`; tokens only (`--bg-surface`, `--border-amber`, `--amber`) |
+| **Thresholds** | `lib/weather-risk.ts` | `WEATHER_RISK_THRESHOLDS`, `isWeatherSensitiveJob` (Option B: `location_type === 'mobile'`) |
+| **Server cache** | `lib/server/weather-forecast.ts` | Open-Meteo; geocode by address hash; forecast by day + lat/lon 2dp |
+| **API** | `app/api/weather/readiness/route.ts` | POST jobs → readiness rows; no client-side weather calls |
+
+Outdoor signal: **Option B** — mobile = weather-sensitive; fixed = not. No PocketBase schema change.
 
 ---
 

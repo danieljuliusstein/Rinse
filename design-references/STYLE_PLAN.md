@@ -367,6 +367,12 @@ Resolve before **Wave 40**:
 
 ## Active wave
 
-**Current:** Wave 56 complete → **Wave 57+** (ScreenDesigns expansion)
+**Motion arc:** Wave 56 complete ✅
+
+**Setup layout arc:** [`SETUP_UX_PLAN.md`](./SETUP_UX_PLAN.md) — Waves 1–14 complete ✅ · Wave 15 or 17 next
+
+**Product slice:** Slice W (Job readiness / weather) complete ✅ — Option B (`location_type === 'mobile'`)
+
+**Other:** Wave 57+ ScreenDesigns expansion
 
 _Update this line when starting each wave._

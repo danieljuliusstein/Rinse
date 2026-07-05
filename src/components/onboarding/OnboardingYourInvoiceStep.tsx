@@ -1,12 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { Check } from '@phosphor-icons/react'
 import InvoiceTemplateMock from '@/components/invoice/InvoiceTemplateMock'
+import { AccountReadyCelebration, SetupLoadingScreen } from '@/components/setup'
+import EmptyState from '@/components/ui/EmptyState'
 import OnboardingShell from './OnboardingShell'
 import { getAllPackages } from '@/lib/api'
 import { fmt } from '@/lib/calculations'
 import { normalizeAccentColor } from '@/lib/brand-color'
+import { springSoft } from '@/lib/motion'
 import { trackOnboardingStepCompleted } from '@/lib/onboarding-analytics'
 import type { InvoiceTemplateId } from '@/lib/invoice-templates'
 import {
@@ -28,16 +32,22 @@ interface OnboardingYourInvoiceStepProps {
   step: OnboardingStepSlug
   settings: AppSettings
   onSaved: (settings: AppSettings, next: OnboardingStepSlug) => void
+  demo?: boolean
+  demoPackages?: Package[]
 }
 
 export default function OnboardingYourInvoiceStep({
   step,
   settings,
   onSaved,
+  demo = false,
+  demoPackages,
 }: OnboardingYourInvoiceStepProps) {
+  const [phase, setPhase] = useState<'celebration' | 'picker'>('celebration')
   const [packages, setPackages] = useState<Package[]>([])
   const [selectedPkgId, setSelectedPkgId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -47,13 +57,26 @@ export default function OnboardingYourInvoiceStep({
   const selectedPkg = packages.find((p) => p.id === selectedPkgId)
 
   useEffect(() => {
-    void getAllPackages().then((pkgs) => {
-      const active = pkgs.filter((p) => p.active)
+    if (demo) {
+      const active = (demoPackages ?? []).filter((p) => p.active)
       setPackages(active)
       if (active[0]) setSelectedPkgId(active[0].id)
       setLoading(false)
-    })
-  }, [])
+      return
+    }
+    void getAllPackages()
+      .then((pkgs) => {
+        const active = pkgs.filter((p) => p.active)
+        setPackages(active)
+        if (active[0]) setSelectedPkgId(active[0].id)
+      })
+      .catch(() => {
+        setLoadError('Could not load services. Check your connection and try again.')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [demo, demoPackages])
 
   const handleContinue = async () => {
     if (!selectedPkgId) return
@@ -61,6 +84,13 @@ export default function OnboardingYourInvoiceStep({
     setSaving(true)
     setError('')
     try {
+      if (demo) {
+        const next = nextStepSlug(step)
+        if (!next) throw new Error('Invalid step')
+        onSaved(settings, next)
+        return
+      }
+
       const { saveSettingsAsync } = await import('@/lib/settings')
       const saved = await saveSettingsAsync({
         ...settings,
@@ -81,10 +111,19 @@ export default function OnboardingYourInvoiceStep({
   }
 
   if (loading) {
+    return <SetupLoadingScreen variant="inline" />
+  }
+
+  if (phase === 'celebration') {
     return (
-      <div className="auth-loading-screen">
-        <div className="auth-loading-text">Loading…</div>
-      </div>
+      <AccountReadyCelebration
+        businessName={businessName}
+        logoUrl={settings.logo_url}
+        template={template}
+        accent={accent}
+        amount={selectedPkg?.base_price ?? packages[0]?.base_price ?? 185}
+        onContinue={() => setPhase('picker')}
+      />
     )
   }
 
@@ -93,9 +132,10 @@ export default function OnboardingYourInvoiceStep({
       step={step}
       settings={settings}
       title="Your invoice"
-      footnote="Edit services anytime in Settings → Packages. Customize invoice design in Settings → Invoicing."
+      footnote="Edit services anytime in Settings → Packages. Customize design in Settings → Invoicing."
       continueDisabled={!selectedPkgId}
       saving={saving}
+      demo={demo}
       onBack={() => {
         const prev = prevStepSlug(step)
         if (prev) onSaved(settings, prev)
@@ -103,24 +143,15 @@ export default function OnboardingYourInvoiceStep({
       onContinue={() => void handleContinue()}
     >
       <div className="onboarding-invoice-step">
-        <p className="onboarding-account-hero" role="status">
-          <Check size={18} weight="bold" aria-hidden="true" />
-          You&apos;re set — here&apos;s your first invoice
-        </p>
-
-        <div className="onboarding-first-invoice-phases" aria-hidden="true">
-          <span className="onboarding-first-invoice-phases__item onboarding-first-invoice-phases__item--on">
-            Menu
-          </span>
-          <span className="onboarding-first-invoice-phases__item onboarding-first-invoice-phases__item--on">
-            Preview
-          </span>
-          <span className="onboarding-first-invoice-phases__item">Share</span>
-        </div>
-
         <p className="onboarding-preview-banner" role="status">
           Preview only — nothing is sent.
         </p>
+
+        {loadError ? (
+          <p className="onboarding-error" role="alert">
+            {loadError}
+          </p>
+        ) : null}
 
         <p className="ob-section-label">Your menu</p>
         {packages.length ? (
@@ -128,10 +159,13 @@ export default function OnboardingYourInvoiceStep({
             {packages.map((pkg) => {
               const selected = selectedPkgId === pkg.id
               return (
-                <button
+                <motion.button
                   key={pkg.id}
                   type="button"
+                  layout
                   className={`ob-pick-card${selected ? ' ob-pick-card--on' : ''}`}
+                  animate={{ borderColor: selected ? '#22c55e' : 'rgba(60, 60, 67, 0.12)' }}
+                  transition={springSoft}
                   onClick={() => setSelectedPkgId(pkg.id)}
                 >
                   <div className="ob-pick-card__main">
@@ -140,16 +174,29 @@ export default function OnboardingYourInvoiceStep({
                   </div>
                   <div className="ob-pick-card__right">
                     <span className="ob-pick-card__price">{fmt(pkg.base_price)}</span>
-                    <span className="ob-pick-card__check" aria-hidden="true">
-                      <Check size={12} weight="bold" />
-                    </span>
+                    <AnimatePresence>
+                      {selected ? (
+                        <motion.span
+                          layoutId="package-check"
+                          className="ob-pick-card__check"
+                          transition={springSoft}
+                          aria-hidden="true"
+                        >
+                          <Check size={12} weight="bold" />
+                        </motion.span>
+                      ) : null}
+                    </AnimatePresence>
                   </div>
-                </button>
+                </motion.button>
               )
             })}
           </div>
         ) : (
-          <p className="onboarding-invoice-step__empty">Default services will appear after sync.</p>
+          <EmptyState
+            illustration="invoices"
+            title="No services yet"
+            description="Default packages will appear after sync."
+          />
         )}
 
         <p className="ob-section-label">Preview</p>
@@ -168,7 +215,11 @@ export default function OnboardingYourInvoiceStep({
         </div>
       </div>
 
-      {error ? <p className="onboarding-error">{error}</p> : null}
+      {error ? (
+        <p className="onboarding-error" role="alert" aria-live="assertive">
+          {error}
+        </p>
+      ) : null}
     </OnboardingShell>
   )
 }

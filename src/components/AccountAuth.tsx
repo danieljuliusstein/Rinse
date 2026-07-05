@@ -95,15 +95,15 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
     mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Reset password'
   const subtitle =
     mode === 'login'
-      ? 'Sign in to load your jobs, clients, and business data'
+      ? 'Sign in to your jobs, clients, and business data'
       : mode === 'signup'
-        ? 'Start your solo mobile detailing workspace'
+        ? 'Your solo mobile detailing workspace'
         : 'Enter your email and we will send a reset link'
 
   return (
     <div className="auth-screen setup-flow client-light-root">
       <div className="auth-screen__logo">
-        <AppLogo size={56} priority />
+        <AppLogo size={48} priority />
       </div>
       <div key={mode} className="auth-step">
         <h1 className="auth-screen__title">{title}</h1>
@@ -113,14 +113,6 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
           <p className="auth-info auth-info--setup" role="status">
             {AUTH_PB_NOT_CONFIGURED}
           </p>
-        ) : null}
-
-        {mode === 'signup' ? (
-          <ul className="auth-value-props">
-            <li>Share your booking link</li>
-            <li>Track leads in your pipeline</li>
-            <li>Send invoices and get paid</li>
-          </ul>
         ) : null}
 
         {mode !== 'forgot' && cloudAuthEnabled ? (

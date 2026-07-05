@@ -25,7 +25,9 @@ ScreenDesigns replay exports used as the visual/motion north star for Rinse UI p
 
 ## Related docs
 
-- [`STYLE_PLAN.md`](./STYLE_PLAN.md) — 16-wave polish plan (Waves 40–54)
+- [`STYLE_PLAN.md`](./STYLE_PLAN.md) — motion & operator polish (Waves 40–56 ✅)
+- [`SETUP_UX_PLAN.md`](./SETUP_UX_PLAN.md) — setup funnel layout pass (Waves 1–14 ✅ · Wave 15 or 17 next)
+- [`SETUP_UX_DESIGN_PROMPT.md`](./SETUP_UX_DESIGN_PROMPT.md) — Claude prompt for visual mockups (Waves 2–12)
 - [`MOTION_SPEC.md`](./MOTION_SPEC.md) — 12 animation archetypes + spec template
 - [`../docs/ui-css-audit.md`](../docs/ui-css-audit.md) — CSS pattern owners
 - [`../src/app/tokens.css`](../src/app/tokens.css) — design tokens (already IF-inspired surfaces)

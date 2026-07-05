@@ -6,6 +6,7 @@ import { Check } from '@phosphor-icons/react'
 import AppLogo from '@/components/AppLogo'
 import InvoiceTemplateMock from '@/components/invoice/InvoiceTemplateMock'
 import PaywallSheet from '@/components/PaywallSheet'
+import { AccountReadyCelebration } from '@/components/setup'
 
 function ReplayButton({ onClick, label = 'Replay' }: { onClick: () => void; label?: string }) {
   return (
@@ -24,10 +25,12 @@ export default function SetupMotionDemoPage() {
   const [logoKey, setLogoKey] = useState(0)
   const [invoiceKey, setInvoiceKey] = useState(0)
   const [pickOn, setPickOn] = useState(true)
+  const [successKey, setSuccessKey] = useState(0)
   const [paywallOpen, setPaywallOpen] = useState(false)
 
   const replayWelcome = () => setWelcomeKey((k) => k + 1)
   const replayStep = () => setStepKey((k) => k + 1)
+  const replaySuccess = () => setSuccessKey((k) => k + 1)
   const replayLogo = () => {
     setLogoOn(false)
     requestAnimationFrame(() => {
@@ -43,9 +46,9 @@ export default function SetupMotionDemoPage() {
         <Link href="/demo" className="demo-motion-lab__back">
           ← Demo index
         </Link>
-        <h1>Wave 48 — setup motion</h1>
+        <h1>Setup motion + UX lab</h1>
         <p>
-          Replay each block below. If motion looks instant, check macOS{' '}
+          Wave 1 split shell at top; Wave 48 motion below. If motion looks instant, check macOS{' '}
           <strong>System Settings → Accessibility → Display → Reduce motion</strong> (should be off).
         </p>
       </header>
@@ -53,24 +56,54 @@ export default function SetupMotionDemoPage() {
       <div className="demo-motion-lab__grid">
         <section className="demo-motion-lab__panel">
           <div className="demo-motion-lab__panel-head">
+            <h2>Split shell (with photo)</h2>
+            <span className="demo-motion__frame-tag">IF 274886 · Wave 1</span>
+          </div>
+          <div className="demo-frame">
+            <div className="setup-split setup-split--overlap setup-flow client-light-root demo-motion__clip demo-motion__clip--tall">
+              <div className="setup-split__body setup-split__body--flush">
+                <h2 className="setup-body-headline">Upload logo</h2>
+                <p className="setup-body-lead">Hero band hidden until Wave 15 assets — body fills from top.</p>
+                <div className="setup-placeholder-block" />
+              </div>
+              <footer className="setup-split__footer">
+                <button type="button" className="setup-btn-primary">
+                  Continue
+                </button>
+              </footer>
+            </div>
+          </div>
+        </section>
+
+        <section className="demo-motion-lab__panel">
+          <div className="demo-motion-lab__panel-head">
             <h2>Welcome stagger</h2>
+            <span className="demo-motion__frame-tag">IF 274878–274879 · Wave 2</span>
             <ReplayButton onClick={replayWelcome} />
           </div>
           <div className="demo-frame">
-            <div key={welcomeKey} className="welcome-screen setup-flow client-light-root demo-motion__clip">
-              <div className="welcome-screen__hero">
+            <div
+              key={welcomeKey}
+              className="welcome-screen setup-split setup-flow client-light-root welcome-screen--no-hero demo-motion__clip demo-motion__clip--tall"
+            >
+              <div className="setup-split__body welcome-screen__body">
                 <div className="welcome-screen__logo-wrap">
-                  <AppLogo size={64} />
+                  <AppLogo size={40} />
                 </div>
                 <p className="welcome-screen__eyebrow">Mobile detailing</p>
                 <h1 className="welcome-screen__title">Run your business from your phone</h1>
-                <p className="welcome-screen__lead">Book clients, send invoices, and track jobs.</p>
+                <p className="welcome-screen__lead">
+                  Book clients, send invoices, and track jobs — built for solo mobile detailers.
+                </p>
               </div>
-              <div className="welcome-screen__actions">
+              <footer className="setup-split__footer welcome-screen__footer">
                 <button type="button" className="setup-btn-primary">
                   Get started
                 </button>
-              </div>
+                <p className="welcome-screen__signin">
+                  Already have an account? <a href="#">Sign in</a>
+                </p>
+              </footer>
             </div>
           </div>
         </section>
@@ -91,7 +124,9 @@ export default function SetupMotionDemoPage() {
               <div key={authMode} className="auth-step">
                 <h1 className="auth-screen__title">{authMode === 'login' ? 'Sign in' : 'Create account'}</h1>
                 <p className="auth-screen__subtitle">
-                  {authMode === 'login' ? 'Welcome back' : 'Start your workspace'}
+                  {authMode === 'login'
+                    ? 'Sign in to your jobs, clients, and business data'
+                    : 'Your solo mobile detailing workspace'}
                 </p>
                 <div className="social-auth">
                   <button type="button" className="social-auth__btn">
@@ -188,15 +223,32 @@ export default function SetupMotionDemoPage() {
 
         <section className="demo-motion-lab__panel">
           <div className="demo-motion-lab__panel-head">
-            <h2>Invoice preview hero</h2>
+            <h2>Account ready beat</h2>
+            <span className="demo-motion__frame-tag">IF 274896 · Wave 8</span>
+            <ReplayButton onClick={replaySuccess} />
+          </div>
+          <div className="demo-frame">
+            <div key={successKey} className="demo-motion__clip demo-motion__clip--tall">
+              <AccountReadyCelebration
+                businessName="Summit Detail"
+                logoUrl="/logo.png"
+                amount={185}
+                onContinue={() => undefined}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="demo-motion-lab__panel">
+          <div className="demo-motion-lab__panel-head">
+            <h2>Invoice customize</h2>
             <ReplayButton onClick={replayInvoice} />
           </div>
           <div className="demo-frame">
             <div className="setup-flow client-light-root demo-motion__clip demo-motion__pad">
               <div className="onboarding-invoice-step">
-                <p className="onboarding-account-hero" role="status">
-                  <Check size={18} weight="bold" aria-hidden="true" />
-                  You&apos;re set — here&apos;s your first invoice
+                <p className="onboarding-preview-banner" role="status">
+                  Preview only — nothing is sent.
                 </p>
                 <div className="ob-pick-list">
                   <button

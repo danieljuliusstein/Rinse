@@ -72,6 +72,7 @@ export default function BottomNav() {
   if (
     pathname === '/auth' ||
     pathname === '/welcome' ||
+    pathname === '/intro' ||
     pathname.startsWith('/portal') ||
     pathname.startsWith('/book/') ||
     pathname.startsWith('/embed/') ||

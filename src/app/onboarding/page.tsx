@@ -6,6 +6,7 @@ import OnboardingBusinessStep from '@/components/onboarding/OnboardingBusinessSt
 import OnboardingYourInvoiceStep from '@/components/onboarding/OnboardingYourInvoiceStep'
 import OnboardingBookingStep from '@/components/onboarding/OnboardingBookingStep'
 import OnboardingPlansStep from '@/components/onboarding/OnboardingPlansStep'
+import { SetupLoadingScreen } from '@/components/setup'
 import {
   loadOnboardingProgress,
   needsOnboarding,
@@ -24,6 +25,8 @@ function OnboardingRouter() {
   const [step, setStep] = useState<OnboardingStepSlug>('business')
   const [loading, setLoading] = useState(true)
 
+  const [loadError, setLoadError] = useState('')
+
   useEffect(() => {
     void (async () => {
       try {
@@ -39,7 +42,7 @@ function OnboardingRouter() {
           router.replace(onboardingStepUrl(resolved))
         }
       } catch {
-        // continue
+        setLoadError('Could not load setup. Check your connection and try again.')
       } finally {
         setLoading(false)
       }
@@ -60,11 +63,23 @@ function OnboardingRouter() {
   }, [router])
 
   if (loading || !settings) {
-    return (
-      <div className="auth-loading-screen">
-        <div className="auth-loading-text">Loading…</div>
-      </div>
-    )
+    if (loadError) {
+      return (
+        <div className="setup-flow client-light-root setup-offline-shell">
+          <div className="offline-banner" role="alert">
+            <span className="offline-banner__message">{loadError}</span>
+            <button
+              type="button"
+              className="offline-banner__sync"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return <SetupLoadingScreen />
   }
 
   switch (step) {
@@ -90,13 +105,7 @@ function OnboardingRouter() {
 
 export default function OnboardingPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="auth-loading-screen">
-          <div className="auth-loading-text">Loading…</div>
-        </div>
-      }
-    >
+    <Suspense fallback={<SetupLoadingScreen />}>
       <OnboardingRouter />
     </Suspense>
   )

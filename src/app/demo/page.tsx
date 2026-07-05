@@ -5,7 +5,9 @@ const ROUTES = [
   { href: '/demo/jobs', label: 'Jobs list' },
   { href: '/demo/invoice', label: 'Invoice preview' },
   { href: '/demo/booking', label: 'Booking flow (live)' },
-  { href: '/demo/setup-motion', label: 'Wave 48 — setup motion (replay)' },
+  { href: '/demo/setup', label: 'Setup funnel (interactive — no account)' },
+  { href: '/intro', label: 'Intro onboarding (6 slides — production)' },
+  { href: '/demo/setup-motion', label: 'Setup motion + UX lab' },
   { href: '/demo/delight-motion', label: 'Wave 55 — delight & depth QA' },
 ]
 
