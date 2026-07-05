@@ -102,15 +102,10 @@ export async function loadSettingsAsync(): Promise<AppSettings> {
     const remote = await loadSettingsFromPocketBase()
     if (remote) {
       const merged = { ...local, ...remote, notifications: { ...local.notifications, ...remote.notifications } }
-      if (local.onboarding_completed_at && !remote.onboarding_completed_at) {
-        merged.onboarding_completed_at = local.onboarding_completed_at
-      }
-      if (local.onboarding_first_invoice_at && !remote.onboarding_first_invoice_at) {
-        merged.onboarding_first_invoice_at = local.onboarding_first_invoice_at
-      }
-      if (local.onboarding_step != null && remote.onboarding_step == null) {
-        merged.onboarding_step = local.onboarding_step
-      }
+      merged.onboarding_completed_at = remote.onboarding_completed_at ?? local.onboarding_completed_at
+      merged.onboarding_first_invoice_at =
+        remote.onboarding_first_invoice_at ?? local.onboarding_first_invoice_at
+      merged.onboarding_step = remote.onboarding_step ?? local.onboarding_step
       if (merged.booking_schedule) {
         merged.booking_schedule = normalizeBookingSchedule(merged.booking_schedule)
       }

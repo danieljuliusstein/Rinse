@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { completeOAuthLogin, ensureOAuthProvisioned } from '@/lib/pb-oauth'
 import { markTourPending } from '@/lib/product-tour'
-import { onboardingStepUrl } from '@/lib/onboarding'
 
 function OAuthCallbackInner() {
   const router = useRouter()
@@ -21,7 +20,12 @@ function OAuthCallbackInner() {
         }
         await ensureOAuthProvisioned()
         markTourPending()
-        router.replace(onboardingStepUrl('business'))
+        const { loadSettingsAsync } = await import('@/lib/settings')
+        const { needsOnboarding, onboardingStepUrl } = await import('@/lib/onboarding')
+        const settings = await loadSettingsAsync()
+        router.replace(
+          settings && needsOnboarding(settings) ? onboardingStepUrl('business') : '/',
+        )
       } catch (e) {
         setMessage(e instanceof Error ? e.message : 'Sign in failed')
         window.setTimeout(() => router.replace('/auth'), 2000)

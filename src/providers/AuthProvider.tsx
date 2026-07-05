@@ -69,6 +69,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const bumpAuth = useCallback(() => setAuthTick((t) => t + 1), [])
 
+  useEffect(() => {
+    const pb = getPocketBase()
+    if (!pb) return
+    return pb.authStore.onChange(() => {
+      bumpAuth()
+    })
+  }, [bumpAuth])
+
   const ready = mounted
   void authTick
 
@@ -171,7 +179,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready || !isLoggedIn) return
-    syncPocketBaseInBackground()
+    const timer = window.setTimeout(() => {
+      syncPocketBaseInBackground()
+    }, 600)
+    return () => window.clearTimeout(timer)
   }, [ready, isLoggedIn, syncPocketBaseInBackground])
 
   useEffect(() => {

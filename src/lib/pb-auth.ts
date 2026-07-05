@@ -16,6 +16,18 @@ export function isPocketBaseAuthenticated(): boolean {
   return pb.authStore.isValid
 }
 
+/** True only when the server rejected the session — not for timeouts or offline blips. */
+export function isDefinitiveAuthFailure(err: unknown): boolean {
+  if (!err) return false
+  const e = err as { status?: number; isAbort?: boolean; message?: string; name?: string }
+  if (e.isAbort === true || e.name === 'AbortError') return false
+  const msg = e.message ?? ''
+  if (/timed out|timeout|network|failed to fetch|load failed/i.test(msg)) return false
+  if (e.status === 401 || e.status === 403) return true
+  if (/invalid (or expired )?(auth|token|authorization)/i.test(msg)) return true
+  return false
+}
+
 /** Validate or refresh the current user session (per-tenant login). */
 export async function ensurePocketBaseAuth(): Promise<boolean> {
   if (!isPocketBaseConfigured()) return false
@@ -30,8 +42,16 @@ export async function ensurePocketBaseAuth(): Promise<boolean> {
         sessionStorage.setItem(AUTH_FLAG_KEY, '1')
       }
       return true
-    } catch {
-      pb.authStore.clear()
+    } catch (err) {
+      if (isDefinitiveAuthFailure(err)) {
+        pb.authStore.clear()
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(AUTH_FLAG_KEY)
+        }
+        return false
+      }
+      console.warn('[pb-auth] Auth refresh skipped (transient):', err)
+      return pb.authStore.isValid
     }
   }
 

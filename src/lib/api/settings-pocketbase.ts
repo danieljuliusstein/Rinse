@@ -1,7 +1,7 @@
 import { businessLogoApiUrl, DEFAULT_BUSINESS_LOGO_PATH, pocketBaseRecordHasLogo } from '../business-logo'
 import { getPocketBase, isPocketBaseConfigured } from '../pocketbase'
 import { checkPocketBaseHealth } from '../pocketbase'
-import { authenticatePocketBase } from '../pb-auth'
+import { isPocketBaseAuthenticated } from '../pb-auth'
 import { requireOrganizationId } from '../tenant'
 import { normalizeBookingSchedule } from '../booking-availability'
 import type { AppSettings } from '../settings'
@@ -77,8 +77,9 @@ function recordToSettings(
 
 export async function canSyncSettings(): Promise<boolean> {
   if (!isPocketBaseConfigured()) return false
+  if (!isPocketBaseAuthenticated()) return false
   if (!(await checkPocketBaseHealth())) return false
-  return authenticatePocketBase()
+  return true
 }
 
 export async function loadSettingsFromPocketBase(): Promise<AppSettings | null> {
