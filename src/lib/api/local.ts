@@ -13,6 +13,7 @@ import {
   resolveSuppliesUsed,
 } from '../supplies-logic'
 import { defaultQuickJobStatus } from '../job-create'
+import { enrichClientWithStats } from '../client-stats'
 import { buildDashboardInsights } from '../dashboard-insights'
 import { loadData, newId, saveData } from '../storage'
 import type {

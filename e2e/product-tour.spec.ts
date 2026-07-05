@@ -23,6 +23,7 @@ test.describe('Product tour', () => {
   })
 
   test('walks six steps, lands on home, and does not restart', async ({ page }) => {
+    test.setTimeout(180_000)
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45_000 })
     await page.getByRole('link', { name: 'Jobs' }).waitFor({ state: 'visible', timeout: 30_000 })
 

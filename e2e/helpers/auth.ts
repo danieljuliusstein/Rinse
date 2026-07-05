@@ -13,6 +13,10 @@ function creds(): { email: string; password: string } {
   }
 }
 
+export function getE2ECredentials(): { email: string; password: string } {
+  return creds()
+}
+
 export function hasE2ECredentials(): boolean {
   return Boolean(pbUrl())
 }

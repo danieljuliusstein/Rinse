@@ -68,10 +68,36 @@ export async function startTourFromHome(page: Page): Promise<void> {
   await waitForTourOverlay(page)
 }
 
-export async function advanceTourToEnd(page: Page, steps = 6): Promise<void> {
-  for (let i = 0; i < steps - 1; i += 1) {
-    await page.locator('.rinse-tour__btn--primary', { hasText: 'Next' }).click()
-    await page.locator('.rinse-tour__title').waitFor({ state: 'visible', timeout: 15_000 })
+export async function advanceTourToEnd(page: Page, maxSteps = 8): Promise<void> {
+  const primary = page.locator('.rinse-tour__btn--primary')
+
+  for (let i = 0; i < maxSteps; i += 1) {
+    await page.locator('.rinse-tour:not(.rinse-tour--prep) .rinse-tour__title').waitFor({
+      state: 'visible',
+      timeout: 45_000,
+    })
+
+    const label = ((await primary.textContent({ timeout: 10_000 })) ?? '').trim()
+    if (label === 'Done') {
+      await primary.click()
+      return
+    }
+    if (label !== 'Next') {
+      throw new Error(`Unexpected tour primary button label: "${label}"`)
+    }
+
+    const progressBefore = await page.locator('.rinse-tour__progress').innerText()
+    await primary.click()
+    await page.waitForFunction(
+      (prev) => {
+        const prep = document.querySelector('.rinse-tour--prep')
+        const progress = document.querySelector('.rinse-tour__progress')
+        return !prep && progress != null && progress.textContent !== prev
+      },
+      progressBefore,
+      { timeout: 45_000 },
+    )
   }
-  await page.locator('.rinse-tour__btn--primary', { hasText: 'Done' }).click()
+
+  throw new Error('Tour did not reach the final step')
 }

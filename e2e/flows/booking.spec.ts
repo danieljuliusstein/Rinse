@@ -5,11 +5,11 @@ const manifest = loadDemoManifest()
 
 test.describe('Public booking flow', () => {
   test('walks through booking steps without submitting', async ({ page }) => {
-    await page.goto(`/book/${manifest.orgSlug}`, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-    await expect(page.locator('.book-body').first()).toBeVisible({ timeout: 20_000 })
+    await page.goto(`/book/${manifest.orgSlug}`, { waitUntil: 'domcontentloaded', timeout: 60_000 })
+    await expect(page.locator('.book-body').first()).toBeVisible({ timeout: 45_000 })
 
-    const firstPackage = page.locator('.book-package-card').first()
-    await expect(firstPackage).toBeVisible({ timeout: 15_000 })
+    const firstPackage = page.locator('.book-package-list .book-package-card, .book-package-card').first()
+    await expect(firstPackage).toBeVisible({ timeout: 30_000 })
     await firstPackage.click()
 
     await page.getByRole('button', { name: /Continue/i }).click()

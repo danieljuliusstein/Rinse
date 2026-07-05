@@ -63,6 +63,7 @@ export function loadDemoManifest(): DemoManifest {
 export function staticPublicRoutes(manifest: DemoManifest): string[] {
   const routes = new Set<string>([
     '/welcome',
+    '/intro',
     '/auth',
     '/auth/reset',
     '/auth/oauth/callback',
