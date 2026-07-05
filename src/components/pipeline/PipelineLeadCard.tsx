@@ -142,9 +142,11 @@ interface Props {
   lead: LeadWithRelations
   onEdit: () => void
   onRefresh: () => void
+  /** Switch the pipeline tab after a successful stage advance. */
+  onAdvanced: (stage: LeadStage) => void
 }
 
-export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
+export default function PipelineLeadCard({ lead, onEdit, onRefresh, onAdvanced }: Props) {
   const router = useRouter()
   const confirm = useConfirm()
   const { showMessage } = useActionToast()
@@ -154,11 +156,20 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
 
+  const promoteToQuotedIfNeeded = async () => {
+    if (lead.stage === 'inquiry' && lead.quote_id) {
+      const updated = await updateLeadStage(lead.id, 'quoted')
+      if (!updated) throw new Error('Could not move lead to Quoted')
+    }
+  }
+
   const runCreateQuote = async () => {
     setActionLoading(true)
     try {
       const quote = await createQuoteForLead(lead.id)
+      onAdvanced('quoted')
       onRefresh()
+      showMessage('Moved to Quoted')
       router.push(`/quotes/${quote.id}`)
     } catch (e) {
       showMessage(e instanceof Error ? e.message : 'Could not create quote')
@@ -170,7 +181,16 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
 
   const handleSendQuote = () => {
     if (lead.quote_id) {
-      router.push(`/quotes/${lead.quote_id}`)
+      void (async () => {
+        try {
+          await promoteToQuotedIfNeeded()
+          onAdvanced('quoted')
+          onRefresh()
+          router.push(`/quotes/${lead.quote_id}`)
+        } catch (e) {
+          showMessage(e instanceof Error ? e.message : 'Could not move lead to Quoted')
+        }
+      })()
       return
     }
     if (!lead.package_id) {
@@ -185,38 +205,24 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
     runCreateQuoteGated(() => void runCreateQuote())
   }
 
-  const handleConvert = async (input?: ScheduleLeadJobInput) => {
-    if (lead.job_id) {
-      router.push(`/jobs/${lead.job_id}`)
-      return
+  const runScheduleJob = async (input?: ScheduleLeadJobInput) => {
+    setActionLoading(true)
+    try {
+      await convertLeadToJob(lead.id, input)
+      setScheduleOpen(false)
+      onAdvanced('booked')
+      onRefresh()
+      showMessage('Scheduled')
+    } catch (e) {
+      showMessage(e instanceof Error ? e.message : 'Could not create job')
+    } finally {
+      setActionLoading(false)
     }
-    runCreateJobGated(() => {
-      void (async () => {
-        setActionLoading(true)
-        try {
-          const { jobId } = await convertLeadToJob(lead.id, input)
-          onRefresh()
-          setScheduleOpen(false)
-          router.push(`/jobs/${jobId}`)
-        } catch (e) {
-          showMessage(e instanceof Error ? e.message : 'Could not create job')
-        } finally {
-          setActionLoading(false)
-        }
-      })()
-    })
-  }
-
-  const handleScheduleClick = () => {
-    if (lead.job_id) {
-      void handleConvert()
-      return
-    }
-    setScheduleOpen(true)
   }
 
   const handleMove = async (stage: LeadStage) => {
     await updateLeadStage(lead.id, stage)
+    onAdvanced(stage)
     onRefresh()
   }
 
@@ -237,8 +243,24 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
     ? `${lead.quote.quote_number} · ${lead.quote.status}`
     : undefined
 
-  const showQuoteCta = lead.stage === 'quoted' || (lead.stage === 'inquiry' && Boolean(lead.package_id))
-  const showScheduleCta = lead.stage === 'booked'
+  const isScheduled = Boolean(lead.job_id)
+  /** Inquiry: create/send quote. Quoted: open existing quote. */
+  const showQuoteCta =
+    lead.stage === 'inquiry' || (lead.stage === 'quoted' && Boolean(lead.quote_id) && !isScheduled)
+  /** Quoted or Schedule column: book the job. Scheduled leads show status CTA. */
+  const showScheduleCta = lead.stage === 'quoted' || lead.stage === 'booked' || isScheduled
+
+  const quoteCtaLabel = actionLoading
+    ? 'Creating quote…'
+    : lead.quote_id
+      ? 'Open quote'
+      : 'Send quote'
+
+  const scheduleCtaLabel = actionLoading
+    ? 'Scheduling…'
+    : isScheduled
+      ? 'Scheduled'
+      : 'Schedule job'
 
   return (
     <>
@@ -249,6 +271,7 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
           badge={
             <span className="pipeline-lead-row__badges">
               <Badge tone={leadSourceBadgeTone(lead.source)}>{leadSourceLabel(lead.source)}</Badge>
+              {isScheduled ? <Badge tone="green">Scheduled</Badge> : null}
               {quoteSubtitle ? <Badge tone="gray">{quoteSubtitle}</Badge> : null}
             </span>
           }
@@ -279,7 +302,7 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
               disabled={actionLoading}
               onClick={() => void handleSendQuote()}
             >
-              {actionLoading ? 'Creating quote…' : lead.quote_id ? 'Open quote' : 'Send quote'}
+              {quoteCtaLabel}
             </Button>
           </div>
         ) : null}
@@ -287,11 +310,18 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
         {showScheduleCta ? (
           <div className="pipeline-lead-item__action">
             <Button
-              variant="secondary"
+              variant={isScheduled ? 'ghost' : 'secondary'}
               disabled={actionLoading}
-              onClick={() => void handleScheduleClick()}
+              aria-label={isScheduled ? 'Scheduled — view job' : 'Schedule job'}
+              onClick={() => {
+                if (isScheduled && lead.job_id) {
+                  router.push(`/jobs/${lead.job_id}`)
+                  return
+                }
+                setScheduleOpen(true)
+              }}
             >
-              {actionLoading ? 'Scheduling…' : lead.job_id ? 'View job' : 'Schedule job'}
+              {scheduleCtaLabel}
             </Button>
           </div>
         ) : null}
@@ -311,7 +341,7 @@ export default function PipelineLeadCard({ lead, onEdit, onRefresh }: Props) {
           lead={lead}
           loading={actionLoading}
           onClose={() => setScheduleOpen(false)}
-          onConfirm={(input) => void handleConvert(input)}
+          onConfirm={(input) => runCreateJobGated(() => void runScheduleJob(input))}
         />
       ) : null}
     </>

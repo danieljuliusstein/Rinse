@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import {
-  getClients,
   getDashboardData,
   getInvoices,
   getJobs,
@@ -29,7 +28,6 @@ export default function HomePage() {
   const [leads, setLeads] = useState<LeadWithRelations[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [inventoryAlert, setInventoryAlert] = useState<ReturnType<typeof buildInventoryAlert>>(null)
-  const [clientCount, setClientCount] = useState(0)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -41,16 +39,14 @@ export default function HomePage() {
       getLeads(),
       getSupplies(),
       getPackages(),
-      getClients(),
       getInvoices(),
     ])
-      .then(async ([data, allJobs, allLeads, supplyList, packageList, clients, allInvoices]) => {
+      .then(async ([data, allJobs, allLeads, supplyList, packageList, allInvoices]) => {
         if (cancelled) return
         setWeekDays(data.weekDays)
         setJobs(allJobs)
         setLeads(allLeads)
         setInvoices(allInvoices)
-        setClientCount(clients.length)
 
         const today = data.weekDays.find((d) => d.isToday)?.date ?? data.weekDays[0]?.date ?? ''
         if (today) {
@@ -105,7 +101,6 @@ export default function HomePage() {
       leads={leads}
       invoices={invoices}
       inventoryAlert={inventoryAlert}
-      clientCount={clientCount}
       hasUnviewedMilestone={hasUnviewedMilestone}
     />
   )

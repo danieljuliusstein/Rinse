@@ -67,7 +67,6 @@ export interface DashboardProps {
   leads: LeadWithRelations[]
   invoices: Invoice[]
   inventoryAlert: InventoryAlertData | null
-  clientCount: number
   hasUnviewedMilestone?: boolean
 }
 
@@ -79,7 +78,6 @@ export default function Dashboard({
   leads,
   invoices,
   inventoryAlert,
-  clientCount,
   hasUnviewedMilestone = false,
 }: DashboardProps) {
   const router = useRouter()
@@ -353,12 +351,6 @@ export default function Dashboard({
         </SectionGroup>
       )}
 
-      {!isLoggedOut ? (
-        <div className="stat-card stat-card--tail">
-          <div className="stat-label">Clients on file</div>
-          <div className="stat-value">{clientCount}</div>
-        </div>
-      ) : null}
     </div>
   )
 }

@@ -96,8 +96,18 @@ export async function updateLead(id: string, input: Partial<LeadInput>): Promise
     return pbLeadToApp(updated)
   } catch (err) {
     if (isMissingCollectionError(err)) return null
-    return null
+    rethrowPremiumPocketBaseError(err)
   }
+}
+
+async function requireLeadUpdate(
+  id: string,
+  input: Partial<LeadInput>,
+  errorMessage: string,
+): Promise<Lead> {
+  const updated = await updateLead(id, input)
+  if (!updated) throw new Error(errorMessage)
+  return updated
 }
 
 export async function updateLeadStage(id: string, stage: LeadStage): Promise<Lead | null> {
@@ -162,7 +172,11 @@ export async function createQuoteForLead(leadId: string): Promise<Quote> {
       }),
     )
     const quote = pbQuoteToApp(created)
-    await updateLead(leadId, { client_id: client.id, quote_id: quote.id, stage: 'quoted' })
+    await requireLeadUpdate(
+      leadId,
+      { client_id: client.id, quote_id: quote.id, stage: 'quoted' },
+      'Quote created but lead could not move to Quoted. Try again.',
+    )
     return quote
   } catch (err) {
     rethrowPremiumPocketBaseError(err)
@@ -208,7 +222,11 @@ export async function convertLeadToJob(
       withOrganization(payload as Record<string, unknown>),
     )
     const job = pbJobToApp(jobRecord)
-    await updateLead(leadId, { client_id: client.id, job_id: job.id, stage: 'booked' })
+    await requireLeadUpdate(
+      leadId,
+      { client_id: client.id, job_id: job.id, stage: 'booked' },
+      'Job created but lead could not move to Scheduled. Try again.',
+    )
     return { jobId: job.id, clientId: client.id }
   } catch (err) {
     rethrowPremiumPocketBaseError(err)
@@ -223,6 +241,20 @@ export async function syncLeadForQuoteJob(quoteId: string, jobId: string): Promi
     })
     if (records.length === 0) return
     await updateLead(records[0].id, { job_id: jobId, stage: 'booked' })
+  } catch (err) {
+    if (isMissingCollectionError(err)) return
+  }
+}
+
+/** Promote inquiry leads to quoted when their quote is marked sent. */
+export async function syncLeadForQuoteSent(quoteId: string): Promise<void> {
+  try {
+    const records = await pb().collection('leads').getFullList<PbRecord>({
+      filter: `quote_id = "${escapeFilterValue(quoteId)}" && stage = "inquiry"`,
+      limit: 1,
+    })
+    if (records.length === 0) return
+    await updateLead(records[0].id, { stage: 'quoted' })
   } catch (err) {
     if (isMissingCollectionError(err)) return
   }

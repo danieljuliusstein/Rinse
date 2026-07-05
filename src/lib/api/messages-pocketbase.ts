@@ -66,12 +66,12 @@ export async function saveAutoMessageTemplatesToPocketBase(templates: AutoMessag
 export async function loadSentMessagesFromPocketBase(limit = 50): Promise<SentMessage[] | null> {
   if (!(await canSync())) return null
   try {
-    const records = await pb().collection('sent_messages').getFullList<PbRecord>({
+    const page = await pb().collection('sent_messages').getList<PbRecord>(1, limit, {
       filter: tenantFilter(),
       sort: '-created',
-      limit,
       expand: 'client_id',
     })
+    const records = page.items
     return records.map((r) => ({
       id: String(r.id),
       client_name: r.expand?.client_id?.name ? String(r.expand.client_id.name) : 'Client',

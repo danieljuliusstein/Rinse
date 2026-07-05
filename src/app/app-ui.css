@@ -481,10 +481,6 @@
   box-shadow: var(--depth-card-shadow);
 }
 
-.stat-card--tail {
-  margin-top: 8px;
-}
-
 .stat-label {
   margin-bottom: 4px;
 }
@@ -958,11 +954,6 @@
   animation-delay: calc(var(--stagger-step) * 2);
 }
 
-.home-dashboard .stat-card--tail {
-  animation: home-block-in var(--duration-medium) var(--ease-out) both;
-  animation-delay: calc(var(--stagger-step) * 3);
-}
-
 .home-dashboard .today-job-card {
   box-shadow: var(--depth-elevated-shadow);
   border-color: var(--depth-card-border);
@@ -1014,7 +1005,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .home-dashboard .stat-grid--dashboard .stat-card,
-  .home-dashboard .stat-card--tail,
   .home-dashboard .today-job-card,
   .home-dashboard .ui-section .ui-list-row,
   .home-dashboard .profile-complete-card {

@@ -1,5 +1,5 @@
 import { loadData, newId, saveData } from '../storage'
-import { syncLeadForQuoteJob } from './leads-local'
+import { syncLeadForQuoteJob, syncLeadForQuoteSent } from './leads-local'
 import type { Quote, QuoteInput, QuoteWithRelations } from '../types'
 
 function nextQuoteNumber(): string {
@@ -56,6 +56,7 @@ export function updateQuoteStatus(id: string, status: Quote['status']): Quote | 
   }
   data.quotes[idx] = updated
   saveData(data)
+  if (status === 'sent') syncLeadForQuoteSent(id)
   return updated
 }
 

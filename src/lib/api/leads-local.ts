@@ -143,7 +143,8 @@ export function createQuoteForLead(leadId: string): Quote {
   }
   data.quotes = [...(data.quotes ?? []), quote]
   saveData(data)
-  updateLead(leadId, { client_id: client.id, quote_id: quote.id, stage: 'quoted' })
+  const updated = updateLead(leadId, { client_id: client.id, quote_id: quote.id, stage: 'quoted' })
+  if (!updated) throw new Error('Quote created but lead could not move to Quoted. Try again.')
   return quote
 }
 
@@ -189,7 +190,8 @@ export function convertLeadToJob(
   }
   data.jobs = [...data.jobs, job]
   saveData(data)
-  updateLead(leadId, { client_id: client.id, job_id: job.id, stage: 'booked' })
+  const updated = updateLead(leadId, { client_id: client.id, job_id: job.id, stage: 'booked' })
+  if (!updated) throw new Error('Job created but lead could not move to Scheduled. Try again.')
   return { jobId: job.id, clientId: client.id }
 }
 
@@ -198,4 +200,12 @@ export function syncLeadForQuoteJob(quoteId: string, jobId: string): void {
   const lead = data.leads?.find((l) => l.quote_id === quoteId)
   if (!lead) return
   updateLead(lead.id, { job_id: jobId, stage: 'booked' })
+}
+
+/** Promote inquiry leads to quoted when their quote is marked sent. */
+export function syncLeadForQuoteSent(quoteId: string): void {
+  const data = loadData()
+  const lead = data.leads?.find((l) => l.quote_id === quoteId)
+  if (!lead || lead.stage !== 'inquiry') return
+  updateLead(lead.id, { stage: 'quoted' })
 }

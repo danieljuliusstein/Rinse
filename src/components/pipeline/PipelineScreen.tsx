@@ -74,6 +74,12 @@ export default function PipelineScreen() {
     window.dispatchEvent(new Event('leads-changed'))
   }
 
+  const handleAdvanced = (stage: LeadStage) => {
+    setActiveStage(stage)
+    setStageInitialized(true)
+    handleRefresh()
+  }
+
   const isEmpty = (leads?.length ?? 0) === 0
   const activeLabel = LEAD_STAGES.find((s) => s.id === activeStage)?.label ?? activeStage
   const stageCount = grouped[activeStage].length
@@ -151,6 +157,7 @@ export default function PipelineScreen() {
                   lead={lead}
                   onEdit={() => openLeadSheet(lead)}
                   onRefresh={handleRefresh}
+                  onAdvanced={handleAdvanced}
                 />
               ))}
             </SectionGroup>

@@ -1,6 +1,6 @@
 import { getPocketBase } from '../pocketbase'
 import { pbQuoteToApp, pbQuoteToAppWithRelations, escapeFilterValue, type PbRecord } from './mappers'
-import { syncLeadForQuoteJob } from './leads-pocketbase'
+import { syncLeadForQuoteJob, syncLeadForQuoteSent } from './leads-pocketbase'
 import { rethrowPremiumPocketBaseError } from '../premium-api'
 import { withOrganization } from './tenant-pocketbase'
 import type { Quote, QuoteInput, QuoteWithRelations } from '../types'
@@ -57,7 +57,9 @@ export async function updateQuoteStatus(id: string, status: Quote['status']): Pr
     const payload: Record<string, unknown> = { status }
     if (status === 'sent') payload.sent_at = new Date().toISOString().slice(0, 10)
     const updated = await pb().collection('quotes').update<PbRecord>(id, payload)
-    return pbQuoteToApp(updated)
+    const quote = pbQuoteToApp(updated)
+    if (status === 'sent') await syncLeadForQuoteSent(id)
+    return quote
   } catch {
     return null
   }

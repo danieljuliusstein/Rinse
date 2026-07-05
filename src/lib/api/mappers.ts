@@ -237,7 +237,7 @@ export function appJobCreateToPb(input: {
   recurrence_cadence?: string
   recurrence_anchor_date?: string
 }) {
-  return {
+  const payload: Record<string, unknown> = {
     date: input.date,
     location_type: input.location_type,
     package_id: input.package_id,
@@ -254,9 +254,13 @@ export function appJobCreateToPb(input: {
     travel_cost: input.travel_cost ?? 0,
     marketing_cost: input.marketing_cost ?? 0,
     equipment_depreciation: input.equipment_depreciation ?? 0,
-    recurrence_cadence: input.recurrence_cadence ?? '',
-    recurrence_anchor_date: input.recurrence_anchor_date ?? '',
   }
+  const cadence = input.recurrence_cadence?.trim()
+  if (cadence) {
+    payload.recurrence_cadence = cadence
+    payload.recurrence_anchor_date = input.recurrence_anchor_date ?? input.date
+  }
+  return payload
 }
 
 export function appJobEditToPb(updates: {
@@ -297,10 +301,11 @@ export function appJobEditToPb(updates: {
     payload.equipment_depreciation = updates.equipment_depreciation
   }
   if (updates.recurrence_cadence !== undefined) {
-    payload.recurrence_cadence = updates.recurrence_cadence ?? ''
-    payload.recurrence_anchor_date = updates.recurrence_cadence
-      ? updates.recurrence_anchor_date ?? ''
-      : ''
+    const cadence = updates.recurrence_cadence ?? ''
+    payload.recurrence_cadence = cadence
+    if (cadence) {
+      payload.recurrence_anchor_date = updates.recurrence_anchor_date ?? updates.date ?? ''
+    }
   }
   if (updates.expenses !== undefined) payload.expenses = updates.expenses
   return payload
