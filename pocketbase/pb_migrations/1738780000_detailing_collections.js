@@ -77,6 +77,8 @@ migrate((app) => {
           "facebook",
           "tiktok",
           "word_of_mouth",
+          "website",
+          "text",
           "other"
         ]
       },

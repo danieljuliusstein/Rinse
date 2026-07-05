@@ -1,4 +1,5 @@
 import { ensurePocketBaseAuth } from '../pb-auth'
+import { toClientLeadSource } from '../lead-sources'
 import { scopedStorageKey } from '../tenant'
 import { ensureDefaultCatalog, isCatalogMarkedReady, syncCatalogReadyFlag } from './catalog-ready'
 import { getPocketBase } from '../pocketbase'
@@ -158,7 +159,8 @@ export async function migrateLocalToPocketBase(): Promise<MigrationResult> {
       tags: client.tags ?? [],
       notes: client.notes ?? '',
     }
-    if (client.lead_source) clientPayload.lead_source = client.lead_source
+    const leadSource = toClientLeadSource(client.lead_source)
+    if (leadSource) clientPayload.lead_source = leadSource
 
     const created = await pocketBase.collection('clients').create(withOrganization(clientPayload))
     clientIdMap.set(client.id, created.id)

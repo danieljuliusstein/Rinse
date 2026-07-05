@@ -39,7 +39,7 @@
       {
         "name": "lead_source",
         "type": "select",
-        "values": ["google", "referral", "instagram", "facebook", "tiktok", "word_of_mouth", "website", "other"]
+        "values": ["google", "referral", "instagram", "facebook", "tiktok", "word_of_mouth", "website", "text", "other"]
       },
       { "name": "tags", "type": "json" },
       { "name": "notes", "type": "text" }

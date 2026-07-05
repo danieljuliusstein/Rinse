@@ -10,6 +10,7 @@ import {
   resolveSuppliesUsed,
 } from '../supplies-logic'
 import { ensurePocketBaseAuth } from '../pb-auth'
+import { toClientLeadSource } from '../lead-sources'
 import { rethrowPremiumPocketBaseError } from '../premium-api'
 import { getPocketBase } from '../pocketbase'
 import {
@@ -135,7 +136,8 @@ export async function createClient(input: import('../types').ClientInput): Promi
     tags: input.tags ?? [],
     notes: input.notes ?? '',
   }
-  if (input.lead_source) payload.lead_source = input.lead_source
+  const leadSource = toClientLeadSource(input.lead_source)
+  if (leadSource) payload.lead_source = leadSource
 
   try {
     const created = await pb().collection('clients').create<PbRecord>(withOrganization(payload))
@@ -152,7 +154,10 @@ export async function updateClient(id: string, input: Partial<import('../types')
     if (input.phone !== undefined) payload.phone = input.phone
     if (input.email !== undefined) payload.email = input.email
     if (input.address !== undefined) payload.address = input.address
-    if (input.lead_source) payload.lead_source = input.lead_source
+    if (input.lead_source !== undefined) {
+      const leadSource = toClientLeadSource(input.lead_source)
+      if (leadSource) payload.lead_source = leadSource
+    }
     if (input.tags !== undefined) payload.tags = input.tags
     if (input.notes !== undefined) payload.notes = input.notes
 
