@@ -1,4 +1,4 @@
-# End-to-end smoke + product tour on every pull request.
+# End-to-end smoke + product tour — scheduled daily (and manual dispatch).
 #
 # Strategy:
 #   1. Build production Next.js (`npm run build`) — catches compile errors early.
@@ -6,6 +6,8 @@
 #      controls boot timing and we can health-check before tests run.
 #   3. Set PW_NO_SERVER=1 so playwright.config.ts skips its dev webServer.
 #   4. Run smoke (~56 routes) then tour (6-step driver) against remote Fly PocketBase.
+#
+# Triggers: cron (once daily) + workflow_dispatch. PR/push gates use ci.yml only.
 #
 # Required repository secrets:
 #   PB_URL              — e.g. https://detailing-pb.fly.dev
@@ -17,9 +19,9 @@
 name: E2E (smoke + tour)
 
 on:
-  pull_request:
-  push:
-    branches: [main, master]
+  schedule:
+    # 12:00 UTC daily (~8am ET / 5am PT)
+    - cron: '0 12 * * *'
   workflow_dispatch:
 
 concurrency:

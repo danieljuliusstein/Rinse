@@ -36,7 +36,7 @@ Load on matching files (globs): `css-pattern-owners`, `design-reference`, `a11y-
 
 ```bash
 npm run prepush              # manual run (same as hook)
-npm run prepush:full         # smoke + product tour (matches CI)
+npm run prepush:full         # smoke + product tour (matches daily E2E job)
 PREPUSH_SKIP=1 git push      # emergency bypass
 PREPUSH_FORCE_BUILD=1 npm run prepush   # ignore running server, rebuild
 ```
@@ -45,10 +45,12 @@ First-time setup after clone: `npm install` (runs `husky` via `prepare`).
 
 ## CI (GitHub Actions)
 
-`.github/workflows/e2e.yml` on every PR and push to `main`/`master`:
+| Workflow | When | What |
+|----------|------|------|
+| `ci.yml` | Every PR + push to `main`/`master` | `npm ci`, production build, Vitest, audit |
+| `e2e.yml` | Daily (12:00 UTC) + manual dispatch | Playwright smoke + product tour (needs `PB_URL` secret) |
 
-- Production `build` → `next start` → smoke → product tour
-- Repo secret: `PB_URL` (e.g. `https://detailing-pb.fly.dev`)
+Daily E2E re-run: GitHub Actions → **E2E (smoke + tour)** → **Run workflow**
 
 ## Dev notes
 

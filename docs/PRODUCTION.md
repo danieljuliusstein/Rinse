@@ -8,8 +8,8 @@ Automated checks live in `.github/workflows/`:
 
 | Workflow | Purpose |
 |----------|---------|
-| **CI** (`ci.yml`) | `npm ci`, `npm run build`, `npm test`, non-blocking `npm audit --production --audit-level=high` |
-| **E2E** (`e2e.yml`) | Playwright smoke + product tour (requires `PB_URL` secret) |
+| **CI** (`ci.yml`) | Every PR/push: `npm ci`, `npm run build`, `npm test`, non-blocking `npm audit --production --audit-level=high` |
+| **E2E** (`e2e.yml`) | Daily + manual: Playwright smoke + product tour (requires `PB_URL` secret) |
 
 Dependabot (`.github/dependabot.yml`) opens weekly npm update PRs (max 10 open).
 
@@ -18,7 +18,7 @@ Dependabot (`.github/dependabot.yml`) opens weekly npm update PRs (max 10 open).
 Configure at **GitHub → Settings → Branches → Add branch protection rule** for `main`:
 
 1. **Require a pull request before merging** — you can self-merge your own PRs; this blocks direct pushes to `main`.
-2. **Require status checks to pass before merging** — enable **CI / Build, test & audit** as a required check. Add **E2E / Playwright smoke + tour** when you want E2E on every merge (needs `PB_URL` secret).
+2. **Require status checks to pass before merging** — enable **CI / Build, test & audit** as a required check. E2E is scheduled daily (not a merge gate); re-run manually from Actions when needed.
 3. **Do not require approving reviews** — leave “Required approving reviews” off (or set count to 0). Solo dev does not need a second reviewer.
 4. **Block force pushes** and **Block deletion** of `main`.
 
