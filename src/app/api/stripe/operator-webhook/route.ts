@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { logAuditEvent } from '@/lib/server/audit-log'
+import { logPlatformEvent } from '@/lib/server/platform-events'
 import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
 import { getStripe, isStripeConfigured } from '@/lib/server/stripe'
 import type { PbRecord } from '@/lib/api/mappers'
@@ -42,6 +43,17 @@ async function updateOrgFromSubscription(orgId: string, subscription: Stripe.Sub
   if (mapped === 'canceled') payload.booking_enabled = false
 
   await admin.collection('organizations').update(orgId, payload)
+
+  void logPlatformEvent('subscription_status_changed', {
+    organizationId: orgId,
+    detail: `${mapped}${plan ? ` · ${plan}` : ''}`,
+    metadata: {
+      stripe_subscription_id: subscription.id,
+      status: mapped,
+      plan: plan ?? null,
+      event_source: 'operator_webhook',
+    },
+  })
 }
 
 export async function POST(request: Request) {
@@ -115,6 +127,11 @@ export async function POST(request: Request) {
         await authenticateServerAdmin().then((admin) =>
           admin.collection('organizations').update(orgId, { subscription_status: 'past_due' }),
         )
+        void logPlatformEvent('invoice_payment_failed', {
+          organizationId: orgId,
+          detail: `Subscription ${subId}`,
+          metadata: { stripe_subscription_id: subId, invoice_id: invoice.id },
+        })
       }
     }
   }

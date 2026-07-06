@@ -33,6 +33,23 @@ export interface BackupPreflightResponse {
   counts: Record<string, number>
 }
 
+export interface PlatformEventDto {
+  id: string
+  type: string
+  category: string
+  organization_id: string | null
+  actor_email: string | null
+  detail: string | null
+  metadata: Record<string, unknown> | null
+  created: string
+}
+
+export interface SignupMetricsResponse {
+  days: number
+  total: number
+  series: { date: string; count: number }[]
+}
+
 export type AdminOrgPatch = Partial<{
   booking_enabled: boolean
   plan: 'founding' | 'starter' | 'pro'
@@ -109,4 +126,24 @@ export async function downloadFullBackup(): Promise<{ filename: string; blob: Bl
   const match = disposition.match(/filename="([^"]+)"/)
   const filename = match?.[1] ?? `detailing-full-backup-${new Date().toISOString().slice(0, 10)}.json`
   return { filename, blob }
+}
+
+export async function fetchAdminEvents(options?: {
+  limit?: number
+  organizationId?: string
+  category?: string
+}): Promise<PlatformEventDto[]> {
+  const params = new URLSearchParams()
+  if (options?.limit) params.set('limit', String(options.limit))
+  if (options?.organizationId) params.set('organizationId', options.organizationId)
+  if (options?.category) params.set('category', options.category)
+  const qs = params.toString()
+  const data = await adminFetch<{ events: PlatformEventDto[] }>(
+    `/api/admin/events${qs ? `?${qs}` : ''}`,
+  )
+  return data.events
+}
+
+export async function fetchSignupMetrics(days = 30): Promise<SignupMetricsResponse> {
+  return adminFetch<SignupMetricsResponse>(`/api/admin/metrics/signups?days=${days}`)
 }

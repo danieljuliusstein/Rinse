@@ -3,6 +3,7 @@ import { DEFAULT_INVOICE_TERMS } from '../settings'
 import { DEFAULT_BOOKING_SCHEDULE } from '../booking-availability'
 import { isPlatformAdminEmail } from '../platform-admin'
 import { authenticateServerAdmin } from './pocketbase-admin'
+import { logPlatformEvent } from './platform-events'
 import { escapeFilterValue } from '../api/mappers'
 import type { PbRecord } from '../api/mappers'
 
@@ -213,6 +214,13 @@ export async function provisionOrganizationForOAuthUser(input: OAuthProvisionInp
     organization_id: org.id,
   })
 
+  void logPlatformEvent('org_created', {
+    organizationId: String(org.id),
+    actorEmail: email,
+    detail: `${businessName} (/${String(org.slug)})`,
+    metadata: { source: 'oauth', slug: String(org.slug) },
+  })
+
   return {
     organizationId: String(org.id),
     slug: String(org.slug),
@@ -255,6 +263,13 @@ export async function registerOrganization(input: SignupInput) {
   })
 
   await seedOrganizationData(pb, org.id, businessName, email)
+
+  void logPlatformEvent('org_created', {
+    organizationId: String(org.id),
+    actorEmail: email,
+    detail: `${businessName} (/${String(org.slug)})`,
+    metadata: { source: 'email_signup', slug: String(org.slug) },
+  })
 
   return {
     organizationId: String(org.id),

@@ -1,7 +1,15 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { logAuditEvent } from './audit-log'
 
+vi.mock('./platform-events', () => ({
+  logPlatformEvent: vi.fn(async () => undefined),
+}))
+
 describe('logAuditEvent', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('writes structured JSON to console.info', () => {
     const spy = vi.spyOn(console, 'info').mockImplementation(() => {})
     logAuditEvent('admin_backup_triggered', { actor: 'test@example.com', scope: 'all' })

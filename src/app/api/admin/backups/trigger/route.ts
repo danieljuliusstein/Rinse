@@ -3,6 +3,7 @@ import { apiUnauthorized, verifyApiSecret } from '@/lib/server/api-auth'
 import { logAuditEvent } from '@/lib/server/audit-log'
 import { createPocketBaseBackup, logAdminBackupTrigger } from '@/lib/server/backup'
 import { getClientIp } from '@/lib/server/client-ip'
+import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
 import { authenticateRequestUser } from '@/lib/server/request-auth'
 import { isPlatformAdminEmail } from '@/lib/platform-admin'
 
@@ -42,7 +43,8 @@ async function runFullBackup(
 ) {
   try {
     logAdminBackupTrigger({ authPath, actor, scope: 'all' })
-    const backup = await createPocketBaseBackup()
+    const pb = await authenticateServerAdmin()
+    const backup = await createPocketBaseBackup(undefined, pb)
     const filename = `detailing-full-backup-${backup.exported_at.slice(0, 10)}.json`
 
     return new NextResponse(JSON.stringify(backup, null, 2), {
@@ -73,7 +75,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const backup = await createPocketBaseBackup()
+    const pb = await authenticateServerAdmin()
+    const backup = await createPocketBaseBackup(undefined, pb)
     const counts = Object.fromEntries(
       Object.entries(backup.collections).map(([k, v]) => [k, v.length])
     )

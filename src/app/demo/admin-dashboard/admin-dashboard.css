@@ -95,10 +95,15 @@ html:has(.app-shell--admin-demo) body {
   font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
   background: var(--admin-canvas);
   color: var(--text-primary);
-  min-height: calc(100dvh - 41px);
+  min-height: 100dvh;
   display: flex;
   font-size: 14px;
   line-height: 1.45;
+}
+
+/* Demo lane only — static mock has a 41px banner above .admin-root */
+.demo-admin-dashboard .admin-root {
+  min-height: calc(100dvh - 41px);
 }
 
 .admin-root * {
@@ -113,10 +118,21 @@ html:has(.app-shell--admin-demo) body {
   border-radius: 6px;
 }
 
+/* Admin console — isolate from operator typography (mono + tabular-nums distorts metrics) */
+.admin-root .kpi-value,
+.admin-root .type-metric {
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-variant-numeric: normal;
+  font-feature-settings: normal;
+}
+
 .admin-root h1,
 .admin-root h2,
-.admin-root .display {
-  font-family: var(--font-syne), 'Syne', sans-serif;
+.admin-root .display,
+.admin-root .admin-page-title,
+.admin-root .admin-brand-text {
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-variant-numeric: normal;
 }
 
 .admin-root .mono {
@@ -143,6 +159,11 @@ html:has(.app-shell--admin-demo) body {
   flex-direction: column;
   padding: 20px 14px;
   position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+
+.demo-admin-dashboard .admin-sidebar {
   top: 41px;
   height: calc(100dvh - 41px);
 }
@@ -175,11 +196,11 @@ html:has(.app-shell--admin-demo) body {
 }
 
 .admin-brand-text {
-  font-family: var(--font-syne), 'Syne', sans-serif;
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
   font-weight: 700;
   font-size: 15px;
   color: var(--admin-sidebar-text-active);
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 
 .admin-brand-sub {
@@ -272,10 +293,12 @@ html:has(.app-shell--admin-demo) body {
   margin-bottom: 6px;
 }
 
-.admin-page-title {
+.admin-root .admin-page-title {
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  line-height: 1.2;
+  font-variant-numeric: normal;
 }
 
 .admin-page-desc {
@@ -288,7 +311,7 @@ html:has(.app-shell--admin-demo) body {
 /* Top bar */
 .admin-topbar {
   position: sticky;
-  top: 41px;
+  top: 0;
   z-index: 20;
   height: 58px;
   background: rgba(242, 242, 247, 0.88);
@@ -300,6 +323,10 @@ html:has(.app-shell--admin-demo) body {
   justify-content: space-between;
   padding: 0 40px;
   margin: 0 -40px 26px -40px;
+}
+
+.demo-admin-dashboard .admin-topbar {
+  top: 41px;
 }
 
 .topbar-left {
@@ -449,6 +476,11 @@ html:has(.app-shell--admin-demo) body {
   flex-shrink: 0;
 }
 
+.topbar-user-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .topbar-user {
   display: flex;
   align-items: center;
@@ -457,11 +489,86 @@ html:has(.app-shell--admin-demo) body {
   border-radius: 9px;
   border: 1px solid transparent;
   flex-shrink: 0;
+  background: none;
 }
 
+.topbar-user.open,
 .topbar-user:hover {
   background: white;
   border-color: var(--admin-border);
+}
+
+.topbar-user.open svg {
+  transform: rotate(180deg);
+}
+
+.topbar-user-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: white;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(24, 24, 27, 0.12);
+  padding: 6px;
+  z-index: 30;
+  animation: admin-menu-in 0.16s ease;
+}
+
+@keyframes admin-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.topbar-user-menu-head {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid #f0f0f2;
+  margin-bottom: 4px;
+}
+
+.topbar-user-menu-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.topbar-user-menu-email {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+.topbar-user-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.topbar-user-menu-item:hover {
+  background: var(--muted-soft);
+}
+
+.topbar-user-menu-item.danger {
+  color: var(--danger);
+}
+
+.topbar-user-menu-item.danger:hover {
+  background: var(--danger-soft);
 }
 
 .topbar-avatar {
@@ -489,6 +596,7 @@ html:has(.app-shell--admin-demo) body {
   width: 13px;
   height: 13px;
   color: var(--text-faint);
+  transition: transform 0.15s ease;
 }
 
 /* Cards */
@@ -539,7 +647,7 @@ html:has(.app-shell--admin-demo) body {
   }
 }
 
-.kpi-label {
+.admin-root .kpi-label {
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -548,23 +656,25 @@ html:has(.app-shell--admin-demo) body {
   margin-bottom: 10px;
 }
 
-.kpi-value {
-  font-family: var(--font-syne), 'Syne', sans-serif;
-  font-size: 30px;
+.admin-root .kpi-value {
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-size: 32px;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  font-variant-numeric: normal;
+  font-feature-settings: normal;
 }
 
-.kpi-value.accent {
+.admin-root .kpi-value.accent {
   color: var(--green-text);
 }
 
-.kpi-value.warn {
+.admin-root .kpi-value.warn {
   color: var(--warn-text);
 }
 
-.kpi-sub {
+.admin-root .kpi-sub {
   font-size: 11.5px;
   color: var(--text-faint);
   margin-top: 4px;
@@ -660,6 +770,13 @@ html:has(.app-shell--admin-demo) body {
 
 .sparkline-card {
   padding: 20px;
+}
+
+.signup-sparkline {
+  display: block;
+  width: 100%;
+  height: 56px;
+  margin: 8px 0 4px;
 }
 
 .sparkline-head {
@@ -1102,8 +1219,8 @@ html:has(.app-shell--admin-demo) body {
 }
 
 .preflight-item b {
-  font-family: var(--font-syne), 'Syne', sans-serif;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-variant-numeric: normal;
 }
 
 .cli-block {
@@ -1231,6 +1348,9 @@ html:has(.app-shell--admin-demo) body {
   .admin-root .icon-spin {
     animation: none;
   }
+  .topbar-user-menu {
+    animation: none;
+  }
   .drawer {
     animation: none;
   }
@@ -1248,11 +1368,15 @@ html:has(.app-shell--admin-demo) body {
     width: 100%;
     height: auto;
     position: sticky;
-    top: 41px;
+    top: 0;
     z-index: 30;
     flex-direction: row;
     align-items: center;
     padding: 12px 16px;
+  }
+
+  .demo-admin-dashboard .admin-sidebar {
+    top: 41px;
   }
 
   .admin-nav {

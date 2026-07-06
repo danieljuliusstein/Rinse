@@ -135,8 +135,7 @@ export async function smokeVisitAdmin(page: Page): Promise<void> {
   expect(response?.status() ?? 0, '/admin HTTP status').toBeLessThan(500)
   expect(page.url()).not.toContain('/auth')
 
-  await expect(
-    page.locator('.admin-root, .admin-page, .legal-page, .settings-screen--loading').first(),
-  ).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.admin-root').first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.bottom-nav')).toHaveCount(0, { timeout: 10_000 })
   assertNoUnexpectedErrors(pageErrors, '/admin')
 }

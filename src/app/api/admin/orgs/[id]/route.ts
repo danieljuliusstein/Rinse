@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
 import { authenticateRequestUser } from '@/lib/server/request-auth'
 import { isPlatformAdminEmail } from '@/lib/platform-admin'
+import { logPlatformEvent } from '@/lib/server/platform-events'
 
 export const runtime = 'nodejs'
 
@@ -38,6 +39,14 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const pb = await authenticateServerAdmin()
   const updated = await pb.collection('organizations').update(id, payload)
+
+  void logPlatformEvent('admin_org_updated', {
+    organizationId: id,
+    actorEmail: auth.email,
+    detail: Object.keys(payload).join(', '),
+    metadata: { changes: payload },
+  })
+
   return NextResponse.json({
     org: {
       id: updated.id,

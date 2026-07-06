@@ -17,6 +17,7 @@
     "demo": "npm run seed:demo",
     "demo:account": "node scripts/ensure-demo-account.mjs",
     "admin:account": "node scripts/ensure-platform-admin-account.mjs",
+    "admin:backfill-events": "node scripts/backfill-platform-events.mjs",
     "demo:setup": "node scripts/ensure-demo-account.mjs && FORCE_DEMO_PHOTOS=1 ORG_SLUG=summit-detail PB_EMAIL=demo@rinsehq.com PB_PASSWORD=SummitDemo2026! APP_URL=https://rinsehq.com node scripts/seed-demo.mjs",
     "capture:screenshots": "node scripts/capture-screenshots.mjs",
     "export:waitlist-assets": "node scripts/export-waitlist-assets.mjs",

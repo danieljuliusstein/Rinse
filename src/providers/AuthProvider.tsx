@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { fetchPlatformAdminAccess } from '@/lib/admin-api'
 import { resetBackend, syncOnReconnect } from '@/lib/api'
@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [needsOnboardingState, setNeedsOnboardingState] = useState(false)
   const [subscriptionLapsed, setSubscriptionLapsed] = useState(false)
   const [subscriptionLoading, setSubscriptionLoading] = useState(true)
+  const platformAdminCheckedRef = useRef(false)
 
   const isPublicRoute = isPublicPath(pathname)
   const isOnboardingRoute = isOnboardingPath(pathname)
@@ -108,16 +109,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!mounted || !isLoggedIn) {
       setIsPlatformAdmin(false)
       setPlatformAdminLoading(false)
+      platformAdminCheckedRef.current = false
       return
     }
+    if (platformAdminCheckedRef.current) return
     let cancelled = false
     setPlatformAdminLoading(true)
     void (async () => {
       try {
         const admin = await fetchPlatformAdminAccess()
-        if (!cancelled) setIsPlatformAdmin(admin)
+        if (!cancelled) {
+          setIsPlatformAdmin(admin)
+          platformAdminCheckedRef.current = true
+        }
       } catch {
-        if (!cancelled) setIsPlatformAdmin(false)
+        if (!cancelled) {
+          setIsPlatformAdmin(false)
+          platformAdminCheckedRef.current = true
+        }
       } finally {
         if (!cancelled) setPlatformAdminLoading(false)
       }
@@ -125,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [mounted, isLoggedIn, authTick])
+  }, [mounted, isLoggedIn, pathname])
 
   useEffect(() => {
     if (!mounted || !isLoggedIn || isPlatformAdmin || platformAdminLoading) return
@@ -299,9 +308,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const needsGuestRedirect = !isLoggedIn && !isPublicRoute
+  const adminShellPath = isAdminAllowedPath(pathname)
   const showBlockingRedirect =
     !ready ||
-    (isLoggedIn && platformAdminLoading) ||
+    (isLoggedIn && platformAdminLoading && !adminShellPath) ||
     needsGuestRedirect ||
     (isLoggedIn &&
       !isPlatformAdmin &&

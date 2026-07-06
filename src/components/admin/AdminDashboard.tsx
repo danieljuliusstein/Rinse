@@ -5,18 +5,22 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import AdminAccountPanel from '@/components/admin/AdminAccountPanel'
 import {
   downloadFullBackup,
+  fetchAdminEvents,
   fetchAdminOrgs,
   fetchBackupPreflight,
+  fetchSignupMetrics,
   patchAdminOrg,
   type AdminOrg,
   type AdminOrgSummary,
   type AdminView,
+  type PlatformEventDto,
 } from '@/lib/admin-api'
 import { getCurrentUserEmail, getPocketBaseAuthToken } from '@/lib/pb-auth'
 import { checkPocketBaseHealth } from '@/lib/pocketbase'
 import type { SubscriptionStatus } from '@/lib/subscription'
 import { truncateMiddle } from '@/lib/truncate'
 import { parseAdminViewParam } from '@/lib/route-lanes'
+import { formatPlatformEventLabel, formatPlatformEventTime } from '@/lib/platform-event-labels'
 import { ScreenLoading } from '@/components/ui'
 import { useAuth } from '@/providers/AuthProvider'
 
@@ -74,6 +78,26 @@ function userDisplayName(email: string): string {
   const local = email.split('@')[0] ?? email
   const first = local.split(/[._-]+/)[0] ?? local
   return first.charAt(0).toUpperCase() + first.slice(1)
+}
+
+function SignupSparkline({ series }: { series: { date: string; count: number }[] }) {
+  if (!series.length) return null
+  const width = 320
+  const height = 56
+  const max = Math.max(...series.map((point) => point.count), 1)
+  const points = series
+    .map((point, index) => {
+      const x = series.length === 1 ? width / 2 : (index / (series.length - 1)) * width
+      const y = height - 6 - (point.count / max) * (height - 12)
+      return `${x},${y}`
+    })
+    .join(' ')
+
+  return (
+    <svg className="signup-sparkline" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Signups over the last 30 days">
+      <polyline points={points} fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
 function IconOverview() {
@@ -252,11 +276,21 @@ export default function AdminDashboard() {
   const [pbOnline, setPbOnline] = useState<boolean | null>(null)
   const [patchingId, setPatchingId] = useState<string | null>(null)
   const [trialDraft, setTrialDraft] = useState('')
+  const [signupSeries, setSignupSeries] = useState<{ date: string; count: number }[]>([])
+  const [signupTotal, setSignupTotal] = useState(0)
+  const [signupLoading, setSignupLoading] = useState(false)
+  const [auditEvents, setAuditEvents] = useState<PlatformEventDto[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
+  const [orgActivity, setOrgActivity] = useState<PlatformEventDto[]>([])
+  const [orgActivityLoading, setOrgActivityLoading] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const lastFocusedRef = useRef<HTMLElement | null>(null)
   const drawerCloseRef = useRef<HTMLButtonElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+  const orgsLoadedRef = useRef(false)
 
   const userEmail = getCurrentUserEmail() ?? 'admin'
   const pbAdminUrl = process.env.NEXT_PUBLIC_PB_URL ? `${process.env.NEXT_PUBLIC_PB_URL.replace(/\/$/, '')}/_/` : null
@@ -282,12 +316,13 @@ export default function AdminDashboard() {
       router.replace('/auth/admin')
       return
     }
-    setLoading(true)
+    if (!orgsLoadedRef.current) setLoading(true)
     setError(null)
     try {
       const data = await fetchAdminOrgs()
       setOrgs(data.orgs)
       setSummary(data.summary)
+      orgsLoadedRef.current = true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load admin data')
     } finally {
@@ -298,6 +333,90 @@ export default function AdminDashboard() {
   useEffect(() => {
     void loadOrgs()
   }, [loadOrgs])
+
+  useEffect(() => {
+    if (activeView !== 'overview') return
+    let cancelled = false
+    setSignupLoading(true)
+    void (async () => {
+      try {
+        const metrics = await fetchSignupMetrics(30)
+        if (!cancelled) {
+          setSignupSeries(metrics.series)
+          setSignupTotal(metrics.total)
+        }
+      } catch {
+        if (!cancelled) {
+          setSignupSeries([])
+          setSignupTotal(0)
+        }
+      } finally {
+        if (!cancelled) setSignupLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [activeView])
+
+  useEffect(() => {
+    if (activeView !== 'audit') return
+    let cancelled = false
+    setAuditLoading(true)
+    void (async () => {
+      try {
+        const events = await fetchAdminEvents({ limit: 100 })
+        if (!cancelled) setAuditEvents(events)
+      } catch {
+        if (!cancelled) setAuditEvents([])
+      } finally {
+        if (!cancelled) setAuditLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [activeView])
+
+  useEffect(() => {
+    if (!drawerOpen || !selectedOrgId) {
+      setOrgActivity([])
+      return
+    }
+    let cancelled = false
+    setOrgActivityLoading(true)
+    void (async () => {
+      try {
+        const events = await fetchAdminEvents({ organizationId: selectedOrgId, limit: 20 })
+        if (!cancelled) setOrgActivity(events)
+      } catch {
+        if (!cancelled) setOrgActivity([])
+      } finally {
+        if (!cancelled) setOrgActivityLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [drawerOpen, selectedOrgId])
+
+  useEffect(() => {
+    if (!profileMenuOpen) return
+    const onPointerDown = (event: PointerEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setProfileMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [profileMenuOpen])
 
   useEffect(() => {
     if (activeView !== 'backups' && activeView !== 'overview') return
@@ -535,15 +654,50 @@ export default function AdminDashboard() {
               <span>{isLocalhost ? 'Local' : 'Production'}</span>
             </div>
             <div className="topbar-divider" />
-            <button
-              type="button"
-              className="topbar-user"
-              aria-label={`Signed in as ${userEmail}. Sign out.`}
-              onClick={() => logout({ lane: 'admin' })}
-            >
-              <div className="topbar-avatar">{userInitials(userEmail)}</div>
-              <span className="topbar-user-name">{userDisplayName(userEmail)}</span>
-            </button>
+            <div className="topbar-user-wrap" ref={profileMenuRef}>
+              <button
+                type="button"
+                className={`topbar-user${profileMenuOpen ? ' open' : ''}`}
+                aria-label={`Signed in as ${userEmail}`}
+                aria-expanded={profileMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setProfileMenuOpen((open) => !open)}
+              >
+                <div className="topbar-avatar">{userInitials(userEmail)}</div>
+                <span className="topbar-user-name">{userDisplayName(userEmail)}</span>
+                <IconChevronDown />
+              </button>
+              {profileMenuOpen ? (
+                <div className="topbar-user-menu" role="menu" aria-label="Account menu">
+                  <div className="topbar-user-menu-head">
+                    <div className="topbar-user-menu-name">{userDisplayName(userEmail)}</div>
+                    <div className="topbar-user-menu-email">{userEmail}</div>
+                  </div>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="topbar-user-menu-item"
+                    onClick={() => {
+                      setProfileMenuOpen(false)
+                      switchView('account')
+                    }}
+                  >
+                    Account settings
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="topbar-user-menu-item danger"
+                    onClick={() => {
+                      setProfileMenuOpen(false)
+                      void logout({ lane: 'admin' })
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -598,9 +752,18 @@ export default function AdminDashboard() {
               <div className="admin-card sparkline-card">
                 <div className="sparkline-head">
                   <div className="sparkline-title">Signups, last 30 days</div>
-                  <div className="sparkline-badge">Coming soon</div>
+                  <div className="sparkline-badge">{signupTotal} total</div>
                 </div>
-                <div className="kpi-sub">Wired once analytics event stream ships.</div>
+                {signupLoading ? (
+                  <div className="kpi-sub">Loading signup trend…</div>
+                ) : signupSeries.some((point) => point.count > 0) ? (
+                  <>
+                    <SignupSparkline series={signupSeries} />
+                    <div className="kpi-sub">New organizations per day from platform events.</div>
+                  </>
+                ) : (
+                  <div className="kpi-sub">No signups in this window yet.</div>
+                )}
               </div>
               <div className="admin-card backup-mini">
                 <div className="sparkline-title">Last backup</div>
@@ -859,18 +1022,42 @@ export default function AdminDashboard() {
             <div className="admin-page-header">
               <div className="admin-page-title">Audit log</div>
               <div className="admin-page-desc">
-                Events stream to Vercel Functions today. Search{' '}
-                <span className="mono">admin_backup_triggered</span> in Vercel → Functions.
+                Platform events stored in PocketBase. Security events also stream to Vercel Functions logs.
               </div>
             </div>
 
             <div className="admin-card">
-              <div style={{ padding: 16 }}>
-                <div className="empty-state">
-                  Full log ingestion isn&apos;t built yet. Known events:{' '}
-                  <span className="mono">admin_backup_triggered</span>, <span className="mono">auth_failure</span>,{' '}
-                  <span className="mono">webhook_reject</span>.
-                </div>
+              <div style={{ padding: 0, overflowX: 'auto' }}>
+                {auditLoading ? (
+                  <div className="empty-state" style={{ margin: 16 }}>
+                    Loading events…
+                  </div>
+                ) : auditEvents.length === 0 ? (
+                  <div className="empty-state" style={{ margin: 16 }}>
+                    No events yet. New signups, admin actions, and billing updates will appear here.
+                  </div>
+                ) : (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Actor</th>
+                        <th>Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {auditEvents.map((event) => (
+                        <tr key={event.id}>
+                          <td>{formatPlatformEventTime(event.created)}</td>
+                          <td>{formatPlatformEventLabel(event.type)}</td>
+                          <td>{event.actor_email ?? '—'}</td>
+                          <td>{event.detail ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </section>
@@ -1030,6 +1217,29 @@ export default function AdminDashboard() {
                       ))}
                     </select>
                   </label>
+                </div>
+              </div>
+
+              <div>
+                <div className="drawer-section-label">Activity</div>
+                <div className="admin-card drawer-card">
+                  {orgActivityLoading ? (
+                    <div className="kpi-sub">Loading activity…</div>
+                  ) : orgActivity.length === 0 ? (
+                    <div className="empty-state" style={{ padding: '12px 0', border: 'none' }}>
+                      No platform events for this org yet.
+                    </div>
+                  ) : (
+                    orgActivity.map((event) => (
+                      <div key={event.id} className="kv-row">
+                        <span className="kv-label">{formatPlatformEventTime(event.created)}</span>
+                        <span className="kv-value" style={{ textAlign: 'right', maxWidth: '58%' }}>
+                          {formatPlatformEventLabel(event.type)}
+                          {event.detail ? ` · ${event.detail}` : ''}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

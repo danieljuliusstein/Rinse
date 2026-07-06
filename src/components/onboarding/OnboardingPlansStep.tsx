@@ -10,7 +10,7 @@ import { getPocketBaseAuthToken } from '@/lib/pb-auth'
 import { readApiJson } from '@/lib/api-json'
 import { STARTER_PLAN } from '@/lib/plans'
 import { completeOnboarding } from '@/lib/onboarding'
-import { trackOnboardingStepCompleted } from '@/lib/onboarding-analytics'
+import { trackOnboardingStepCompleted, trackOnboardingCompleted } from '@/lib/onboarding-analytics'
 import { markTourPending } from '@/lib/product-tour'
 import { prevStepSlug, type OnboardingStepSlug } from '@/lib/onboarding'
 import type { AppSettings } from '@/lib/settings'
@@ -54,6 +54,7 @@ export default function OnboardingPlansStep({
       }
       await completeOnboarding({ firstInvoiceCreated: Boolean(settings.onboarding_first_invoice_at) })
       trackOnboardingStepCompleted(step)
+      trackOnboardingCompleted()
       markTourPending()
       const finished = await refreshOnboardingGate()
       if (!finished) {

@@ -90,29 +90,43 @@ async function main() {
   const headers = await adminAuth()
   console.log(`Platform admin target: ${HQ_EMAIL} → internal org "${HQ_SLUG}"\n`)
 
-  let org =
-    (await list(headers, 'organizations', `slug = "${escapeFilter(HQ_SLUG)}"`))[0] ??
-    (await list(headers, 'organizations', 'is_platform_internal = true'))[0]
+  let org = (await list(headers, 'organizations', `slug = "${escapeFilter(HQ_SLUG)}"`))[0]
+
+  const orgPayload = {
+    name: HQ_NAME,
+    slug: HQ_SLUG,
+    is_platform_internal: true,
+    plan: 'founding',
+    founding_member: true,
+    booking_enabled: false,
+    subscription_status: 'active',
+  }
 
   if (!org) {
-    org = await create(headers, 'organizations', {
-      name: HQ_NAME,
-      slug: HQ_SLUG,
-      is_platform_internal: true,
-      plan: 'founding',
-      founding_member: true,
-      booking_enabled: false,
-      subscription_status: 'active',
-    })
+    try {
+      org = await create(headers, 'organizations', orgPayload)
+    } catch {
+      const { is_platform_internal: _ignored, ...withoutFlag } = orgPayload
+      org = await create(headers, 'organizations', withoutFlag)
+    }
     console.log(`Created internal organization: ${org.id} (${HQ_SLUG})`)
   } else {
-    await patch(headers, 'organizations', org.id, {
-      is_platform_internal: true,
-      name: HQ_NAME,
-      booking_enabled: false,
-      subscription_status: 'active',
-      plan: 'founding',
-    })
+    try {
+      await patch(headers, 'organizations', org.id, {
+        is_platform_internal: true,
+        name: HQ_NAME,
+        booking_enabled: false,
+        subscription_status: 'active',
+        plan: 'founding',
+      })
+    } catch {
+      await patch(headers, 'organizations', org.id, {
+        name: HQ_NAME,
+        booking_enabled: false,
+        subscription_status: 'active',
+        plan: 'founding',
+      })
+    }
     console.log(`Internal organization exists: ${org.id} (${org.slug ?? HQ_SLUG})`)
   }
 
