@@ -4,10 +4,14 @@ import {
   DEFAULT_APP_VERSION,
   SUPPORT_FAQ,
   buildBugReportMailto,
+  buildBillingMailto,
   buildContactMailto,
   buildDebugInfo,
+  buildPrivacyMailto,
   buildSupportMailto,
   getAppVersion,
+  getBillingEmail,
+  getPrivacyEmail,
   getSupportEmail,
 } from './support-config'
 
@@ -92,5 +96,21 @@ describe('support-config', () => {
     expect(url).toMatch(/^mailto:support@example\.com\?subject=/)
     expect(url).toContain('Rinse')
     expect(url).toContain('support')
+  })
+
+  it('derives billing and privacy emails from support domain', () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPPORT_EMAIL', 'support@rinsehq.com')
+    expect(getBillingEmail()).toBe('billing@rinsehq.com')
+    expect(getPrivacyEmail()).toBe('privacy@rinsehq.com')
+    expect(buildBillingMailto()).toMatch(/^mailto:billing@rinsehq\.com/)
+    expect(buildPrivacyMailto()).toMatch(/^mailto:privacy@rinsehq\.com/)
+  })
+
+  it('prefers explicit billing and privacy env overrides', () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPPORT_EMAIL', 'support@rinsehq.com')
+    vi.stubEnv('NEXT_PUBLIC_BILLING_EMAIL', 'billing@custom.com')
+    vi.stubEnv('NEXT_PUBLIC_PRIVACY_EMAIL', 'privacy@custom.com')
+    expect(getBillingEmail()).toBe('billing@custom.com')
+    expect(getPrivacyEmail()).toBe('privacy@custom.com')
   })
 })

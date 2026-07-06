@@ -216,6 +216,12 @@ async function runNotificationsCronForOrg(
   return result
 }
 
+export async function runNotificationsCronForOrganization(organizationId: string): Promise<CronResult> {
+  const pb = await authenticateServerPocketBase()
+  const org = await pb.collection('organizations').getOne(organizationId)
+  return runNotificationsCronForOrg(pb, organizationId, String(org.slug ?? org.id))
+}
+
 export async function runNotificationsCron(): Promise<CronResult> {
   const pb = await authenticateServerPocketBase()
   const orgs = await pb.collection('organizations').getFullList()

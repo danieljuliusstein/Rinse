@@ -14,6 +14,7 @@ import {
 } from '@/lib/subscription'
 import { STARTER_PLAN, PRO_PLAN } from '@/lib/plans'
 import { readApiJson } from '@/lib/api-json'
+import { buildBillingMailto, getBillingEmail } from '@/lib/support-config'
 import SettingsDetailShell from './SettingsDetailShell'
 
 const PLAN_LABELS: Record<string, string> = {
@@ -55,6 +56,8 @@ export default function SettingsBillingPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const checkoutStatus = searchParams.get('checkout')
+  const billingEmail = getBillingEmail()
+  const billingMailto = buildBillingMailto()
 
   useEffect(() => {
     void (async () => {
@@ -231,6 +234,18 @@ export default function SettingsBillingPage() {
       ) : null}
 
       {error ? <p className="settings-msg settings-msg--error">{error}</p> : null}
+
+      {billingMailto && billingEmail ? (
+        <section className="card settings-billing-card">
+          <h2 className="settings-billing-card__title">Billing help</h2>
+          <p className="settings-panel__lead settings-panel__lead--tight">
+            Questions about your Rinse subscription or invoices from us?
+          </p>
+          <a href={billingMailto} className="btn-secondary settings-support-contact__btn">
+            Email {billingEmail}
+          </a>
+        </section>
+      ) : null}
     </SettingsDetailShell>
   )
 }

@@ -12,8 +12,7 @@
 #
 # Optional secrets:
 #   E2E_EMAIL / E2E_PASSWORD — override demo defaults (demo@rinsehq.com / SummitDemo2026!)
-#   INTERNAL_API_SECRET — enables /api/portal/create in smoke suite
-#   NEXT_PUBLIC_INTERNAL_API_SECRET — same value, baked into client bundle at build
+#   INTERNAL_API_SECRET — cron route auth for PB hook smoke (portal/create uses operator JWT in tests)
 
 name: E2E (smoke + tour)
 
@@ -79,7 +78,6 @@ jobs:
           PB_URL=${{ secrets.PB_URL }}
           NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000
           INTERNAL_API_SECRET=${{ secrets.INTERNAL_API_SECRET }}
-          NEXT_PUBLIC_INTERNAL_API_SECRET=${{ secrets.NEXT_PUBLIC_INTERNAL_API_SECRET || secrets.INTERNAL_API_SECRET }}
           EOF
           if [ -n "${{ secrets.E2E_EMAIL }}" ]; then echo "E2E_EMAIL=${{ secrets.E2E_EMAIL }}" >> .env.local; fi
           if [ -n "${{ secrets.E2E_PASSWORD }}" ]; then echo "E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}" >> .env.local; fi
@@ -88,7 +86,6 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_PB_URL: ${{ secrets.PB_URL }}
-          NEXT_PUBLIC_INTERNAL_API_SECRET: ${{ secrets.NEXT_PUBLIC_INTERNAL_API_SECRET || secrets.INTERNAL_API_SECRET }}
 
       - name: Start production server
         run: |

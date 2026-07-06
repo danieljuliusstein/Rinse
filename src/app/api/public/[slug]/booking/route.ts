@@ -37,7 +37,7 @@ export async function POST(request: Request, { params }: Params) {
   if (tooLarge) return tooLarge
 
   const ip = getClientIp(request)
-  const ipLimited = enforceRateLimit(`booking:ip:${ip}`, RATE_LIMITS.publicBookingIp)
+  const ipLimited = await enforceRateLimit(`booking:ip:${ip}`, RATE_LIMITS.publicBookingIp, 'public-booking')
   if (ipLimited) {
     return jsonWithCors(request, { error: 'Too many booking attempts. Try again later.' }, 429)
   }
@@ -59,9 +59,10 @@ export async function POST(request: Request, { params }: Params) {
 
     const phoneKey = normalizePhone(phone)
     if (phoneKey) {
-      const phoneLimited = enforceRateLimit(
+      const phoneLimited = await enforceRateLimit(
         `booking:${org.id}:${phoneKey}`,
         RATE_LIMITS.publicBookingPhone,
+        'public-booking-phone',
       )
       if (phoneLimited) {
         return jsonWithCors(request, { error: 'Too many requests for this number. Try again tomorrow.' }, 429)

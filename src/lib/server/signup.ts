@@ -1,6 +1,7 @@
 import { slugifyBusinessName } from '../tenant'
 import { DEFAULT_INVOICE_TERMS } from '../settings'
 import { DEFAULT_BOOKING_SCHEDULE } from '../booking-availability'
+import { isPlatformAdminEmail } from '../platform-admin'
 import { authenticateServerAdmin } from './pocketbase-admin'
 import { escapeFilterValue } from '../api/mappers'
 import type { PbRecord } from '../api/mappers'
@@ -81,6 +82,95 @@ async function seedOrganizationData(
   }
 }
 
+const INTERNAL_ORG_SLUG = (process.env.PLATFORM_ADMIN_ORG_SLUG ?? 'rinse-hq-internal').trim()
+
+async function findOrCreateInternalOrg(pb: Awaited<ReturnType<typeof authenticateServerAdmin>>) {
+  const byFlag = await pb.collection('organizations').getFullList<PbRecord>({
+    filter: 'is_platform_internal = true',
+    limit: 1,
+  })
+  if (byFlag.length > 0) return byFlag[0]
+
+  const escaped = escapeFilterValue(INTERNAL_ORG_SLUG)
+  const bySlug = await pb.collection('organizations').getFullList<PbRecord>({
+    filter: `slug = "${escaped}"`,
+    limit: 1,
+  })
+  if (bySlug.length > 0) {
+    return pb.collection('organizations').update<PbRecord>(bySlug[0].id, {
+      is_platform_internal: true,
+      name: 'Rinse HQ',
+      booking_enabled: false,
+      subscription_status: 'active',
+      plan: 'founding',
+      founding_member: true,
+    })
+  }
+
+  return pb.collection('organizations').create<PbRecord>({
+    name: 'Rinse HQ',
+    slug: INTERNAL_ORG_SLUG,
+    is_platform_internal: true,
+    plan: 'founding',
+    founding_member: true,
+    booking_enabled: false,
+    subscription_status: 'active',
+  })
+}
+
+async function ensureMinimalInternalAppSettings(
+  pb: Awaited<ReturnType<typeof authenticateServerAdmin>>,
+  orgId: string,
+  email: string,
+) {
+  const existing = await pb.collection('app_settings').getFullList<PbRecord>({
+    filter: `organization_id = "${escapeFilterValue(orgId)}"`,
+    limit: 1,
+  })
+  const completedAt = new Date().toISOString()
+  const payload = {
+    business_name: 'Rinse HQ',
+    business_email: email,
+    onboarding_step: 4,
+    onboarding_completed_at: completedAt,
+  }
+  if (existing.length > 0) {
+    await pb.collection('app_settings').update(existing[0].id, payload)
+    return
+  }
+  await pb.collection('app_settings').create({
+    organization_id: orgId,
+    ...payload,
+  })
+}
+
+async function provisionPlatformAdminUser(
+  pb: Awaited<ReturnType<typeof authenticateServerAdmin>>,
+  userId: string,
+  email: string,
+) {
+  const user = await pb.collection('users').getOne<PbRecord>(userId)
+  const existingOrgId = String(user.organization_id ?? '').trim()
+  if (existingOrgId) {
+    const org = await pb.collection('organizations').getOne<PbRecord>(existingOrgId)
+    return {
+      organizationId: existingOrgId,
+      slug: String(org.slug ?? INTERNAL_ORG_SLUG),
+      alreadyProvisioned: true,
+    }
+  }
+
+  const org = await findOrCreateInternalOrg(pb)
+  await ensureMinimalInternalAppSettings(pb, org.id, email)
+  await pb.collection('users').update(userId, { organization_id: org.id })
+
+  return {
+    organizationId: String(org.id),
+    slug: String(org.slug ?? INTERNAL_ORG_SLUG),
+    alreadyProvisioned: false,
+  }
+}
+
 export async function provisionOrganizationForOAuthUser(input: OAuthProvisionInput) {
   const email = input.email.trim().toLowerCase()
   const businessName =
@@ -91,6 +181,11 @@ export async function provisionOrganizationForOAuthUser(input: OAuthProvisionInp
   }
 
   const pb = await authenticateServerAdmin()
+
+  if (isPlatformAdminEmail(email)) {
+    return provisionPlatformAdminUser(pb, input.userId, email)
+  }
+
   const user = await pb.collection('users').getOne<PbRecord>(input.userId)
   const existingOrgId = String(user.organization_id ?? '').trim()
   if (existingOrgId) {
@@ -134,6 +229,9 @@ export async function registerOrganization(input: SignupInput) {
     throw new Error('Valid email and password (8+ characters) required')
   }
   if (!businessName) throw new Error('Business name is required')
+  if (isPlatformAdminEmail(email)) {
+    throw new Error('This email is reserved for platform admin. Sign in at /auth/admin instead.')
+  }
 
   const pb = await authenticateServerAdmin()
   const slug = await uniqueSlug(pb, input.slug?.trim() || businessName)

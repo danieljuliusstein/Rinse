@@ -1,31 +1,32 @@
 import { NextResponse } from 'next/server'
-import { apiUnauthorized, verifyApiSecret } from '@/lib/server/api-auth'
-import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
-import { createPortalToken, getRequestAppBaseUrl, resolveClientOrgId } from '@/lib/server/portal-tokens'
+import { createPortalToken, getRequestAppBaseUrl } from '@/lib/server/portal-tokens'
+import { parseJsonBody } from '@/lib/server/parse-body'
+import { assertOrgAccess, requireUser } from '@/lib/server/route-guard'
 import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
+import { portalCreateBodySchema } from '@/lib/validation/api-schemas'
 
 export async function POST(request: Request) {
-  if (!verifyApiSecret(request)) return apiUnauthorized()
+  const auth = await requireUser(request)
+  if (auth instanceof Response) return auth
+
+  const parsed = await parseJsonBody(request, portalCreateBodySchema)
+  if (parsed instanceof NextResponse) return parsed
+  const { clientId, scope, jobId, quoteId } = parsed.data
+
+  const denied = await assertOrgAccess(auth, { clientId })
+  if (denied) return denied
+
+  const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
+  if (premiumDenied) return premiumDenied
 
   try {
-    const body = await request.json()
-    const { clientId, scope, jobId, quoteId } = body
-
-    if (!clientId || !scope) {
-      return NextResponse.json({ error: 'clientId and scope required' }, { status: 400 })
-    }
-
-    const pb = await authenticateServerAdmin()
-    const organizationId = await resolveClientOrgId(pb, clientId)
-    const premiumDenied = await requirePremiumSubscription(pb, organizationId)
-    if (premiumDenied) return premiumDenied
-
     const result = await createPortalToken({
       clientId,
       scope,
       jobId,
       quoteId,
       appBaseUrl: await getRequestAppBaseUrl(),
+      pb: auth.pb,
     })
 
     return NextResponse.json(result)

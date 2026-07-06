@@ -1,19 +1,18 @@
-import type { PLReport } from '@/lib/api/aggregates'
 import type { DateRangeKey } from '@/lib/api/reports'
 import { triggerDownload } from '@/lib/pdf/triggerDownload'
 import { handleApiResponsePremiumGate, PREMIUM_REQUIRED_MESSAGE } from '@/lib/premium-api'
 import { getAuthFetchHeaders } from '@/lib/pb-auth'
 
 export async function downloadReportPdf(
-  report: PLReport,
+  _report: unknown,
   range: DateRangeKey,
-  businessName: string,
-  logoUrl?: string | null
+  _businessName?: string,
+  _logoUrl?: string | null
 ): Promise<void> {
   const res = await fetch('/api/pdf/report', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthFetchHeaders() },
-    body: JSON.stringify({ report, range, businessName, logoUrl }),
+    body: JSON.stringify({ range }),
   })
 
   if (!res.ok) {

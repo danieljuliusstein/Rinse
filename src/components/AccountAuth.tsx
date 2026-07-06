@@ -6,7 +6,8 @@ import AppLogo from '@/components/AppLogo'
 import SocialAuthButtons from '@/components/auth/SocialAuthButtons'
 import { SetupRowField } from '@/components/forms'
 import { AUTH_PB_NOT_CONFIGURED, formatAuthApiError } from '@/lib/auth-messages'
-import { loginWithPassword, requestPasswordReset } from '@/lib/pb-auth'
+import { loginWithPassword, requestPasswordReset, clearPocketBaseAuth } from '@/lib/pb-auth'
+import { fetchPlatformAdminAccess } from '@/lib/admin-api'
 import { isPocketBaseConfigured } from '@/lib/pocketbase'
 import { markTourPending } from '@/lib/product-tour'
 import { onboardingStepUrl } from '@/lib/onboarding'
@@ -14,11 +15,12 @@ import { slugifyBusinessName } from '@/lib/tenant'
 
 interface AccountAuthProps {
   onAuthenticated: (options?: { isSignup?: boolean }) => void
+  variant?: 'operator' | 'admin'
 }
 
 type AuthMode = 'login' | 'signup' | 'forgot'
 
-export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
+export default function AccountAuth({ onAuthenticated, variant = 'operator' }: AccountAuthProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<AuthMode>('login')
@@ -30,10 +32,11 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    if (variant === 'admin') return
     if (searchParams.get('mode') === 'signup') {
       setMode('signup')
     }
-  }, [searchParams])
+  }, [searchParams, variant])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,7 +59,7 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
         return
       }
 
-      if (mode === 'signup') {
+      if (mode === 'signup' && variant !== 'admin') {
         const res = await fetch('/api/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -73,6 +76,14 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
       if (!ok) {
         setError('Invalid email or password')
         return
+      }
+      if (variant === 'admin') {
+        const isAdmin = await fetchPlatformAdminAccess()
+        if (!isAdmin) {
+          clearPocketBaseAuth()
+          setError('Not a platform admin account')
+          return
+        }
       }
       if (mode === 'signup') {
         markTourPending()
@@ -91,10 +102,17 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
   const slugPreview = businessName.trim() ? slugifyBusinessName(businessName) : ''
   const cloudAuthEnabled = isPocketBaseConfigured()
 
-  const title =
-    mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Reset password'
-  const subtitle =
-    mode === 'login'
+  const isAdminVariant = variant === 'admin'
+  const title = isAdminVariant
+    ? 'Rinse HQ'
+    : mode === 'login'
+      ? 'Sign in'
+      : mode === 'signup'
+        ? 'Create account'
+        : 'Reset password'
+  const subtitle = isAdminVariant
+    ? 'Platform console sign in'
+    : mode === 'login'
       ? 'Sign in to your jobs, clients, and business data'
       : mode === 'signup'
         ? 'Your solo mobile detailing workspace'
@@ -115,7 +133,7 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
           </p>
         ) : null}
 
-        {mode !== 'forgot' && cloudAuthEnabled ? (
+        {mode !== 'forgot' && cloudAuthEnabled && !isAdminVariant ? (
           <SocialAuthButtons disabled={loading} onError={setError} />
         ) : null}
 
@@ -198,25 +216,27 @@ export default function AccountAuth({ onAuthenticated }: AccountAuthProps) {
           </button>
         ) : null}
 
-        <button
-          type="button"
-          className="auth-link"
-          onClick={() => {
-            if (mode === 'forgot') {
-              setMode('login')
-            } else {
-              setMode(mode === 'login' ? 'signup' : 'login')
-            }
-            setError('')
-            setInfo('')
-          }}
-        >
-          {mode === 'login'
-            ? 'New here? Create an account'
-            : mode === 'signup'
-              ? 'Already have an account? Sign in'
-              : 'Back to sign in'}
-        </button>
+        {!isAdminVariant ? (
+          <button
+            type="button"
+            className="auth-link"
+            onClick={() => {
+              if (mode === 'forgot') {
+                setMode('login')
+              } else {
+                setMode(mode === 'login' ? 'signup' : 'login')
+              }
+              setError('')
+              setInfo('')
+            }}
+          >
+            {mode === 'login'
+              ? 'New here? Create an account'
+              : mode === 'signup'
+                ? 'Already have an account? Sign in'
+                : 'Back to sign in'}
+          </button>
+        ) : null}
       </div>
     </div>
   )

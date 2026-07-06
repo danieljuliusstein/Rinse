@@ -1,39 +1,31 @@
 import { NextResponse } from 'next/server'
-import { authenticateRequestUser } from '@/lib/server/request-auth'
-import { authenticateServerPocketBase } from '@/lib/server/pocketbase-admin'
-import { requirePremiumSubscription, requireProPlan } from '@/lib/server/subscription-guard'
+import { parseJsonBody } from '@/lib/server/parse-body'
 import { parseReceiptImage } from '@/lib/server/receipt-ocr'
+import { requireUser } from '@/lib/server/route-guard'
+import { requirePremiumSubscription, requireProPlan } from '@/lib/server/subscription-guard'
+import { receiptParseBodySchema } from '@/lib/validation/api-schemas'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: Request) {
-  const auth = await authenticateRequestUser(request)
-  if (!auth) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+const RECEIPT_MAX_BYTES = 8_388_608
 
-  const pb = await authenticateServerPocketBase()
-  const premiumBlock = await requirePremiumSubscription(pb, auth.organizationId)
+export async function POST(request: Request) {
+  const auth = await requireUser(request)
+  if (auth instanceof Response) return auth
+
+  const premiumBlock = await requirePremiumSubscription(auth.pb, auth.organizationId)
   if (premiumBlock) return premiumBlock
 
-  const proBlock = await requireProPlan(pb, auth.organizationId)
+  const proBlock = await requireProPlan(auth.pb, auth.organizationId)
   if (proBlock) return proBlock
 
-  let body: { image?: string; mimeType?: string }
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
+  const parsed = await parseJsonBody(request, receiptParseBodySchema, RECEIPT_MAX_BYTES)
+  if (parsed instanceof NextResponse) return parsed
 
-  const image = body.image?.trim()
-  const mimeType = body.mimeType?.trim() || 'image/jpeg'
-  if (!image) {
-    return NextResponse.json({ error: 'image required' }, { status: 400 })
-  }
+  const { image, mimeType } = parsed.data
 
   try {
-    const result = await parseReceiptImage(image, mimeType)
+    const result = await parseReceiptImage(image, mimeType?.trim() || 'image/jpeg')
     return NextResponse.json(result)
   } catch (e) {
     return NextResponse.json(

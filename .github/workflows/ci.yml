@@ -1,0 +1,53 @@
+# Security Wave 0 — fast merge gate on pull requests.
+# Runs npm ci, production build, unit tests, and a non-blocking prod audit.
+#
+# To make npm audit blocking: remove `continue-on-error: true` on the audit step
+# (and add "Build, test & audit" as a required status check in branch protection).
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  NEXT_TELEMETRY_DISABLED: '1'
+  NEXT_PUBLIC_PB_URL: https://ci-placeholder.example.com
+  PB_URL: https://ci-placeholder.example.com
+
+jobs:
+  verify:
+    name: Build, test & audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production dependency audit (high+)
+        run: npm audit --production --audit-level=high
+        continue-on-error: true

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { saveInvoiceSignature } from '@/lib/server/invoice-signature'
+import { portalScopeAllowsCheckout } from '@/lib/server/portal-scope'
 import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
 import { validatePortalToken } from '@/lib/server/portal-tokens'
 
@@ -13,9 +14,7 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid or expired link' }, { status: 404 })
   }
 
-  const scopeOk =
-    record.scope === 'invoice' || record.scope === 'full' || record.scope === 'job'
-  if (!scopeOk) {
+  if (!portalScopeAllowsCheckout(record.scope)) {
     return NextResponse.json({ error: 'Invalid link for invoice signature' }, { status: 400 })
   }
 

@@ -1,3 +1,4 @@
+import { getAuthFetchHeaders, getPocketBaseAuthToken } from './pb-auth'
 import { loadSettings } from './settings'
 import { loadData } from './storage'
 import { getCurrentOrganizationId } from './tenant'
@@ -30,24 +31,20 @@ export function downloadJson(data: unknown, filename: string): void {
   URL.revokeObjectURL(url)
 }
 
-export function getInternalApiSecret(): string | undefined {
-  return process.env.NEXT_PUBLIC_INTERNAL_API_SECRET
-}
-
 export async function triggerServerBackup(): Promise<{ ok: boolean; error?: string }> {
-  const secret = getInternalApiSecret()
-  if (!secret) {
-    return { ok: false, error: 'Server backup requires NEXT_PUBLIC_INTERNAL_API_SECRET' }
+  if (!getPocketBaseAuthToken()) {
+    return { ok: false, error: 'Sign in to download server backup' }
   }
 
   const organizationId = getCurrentOrganizationId()
-  const endpoint = organizationId
-    ? `/api/backups/trigger?organizationId=${encodeURIComponent(organizationId)}`
-    : '/api/backups/trigger'
+  if (!organizationId) {
+    return { ok: false, error: 'No organization selected' }
+  }
 
+  const endpoint = `/api/backups/trigger?organizationId=${encodeURIComponent(organizationId)}`
   const res = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'x-api-secret': secret },
+    headers: getAuthFetchHeaders(),
   })
 
   if (!res.ok) {
@@ -71,14 +68,13 @@ export async function triggerServerBackup(): Promise<{ ok: boolean; error?: stri
 }
 
 export async function runNotificationsCheck(): Promise<{ ok: boolean; error?: string; created?: number }> {
-  const secret = getInternalApiSecret()
-  if (!secret) {
-    return { ok: false, error: 'Requires NEXT_PUBLIC_INTERNAL_API_SECRET' }
+  if (!getPocketBaseAuthToken()) {
+    return { ok: false, error: 'Sign in to run notifications' }
   }
 
   const res = await fetch('/api/cron/notifications', {
     method: 'POST',
-    headers: { 'x-api-secret': secret },
+    headers: getAuthFetchHeaders(),
   })
   const data = await res.json()
   if (!res.ok) return { ok: false, error: data.error ?? 'Cron failed' }

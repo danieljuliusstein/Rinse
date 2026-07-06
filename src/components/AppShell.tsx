@@ -64,11 +64,15 @@ function QuickActionOverlays() {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, isPlatformAdmin } = useAuth()
   const isPortal = pathname.startsWith('/portal')
   const isBook = pathname.startsWith('/book/')
   const isEmbed = pathname.startsWith('/embed/')
   const isDemo = pathname.startsWith('/demo')
+  const isAdminPath = pathname.startsWith('/admin')
+  const isAdminDemo = pathname.startsWith('/demo/admin-dashboard')
+  const isAdminLane = isPlatformAdmin
+  const isAdminConsole = isAdminLane || isAdminPath || isAdminDemo
   const isSettings = pathname.startsWith('/settings') || pathname === '/privacy'
   const isAuthFlow =
     pathname === '/auth' ||
@@ -77,7 +81,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname === '/onboarding' ||
     pathname.startsWith('/auth/')
   const isPublicClient = isPortal || isBook || isEmbed
-  const showOperatorChrome = !isPublicClient && !isAuthFlow && !isDemo
+  const showOperatorChrome = !isPublicClient && !isAuthFlow && !isDemo && !isAdminLane
   const showProductTour = showOperatorChrome && isLoggedIn
 
   const shellClass = [
@@ -87,6 +91,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     isEmbed ? 'app-shell--embed' : '',
     isSettings ? 'app-shell--settings' : '',
     isAuthFlow ? 'app-shell--auth-flow' : '',
+    isAdminConsole ? 'app-shell--admin-demo' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -112,17 +117,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               Skip to content
             </a>
           ) : null}
-          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <SubscriptionLapsedBanner /> : null}
-          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <TrialPlanBadge /> : null}
-          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo ? <DemoModeBadge /> : null}
-          {!isPublicClient && !isAuthFlow && isLoggedIn ? <PwaInstallBanner /> : null}
+          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo && !isAdminLane ? <SubscriptionLapsedBanner /> : null}
+          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo && !isAdminLane ? <TrialPlanBadge /> : null}
+          {!isPublicClient && !isAuthFlow && isLoggedIn && !isDemo && !isAdminLane ? <DemoModeBadge /> : null}
+          {!isPublicClient && !isAuthFlow && isLoggedIn && !isAdminConsole ? <PwaInstallBanner /> : null}
           <main id="main-content" className="app-shell__main" tabIndex={-1}>
             {children}
           </main>
-          {!isDemo ? <BottomNav /> : null}
+          {!isDemo && !isAdminLane ? <BottomNav /> : null}
           {showProductTour ? <ProductTour /> : null}
           {showProductTour ? <RinseTourHost onTourEnd={handleTourFinished} /> : null}
-          {!isPublicClient && !isDemo && <QuickActionOverlays />}
+          {!isPublicClient && !isDemo && !isAdminLane && <QuickActionOverlays />}
         </div>
         </DetailOverlayProvider>
         </PaywallGateProvider>

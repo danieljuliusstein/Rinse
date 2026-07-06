@@ -96,7 +96,11 @@ export function operatorCreateRoutes(): string[] {
 }
 
 export function operatorMiscRoutes(): string[] {
-  return ['/admin', '/onboarding?step=business']
+  return ['/onboarding?step=business']
+}
+
+export function adminSmokeRoutes(): string[] {
+  return ['/admin', '/admin?view=orgs', '/admin?view=account']
 }
 
 export function operatorDynamicRoutes(ids: DemoIds, manifest: DemoManifest): string[] {

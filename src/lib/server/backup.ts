@@ -1,3 +1,5 @@
+import type PocketBase from 'pocketbase'
+import { logAuditEvent } from './audit-log'
 import { authenticateServerPocketBase } from './pocketbase-admin'
 
 const COLLECTIONS = [
@@ -23,8 +25,11 @@ export interface BackupPayload {
   collections: Record<string, unknown[]>
 }
 
-export async function createPocketBaseBackup(organizationId?: string): Promise<BackupPayload> {
-  const pb = await authenticateServerPocketBase()
+export async function createPocketBaseBackup(
+  organizationId?: string,
+  existingPb?: PocketBase,
+): Promise<BackupPayload> {
+  const pb = existingPb ?? (await authenticateServerPocketBase())
   const collections: Record<string, unknown[]> = {}
   const orgFilter = organizationId ? `organization_id = "${organizationId}"` : undefined
 
@@ -53,10 +58,7 @@ export async function createPocketBaseBackup(organizationId?: string): Promise<B
   return payload
 }
 
-async function updateLastBackupAt(
-  pb: Awaited<ReturnType<typeof authenticateServerPocketBase>>,
-  organizationId: string,
-) {
+async function updateLastBackupAt(pb: PocketBase, organizationId: string) {
   try {
     const records = await pb.collection('app_settings').getFullList({
       filter: `organization_id = "${organizationId}"`,
@@ -69,4 +71,12 @@ async function updateLastBackupAt(
   } catch {
     // app_settings may not exist yet
   }
+}
+
+export function logAdminBackupTrigger(input: {
+  authPath: 'platform_admin_jwt' | 'internal_api_secret'
+  actor: string
+  scope: 'all'
+}) {
+  logAuditEvent('admin_backup_triggered', input)
 }

@@ -789,6 +789,18 @@
   margin-bottom: 16px;
 }
 
+.weather-readiness-row--skeleton {
+  pointer-events: none;
+}
+
+.weather-readiness-skeleton__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .weather-readiness__list {
   list-style: none;
   margin: 0;

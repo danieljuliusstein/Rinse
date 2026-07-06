@@ -41,6 +41,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/embed/:path*',
+        // Enforcing — allows customer sites to iframe the widget (Report-Only frame-ancestors is stricter in middleware).
         headers: [{ key: 'Content-Security-Policy', value: 'frame-ancestors *' }],
       },
       {

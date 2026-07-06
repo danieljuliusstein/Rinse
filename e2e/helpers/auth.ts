@@ -17,6 +17,18 @@ export function getE2ECredentials(): { email: string; password: string } {
   return creds()
 }
 
+export function getAdminCredentials(): { email: string; password: string } {
+  return {
+    email: (process.env.PLATFORM_ADMIN_ACCOUNT_EMAIL ?? 'admin@rinsehq.com').trim().toLowerCase(),
+    password: (process.env.PLATFORM_ADMIN_ACCOUNT_PASSWORD ?? '').trim(),
+  }
+}
+
+export function hasAdminCredentials(): boolean {
+  const { password } = getAdminCredentials()
+  return Boolean(pbUrl() && password.length >= 8)
+}
+
 export function hasE2ECredentials(): boolean {
   return Boolean(pbUrl())
 }
@@ -48,6 +60,31 @@ export async function authenticateWithPocketBase(
   if (!response.ok()) {
     const body = await response.text()
     throw new Error(`PocketBase login failed (${response.status()}): ${body}`)
+  }
+
+  const data = (await response.json()) as { token: string; record: Record<string, unknown> }
+  return { token: data.token, record: data.record }
+}
+
+export async function authenticateAdminWithPocketBase(
+  request: APIRequestContext,
+): Promise<{ token: string; record: Record<string, unknown> }> {
+  const auth = getAdminCredentials()
+  const base = pbUrl()
+  if (!base) {
+    throw new Error('Set PB_URL or NEXT_PUBLIC_PB_URL in .env.local')
+  }
+  if (!auth.password) {
+    throw new Error('Set PLATFORM_ADMIN_ACCOUNT_PASSWORD in .env.local')
+  }
+
+  const response = await request.post(`${base}/api/collections/users/auth-with-password`, {
+    data: { identity: auth.email, password: auth.password },
+    timeout: API_TIMEOUT_MS,
+  })
+  if (!response.ok()) {
+    const body = await response.text()
+    throw new Error(`Platform admin login failed (${response.status()}): ${body}`)
   }
 
   const data = (await response.json()) as { token: string; record: Record<string, unknown> }

@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto'
+import type PocketBase from 'pocketbase'
 import { authenticateServerAdmin } from './pocketbase-admin'
 
 export type PortalScope = 'job' | 'photos' | 'invoice' | 'quote' | 'full'
@@ -25,10 +26,7 @@ function expiresAt(days = 90): string {
   return d.toISOString().slice(0, 10)
 }
 
-export async function resolveClientOrgId(
-  pb: Awaited<ReturnType<typeof authenticateServerAdmin>>,
-  clientId: string,
-): Promise<string> {
+export async function resolveClientOrgId(pb: PocketBase, clientId: string): Promise<string> {
   try {
     const client = await pb.collection('clients').getOne(clientId)
     const orgId = String(client.organization_id ?? '')
@@ -71,8 +69,10 @@ export async function createPortalToken(input: {
   jobId?: string
   quoteId?: string
   appBaseUrl?: string
+  /** User-scoped PB from JWT when the operator is authenticated (Wave 2). */
+  pb?: PocketBase
 }): Promise<{ token: string; url: string; expiresAt: string; id: string }> {
-  const pb = await authenticateServerAdmin()
+  const pb = input.pb ?? (await authenticateServerAdmin())
   const token = generateToken()
   const exp = expiresAt()
   const organizationId = await resolveClientOrgId(pb, input.clientId)
@@ -100,6 +100,7 @@ export async function createPortalToken(input: {
   }
 }
 
+/** Public portal routes — no user JWT; superuser read for token lookup. */
 export async function validatePortalToken(token: string): Promise<PortalTokenRecord | null> {
   if (!token || token.length < 16) return null
 

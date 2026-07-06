@@ -2,30 +2,43 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { fetchPlatformAdminAccess } from '@/lib/admin-api'
 import { resetBackend, syncOnReconnect } from '@/lib/api'
 import { clearLocalDeviceDataSync } from '@/lib/clear-local-data'
-import {
-  authenticatePocketBase,
-  clearPocketBaseAuth,
-  isPocketBaseAuthenticated,
-} from '@/lib/pb-auth'
-import { getCurrentOrganizationId } from '@/lib/tenant'
-import { getPocketBase } from '@/lib/pocketbase'
-import { isSubscriptionActive, type OrgSubscription } from '@/lib/subscription'
 import {
   needsOnboarding,
   onboardingStepUrl,
   resolveOnboardingStep,
 } from '@/lib/onboarding'
+import {
+  authenticatePocketBase,
+  clearPocketBaseAuth,
+  isPocketBaseAuthenticated,
+} from '@/lib/pb-auth'
+import { getPocketBase } from '@/lib/pocketbase'
+import {
+  ADMIN_AUTH,
+  ADMIN_HOME,
+  isAdminAllowedPath,
+  resolveGuestRedirect,
+  resolveLogoutHref,
+  resolvePostAuthHome,
+} from '@/lib/route-lanes'
+import { getCurrentOrganizationId } from '@/lib/tenant'
+import { isSubscriptionActive, type OrgSubscription } from '@/lib/subscription'
+
+export type LogoutLane = 'admin' | 'operator'
 
 interface AuthContextValue {
   isLoggedIn: boolean
   isAuthenticated: boolean
+  isPlatformAdmin: boolean
+  platformAdminLoading: boolean
   needsOnboarding: boolean
   subscriptionLapsed: boolean
   subscriptionLoading: boolean
   refreshOnboardingGate: () => Promise<boolean>
-  logout: () => void
+  logout: (options?: { lane?: LogoutLane }) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -33,6 +46,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 function isPublicPath(pathname: string): boolean {
   return (
     pathname === '/auth' ||
+    pathname === ADMIN_AUTH ||
     pathname === '/welcome' ||
     pathname === '/intro' ||
     pathname === '/privacy' ||
@@ -81,6 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   void authTick
 
   const isLoggedIn = mounted && isPocketBaseAuthenticated()
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
+  const [platformAdminLoading, setPlatformAdminLoading] = useState(false)
   const [needsOnboardingState, setNeedsOnboardingState] = useState(false)
   const [subscriptionLapsed, setSubscriptionLapsed] = useState(false)
   const [subscriptionLoading, setSubscriptionLoading] = useState(true)
@@ -89,7 +105,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isOnboardingRoute = isOnboardingPath(pathname)
 
   useEffect(() => {
-    if (!mounted || !isLoggedIn) return
+    if (!mounted || !isLoggedIn) {
+      setIsPlatformAdmin(false)
+      setPlatformAdminLoading(false)
+      return
+    }
+    let cancelled = false
+    setPlatformAdminLoading(true)
+    void (async () => {
+      try {
+        const admin = await fetchPlatformAdminAccess()
+        if (!cancelled) setIsPlatformAdmin(admin)
+      } catch {
+        if (!cancelled) setIsPlatformAdmin(false)
+      } finally {
+        if (!cancelled) setPlatformAdminLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, isLoggedIn, authTick])
+
+  useEffect(() => {
+    if (!mounted || !isLoggedIn || isPlatformAdmin || platformAdminLoading) return
     let cancelled = false
     void (async () => {
       try {
@@ -112,10 +151,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [mounted, isLoggedIn, pathname, router])
+  }, [mounted, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname, router])
 
   useEffect(() => {
-    if (!mounted || !isLoggedIn || isPublicPath(pathname) || isOnboardingPath(pathname)) {
+    if (
+      !mounted ||
+      !isLoggedIn ||
+      isPlatformAdmin ||
+      platformAdminLoading ||
+      isPublicPath(pathname) ||
+      isOnboardingPath(pathname)
+    ) {
       setSubscriptionLapsed(false)
       setSubscriptionLoading(false)
       return
@@ -151,48 +197,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [mounted, isLoggedIn, pathname])
+  }, [mounted, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname])
 
   useEffect(() => {
     if (!ready || isLoggedIn) return
     if (isPublicRoute) return
+    const adminGuestRedirect = resolveGuestRedirect(pathname)
+    if (adminGuestRedirect) {
+      safeReplace(router, adminGuestRedirect)
+      return
+    }
     safeReplace(router, '/welcome')
   }, [ready, isLoggedIn, router, isPublicRoute, pathname])
 
   useEffect(() => {
-    if (!ready || !isLoggedIn || pathname !== '/welcome') return
-    safeReplace(router, '/')
-  }, [ready, isLoggedIn, pathname, router])
+    if (!ready || !isLoggedIn || platformAdminLoading) return
+    if (pathname !== '/welcome' && pathname !== '/auth' && pathname !== ADMIN_AUTH) return
+    const home = resolvePostAuthHome(isPlatformAdmin)
+    if (pathname === '/welcome' || pathname === '/auth' || pathname === ADMIN_AUTH) {
+      if (pathname === '/auth' && !isPlatformAdmin && needsOnboardingState) {
+        safeReplace(router, onboardingStepUrl('business'))
+        return
+      }
+      safeReplace(router, home)
+    }
+  }, [
+    ready,
+    isLoggedIn,
+    isPlatformAdmin,
+    platformAdminLoading,
+    needsOnboardingState,
+    pathname,
+    router,
+  ])
+
+  useEffect(() => {
+    if (!ready || !isLoggedIn || !isPlatformAdmin || platformAdminLoading) return
+    if (isAdminAllowedPath(pathname)) return
+    safeReplace(router, ADMIN_HOME)
+  }, [ready, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname, router])
 
   const syncPocketBaseInBackground = useCallback(() => {
     void (async () => {
       try {
         await authenticatePocketBase()
-        await syncOnReconnect()
+        if (!isPlatformAdmin) {
+          await syncOnReconnect()
+        }
       } catch {
         // fall back to local data
       } finally {
         resetBackend()
       }
     })()
-  }, [])
+  }, [isPlatformAdmin])
 
   useEffect(() => {
-    if (!ready || !isLoggedIn) return
+    if (!ready || !isLoggedIn || platformAdminLoading) return
     const timer = window.setTimeout(() => {
       syncPocketBaseInBackground()
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [ready, isLoggedIn, syncPocketBaseInBackground])
-
-  useEffect(() => {
-    if (!ready || !isLoggedIn || pathname !== '/auth') return
-    if (needsOnboardingState) {
-      safeReplace(router, onboardingStepUrl('business'))
-      return
-    }
-    safeReplace(router, '/')
-  }, [ready, isLoggedIn, needsOnboardingState, pathname, router])
+  }, [ready, isLoggedIn, platformAdminLoading, syncPocketBaseInBackground])
 
   const refreshOnboardingGate = useCallback(async (): Promise<boolean> => {
     try {
@@ -207,17 +273,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const logout = useCallback(() => {
-    clearPocketBaseAuth()
-    void clearLocalDeviceDataSync()
-    resetBackend()
-    bumpAuth()
-    safeReplace(router, '/welcome')
-  }, [router, bumpAuth])
+  const logout = useCallback(
+    (options?: { lane?: LogoutLane }) => {
+      const lane = options?.lane ?? (isPlatformAdmin ? 'admin' : 'operator')
+      clearPocketBaseAuth()
+      void clearLocalDeviceDataSync()
+      resetBackend()
+      setIsPlatformAdmin(false)
+      bumpAuth()
+      safeReplace(router, resolveLogoutHref(lane === 'admin'))
+    },
+    [router, bumpAuth, isPlatformAdmin],
+  )
 
   const contextValue: AuthContextValue = {
     isLoggedIn,
     isAuthenticated: isLoggedIn,
+    isPlatformAdmin,
+    platformAdminLoading,
     needsOnboarding: needsOnboardingState,
     subscriptionLapsed,
     subscriptionLoading,
@@ -228,8 +301,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const needsGuestRedirect = !isLoggedIn && !isPublicRoute
   const showBlockingRedirect =
     !ready ||
+    (isLoggedIn && platformAdminLoading) ||
     needsGuestRedirect ||
-    (isLoggedIn && needsOnboardingState && !isOnboardingRoute && !isPublicRoute)
+    (isLoggedIn &&
+      !isPlatformAdmin &&
+      needsOnboardingState &&
+      !isOnboardingRoute &&
+      !isPublicRoute)
 
   return (
     <AuthContext.Provider value={contextValue}>

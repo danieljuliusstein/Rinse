@@ -136,7 +136,7 @@ export async function smokeVisitAdmin(page: Page): Promise<void> {
   expect(page.url()).not.toContain('/auth')
 
   await expect(
-    page.locator('.admin-page, .legal-page, .settings-screen--loading').first(),
+    page.locator('.admin-root, .admin-page, .legal-page, .settings-screen--loading').first(),
   ).toBeVisible({ timeout: 15_000 })
   assertNoUnexpectedErrors(pageErrors, '/admin')
 }

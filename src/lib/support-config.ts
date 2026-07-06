@@ -93,6 +93,39 @@ export function getSupportEmail(): string | null {
   return email && email.includes('@') ? email : null
 }
 
+function domainFromSupportEmail(): string | null {
+  const support = getSupportEmail()
+  if (!support) return null
+  const domain = support.split('@')[1]?.trim()
+  return domain || null
+}
+
+function getPublicEmail(envKey: string, localPart: string): string | null {
+  const explicit = process.env[envKey]?.trim()
+  if (explicit && explicit.includes('@')) return explicit
+  const domain = domainFromSupportEmail()
+  return domain ? `${localPart}@${domain}` : null
+}
+
+/** Billing questions — defaults to billing@ on the support email domain. */
+export function getBillingEmail(): string | null {
+  return getPublicEmail('NEXT_PUBLIC_BILLING_EMAIL', 'billing')
+}
+
+/** Privacy / data requests — defaults to privacy@ on the support email domain. */
+export function getPrivacyEmail(): string | null {
+  return getPublicEmail('NEXT_PUBLIC_PRIVACY_EMAIL', 'privacy')
+}
+
+function buildMailto(email: string | null, options: { subject: string; body?: string }): string | null {
+  if (!email) return null
+  const params = new URLSearchParams()
+  if (options.subject) params.set('subject', options.subject)
+  if (options.body) params.set('body', options.body)
+  const query = params.toString()
+  return `mailto:${email}${query ? `?${query}` : ''}`
+}
+
 export interface SupportDebugInput {
   backend: string
   origin: string
@@ -120,14 +153,7 @@ export function buildSupportMailto(options: {
   subject: string
   body?: string
 }): string | null {
-  const email = getSupportEmail()
-  if (!email) return null
-
-  const params = new URLSearchParams()
-  if (options.subject) params.set('subject', options.subject)
-  if (options.body) params.set('body', options.body)
-  const query = params.toString()
-  return `mailto:${email}${query ? `?${query}` : ''}`
+  return buildMailto(getSupportEmail(), options)
 }
 
 export function buildContactMailto(): string | null {
@@ -139,4 +165,12 @@ export function buildBugReportMailto(debugInfo: string): string | null {
     subject: `${APP_DISPLAY_NAME} support request`,
     body: `${debugInfo}\n\nDescribe the issue:\n`,
   })
+}
+
+export function buildBillingMailto(): string | null {
+  return buildMailto(getBillingEmail(), { subject: `${APP_DISPLAY_NAME} billing` })
+}
+
+export function buildPrivacyMailto(): string | null {
+  return buildMailto(getPrivacyEmail(), { subject: `${APP_DISPLAY_NAME} privacy request` })
 }

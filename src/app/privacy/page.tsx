@@ -1,12 +1,19 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
+import {
+  buildPrivacyMailto,
+  getPrivacyEmail,
+} from '@/lib/support-config'
+
 export const metadata: Metadata = {
   title: 'Privacy Policy',
 }
 
 export default function PrivacyPage() {
   const updated = 'June 25, 2026'
+  const privacyEmail = getPrivacyEmail()
+  const privacyMailto = buildPrivacyMailto()
 
   return (
     <div className="screen page-content legal-page client-light-root">
@@ -88,8 +95,18 @@ export default function PrivacyPage() {
         <section>
           <h2>Contact</h2>
           <p>
-            Questions about this policy or your data? Email the address listed in your business
-            settings or contact your app administrator.
+            Questions about this policy or your data?{' '}
+            {privacyMailto && privacyEmail ? (
+              <>
+                Email{' '}
+                <a href={privacyMailto} className="portal-contact-link">
+                  {privacyEmail}
+                </a>
+                .
+              </>
+            ) : (
+              <>Contact your detailer or the address listed in your business settings.</>
+            )}
           </p>
         </section>
       </div>

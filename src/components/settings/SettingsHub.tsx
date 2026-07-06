@@ -196,18 +196,20 @@ export default function SettingsHub() {
             )}
           </SectionGroup>
         ) : (
-          SETTINGS_MENU_GROUPS.map((group) => {
-            const items = SETTINGS_MENU_ITEMS.filter((item) => item.group === group.id)
-            if (items.length === 0) return null
+          <>
+            {SETTINGS_MENU_GROUPS.map((group) => {
+              const items = SETTINGS_MENU_ITEMS.filter((item) => item.group === group.id)
+              if (items.length === 0) return null
 
-            return (
-              <SectionGroup key={group.id} title={group.label}>
-                {items.map((item) =>
-                  hubRowFromItem(item, navigate, profileCompletion, hasUnviewed, unlockedCount),
-                )}
-              </SectionGroup>
-            )
-          })
+              return (
+                <SectionGroup key={group.id} title={group.label}>
+                  {items.map((item) =>
+                    hubRowFromItem(item, navigate, profileCompletion, hasUnviewed, unlockedCount),
+                  )}
+                </SectionGroup>
+              )
+            })}
+          </>
         )}
       </div>
 

@@ -21,7 +21,7 @@ const PB_URL = (process.env.PB_URL || process.env.NEXT_PUBLIC_PB_URL || '').repl
 const APP_URL = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://127.0.0.1:3000').replace(/\/$/, '')
 const EMAIL = process.env.PB_EMAIL || process.env.NEXT_PUBLIC_PB_EMAIL
 const PASSWORD = process.env.PB_PASSWORD || process.env.NEXT_PUBLIC_PB_PASSWORD
-const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || process.env.NEXT_PUBLIC_INTERNAL_API_SECRET
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET
 
 async function pbAuth() {
   const res = await fetch(`${PB_URL}/api/collections/users/auth-with-password`, {

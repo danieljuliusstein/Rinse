@@ -18,7 +18,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const limited = enforceRateLimit(`invoice-send:${auth.userId}`, RATE_LIMITS.sendEmail)
+  const limited = await enforceRateLimit(
+    `invoice-send:${auth.userId}`,
+    RATE_LIMITS.sendEmail,
+    'send-email',
+  )
   if (limited) return limited
 
   const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)

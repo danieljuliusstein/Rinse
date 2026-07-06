@@ -1,5 +1,6 @@
 import { pocketBaseLogoFilename } from '../business-logo'
 import { authenticateServerAdmin } from './pocketbase-admin'
+import { portalScopeAllowsPhotos } from './portal-scope'
 import type { PortalScope, PortalTokenRecord } from './portal-tokens'
 
 export interface PortalPhoto {
@@ -236,7 +237,7 @@ export async function streamPortalPhoto(
 ): Promise<{ bytes: ArrayBuffer; contentType: string } | null> {
   const { validatePortalToken } = await import('./portal-tokens')
   const record = await validatePortalToken(token)
-  if (!record?.job_id) return null
+  if (!record?.job_id || !portalScopeAllowsPhotos(record.scope)) return null
 
   const pb = await authenticateServerAdmin()
   const job = await pb.collection('jobs').getOne(record.job_id)

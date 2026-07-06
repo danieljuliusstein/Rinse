@@ -18,6 +18,11 @@ import {
   buildTodayJobCard,
 } from '@/lib/home-dashboard'
 import { computeMilestoneState, hasUnviewedMilestones } from '@/lib/milestones'
+import { fetchWeatherReadiness } from '@/lib/weather-readiness-client'
+import {
+  buildWeatherReadinessFetchKey,
+  setWeatherReadinessCache,
+} from '@/lib/weather-readiness-cache'
 import type { Invoice, JobWithRelations, LeadWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
 
 export default function HomePage() {
@@ -32,6 +37,7 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false
+    const weatherPromise = fetchWeatherReadiness()
 
     Promise.all([
       getDashboardData(),
@@ -47,6 +53,10 @@ export default function HomePage() {
         setJobs(allJobs)
         setLeads(allLeads)
         setInvoices(allInvoices)
+
+        void weatherPromise.then((result) => {
+          setWeatherReadinessCache(buildWeatherReadinessFetchKey(allJobs), result)
+        })
 
         const today = data.weekDays.find((d) => d.isToday)?.date ?? data.weekDays[0]?.date ?? ''
         if (today) {

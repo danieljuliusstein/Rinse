@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Car, ChatCircle, Funnel, Gear, Trophy } from '@phosphor-icons/react'
 import ArSummaryCard from '@/components/business/ArSummaryCard'
@@ -11,7 +11,7 @@ import InventoryAlertCard from '@/components/home/InventoryAlertCard'
 import ProfileCompleteCard from '@/components/home/ProfileCompleteCard'
 import TodayJobCard from '@/components/home/TodayJobCard'
 import WeatherReadinessCard from '@/components/home/WeatherReadinessCard'
-import { Badge, ListRow, MonthCarousel, SectionGroup } from '@/components/ui'
+import { Badge, ListRow, MonthCarousel, SectionGroup, WeatherReadinessSkeleton } from '@/components/ui'
 import TrialExpiryBanner from '@/components/TrialExpiryBanner'
 import { useOrgSubscription } from '@/hooks/useOrgSubscription'
 import { useProfileCompletion } from '@/hooks/useProfileCompletion'
@@ -34,16 +34,13 @@ import { loadSentMessagesAsync } from '@/lib/messages'
 import { loadSettingsAsync } from '@/lib/settings'
 import { fetchWeatherReadiness } from '@/lib/weather-readiness-client'
 import {
+  buildWeatherReadinessFetchKey,
+  getFreshWeatherReadinessCache,
   peekWeatherReadinessCache,
+  peekWeatherReadinessCacheForPaint,
   setWeatherReadinessCache,
 } from '@/lib/weather-readiness-cache'
-import {
-  isWeatherReadinessActiveJob,
-  isWeatherSensitiveJob,
-  isoDate,
-  nextThreeDayDates,
-  type WeatherReadinessResult,
-} from '@/lib/weather-risk'
+import type { WeatherReadinessResult } from '@/lib/weather-risk'
 import type { Invoice, JobWithRelations, LeadWithRelations, RecentJobRow, WeekDay } from '@/lib/types'
 
 function formatHeaderCount(n: number): string {
@@ -96,8 +93,6 @@ export default function Dashboard({
   const { showTrialBanner, daysLeft } = useOrgSubscription()
   const [trialDismissed, setTrialDismissed] = useState(() => isTrialBannerDismissed())
   const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
-  const [weatherReadiness, setWeatherReadiness] = useState<WeatherReadinessResult | null>(null)
-  const [weatherFromCache, setWeatherFromCache] = useState(false)
   const [messageCount, setMessageCount] = useState(0)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null)
   const profileCompletion = useProfileCompletion()
@@ -108,21 +103,11 @@ export default function Dashboard({
     [todayJobRows, todayJob],
   )
   const arSummary = useMemo(() => computeArSummary(invoices), [invoices])
-  const weatherFetchKey = useMemo(() => {
-    const today = isoDate(new Date())
-    const window = new Set(nextThreeDayDates())
-    const jobKey = jobs
-      .filter(
-        (j) =>
-          isWeatherReadinessActiveJob(j) &&
-          isWeatherSensitiveJob(j) &&
-          window.has(j.date),
-      )
-      .map((j) => `${j.id}:${j.date}`)
-      .sort()
-      .join('|')
-    return `${today}|${jobKey}`
-  }, [jobs])
+  const weatherFetchKey = useMemo(() => buildWeatherReadinessFetchKey(jobs), [jobs])
+  const [weatherReadiness, setWeatherReadiness] = useState<WeatherReadinessResult | null>(() =>
+    peekWeatherReadinessCacheForPaint(buildWeatherReadinessFetchKey(jobs)),
+  )
+  const [weatherFromCache, setWeatherFromCache] = useState(() => weatherReadiness !== null)
   const invoiceMonthCarousel = useMemo(
     () => (isLoggedOut ? [] : buildInvoiceMonthCarouselItems(invoices)),
     [invoices, isLoggedOut],
@@ -164,32 +149,36 @@ export default function Dashboard({
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
-  useLayoutEffect(() => {
-    if (isLoggedOut || !isHomeModuleEnabled(homeModules, 'job_readiness')) return
-    const cached = peekWeatherReadinessCache(weatherFetchKey)
-    if (cached) {
-      setWeatherReadiness(cached)
-      setWeatherFromCache(true)
-    }
-  }, [isLoggedOut, homeModules, weatherFetchKey])
-
   useEffect(() => {
     if (isLoggedOut || !isHomeModuleEnabled(homeModules, 'job_readiness')) {
       return
     }
+
+    const fresh = getFreshWeatherReadinessCache(weatherFetchKey)
+    if (fresh) {
+      setWeatherReadiness(fresh)
+      setWeatherFromCache(true)
+      return
+    }
+
+    const stale = peekWeatherReadinessCacheForPaint(weatherFetchKey)
+    if (stale) {
+      setWeatherReadiness(stale)
+      setWeatherFromCache(true)
+    }
+
     let alive = true
     void fetchWeatherReadiness()
       .then((result) => {
         if (!alive) return
         setWeatherReadinessCache(weatherFetchKey, result)
         setWeatherReadiness(result)
-        setWeatherFromCache(false)
+        setWeatherFromCache(true)
       })
       .catch(() => {
         if (!alive) return
         if (!peekWeatherReadinessCache(weatherFetchKey)) {
           setWeatherReadiness({ status: 'unresolved', rows: [] })
-          setWeatherFromCache(false)
         }
       })
     return () => {
@@ -294,8 +283,12 @@ export default function Dashboard({
         <ArSummaryCard summary={arSummary} />
       ) : null}
 
-      {isHomeModuleEnabled(homeModules, 'job_readiness') && weatherReadiness ? (
-        <WeatherReadinessCard result={weatherReadiness} skipEnterAnimation={weatherFromCache} />
+      {isHomeModuleEnabled(homeModules, 'job_readiness') ? (
+        weatherReadiness ? (
+          <WeatherReadinessCard result={weatherReadiness} skipEnterAnimation={weatherFromCache} />
+        ) : (
+          <WeatherReadinessSkeleton />
+        )
       ) : null}
 
       {!isLoggedOut &&

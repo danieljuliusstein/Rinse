@@ -208,20 +208,22 @@ function dateOffset(days: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-export async function runAutoMessagesCron(): Promise<{ sent: number; failed: number; details: string[] }> {
-  const pb = await authenticateServerPocketBase()
-  const orgs = await pb.collection('organizations').getFullList({ limit: 200 })
+type AutoMessagesPb = Awaited<ReturnType<typeof authenticateServerPocketBase>>
+
+export async function runAutoMessagesCronForOrg(
+  organizationId: string,
+  existingPb?: AutoMessagesPb,
+): Promise<{ sent: number; failed: number; details: string[] }> {
+  const pb = existingPb ?? (await authenticateServerPocketBase())
   let sent = 0
   let failed = 0
-  const details: string[] = []
 
   const tomorrow = dateOffset(1)
   const yesterday = dateOffset(-1)
   const thirtyDaysAgo = dateOffset(-30)
   const today = dateOffset(0)
 
-  for (const org of orgs) {
-    const orgId = String(org.id)
+  const orgId = organizationId
     const templates = await loadAutoMessageTemplatesForOrg(orgId)
     const byId = Object.fromEntries(templates.map((t) => [t.id, t]))
 
@@ -335,6 +337,26 @@ export async function runAutoMessagesCron(): Promise<{ sent: number; failed: num
         else failed++
       }
     }
+
+  return {
+    sent,
+    failed,
+    details: [`Auto-messages (${orgId}): ${sent} sent, ${failed} failed/skipped`],
+  }
+}
+
+export async function runAutoMessagesCron(): Promise<{ sent: number; failed: number; details: string[] }> {
+  const pb = await authenticateServerPocketBase()
+  const orgs = await pb.collection('organizations').getFullList({ limit: 200 })
+  let sent = 0
+  let failed = 0
+  const details: string[] = []
+
+  for (const org of orgs) {
+    const orgResult = await runAutoMessagesCronForOrg(String(org.id), pb)
+    sent += orgResult.sent
+    failed += orgResult.failed
+    details.push(...orgResult.details)
   }
 
   details.push(`Auto-messages: ${sent} sent, ${failed} failed/skipped`)

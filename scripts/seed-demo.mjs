@@ -41,7 +41,7 @@ const PB_PASSWORD = process.env.PB_PASSWORD || process.env.NEXT_PUBLIC_PB_PASSWO
 const APP_URL = (process.env.APP_URL || 'http://127.0.0.1:3000').replace(/\/$/, '')
 const ORG_SLUG = (process.env.ORG_SLUG ?? 'atlas-detailing').trim()
 const INTERNAL_SECRET =
-  process.env.INTERNAL_API_SECRET || process.env.NEXT_PUBLIC_INTERNAL_API_SECRET
+  process.env.INTERNAL_API_SECRET
 const DEMO_BUSINESS_NAME = (process.env.DEMO_BUSINESS_NAME ?? 'Summit Mobile Detail').trim()
 const FORCE_DEMO_PHOTOS = process.env.FORCE_DEMO_PHOTOS === '1'
 

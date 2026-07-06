@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { logAuditEvent } from '@/lib/server/audit-log'
 import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
 import { getStripe, isStripeConfigured } from '@/lib/server/stripe'
 import type { PbRecord } from '@/lib/api/mappers'
@@ -57,6 +58,10 @@ export async function POST(request: Request) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
   if (!signature) {
+    logAuditEvent('webhook_reject', {
+      route: '/api/stripe/operator-webhook',
+      reason: 'missing_signature',
+    })
     return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
   }
 
@@ -64,6 +69,11 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (e) {
+    logAuditEvent('webhook_reject', {
+      route: '/api/stripe/operator-webhook',
+      reason: 'invalid_signature',
+      detail: e instanceof Error ? e.message : 'unknown',
+    })
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Invalid signature' },
       { status: 400 },

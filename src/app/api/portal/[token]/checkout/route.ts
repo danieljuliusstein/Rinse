@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { portalScopeAllowsCheckout } from '@/lib/server/portal-scope'
 import { validatePortalToken } from '@/lib/server/portal-tokens'
 import { authenticateServerPocketBase } from '@/lib/server/pocketbase-admin'
 import { resolveConnectDestination } from '@/lib/server/stripe-connect'
@@ -14,7 +15,15 @@ async function createPortalCheckout(request: Request, token: string): Promise<Ch
   }
 
   const record = await validatePortalToken(token)
-  if (!record?.job_id) {
+  if (!record) {
+    return { ok: false, error: 'Invalid link', status: 404 }
+  }
+
+  if (!portalScopeAllowsCheckout(record.scope)) {
+    return { ok: false, error: 'This link cannot be used for payment', status: 403 }
+  }
+
+  if (!record.job_id) {
     return { ok: false, error: 'Invalid link', status: 404 }
   }
 

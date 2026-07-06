@@ -16,7 +16,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const limited = enforceRateLimit(`account-delete:${auth.userId}`, RATE_LIMITS.accountDelete)
+  const limited = await enforceRateLimit(
+    `account-delete:${auth.userId}`,
+    RATE_LIMITS.accountDelete,
+    'account-delete',
+  )
   if (limited) return limited
 
   let body: { businessName?: string; confirmed?: boolean }

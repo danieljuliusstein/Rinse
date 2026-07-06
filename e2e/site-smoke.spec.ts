@@ -10,7 +10,6 @@ import {
 } from './helpers/routes'
 import { getOperatorSession } from './helpers/session'
 import {
-  smokeVisitAdmin,
   smokeVisitDemo,
   smokeVisitEmbed,
   smokeVisitOAuthCallback,
@@ -23,10 +22,6 @@ const manifest = loadDemoManifest()
 const manifestIds = manifest.ids ?? {}
 
 async function visitOperatorRoute(page: import('@playwright/test').Page, route: string): Promise<void> {
-  if (route === '/admin') {
-    await smokeVisitAdmin(page)
-    return
-  }
   if (route.startsWith('/onboarding')) {
     await smokeVisitOperator(page, route, { allowOnboardingRedirect: true })
     return
@@ -75,7 +70,7 @@ test.describe('Site smoke — portal', () => {
 
     const { portalPath } = await resolveE2EData(request, session)
     if (!portalPath) {
-      testInfo.skip(true, 'Could not create portal token — set INTERNAL_API_SECRET and run dev server')
+      testInfo.skip(true, 'Could not create portal token — sign in as operator and ensure demo job exists')
       return
     }
 

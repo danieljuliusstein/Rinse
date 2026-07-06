@@ -38,5 +38,20 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const pb = await authenticateServerAdmin()
   const updated = await pb.collection('organizations').update(id, payload)
-  return NextResponse.json({ org: updated })
+  return NextResponse.json({
+    org: {
+      id: updated.id,
+      name: String(updated.name ?? ''),
+      slug: String(updated.slug ?? ''),
+      plan: String(updated.plan ?? ''),
+      subscription_status: String(updated.subscription_status ?? 'none'),
+      trial_ends_at: updated.trial_ends_at ? String(updated.trial_ends_at) : null,
+      current_period_end: updated.current_period_end ? String(updated.current_period_end) : null,
+      founding_member: updated.founding_member === true,
+      booking_enabled: updated.booking_enabled !== false,
+      stripe_customer_id: updated.stripe_customer_id ? String(updated.stripe_customer_id) : null,
+      stripe_subscription_id: updated.stripe_subscription_id ? String(updated.stripe_subscription_id) : null,
+      created: updated.created,
+    },
+  })
 }

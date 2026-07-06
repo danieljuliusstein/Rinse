@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkRateLimit, RATE_LIMITS } from './rate-limit'
+import { checkRateLimit, checkRateLimitAsync, isUpstashRateLimitEnabled, RATE_LIMITS } from './rate-limit'
 
 describe('rate-limit', () => {
   it('allows requests under the limit', () => {
@@ -21,5 +21,13 @@ describe('rate-limit', () => {
   it('exposes preset configs', () => {
     expect(RATE_LIMITS.signup.limit).toBeGreaterThan(0)
     expect(RATE_LIMITS.publicBookingIp.windowMs).toBeGreaterThan(0)
+  })
+
+  it('falls back to in-memory when Upstash is not configured', async () => {
+    expect(isUpstashRateLimitEnabled()).toBe(false)
+    const key = `test-async-${Date.now()}`
+    const config = { limit: 1, windowMs: 60_000 }
+    expect((await checkRateLimitAsync(key, config, 'test')).ok).toBe(true)
+    expect((await checkRateLimitAsync(key, config, 'test')).ok).toBe(false)
   })
 })

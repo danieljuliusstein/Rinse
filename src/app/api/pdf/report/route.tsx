@@ -1,40 +1,34 @@
 import { NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import ReportPdfDocument from '@/components/pdf/ReportPdfDocument'
-import type { PLReport } from '@/lib/api/aggregates'
-import type { DateRangeKey } from '@/lib/api/reports'
 import { resolveInvoiceLogoDataUri } from '@/lib/invoice-logo-server'
-import { authenticateRequestUser } from '@/lib/server/request-auth'
-import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 import { plProgressPeriodLabel } from '@/lib/reports-metrics'
+import { PdfDataError, fetchReportPdfData } from '@/lib/server/pdf-data'
+import { parseJsonBody } from '@/lib/server/parse-body'
+import { requireUser } from '@/lib/server/route-guard'
+import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
+import { pdfReportBodySchema } from '@/lib/validation/api-schemas'
 
 export async function POST(request: Request) {
-  const auth = await authenticateRequestUser(request)
-  if (!auth) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireUser(request)
+  if (auth instanceof Response) return auth
 
   const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
   if (premiumDenied) return premiumDenied
 
+  const parsed = await parseJsonBody(request, pdfReportBodySchema)
+  if (parsed instanceof NextResponse) return parsed
+  const { range } = parsed.data
+
   try {
-    const body = await request.json()
-    const report = body.report as PLReport | undefined
-    const range = body.range as DateRangeKey | undefined
-    const businessName = (body.businessName as string | undefined) ?? 'Detailing Report'
-    const logoUrl = typeof body.logoUrl === 'string' ? body.logoUrl : undefined
-
-    if (!report || !range) {
-      return NextResponse.json({ error: 'Missing report data' }, { status: 400 })
-    }
-
+    const { report, settings } = await fetchReportPdfData(auth.pb, auth.organizationId, range)
     const periodLabel = plProgressPeriodLabel(range)
-    const logoDataUri = await resolveInvoiceLogoDataUri(logoUrl)
+    const logoDataUri = await resolveInvoiceLogoDataUri(settings.logo_url)
     const buffer = await renderToBuffer(
       <ReportPdfDocument
         report={report}
         periodLabel={periodLabel}
-        businessName={businessName}
+        businessName={settings.business_name || 'Detailing Report'}
         logoDataUri={logoDataUri ?? undefined}
       />
     )
@@ -49,6 +43,9 @@ export async function POST(request: Request) {
       },
     })
   } catch (err) {
+    if (err instanceof PdfDataError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
     console.error('[api/pdf/report]', err)
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'PDF generation failed' },

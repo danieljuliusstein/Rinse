@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const limited = enforceRateLimit(`push:${auth.userId}`, RATE_LIMITS.pushSubscribe)
+  const limited = await enforceRateLimit(`push:${auth.userId}`, RATE_LIMITS.pushSubscribe, 'push-subscribe')
   if (limited) return limited
 
   try {

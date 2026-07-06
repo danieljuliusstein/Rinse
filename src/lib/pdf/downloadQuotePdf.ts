@@ -1,13 +1,12 @@
-import type { AppSettings } from '@/lib/settings'
 import type { QuoteWithRelations } from '@/lib/types'
 import { handleApiResponsePremiumGate, PREMIUM_REQUIRED_MESSAGE } from '@/lib/premium-api'
 import { getAuthFetchHeaders } from '@/lib/pb-auth'
 
-export async function downloadQuotePdf(quote: QuoteWithRelations, settings: AppSettings): Promise<void> {
+export async function downloadQuotePdf(quote: QuoteWithRelations, _settings?: unknown): Promise<void> {
   const res = await fetch('/api/pdf/quote', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthFetchHeaders() },
-    body: JSON.stringify({ quote, settings }),
+    body: JSON.stringify({ quoteId: quote.id }),
   })
   if (!res.ok) {
     if (await handleApiResponsePremiumGate(res)) {

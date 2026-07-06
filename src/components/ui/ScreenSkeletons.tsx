@@ -126,6 +126,31 @@ export function HomeScreenSkeleton() {
   )
 }
 
+export function WeatherReadinessSkeleton() {
+  return (
+    <section
+      className="weather-readiness weather-readiness--skeleton"
+      aria-label="Job readiness"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <p className="sec">Job readiness</p>
+      <ul className="weather-readiness__list">
+        {[0, 1].map((i) => (
+          <li key={i} className="weather-readiness-row weather-readiness-row--skeleton" aria-hidden>
+            <Skeleton width={26} height={26} radius="50%" stagger={i * 3} />
+            <div className="weather-readiness-skeleton__body">
+              <Skeleton width="72%" height={14} radius={6} stagger={i * 3 + 1} />
+              <Skeleton width="48%" height={11} radius={5} stagger={i * 3 + 2} />
+            </div>
+            <Skeleton width={68} height={22} radius={999} stagger={i * 3 + 1} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 export function InlineScreenSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="skeleton-screen skeleton-screen--inline" role="status" aria-live="polite">

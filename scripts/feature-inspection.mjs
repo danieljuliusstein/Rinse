@@ -16,7 +16,7 @@ if (existsSync(envPath)) {
 const APP = env.APP_URL || 'http://127.0.0.1:3000'
 const PB = env.PB_URL || env.NEXT_PUBLIC_PB_URL || 'http://127.0.0.1:8090'
 const FLY_PB = 'https://detailing-pb.fly.dev'
-const SECRET = env.INTERNAL_API_SECRET || env.NEXT_PUBLIC_INTERNAL_API_SECRET
+const SECRET = env.INTERNAL_API_SECRET
 const EMAIL = env.PB_EMAIL || env.NEXT_PUBLIC_PB_EMAIL
 const PASSWORD = env.PB_PASSWORD || env.NEXT_PUBLIC_PB_PASSWORD
 

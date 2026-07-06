@@ -9,6 +9,7 @@ const ROUTES = [
   { href: '/intro', label: 'Intro onboarding (6 slides — production)' },
   { href: '/demo/setup-motion', label: 'Setup motion + UX lab' },
   { href: '/demo/delight-motion', label: 'Wave 55 — delight & depth QA' },
+  { href: '/demo/admin-dashboard', label: 'Platform admin dashboard (desktop mock)' },
 ]
 
 export default function DemoIndexPage() {

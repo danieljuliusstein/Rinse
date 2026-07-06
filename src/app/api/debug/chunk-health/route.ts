@@ -1,11 +1,13 @@
 import { readFileSync, statSync } from 'fs'
 import { join } from 'path'
 import { NextResponse } from 'next/server'
+import { apiUnauthorized, verifyApiSecret } from '@/lib/server/api-auth'
 
 const DEBUG_ENDPOINT = 'http://127.0.0.1:7501/ingest/f04eb7ba-425d-4857-bab2-4c1fd3627881'
 const SESSION_ID = '8503ec'
 
 function logDebug(payload: Record<string, unknown>) {
+  if (process.env.NODE_ENV === 'production') return
   // #region agent log
   fetch(DEBUG_ENDPOINT, {
     method: 'POST',
@@ -26,6 +28,8 @@ function parseCheck(source: string): { ok: boolean; error?: string } {
 }
 
 export async function GET(request: Request) {
+  if (!verifyApiSecret(request)) return apiUnauthorized()
+
   const distDir = process.env.NEXT_DIST_DIR ?? '.next'
   const layoutPath = join(process.cwd(), distDir, 'dev/static/chunks/app/layout.js')
   const origin = new URL(request.url).origin

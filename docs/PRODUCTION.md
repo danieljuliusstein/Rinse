@@ -2,6 +2,130 @@
 
 Use this when taking Atlas Detailing from local dev to a live operator + customer setup.
 
+## Security Wave 0 — CI & branch protection
+
+Automated checks live in `.github/workflows/`:
+
+| Workflow | Purpose |
+|----------|---------|
+| **CI** (`ci.yml`) | `npm ci`, `npm run build`, `npm test`, non-blocking `npm audit --production --audit-level=high` |
+| **E2E** (`e2e.yml`) | Playwright smoke + product tour (requires `PB_URL` secret) |
+
+Dependabot (`.github/dependabot.yml`) opens weekly npm update PRs (max 10 open).
+
+### Recommended branch protection (solo dev)
+
+Configure at **GitHub → Settings → Branches → Add branch protection rule** for `main`:
+
+1. **Require a pull request before merging** — you can self-merge your own PRs; this blocks direct pushes to `main`.
+2. **Require status checks to pass before merging** — enable **CI / Build, test & audit** as a required check. Add **E2E / Playwright smoke + tour** when you want E2E on every merge (needs `PB_URL` secret).
+3. **Do not require approving reviews** — leave “Required approving reviews” off (or set count to 0). Solo dev does not need a second reviewer.
+4. **Block force pushes** and **Block deletion** of `main`.
+
+Also enable **two-factor authentication** on GitHub, Vercel, Fly.io, and Stripe.
+
+### Making npm audit blocking (later)
+
+In `.github/workflows/ci.yml`, remove `continue-on-error: true` from the audit step. Re-run a PR to confirm failures surface as a red check, then ensure **Build, test & audit** stays in the required status checks list above.
+
+## Security Wave 1 — JWT on sensitive routes
+
+Operator-facing API routes no longer accept a client-bundle secret. Authenticated actions use the signed-in user’s **PocketBase JWT** (`Authorization: Bearer`).
+
+| Route | Auth |
+|-------|------|
+| `POST /api/portal/create`, `POST /api/portal/send` | User JWT + org check |
+| `POST/GET /api/backups/trigger` | User JWT + required `organizationId` query param |
+| `POST /api/cron/notifications` (Settings manual run) | User JWT — org-scoped only |
+| `POST /api/cron/notifications` (Vercel Cron / PB hook) | Server-only `CRON_SECRET` / `INTERNAL_API_SECRET` |
+| `GET /api/debug/chunk-health` | Server-only secret |
+
+**Remove from Vercel:** any client-exposed copy of `INTERNAL_API_SECRET` (pre–Wave 1; do not use `NEXT_PUBLIC_*` for secrets).
+
+**Keep server-only:** `INTERNAL_API_SECRET` and `CRON_SECRET` (same value is fine) for scheduled cron and debug routes.
+
+## Security Wave 2 — Superuser audit & admin backup
+
+Full inventory: [`docs/SUPERUSER_PB_AUDIT.md`](./SUPERUSER_PB_AUDIT.md).
+
+| Route | Auth | Scope |
+|-------|------|-------|
+| `POST/GET /api/backups/trigger` | Operator JWT | Single org (`organizationId` required) |
+| `POST/GET /api/admin/backups/trigger` | Platform admin JWT **or** server secret | All tenants |
+
+Set `PLATFORM_ADMIN_EMAILS` (comma-separated) for admin UI + full backup Path A. Path B uses `INTERNAL_API_SECRET` for CLI/DR only.
+
+## Security Wave 3 — Server validation & PDF re-fetch
+
+High-risk routes validate request bodies with Zod (`src/lib/validation/api-schemas.ts`, `parseJsonBody` in `src/lib/server/parse-body.ts`).
+
+PDF export routes accept **IDs only** (`jobId` / `invoiceId` / `quoteId` / `range`) and re-fetch authoritative data from PocketBase with the user's org filter (`src/lib/server/pdf-data.ts`).
+
+## Security Wave 4 — Portal token scope
+
+Portal link **scope** must match the action:
+
+| Action | Allowed scopes |
+|--------|----------------|
+| Stripe checkout (`/api/portal/[token]/checkout`) | `invoice`, `full`, `job` |
+| Job photos (`streamPortalPhoto`) | `photos`, `full`, `job` |
+
+Quote-only or photos-only tokens cannot checkout; invoice-only tokens cannot load photos. Helpers: `src/lib/server/portal-scope.ts`; tests: `portal-scope.test.ts`.
+
+## Security Wave 5 — CSP Report-Only & HSTS
+
+**Report-Only only** — violations are logged, nothing is blocked yet. Soak **1–2 weeks** on production, review Vercel function logs for `csp_violation` events, then switch to enforcing `Content-Security-Policy` (remove `-Report-Only` in `src/middleware.ts`).
+
+| Header | Where | Notes |
+|--------|-------|-------|
+| `Content-Security-Policy-Report-Only` | `src/middleware.ts` (production) | Path-specific `frame-ancestors` |
+| `Strict-Transport-Security` | `src/middleware.ts` (production) | `max-age=63072000; includeSubDomains; preload` |
+| `Content-Security-Policy: frame-ancestors *` | `next.config.ts` | **Enforcing** — only `/book/*` and `/embed/*` (preserves iframe embed) |
+
+**Customize before enforcing CSP:**
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_PB_URL` / `PB_URL` | PocketBase origin in `connect-src` and `img-src` |
+| `BOOKING_ALLOWED_ORIGINS` | Comma-separated parent origins for `frame-ancestors` on book/embed (Report-Only); also used for public booking API CORS |
+
+**TODO:** Add each customer marketing-site origin to `BOOKING_ALLOWED_ORIGINS` when they embed `/embed/book/{slug}` on WordPress or similar. Until then, enforcing `frame-ancestors` on book/embed still uses `*` via `next.config.ts`.
+
+Violation reports: `POST /api/csp-report` (rate-limited, structured `console.info` log).
+
+## Security Wave 7 — Durable rate limits, audit trail, upload validation
+
+### Upstash Redis rate limiting
+
+When `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set on Vercel, signup, public booking, public read, and auth-adjacent routes use **Upstash** instead of per-instance in-memory counters (survives cold starts and scales horizontally).
+
+| Variable | Purpose |
+|----------|---------|
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash REST token |
+
+Create a free Upstash Redis database at [upstash.com](https://upstash.com), copy REST credentials into Vercel env, redeploy.
+
+**Verify durable limits:** From two different networks (or after a Vercel redeploy / cold start), send more than 5 signup POSTs to `/api/auth/signup` within an hour — the 6th should return **429** with `Retry-After`. Without Upstash, limits reset per server instance only.
+
+Keying: **IP** for pre-auth routes (`signup`, `public-booking`, `public-read`); **userId** for authenticated routes (`send-email`, `push-subscribe`, `account-delete`).
+
+### Audit log (structured `console.info`)
+
+Events written to Vercel/Fly function logs — search for `"event":"admin_backup_triggered"` etc.
+
+| Event | When |
+|-------|------|
+| `admin_backup_triggered` | Full backup via `/api/admin/backups/trigger` |
+| `auth_failure` | Invalid Bearer JWT on admin backup (sample route) |
+| `webhook_reject` | Stripe webhook signature missing/invalid |
+
+Helper: `src/lib/server/audit-log.ts`
+
+### Job photo upload validation
+
+PocketBase hook `pocketbase/pb_hooks/jobs_photo_validate.pb.js` — on jobs create/update, rejects non-image uploads (JPEG/PNG/GIF/WebP magic bytes). Redeploy PocketBase after pulling hooks.
+
 ## 1. Deploy PocketBase (Fly.io)
 
 PocketBase should already be on Fly at your `NEXT_PUBLIC_PB_URL`. If not, follow [`pocketbase/DEPLOY.md`](../pocketbase/DEPLOY.md).
@@ -28,14 +152,10 @@ Connect the repo and set these environment variables:
 | `RESEND_FROM_EMAIL` | Verified sender domain |
 | `VAPID_PUBLIC_KEY` | Web push (`npm run generate:vapid`) |
 | `VAPID_PRIVATE_KEY` | Web push |
-| `CRON_SECRET` | Protects `/api/cron/notifications` |
-| `INTERNAL_API_SECRET` | Same value as `CRON_SECRET` (backup routes) |
-
-Optional (client manual cron fallback):
-
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_INTERNAL_API_SECRET` | Same secret for Settings → run notifications |
+| `CRON_SECRET` | Protects `/api/cron/notifications` (Vercel Cron + PB hook) |
+| `INTERNAL_API_SECRET` | Same value as `CRON_SECRET` (server-only cron/debug) |
+| `UPSTASH_REDIS_REST_URL` | (Wave 7) Durable rate limits — Upstash Redis REST URL |
+| `UPSTASH_REDIS_REST_TOKEN` | (Wave 7) Upstash REST token |
 
 Optional (support):
 

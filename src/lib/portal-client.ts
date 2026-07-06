@@ -1,4 +1,4 @@
-import { getInternalApiSecret } from './export-data'
+import { getAuthFetchHeaders } from './pb-auth'
 import { handleApiResponsePremiumGate, PREMIUM_REQUIRED_MESSAGE } from './premium-api'
 import { getCurrentOrganizationId } from './tenant'
 
@@ -37,12 +37,11 @@ export async function createShareLink(input: {
   jobId?: string
   quoteId?: string
 }): Promise<CreatePortalLinkResult> {
-  const secret = getInternalApiSecret()
   const res = await fetch('/api/portal/create', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(secret ? { 'x-api-secret': secret } : {}),
+      ...getAuthFetchHeaders(),
     },
     body: JSON.stringify(input),
   })
@@ -77,12 +76,11 @@ export async function emailShareLink(input: {
   subject?: string
   message?: string
 }): Promise<void> {
-  const secret = getInternalApiSecret()
   const res = await fetch('/api/portal/send', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(secret ? { 'x-api-secret': secret } : {}),
+      ...getAuthFetchHeaders(),
     },
     body: JSON.stringify({
       ...input,

@@ -11,10 +11,6 @@ function appUrl(): string {
   return (process.env.APP_URL || 'http://127.0.0.1:3000').replace(/\/$/, '')
 }
 
-function apiSecret(): string | undefined {
-  return process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET
-}
-
 export interface ResolvedE2EData {
   ids: DemoIds
   portalPath: string | null
@@ -45,10 +41,12 @@ async function ensurePortalPath(
   request: APIRequestContext,
   clientId: string,
   jobId: string,
+  sessionToken: string,
 ): Promise<string | null> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const secret = apiSecret()
-  if (secret) headers['x-api-secret'] = secret
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${sessionToken}`,
+  }
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
@@ -114,11 +112,11 @@ export async function resolveE2EData(
   }
 
   let portalPath = cached?.portalPath ?? null
-  if (!portalPath) {
+  if (!portalPath && session) {
     const clientId = ids.clientMarcusId || ids.clientId
     const jobId = ids.paidJobId
     if (clientId && jobId) {
-      portalPath = await ensurePortalPath(request, clientId, jobId)
+      portalPath = await ensurePortalPath(request, clientId, jobId, session.token)
     }
   }
 

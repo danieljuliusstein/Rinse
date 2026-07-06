@@ -64,10 +64,12 @@ export default function BottomNav() {
   const pathname = usePathname()
   const navRef = useVisualViewportBottom<HTMLElement>()
   const { menuOpen, openMenu, closeMenu } = useQuickAction()
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, isPlatformAdmin } = useAuth()
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
+
+  if (isPlatformAdmin) return null
 
   if (
     pathname === '/auth' ||

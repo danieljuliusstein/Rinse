@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { formatAuthApiError } from '@/lib/auth-messages'
+import { isPlatformAdminEmail } from '@/lib/platform-admin'
 import { registerOrganization } from '@/lib/server/signup'
 import { getClientIp } from '@/lib/server/client-ip'
 import { enforceRateLimit, RATE_LIMITS } from '@/lib/server/rate-limit'
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
   if (tooLarge) return tooLarge
 
   const ip = getClientIp(request)
-  const limited = enforceRateLimit(`signup:${ip}`, RATE_LIMITS.signup)
+  const limited = await enforceRateLimit(`signup:${ip}`, RATE_LIMITS.signup, 'signup')
   if (limited) return limited
 
   try {
@@ -21,8 +22,16 @@ export async function POST(request: Request) {
       slug?: string
     }
 
+    const email = String(body.email ?? '').trim().toLowerCase()
+    if (isPlatformAdminEmail(email)) {
+      return NextResponse.json(
+        { error: 'This email is reserved for platform admin. Sign in at /auth/admin instead.' },
+        { status: 400 },
+      )
+    }
+
     const result = await registerOrganization({
-      email: String(body.email ?? ''),
+      email,
       password: String(body.password ?? ''),
       businessName: String(body.businessName ?? ''),
       slug: body.slug ? String(body.slug) : undefined,

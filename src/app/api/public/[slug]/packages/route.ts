@@ -12,7 +12,7 @@ export async function OPTIONS(request: Request) {
 
 export async function GET(request: Request, { params }: Params) {
   const ip = getClientIp(request)
-  const limited = enforceRateLimit(`public-read:${ip}`, RATE_LIMITS.publicRead)
+  const limited = await enforceRateLimit(`public-read:${ip}`, RATE_LIMITS.publicRead, 'public-read')
   if (limited) {
     return jsonWithCors(request, { error: 'Too many requests' }, 429)
   }

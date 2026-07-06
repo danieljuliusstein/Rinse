@@ -41,8 +41,7 @@ Phase 5 (optional):
 RESEND_API_KEY=re_xxxx
 VAPID_PUBLIC_KEY=...          # npm run generate:vapid
 VAPID_PRIVATE_KEY=...
-INTERNAL_API_SECRET=random    # protects backup/cron API routes
-NEXT_PUBLIC_INTERNAL_API_SECRET=random
+INTERNAL_API_SECRET=random    # server-only: cron hooks + debug routes
 ```
 
 ## PocketBase (local)
