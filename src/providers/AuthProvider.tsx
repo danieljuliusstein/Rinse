@@ -6,6 +6,11 @@ import { fetchPlatformAdminAccess } from '@/lib/admin-api'
 import { resetBackend, syncOnReconnect } from '@/lib/api'
 import { clearLocalDeviceDataSync } from '@/lib/clear-local-data'
 import {
+  clearCachedPlatformAdmin,
+  readCachedPlatformAdmin,
+  writeCachedPlatformAdmin,
+} from '@/lib/platform-admin-cache'
+import {
   needsOnboarding,
   onboardingStepUrl,
   resolveOnboardingStep,
@@ -43,37 +48,16 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
-const PLATFORM_ADMIN_CACHE_PREFIX = 'rinse_platform_admin:'
 
-function platformAdminCacheKey(email: string): string {
-  return `${PLATFORM_ADMIN_CACHE_PREFIX}${email.toLowerCase()}`
-}
-
-function readCachedPlatformAdmin(email: string): boolean | null {
-  if (typeof window === 'undefined') return null
-  const cached = sessionStorage.getItem(platformAdminCacheKey(email))
-  if (cached === '1') return true
-  if (cached === '0') return false
-  return null
-}
-
-function writeCachedPlatformAdmin(email: string, admin: boolean): void {
-  if (typeof window === 'undefined') return
-  sessionStorage.setItem(platformAdminCacheKey(email), admin ? '1' : '0')
-}
-
-function clearCachedPlatformAdmin(email?: string | null): void {
-  if (typeof window === 'undefined') return
-  if (email) {
-    sessionStorage.removeItem(platformAdminCacheKey(email))
-    return
-  }
-  for (let i = sessionStorage.length - 1; i >= 0; i--) {
-    const key = sessionStorage.key(i)
-    if (key?.startsWith(PLATFORM_ADMIN_CACHE_PREFIX)) {
-      sessionStorage.removeItem(key)
-    }
-  }
+function initialPlatformAdminState(): { admin: boolean; loading: boolean } {
+  if (typeof window === 'undefined') return { admin: false, loading: false }
+  if (!isPocketBaseAuthenticated()) return { admin: false, loading: false }
+  const email = getCurrentUserEmail()
+  if (!email) return { admin: false, loading: false }
+  const cached = readCachedPlatformAdmin(email)
+  if (cached === true) return { admin: true, loading: false }
+  if (cached === false) return { admin: false, loading: false }
+  return { admin: false, loading: true }
 }
 
 function isPublicPath(pathname: string): boolean {
@@ -108,6 +92,14 @@ function safeReplace(router: ReturnType<typeof useRouter>, href: string) {
   })
 }
 
+/** iOS PWA often ignores soft router.replace — hard navigation is reliable for lane changes. */
+function hardReplace(href: string) {
+  if (typeof window === 'undefined') return
+  const target = new URL(href, window.location.origin)
+  if (window.location.pathname === target.pathname && window.location.search === target.search) return
+  window.location.replace(target.pathname + target.search + target.hash)
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authTick, setAuthTick] = useState(0)
   const pathname = usePathname()
@@ -137,8 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   void authTick
 
   const isLoggedIn = mounted && isPocketBaseAuthenticated()
-  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
-  const [platformAdminLoading, setPlatformAdminLoading] = useState(false)
+  const initialAdmin = initialPlatformAdminState()
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(initialAdmin.admin)
+  const [platformAdminLoading, setPlatformAdminLoading] = useState(initialAdmin.loading)
   const [needsOnboardingState, setNeedsOnboardingState] = useState(false)
   const [onboardingCheckPending, setOnboardingCheckPending] = useState(false)
   const [subscriptionLapsed, setSubscriptionLapsed] = useState(false)
@@ -169,7 +162,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPlatformAdminLoading(true)
     void (async () => {
       try {
-        const admin = await fetchPlatformAdminAccess()
+        const admin = await Promise.race([
+          fetchPlatformAdminAccess(),
+          new Promise<boolean>((_, reject) => {
+            window.setTimeout(() => reject(new Error('platform admin check timeout')), 10_000)
+          }),
+        ])
         if (!cancelled) {
           setIsPlatformAdmin(admin)
           platformAdminCheckedRef.current = true
@@ -177,9 +175,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch {
         if (!cancelled) {
-          setIsPlatformAdmin(false)
+          const fallback = email ? readCachedPlatformAdmin(email) : null
+          setIsPlatformAdmin(fallback === true)
           platformAdminCheckedRef.current = true
-          if (email) writeCachedPlatformAdmin(email, false)
+          if (email && fallback !== null) writeCachedPlatformAdmin(email, fallback)
         }
       } finally {
         if (!cancelled) setPlatformAdminLoading(false)
@@ -195,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setOnboardingCheckPending(false)
       return
     }
-    if (isPublicPath(pathname) || isOnboardingPath(pathname)) {
+    if (isPublicPath(pathname) || isOnboardingPath(pathname) || isAdminAllowedPath(pathname)) {
       setOnboardingCheckPending(false)
       return
     }
@@ -273,26 +272,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready || isLoggedIn) return
-    if (isPublicRoute) return
     const adminGuestRedirect = resolveGuestRedirect(pathname)
     if (adminGuestRedirect) {
-      safeReplace(router, adminGuestRedirect)
+      hardReplace(adminGuestRedirect)
       return
     }
+    if (isPublicRoute) return
     safeReplace(router, '/welcome')
+    const timer = window.setTimeout(() => {
+      if (window.location.pathname === pathname) {
+        hardReplace('/welcome')
+      }
+    }, 1500)
+    return () => window.clearTimeout(timer)
   }, [ready, isLoggedIn, router, isPublicRoute, pathname])
 
   useEffect(() => {
     if (!ready || !isLoggedIn || platformAdminLoading) return
     if (pathname !== '/welcome' && pathname !== '/auth' && pathname !== ADMIN_AUTH) return
     const home = resolvePostAuthHome(isPlatformAdmin)
-    if (pathname === '/welcome' || pathname === '/auth' || pathname === ADMIN_AUTH) {
-      if (pathname === '/auth' && !isPlatformAdmin && needsOnboardingState) {
-        safeReplace(router, onboardingStepUrl('business'))
-        return
-      }
-      safeReplace(router, home)
+    if (pathname === '/auth' && !isPlatformAdmin && needsOnboardingState) {
+      safeReplace(router, onboardingStepUrl('business'))
+      return
     }
+    if (home === ADMIN_HOME) {
+      hardReplace(home)
+      return
+    }
+    safeReplace(router, home)
   }, [
     ready,
     isLoggedIn,
@@ -306,7 +313,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!ready || !isLoggedIn || !isPlatformAdmin || platformAdminLoading) return
     if (isAdminAllowedPath(pathname)) return
-    safeReplace(router, ADMIN_HOME)
+    hardReplace(ADMIN_HOME)
   }, [ready, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname, router])
 
   const syncPocketBaseInBackground = useCallback(() => {
@@ -373,15 +380,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const needsGuestRedirect = !isLoggedIn && !isPublicRoute
+  const adminGuestTarget = !isLoggedIn ? resolveGuestRedirect(pathname) : null
+  const isAdminShellPath = isAdminAllowedPath(pathname)
   const showBlockingRedirect =
     !ready ||
-    needsGuestRedirect ||
-    (isLoggedIn && onboardingCheckPending && !isOnboardingRoute && !isPublicRoute) ||
+    (needsGuestRedirect && !adminGuestTarget) ||
+    (isLoggedIn && platformAdminLoading && !isAdminShellPath) ||
+    (isLoggedIn &&
+      onboardingCheckPending &&
+      !isOnboardingRoute &&
+      !isPublicRoute &&
+      !isAdminShellPath) ||
     (isLoggedIn &&
       !isPlatformAdmin &&
       needsOnboardingState &&
       !isOnboardingRoute &&
-      !isPublicRoute)
+      !isPublicRoute &&
+      !isAdminShellPath)
 
   return (
     <AuthContext.Provider value={contextValue}>

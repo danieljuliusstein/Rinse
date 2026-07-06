@@ -99,6 +99,8 @@ html:has(.app-shell--admin-demo) body {
   display: flex;
   font-size: 14px;
   line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Demo lane only — static mock has a 41px banner above .admin-root */

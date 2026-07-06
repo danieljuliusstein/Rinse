@@ -10,6 +10,7 @@ import { AUTH_PB_NOT_CONFIGURED, formatAuthApiError } from '@/lib/auth-messages'
 import { loginWithPassword, requestPasswordReset, clearPocketBaseAuth } from '@/lib/pb-auth'
 import { fetchPlatformAdminAccess } from '@/lib/admin-api'
 import { isPocketBaseConfigured } from '@/lib/pocketbase'
+import { writeCachedPlatformAdmin } from '@/lib/platform-admin-cache'
 import { markTourPending } from '@/lib/product-tour'
 import { onboardingStepUrl } from '@/lib/onboarding'
 import { slugifyBusinessName } from '@/lib/tenant'
@@ -85,6 +86,7 @@ export default function AccountAuth({ onAuthenticated, variant = 'operator' }: A
           setError('Not a platform admin account')
           return
         }
+        writeCachedPlatformAdmin(email.trim(), true)
       }
       if (mode === 'signup') {
         markTourPending()

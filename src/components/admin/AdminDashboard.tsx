@@ -313,7 +313,11 @@ export default function AdminDashboard() {
   const loadOrgs = useCallback(async () => {
     const token = getPocketBaseAuthToken()
     if (!token) {
-      router.replace('/auth/admin')
+      if (typeof window !== 'undefined') {
+        window.location.replace('/auth/admin')
+      } else {
+        router.replace('/auth/admin')
+      }
       return
     }
     if (!orgsLoadedRef.current) setLoading(true)

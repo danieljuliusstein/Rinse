@@ -1,21 +1,23 @@
 'use client'
 
 import { Suspense } from 'react'
-import { useRouter } from 'next/navigation'
 import AccountAuth from '@/components/AccountAuth'
 import { ADMIN_HOME } from '@/lib/route-lanes'
 
 function AdminAuthPageInner() {
-  const router = useRouter()
-
   return (
     <AccountAuth
       variant="admin"
       onAuthenticated={() => {
-        router.replace(ADMIN_HOME)
+        hardReplace(ADMIN_HOME)
       }}
     />
   )
+}
+
+function hardReplace(href: string) {
+  if (typeof window === 'undefined') return
+  window.location.replace(href)
 }
 
 export default function AdminAuthPage() {
