@@ -7,7 +7,11 @@ export type OnboardingAnalyticsEvent =
   | 'onboarding_completed'
   | 'setup_intro_slide_viewed'
 
-function trackPlatformEvent(type: OnboardingAnalyticsEvent, metadata: Record<string, unknown>) {
+/** Matches @vercel/analytics `track()` property value types. */
+type AnalyticsPropertyValue = string | number | boolean | null | undefined
+type AnalyticsMetadata = Record<string, AnalyticsPropertyValue>
+
+function trackPlatformEvent(type: OnboardingAnalyticsEvent, metadata: AnalyticsMetadata) {
   void fetch('/api/platform/track', {
     method: 'POST',
     headers: {
@@ -20,7 +24,7 @@ function trackPlatformEvent(type: OnboardingAnalyticsEvent, metadata: Record<str
   })
 }
 
-function emitVercel(event: OnboardingAnalyticsEvent, payload: Record<string, unknown>) {
+function emitVercel(event: OnboardingAnalyticsEvent, payload: AnalyticsMetadata) {
   void import('@vercel/analytics')
     .then(({ track }) => {
       track(event, payload)
@@ -30,7 +34,7 @@ function emitVercel(event: OnboardingAnalyticsEvent, payload: Record<string, unk
     })
 }
 
-function emit(event: OnboardingAnalyticsEvent, metadata: Record<string, unknown>) {
+function emit(event: OnboardingAnalyticsEvent, metadata: AnalyticsMetadata) {
   if (process.env.NODE_ENV !== 'production') {
     console.info(`[onboarding] ${event}`, metadata)
   }
