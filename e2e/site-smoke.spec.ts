@@ -42,6 +42,12 @@ test.describe('Site smoke — public', () => {
       await smokeVisitPublic(page, route)
     })
   }
+
+  test('auth screen shows terms and privacy links', async ({ page }) => {
+    await smokeVisitPublic(page, '/auth')
+    await expect(page.getByRole('link', { name: 'Terms of Service' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Privacy Policy' })).toBeVisible()
+  })
 })
 
 test.describe('Site smoke — demo screens', () => {

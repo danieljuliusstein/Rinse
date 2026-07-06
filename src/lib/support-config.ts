@@ -117,6 +117,11 @@ export function getPrivacyEmail(): string | null {
   return getPublicEmail('NEXT_PUBLIC_PRIVACY_EMAIL', 'privacy')
 }
 
+/** Legal notices — defaults to legal@ on the support email domain. */
+export function getLegalEmail(): string | null {
+  return getPublicEmail('NEXT_PUBLIC_LEGAL_EMAIL', 'legal')
+}
+
 function buildMailto(email: string | null, options: { subject: string; body?: string }): string | null {
   if (!email) return null
   const params = new URLSearchParams()
@@ -173,4 +178,8 @@ export function buildBillingMailto(): string | null {
 
 export function buildPrivacyMailto(): string | null {
   return buildMailto(getPrivacyEmail(), { subject: `${APP_DISPLAY_NAME} privacy request` })
+}
+
+export function buildLegalMailto(): string | null {
+  return buildMailto(getLegalEmail(), { subject: `${APP_DISPLAY_NAME} legal notice` })
 }

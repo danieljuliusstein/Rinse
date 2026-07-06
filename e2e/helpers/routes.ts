@@ -68,6 +68,8 @@ export function staticPublicRoutes(manifest: DemoManifest): string[] {
     '/auth/reset',
     '/auth/oauth/callback',
     '/privacy',
+    '/terms',
+    '/terms/customers',
     '/offline',
     `/book/${manifest.orgSlug}`,
   ])

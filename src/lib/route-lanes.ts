@@ -38,7 +38,8 @@ export function isAdminAllowedPath(pathname: string): boolean {
   if (pathname === ADMIN_HOME || pathname.startsWith(`${ADMIN_HOME}/`)) return true
   if (pathname === ADMIN_AUTH) return true
   if (pathname === '/auth/reset') return true
-  if (pathname === '/privacy' || pathname === '/offline') return true
+  if (pathname === '/privacy' || pathname === '/terms' || pathname === '/offline') return true
+  if (pathname.startsWith('/terms/')) return true
   if (isPublicClientPath(pathname)) return true
   if (isDemoPath(pathname)) return true
   return false

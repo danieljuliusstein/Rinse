@@ -240,6 +240,8 @@ function BookPageShell({
       <footer className="book-footer">
         {footerContact ? <p className="book-footer-contact">{footerContact}</p> : null}
         <p className="book-legal">
+          <Link href="/terms/customers">Customer Terms</Link>
+          {' · '}
           <Link href="/privacy">Privacy policy</Link>
         </p>
       </footer>
@@ -820,6 +822,11 @@ function BookContent() {
               {submitting ? 'Booking…' : 'Confirm booking →'}
             </button>
           </div>
+          <p className="book-legal-disclaimer">
+            Services are provided by <strong>{business?.name || 'the Business'}</strong>, an
+            independent business. Rinse provides this booking page. By confirming, you agree to the{' '}
+            <Link href="/terms/customers">Customer Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
+          </p>
         </section>
       ) : null}
     </BookPageShell>

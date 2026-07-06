@@ -106,6 +106,25 @@
   padding: 8px;
 }
 
+.auth-legal {
+  margin: 16px auto 0;
+  max-width: 320px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.auth-screen.client-light-root .auth-legal {
+  max-width: none;
+}
+
+.auth-legal a {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .auth-slug-preview {
   font-size: 12px;
   color: var(--text-muted);

@@ -31,6 +31,8 @@ describe('route-lanes', () => {
     expect(isAdminAllowedPath(ADMIN_AUTH)).toBe(true)
     expect(isAdminAllowedPath('/auth/reset')).toBe(true)
     expect(isAdminAllowedPath('/privacy')).toBe(true)
+    expect(isAdminAllowedPath('/terms')).toBe(true)
+    expect(isAdminAllowedPath('/terms/customers')).toBe(true)
     expect(isAdminAllowedPath('/offline')).toBe(true)
     expect(isAdminAllowedPath('/book/acme')).toBe(true)
     expect(isAdminAllowedPath('/demo/home')).toBe(true)

@@ -846,6 +846,23 @@
   text-underline-offset: 2px;
 }
 
+.book-legal-disclaimer {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--book-hint);
+}
+
+.book-legal-disclaimer strong {
+  color: var(--book-muted);
+}
+
+.book-legal-disclaimer a {
+  color: var(--book-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 @media (max-width: 380px) {
   .book-slots-grid,
   .book-datetime-grid {

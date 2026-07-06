@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { PortalPayload } from '@/lib/server/portal-data'
 
 export default function PortalPhotosFooter({ business }: { business: PortalPayload['business'] }) {
@@ -13,6 +14,11 @@ export default function PortalPhotosFooter({ business }: { business: PortalPaylo
           {business.email && <div>{business.email}</div>}
         </div>
       )}
+      <p className="portal-photos-footer__legal">
+        <Link href="/terms/customers">Customer Terms</Link>
+        {' · '}
+        <Link href="/privacy">Privacy Policy</Link>
+      </p>
     </footer>
   )
 }

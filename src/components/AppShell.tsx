@@ -73,7 +73,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isAdminDemo = pathname.startsWith('/demo/admin-dashboard')
   const isAdminLane = isPlatformAdmin
   const isAdminConsole = isAdminLane || isAdminPath || isAdminDemo
-  const isSettings = pathname.startsWith('/settings') || pathname === '/privacy'
+  const isSettings =
+    pathname.startsWith('/settings') || pathname === '/privacy' || pathname === '/terms' || pathname.startsWith('/terms/')
   const isAuthFlow =
     pathname === '/auth' ||
     pathname === '/welcome' ||

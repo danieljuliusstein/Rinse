@@ -14,12 +14,14 @@ export default function PortalInvoiceCard({
   token,
   showPayOnline = false,
   businessPhone,
+  businessName,
 }: {
   invoice: NonNullable<PortalPayload['invoice']>
   job?: PortalPayload['job']
   token?: string
   showPayOnline?: boolean
   businessPhone?: string
+  businessName?: string
 }) {
   const balanceVariant = portalBalancePanelClass(invoice.status, invoice.balanceDue)
   const lineDesc = job?.packageName ?? 'Detailing service'
@@ -100,6 +102,7 @@ export default function PortalInvoiceCard({
             token={token}
             balanceDue={invoice.balanceDue}
             businessPhone={businessPhone}
+            businessName={businessName}
           />
         ) : null}
 

@@ -131,6 +131,18 @@
   line-height: 1.6;
 }
 
+.portal-footer-legal {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--portal-text-muted);
+}
+
+.portal-footer-legal a {
+  color: var(--portal-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .portal-badge {
   display: inline-flex;
   align-items: center;
@@ -352,6 +364,19 @@
 
 .portal-pay-area {
   margin-top: 14px;
+}
+
+.portal-pay-legal {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--portal-text-muted);
+}
+
+.portal-pay-legal a {
+  color: var(--portal-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .portal-pay-fallback {
@@ -658,6 +683,18 @@ a.portal-btn-primary,
   color: var(--portal-photos-muted);
   margin-top: 6px;
   line-height: 1.6;
+}
+
+.portal-photos-footer__legal {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--portal-photos-muted);
+}
+
+.portal-photos-footer__legal a {
+  color: var(--portal-photos-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .portal-biz-logo {

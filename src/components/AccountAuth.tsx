@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import AppLogo from '@/components/AppLogo'
 import SocialAuthButtons from '@/components/auth/SocialAuthButtons'
 import { SetupRowField } from '@/components/forms'
@@ -236,6 +237,13 @@ export default function AccountAuth({ onAuthenticated, variant = 'operator' }: A
                 ? 'Already have an account? Sign in'
                 : 'Back to sign in'}
           </button>
+        ) : null}
+
+        {!isAdminVariant ? (
+          <p className="auth-legal">
+            By continuing, you agree to the <Link href="/terms">Terms of Service</Link> and{' '}
+            <Link href="/privacy">Privacy Policy</Link>.
+          </p>
         ) : null}
       </div>
     </div>

@@ -24,6 +24,7 @@ const FAQ_LINKS = [
   { href: '/settings/faq#schedule', label: 'Booking schedule & time off' },
   { href: '/settings/faq#auto-messages', label: 'Auto messages' },
   { href: '/settings/faq', label: 'All FAQ' },
+  { href: '/terms?from=settings', label: 'Terms of service' },
   { href: '/privacy', label: 'Privacy policy' },
 ] as const
 

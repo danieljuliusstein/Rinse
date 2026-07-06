@@ -80,6 +80,8 @@ export default function BottomNav() {
     pathname.startsWith('/embed/') ||
     pathname === '/onboarding' ||
     pathname === '/privacy' ||
+    pathname === '/terms' ||
+    pathname.startsWith('/terms/') ||
     pathname.startsWith('/jobs/new') ||
     pathname.startsWith('/settings')
   ) return null

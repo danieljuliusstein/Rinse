@@ -114,6 +114,7 @@ export default function PortalView({ payload, token }: PortalViewProps) {
             token={token}
             showPayOnline={scope === 'invoice' || scope === 'full'}
             businessPhone={business.phone}
+            businessName={business.name}
           />
         )}
 

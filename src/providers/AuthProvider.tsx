@@ -13,6 +13,7 @@ import {
 import {
   authenticatePocketBase,
   clearPocketBaseAuth,
+  getCurrentUserEmail,
   isPocketBaseAuthenticated,
 } from '@/lib/pb-auth'
 import { getPocketBase } from '@/lib/pocketbase'
@@ -42,6 +43,38 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+const PLATFORM_ADMIN_CACHE_PREFIX = 'rinse_platform_admin:'
+
+function platformAdminCacheKey(email: string): string {
+  return `${PLATFORM_ADMIN_CACHE_PREFIX}${email.toLowerCase()}`
+}
+
+function readCachedPlatformAdmin(email: string): boolean | null {
+  if (typeof window === 'undefined') return null
+  const cached = sessionStorage.getItem(platformAdminCacheKey(email))
+  if (cached === '1') return true
+  if (cached === '0') return false
+  return null
+}
+
+function writeCachedPlatformAdmin(email: string, admin: boolean): void {
+  if (typeof window === 'undefined') return
+  sessionStorage.setItem(platformAdminCacheKey(email), admin ? '1' : '0')
+}
+
+function clearCachedPlatformAdmin(email?: string | null): void {
+  if (typeof window === 'undefined') return
+  if (email) {
+    sessionStorage.removeItem(platformAdminCacheKey(email))
+    return
+  }
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const key = sessionStorage.key(i)
+    if (key?.startsWith(PLATFORM_ADMIN_CACHE_PREFIX)) {
+      sessionStorage.removeItem(key)
+    }
+  }
+}
 
 function isPublicPath(pathname: string): boolean {
   return (
@@ -50,7 +83,9 @@ function isPublicPath(pathname: string): boolean {
     pathname === '/welcome' ||
     pathname === '/intro' ||
     pathname === '/privacy' ||
+    pathname === '/terms' ||
     pathname === '/offline' ||
+    pathname.startsWith('/terms/') ||
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/portal') ||
     pathname.startsWith('/book/') ||
@@ -82,11 +117,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => setMounted(true), [])
 
   const bumpAuth = useCallback(() => setAuthTick((t) => t + 1), [])
+  const lastAuthEmailRef = useRef<string | null>(null)
+  const platformAdminCheckedRef = useRef(false)
 
   useEffect(() => {
     const pb = getPocketBase()
     if (!pb) return
     return pb.authStore.onChange(() => {
+      const email = getCurrentUserEmail()
+      if (email !== lastAuthEmailRef.current) {
+        platformAdminCheckedRef.current = false
+        lastAuthEmailRef.current = email
+      }
       bumpAuth()
     })
   }, [bumpAuth])
@@ -98,9 +140,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
   const [platformAdminLoading, setPlatformAdminLoading] = useState(false)
   const [needsOnboardingState, setNeedsOnboardingState] = useState(false)
+  const [onboardingCheckPending, setOnboardingCheckPending] = useState(false)
   const [subscriptionLapsed, setSubscriptionLapsed] = useState(false)
   const [subscriptionLoading, setSubscriptionLoading] = useState(true)
-  const platformAdminCheckedRef = useRef(false)
 
   const isPublicRoute = isPublicPath(pathname)
   const isOnboardingRoute = isOnboardingPath(pathname)
@@ -113,6 +155,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
     if (platformAdminCheckedRef.current) return
+
+    const email = getCurrentUserEmail()
+    const cached = email ? readCachedPlatformAdmin(email) : null
+    if (cached !== null) {
+      setIsPlatformAdmin(cached)
+      setPlatformAdminLoading(false)
+      platformAdminCheckedRef.current = true
+      return
+    }
+
     let cancelled = false
     setPlatformAdminLoading(true)
     void (async () => {
@@ -121,11 +173,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!cancelled) {
           setIsPlatformAdmin(admin)
           platformAdminCheckedRef.current = true
+          if (email) writeCachedPlatformAdmin(email, admin)
         }
       } catch {
         if (!cancelled) {
           setIsPlatformAdmin(false)
           platformAdminCheckedRef.current = true
+          if (email) writeCachedPlatformAdmin(email, false)
         }
       } finally {
         if (!cancelled) setPlatformAdminLoading(false)
@@ -137,8 +191,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [mounted, isLoggedIn, pathname])
 
   useEffect(() => {
-    if (!mounted || !isLoggedIn || isPlatformAdmin || platformAdminLoading) return
+    if (!mounted || !isLoggedIn || isPlatformAdmin || platformAdminLoading) {
+      setOnboardingCheckPending(false)
+      return
+    }
+    if (isPublicPath(pathname) || isOnboardingPath(pathname)) {
+      setOnboardingCheckPending(false)
+      return
+    }
+
     let cancelled = false
+    setOnboardingCheckPending(true)
     void (async () => {
       try {
         const { loadSettingsAsync } = await import('@/lib/settings')
@@ -146,15 +209,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (cancelled) return
         if (settings && needsOnboarding(settings)) {
           setNeedsOnboardingState(true)
-          if (!isOnboardingPath(pathname) && !isPublicPath(pathname)) {
-            const step = resolveOnboardingStep(null, settings)
-            safeReplace(router, onboardingStepUrl(step))
-          }
+          const step = resolveOnboardingStep(null, settings)
+          safeReplace(router, onboardingStepUrl(step))
         } else {
           setNeedsOnboardingState(false)
         }
       } catch {
         if (!cancelled) setNeedsOnboardingState(false)
+      } finally {
+        if (!cancelled) setOnboardingCheckPending(false)
       }
     })()
     return () => {
@@ -285,6 +348,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(
     (options?: { lane?: LogoutLane }) => {
       const lane = options?.lane ?? (isPlatformAdmin ? 'admin' : 'operator')
+      const email = getCurrentUserEmail()
+      clearCachedPlatformAdmin(email)
       clearPocketBaseAuth()
       void clearLocalDeviceDataSync()
       resetBackend()
@@ -308,11 +373,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const needsGuestRedirect = !isLoggedIn && !isPublicRoute
-  const adminShellPath = isAdminAllowedPath(pathname)
   const showBlockingRedirect =
     !ready ||
-    (isLoggedIn && platformAdminLoading && !adminShellPath) ||
     needsGuestRedirect ||
+    (isLoggedIn && onboardingCheckPending && !isOnboardingRoute && !isPublicRoute) ||
     (isLoggedIn &&
       !isPlatformAdmin &&
       needsOnboardingState &&
