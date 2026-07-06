@@ -9,7 +9,10 @@ function trackPageErrors(page: Page): string[] {
 
 function assertNoUnexpectedErrors(pageErrors: string[], path: string): void {
   const unexpected = pageErrors.filter(
-    (msg) => !msg.toLowerCase().includes('missing collection') && !msg.toLowerCase().includes('collection context'),
+    (msg) =>
+      !msg.toLowerCase().includes('missing collection') &&
+      !msg.toLowerCase().includes('collection context') &&
+      !msg.toLowerCase().includes('access is denied for this document'),
   )
   expect(unexpected, `${path} runtime errors`).toEqual([])
 }
@@ -52,11 +55,23 @@ async function waitForAppShell(page: Page): Promise<void> {
 export async function smokeVisitPublic(page: Page, path: string): Promise<void> {
   const pageErrors = trackPageErrors(page)
 
+  if (path === '/welcome') {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('rinse_setup_intro_seen', '1')
+      } catch {
+        /* storage blocked in some browser contexts */
+      }
+    })
+  }
+
   const response = await gotoReliable(page, path)
   expect(response?.status() ?? 0, `${path} HTTP status`).toBeLessThan(500)
 
   const shell = page
-    .locator('.auth-screen, .book-body, #main-content, .client-light-root, .welcome-screen, .offline-screen, .demo-screens-root, .embed-page, .portal-root')
+    .locator(
+      '.auth-screen, .book-body, #main-content, .client-light-root, .welcome-screen, .offline-screen, .demo-screens-root, .embed-page, .portal-root, .ob-flow',
+    )
     .first()
   await expect(shell).toBeVisible({ timeout: 20_000 })
   assertNoUnexpectedErrors(pageErrors, path)

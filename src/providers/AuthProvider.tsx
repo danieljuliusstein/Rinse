@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { fetchPlatformAdminAccess } from '@/lib/admin-api'
 import { resetBackend, syncOnReconnect } from '@/lib/api'
 import { clearLocalDeviceDataSync } from '@/lib/clear-local-data'
@@ -49,7 +49,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function initialPlatformAdminState(): { admin: boolean; loading: boolean } {
+function initialPlatformAdminState(pathname: string): { admin: boolean; loading: boolean } {
   if (typeof window === 'undefined') return { admin: false, loading: false }
   if (!isPocketBaseAuthenticated()) return { admin: false, loading: false }
   const email = getCurrentUserEmail()
@@ -57,7 +57,7 @@ function initialPlatformAdminState(): { admin: boolean; loading: boolean } {
   const cached = readCachedPlatformAdmin(email)
   if (cached === true) return { admin: true, loading: false }
   if (cached === false) return { admin: false, loading: false }
-  return { admin: false, loading: true }
+  return { admin: false, loading: shouldProbePlatformAdminWithLoading(pathname) }
 }
 
 function isPublicPath(pathname: string): boolean {
@@ -82,14 +82,16 @@ function isOnboardingPath(pathname: string): boolean {
   return pathname === '/onboarding'
 }
 
-function safeReplace(router: ReturnType<typeof useRouter>, href: string) {
-  queueMicrotask(() => {
-    try {
-      router.replace(href)
-    } catch {
-      // Router may not be ready during hydration
-    }
-  })
+function isPostAuthEntryPath(pathname: string): boolean {
+  return pathname === '/welcome' || pathname === '/auth' || pathname === ADMIN_AUTH
+}
+
+function isAdminLanePath(pathname: string): boolean {
+  return pathname === ADMIN_HOME || pathname.startsWith(`${ADMIN_HOME}/`) || pathname === ADMIN_AUTH
+}
+
+function shouldProbePlatformAdminWithLoading(pathname: string): boolean {
+  return isAdminLanePath(pathname) || isPostAuthEntryPath(pathname)
 }
 
 /** iOS PWA often ignores soft router.replace — hard navigation is reliable for lane changes. */
@@ -103,7 +105,6 @@ function hardReplace(href: string) {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authTick, setAuthTick] = useState(0)
   const pathname = usePathname()
-  const router = useRouter()
 
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
@@ -129,16 +130,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   void authTick
 
   const isLoggedIn = mounted && isPocketBaseAuthenticated()
-  const initialAdmin = initialPlatformAdminState()
-  const [isPlatformAdmin, setIsPlatformAdmin] = useState(initialAdmin.admin)
-  const [platformAdminLoading, setPlatformAdminLoading] = useState(initialAdmin.loading)
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(() => initialPlatformAdminState(pathname).admin)
+  const [platformAdminLoading, setPlatformAdminLoading] = useState(
+    () => initialPlatformAdminState(pathname).loading,
+  )
   const [needsOnboardingState, setNeedsOnboardingState] = useState(false)
-  const [onboardingCheckPending, setOnboardingCheckPending] = useState(false)
   const [subscriptionLapsed, setSubscriptionLapsed] = useState(false)
   const [subscriptionLoading, setSubscriptionLoading] = useState(true)
 
   const isPublicRoute = isPublicPath(pathname)
-  const isOnboardingRoute = isOnboardingPath(pathname)
 
   useEffect(() => {
     if (!mounted || !isLoggedIn) {
@@ -158,8 +158,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    const blockWhileProbing = shouldProbePlatformAdminWithLoading(pathname)
+    if (!blockWhileProbing) {
+      setIsPlatformAdmin(false)
+      setPlatformAdminLoading(false)
+    } else {
+      setPlatformAdminLoading(true)
+    }
+
     let cancelled = false
-    setPlatformAdminLoading(true)
     void (async () => {
       try {
         const admin = await Promise.race([
@@ -191,16 +198,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted || !isLoggedIn || isPlatformAdmin || platformAdminLoading) {
-      setOnboardingCheckPending(false)
       return
     }
     if (isPublicPath(pathname) || isOnboardingPath(pathname) || isAdminAllowedPath(pathname)) {
-      setOnboardingCheckPending(false)
       return
     }
 
     let cancelled = false
-    setOnboardingCheckPending(true)
     void (async () => {
       try {
         const { loadSettingsAsync } = await import('@/lib/settings')
@@ -209,20 +213,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (settings && needsOnboarding(settings)) {
           setNeedsOnboardingState(true)
           const step = resolveOnboardingStep(null, settings)
-          safeReplace(router, onboardingStepUrl(step))
+          hardReplace(onboardingStepUrl(step))
         } else {
           setNeedsOnboardingState(false)
         }
       } catch {
         if (!cancelled) setNeedsOnboardingState(false)
-      } finally {
-        if (!cancelled) setOnboardingCheckPending(false)
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [mounted, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname, router])
+  }, [mounted, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname])
 
   useEffect(() => {
     if (
@@ -278,28 +280,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
     if (isPublicRoute) return
-    safeReplace(router, '/welcome')
-    const timer = window.setTimeout(() => {
-      if (window.location.pathname === pathname) {
-        hardReplace('/welcome')
-      }
-    }, 1500)
-    return () => window.clearTimeout(timer)
-  }, [ready, isLoggedIn, router, isPublicRoute, pathname])
+    hardReplace('/welcome')
+  }, [ready, isLoggedIn, isPublicRoute, pathname])
 
   useEffect(() => {
     if (!ready || !isLoggedIn || platformAdminLoading) return
     if (pathname !== '/welcome' && pathname !== '/auth' && pathname !== ADMIN_AUTH) return
     const home = resolvePostAuthHome(isPlatformAdmin)
     if (pathname === '/auth' && !isPlatformAdmin && needsOnboardingState) {
-      safeReplace(router, onboardingStepUrl('business'))
+      hardReplace(onboardingStepUrl('business'))
       return
     }
-    if (home === ADMIN_HOME) {
-      hardReplace(home)
-      return
-    }
-    safeReplace(router, home)
+    hardReplace(home)
   }, [
     ready,
     isLoggedIn,
@@ -307,14 +299,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     platformAdminLoading,
     needsOnboardingState,
     pathname,
-    router,
   ])
 
   useEffect(() => {
     if (!ready || !isLoggedIn || !isPlatformAdmin || platformAdminLoading) return
     if (isAdminAllowedPath(pathname)) return
     hardReplace(ADMIN_HOME)
-  }, [ready, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname, router])
+  }, [ready, isLoggedIn, isPlatformAdmin, platformAdminLoading, pathname])
 
   const syncPocketBaseInBackground = useCallback(() => {
     void (async () => {
@@ -362,9 +353,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       resetBackend()
       setIsPlatformAdmin(false)
       bumpAuth()
-      safeReplace(router, resolveLogoutHref(lane === 'admin'))
+      hardReplace(resolveLogoutHref(lane === 'admin'))
     },
-    [router, bumpAuth, isPlatformAdmin],
+    [bumpAuth, isPlatformAdmin],
   )
 
   const contextValue: AuthContextValue = {
@@ -379,30 +370,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
   }
 
-  const needsGuestRedirect = !isLoggedIn && !isPublicRoute
-  const adminGuestTarget = !isLoggedIn ? resolveGuestRedirect(pathname) : null
-  const isAdminShellPath = isAdminAllowedPath(pathname)
-  const showBlockingRedirect =
-    !ready ||
-    (needsGuestRedirect && !adminGuestTarget) ||
-    (isLoggedIn && platformAdminLoading && !isAdminShellPath) ||
-    (isLoggedIn &&
-      onboardingCheckPending &&
-      !isOnboardingRoute &&
-      !isPublicRoute &&
-      !isAdminShellPath) ||
-    (isLoggedIn &&
-      !isPlatformAdmin &&
-      needsOnboardingState &&
-      !isOnboardingRoute &&
-      !isPublicRoute &&
-      !isAdminShellPath)
+  const showBlockingRedirect = !ready
 
   return (
     <AuthContext.Provider value={contextValue}>
       {showBlockingRedirect ? (
         <div className="auth-loading-screen">
-          <div className="auth-loading-text">{ready ? 'Redirecting…' : 'Loading…'}</div>
+          <div className="auth-loading-text">Loading…</div>
         </div>
       ) : (
         children

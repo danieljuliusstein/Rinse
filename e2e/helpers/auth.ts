@@ -96,15 +96,19 @@ export async function installPocketBaseSession(
   session: { token: string; record: Record<string, unknown> },
 ): Promise<void> {
   await context.addInitScript(({ token, record }) => {
-    localStorage.setItem('pocketbase_auth', JSON.stringify({ token, record }))
-    sessionStorage.setItem('pb_auth_active', '1')
+    try {
+      localStorage.setItem('pocketbase_auth', JSON.stringify({ token, record }))
+      sessionStorage.setItem('pb_auth_active', '1')
 
-    const settingsKey = 'detailing_settings_v1'
-    const raw = localStorage.getItem(settingsKey)
-    const settings = raw ? JSON.parse(raw) : {}
-    settings.onboarding_completed_at = '2026-07-01'
-    settings.onboarding_step = 4
-    localStorage.setItem(settingsKey, JSON.stringify(settings))
+      const settingsKey = 'detailing_settings_v1'
+      const raw = localStorage.getItem(settingsKey)
+      const settings = raw ? JSON.parse(raw) : {}
+      settings.onboarding_completed_at = '2026-07-01'
+      settings.onboarding_step = 4
+      localStorage.setItem(settingsKey, JSON.stringify(settings))
+    } catch {
+      /* storage may be blocked during early navigation in some browser contexts */
+    }
   }, session)
 }
 

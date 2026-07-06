@@ -47,7 +47,7 @@ export function buildContentSecurityPolicyReportOnly(pathname: string): string {
   const directives = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com",
-    `connect-src ${connectSrc}`,
+    `connect-src ${connectSrc} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
     'frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com',
     `img-src ${imgSrc}`,
     "style-src 'self' 'unsafe-inline'",

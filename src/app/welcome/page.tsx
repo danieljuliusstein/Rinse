@@ -16,9 +16,9 @@ export default function WelcomePage() {
 
   useEffect(() => {
     if (!hasSeenSetupIntro()) {
-      router.replace('/intro')
+      window.location.replace('/intro')
     }
-  }, [router])
+  }, [])
 
   return (
     <div

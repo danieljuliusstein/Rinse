@@ -72,7 +72,7 @@ export default function RootLayout({
           </SetupMotionProvider>
         </ThemeProvider>
         <Analytics />
-        <SpeedInsights />
+        <SpeedInsights dsn={process.env.NEXT_PUBLIC_VERCEL_SPEED_INSIGHTS_DSN} />
       </body>
     </html>
   )

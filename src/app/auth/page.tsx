@@ -1,17 +1,14 @@
 'use client'
 
 import { Suspense } from 'react'
-import { useRouter } from 'next/navigation'
 import AccountAuth from '@/components/AccountAuth'
 
 function AuthPageInner() {
-  const router = useRouter()
-
   return (
     <AccountAuth
       onAuthenticated={(options) => {
         if (options?.isSignup) return
-        router.replace('/')
+        window.location.replace('/')
       }}
     />
   )
