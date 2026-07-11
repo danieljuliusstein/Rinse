@@ -42,6 +42,7 @@ import { formatMoneyInput, parseMoneyInput } from '@/src/lib/money-input'
 import { recordSuccessfulJobAndMaybePromptReview } from '@/src/lib/app-review'
 import { selectionHaptic } from '@/src/lib/haptics'
 import { checkPremiumGate } from '@/src/lib/subscription'
+import { trackProductEvent } from '@/src/lib/telemetry'
 import { VehicleTypePicker } from '@/src/lib/vehicle-type-icons'
 import { colors, radii, spacing, webPressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
@@ -185,6 +186,13 @@ export function JobCreateForm({ initialClientId, initialDate, onSubmit }: JobCre
         selectedClient?.name ?? 'Client',
       )
       setDone(true)
+      trackProductEvent('job_created', {
+        package_id: values.packageId,
+        vehicle_type: values.vehicleType,
+        location_type: values.locationType,
+        revenue: values.revenue,
+        has_recurrence: values.recurrence_cadence !== 'none' && values.recurrence_cadence !== undefined,
+      })
       void recordSuccessfulJobAndMaybePromptReview()
       setTimeout(() => router.back(), 450)
     } catch (e) {

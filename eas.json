@@ -21,7 +21,11 @@
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_wyxJULDswY6PGpmNsVnZ67KWU8qH7vNjucmC4oz6PFoT",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
+      }
     }
   },
   "submit": {

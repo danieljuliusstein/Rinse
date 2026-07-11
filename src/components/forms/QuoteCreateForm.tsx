@@ -17,6 +17,7 @@ import { localCalendarDate } from '@/src/lib/job-create'
 import { formatMoneyInput, parseMoneyInput } from '@/src/lib/money-input'
 import { createQuote } from '@/src/lib/quotes-api'
 import { checkPremiumGate } from '@/src/lib/subscription'
+import { trackProductEvent } from '@/src/lib/telemetry'
 import { VehicleTypePicker } from '@/src/lib/vehicle-type-icons'
 import { colors, spacing } from '@/src/theme/colors'
 
@@ -108,6 +109,11 @@ export function QuoteCreateForm({
         valid_until: values.valid_until,
       })
       setDone(true)
+      trackProductEvent('quote_created', {
+        vehicle_type: values.vehicle_type,
+        location_type: values.location_type,
+        subtotal: values.subtotal,
+      })
       setTimeout(() => router.replace(`/quotes/${quote.id}`), 450)
     } catch (e) {
       Alert.alert('Could not create quote', e instanceof Error ? e.message : 'Try again')

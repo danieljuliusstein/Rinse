@@ -33,6 +33,7 @@ import {
   type InvoiceListRow,
 } from '@/src/lib/invoices-list'
 import { useSafeBack } from '@/src/lib/safe-go-back'
+import { trackProductEvent } from '@/src/lib/telemetry'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 
 export default function InvoicesScreen() {
@@ -95,7 +96,10 @@ export default function InvoicesScreen() {
       actions.push({
         text: 'Mark sent',
         onPress: () => {
-          void markInvoiceSent(inv.id).then(() => void load(true))
+          void markInvoiceSent(inv.id).then(() => {
+            trackProductEvent('invoice_sent', { invoice_id: inv.id, total: inv.total })
+            void load(true)
+          })
         },
       })
     }
@@ -103,7 +107,14 @@ export default function InvoicesScreen() {
       actions.push({
         text: 'Mark paid',
         onPress: () => {
-          void markInvoicePaid(inv.id, 'cash').then(() => void load(true))
+          void markInvoicePaid(inv.id, 'cash').then(() => {
+            trackProductEvent('invoice_marked_paid', {
+              invoice_id: inv.id,
+              total: inv.total,
+              balance_due: inv.balance_due,
+            })
+            void load(true)
+          })
         },
       })
     }
