@@ -8,6 +8,7 @@ import { AppText, EmptyState, ListRow, ScreenLoading, SectionGroup } from '@/src
 import { listJobs } from '@/src/lib/api'
 import { createInvoiceForJob } from '@/src/lib/invoices-api'
 import { checkPremiumGate } from '@/src/lib/subscription'
+import { trackProductEvent } from '@/src/lib/telemetry'
 import { colors, spacing } from '@/src/theme/colors'
 
 function jobAmount(job: JobWithRelations): number {
@@ -57,6 +58,10 @@ export default function InvoicesNewScreen() {
       const gate = await checkPremiumGate('create_invoice')
       if (!gate.allowed) return
       const created = await createInvoiceForJob(job.id)
+      trackProductEvent('invoice_created', {
+        job_id: job.id,
+        amount: jobAmount(job),
+      })
       router.replace(`/invoices/${created.id}`)
     } catch (e) {
       Alert.alert('Create invoice', e instanceof Error ? e.message : 'Could not create invoice')

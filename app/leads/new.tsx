@@ -9,6 +9,7 @@ import { SectionGroup } from '@/src/components/ui/SectionGroup'
 import { SheetSubmitButton } from '@/src/components/ui/SheetSubmitButton'
 import { createLead } from '@/src/lib/leads-api'
 import { checkPremiumGate } from '@/src/lib/subscription'
+import { trackProductEvent } from '@/src/lib/telemetry'
 import { VehicleTypePicker } from '@/src/lib/vehicle-type-icons'
 import { spacing } from '@/src/theme/colors'
 
@@ -38,6 +39,11 @@ export default function NewLeadScreen() {
         vehicle_type: vehicleType,
         service_interest: service.trim() || undefined,
         stage: 'inquiry',
+      })
+      trackProductEvent('lead_created', {
+        vehicle_type: vehicleType,
+        has_phone: phone.trim().length > 0,
+        has_service_interest: service.trim().length > 0,
       })
       setDone(true)
       setTimeout(() => router.back(), 600)

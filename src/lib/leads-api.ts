@@ -4,6 +4,7 @@ import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { resolveLeadStage } from '@/src/lib/lead-sources'
 import { requireOrganizationId } from './org'
+import { trackProductEvent } from './telemetry'
 
 const LEAD_EXPAND = 'package_id,quote_id,client_id'
 
@@ -194,7 +195,11 @@ async function requireLeadUpdate(id: string, input: Partial<LeadInput>, errorMes
 }
 
 export async function updateLeadStage(id: string, stage: LeadStage): Promise<Lead | null> {
-  return updateLead(id, { stage })
+  const result = await updateLead(id, { stage })
+  if (result) {
+    trackProductEvent('lead_stage_changed', { lead_id: id, stage })
+  }
+  return result
 }
 
 export async function deleteLead(id: string): Promise<boolean> {

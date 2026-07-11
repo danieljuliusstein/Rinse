@@ -4,6 +4,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { Car, Plus } from 'phosphor-react-native'
 import { deleteJob, listJobs } from '@/src/lib/api'
 import type { JobWithRelations, Vehicle } from '@rinse/core'
+import { trackProductEvent } from '@/src/lib/telemetry'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import {
   AppText,
@@ -137,8 +138,12 @@ export default function JobsScreen() {
               style: 'destructive',
               onPress: () => {
                 void deleteJob(job.id).then((result) => {
-                  if (result.ok) void load(true)
-                  else Alert.alert('Cancel', result.error ?? 'Could not cancel job')
+                  if (result.ok) {
+                    trackProductEvent('job_cancelled', { job_id: job.id, status: job.status })
+                    void load(true)
+                  } else {
+                    Alert.alert('Cancel', result.error ?? 'Could not cancel job')
+                  }
                 })
               },
             },
@@ -184,8 +189,12 @@ export default function JobsScreen() {
           style: 'destructive',
           onPress: () => {
             void deleteJob(job.id).then((result) => {
-              if (result.ok) void load(true)
-              else Alert.alert('Cancel', result.error ?? 'Could not cancel job')
+              if (result.ok) {
+                trackProductEvent('job_cancelled', { job_id: job.id, status: job.status })
+                void load(true)
+              } else {
+                Alert.alert('Cancel', result.error ?? 'Could not cancel job')
+              }
             })
           },
         },
