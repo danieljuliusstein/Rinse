@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Platform, Pressable, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native'
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
 import { lightHaptic } from '@/src/lib/haptics'
 import { colors } from '@/src/theme/colors'
@@ -80,7 +80,7 @@ export function PressableSurface({
       }}
       onPressOut={(event) => {
         if (!reduceMotion) {
-          scale.value = withTiming(1, { duration: motion.pressMs })
+          scale.value = withSpring(1, motion.snappy)
         }
         onPressOut?.(event)
       }}

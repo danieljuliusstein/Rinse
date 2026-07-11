@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react'
 import { useCallback, useEffect } from 'react'
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { useNavigation } from 'expo-router'
 import { initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
+import { useSheetDismissPanHandlers } from '@/src/hooks/useSheetDismissGesture'
 import { tabDockSafeBottom } from '@/src/hooks/useTabDockPadding'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
 import { lightHaptic, mediumHaptic } from '@/src/lib/haptics'
+import { closeSheetSpring, openSheetSpring } from '@/src/lib/sheet-motion'
 import { safeGoBack } from '@/src/lib/safe-go-back'
 import { colors, radii, shadows, spacing } from '@/src/theme/colors'
-import { motion } from '@/src/theme/motion'
 
 /**
  * Screen `safeAreaInsets: { bottom: 0 }` lets the sheet bleed to the physical
@@ -72,8 +73,7 @@ export function AppSheet({
       return
     }
     mediumHaptic()
-    scrimOpacity.value = withTiming(1, { duration: motion.fadeMs })
-    sheetTranslateY.value = withTiming(0, { duration: motion.sheetMs })
+    openSheetSpring(sheetTranslateY, scrimOpacity)
   }, [isModal, reduceMotion, scrimOpacity, sheetTranslateY, visible])
 
   const requestClose = useCallback(() => {
@@ -82,11 +82,16 @@ export function AppSheet({
       finishClose()
       return
     }
-    scrimOpacity.value = withTiming(0, { duration: motion.fastMs })
-    sheetTranslateY.value = withTiming(SHEET_OFFSCREEN, { duration: motion.sheetMs }, (finished) => {
-      if (finished) runOnJS(finishClose)()
-    })
+    closeSheetSpring(sheetTranslateY, scrimOpacity, SHEET_OFFSCREEN, finishClose)
   }, [finishClose, reduceMotion, scrimOpacity, sheetTranslateY])
+
+  const dismissPanHandlers = useSheetDismissPanHandlers(
+    sheetTranslateY,
+    scrimOpacity,
+    SHEET_OFFSCREEN,
+    finishClose,
+    !reduceMotion,
+  )
 
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: scrimOpacity.value,
@@ -108,21 +113,23 @@ export function AppSheet({
         pointerEvents="box-none"
       >
         <Animated.View style={[styles.sheet, sheetStyle, { paddingBottom: safeBottom }]}>
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <View style={styles.headerText}>
-              <AppText variant="h2">{title}</AppText>
-              {subtitle ? (
-                <AppText variant="caption" style={styles.subtitle}>
-                  {subtitle}
-                </AppText>
-              ) : null}
-            </View>
-            <Pressable onPress={requestClose} hitSlop={12} style={styles.closeBtn} accessibilityLabel="Close">
-              <View>
-                <X size={20} color={colors.textMuted} weight="bold" />
+          <View style={styles.dragRegion} {...dismissPanHandlers}>
+            <View style={styles.handle} />
+            <View style={styles.header}>
+              <View style={styles.headerText}>
+                <AppText variant="h2">{title}</AppText>
+                {subtitle ? (
+                  <AppText variant="caption" style={styles.subtitle}>
+                    {subtitle}
+                  </AppText>
+                ) : null}
               </View>
-            </Pressable>
+              <Pressable onPress={requestClose} hitSlop={12} style={styles.closeBtn} accessibilityLabel="Close">
+                <View>
+                  <X size={20} color={colors.textMuted} weight="bold" />
+                </View>
+              </Pressable>
+            </View>
           </View>
 
           <ScrollView
@@ -178,6 +185,9 @@ const styles = StyleSheet.create({
     width: '100%',
     overflow: 'hidden',
     ...shadows.card,
+  },
+  dragRegion: {
+    width: '100%',
   },
   handle: {
     alignSelf: 'center',

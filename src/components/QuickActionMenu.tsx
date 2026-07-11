@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native'
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { Briefcase, FileText, Flask, Funnel, Receipt, Wallet, type Icon } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
+import { useSheetDismissPanHandlers } from '@/src/hooks/useSheetDismissGesture'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
 import { lightHaptic, mediumHaptic } from '@/src/lib/haptics'
+import { closeSheetSpring, openSheetSpring } from '@/src/lib/sheet-motion'
+import { quickActionRowEntering } from '@/src/lib/motion-presets'
 import { useQuickAction } from '@/src/providers/QuickActionProvider'
 import { colors, layout, spacing, webPressableReset } from '@/src/theme/colors'
-import { motion } from '@/src/theme/motion'
 import { fonts } from '@/src/theme/typography'
 
 interface ActionItem {
@@ -29,6 +31,8 @@ export function QuickActionMenu() {
   const reduceMotion = useReduceMotion()
   const { menuOpen, closeMenu } = useQuickAction()
   const [mounted, setMounted] = useState(menuOpen)
+  /** Pan dismiss already sprang the panel away — skip a second close animation. */
+  const skipCloseAnimation = useRef(false)
 
   const sheetWidth =
     Platform.OS === 'web' ? Math.min(windowWidth, layout.phoneColumnWidth) : windowWidth
@@ -40,9 +44,14 @@ export function QuickActionMenu() {
     setMounted(false)
   }, [])
 
+  const finishPanDismiss = useCallback(() => {
+    skipCloseAnimation.current = true
+    closeMenu()
+    finishUnmount()
+  }, [closeMenu, finishUnmount])
+
   const animateOpen = useCallback(() => {
-    scrimOpacity.value = withTiming(1, { duration: motion.fadeMs })
-    sheetTranslateY.value = withTiming(0, { duration: motion.sheetMs })
+    openSheetSpring(sheetTranslateY, scrimOpacity)
   }, [scrimOpacity, sheetTranslateY])
 
   const animateClose = useCallback(() => {
@@ -52,11 +61,21 @@ export function QuickActionMenu() {
       finishUnmount()
       return
     }
-    scrimOpacity.value = withTiming(0, { duration: motion.fastMs })
-    sheetTranslateY.value = withTiming(SHEET_OFFSCREEN, { duration: motion.sheetMs }, (finished) => {
-      if (finished) runOnJS(finishUnmount)()
-    })
+    closeSheetSpring(sheetTranslateY, scrimOpacity, SHEET_OFFSCREEN, finishUnmount)
   }, [finishUnmount, reduceMotion, scrimOpacity, sheetTranslateY])
+
+  const requestClose = useCallback(() => {
+    lightHaptic()
+    closeMenu()
+  }, [closeMenu])
+
+  const dismissPanHandlers = useSheetDismissPanHandlers(
+    sheetTranslateY,
+    scrimOpacity,
+    SHEET_OFFSCREEN,
+    finishPanDismiss,
+    !reduceMotion,
+  )
 
   useEffect(() => {
     if (menuOpen) {
@@ -73,6 +92,10 @@ export function QuickActionMenu() {
       return
     }
     if (mounted) {
+      if (skipCloseAnimation.current) {
+        skipCloseAnimation.current = false
+        return
+      }
       animateClose()
     }
   }, [animateClose, animateOpen, menuOpen, mounted, reduceMotion, scrimOpacity, sheetTranslateY])
@@ -148,7 +171,7 @@ export function QuickActionMenu() {
         },
       },
     ],
-    [closeMenu, router]
+    [closeMenu, router],
   )
 
   if (!mounted) return null
@@ -160,13 +183,13 @@ export function QuickActionMenu() {
       transparent
       visible
       animationType="none"
-      onRequestClose={closeMenu}
+      onRequestClose={requestClose}
       statusBarTranslucent
       presentationStyle="overFullScreen"
     >
       <View style={[styles.root, Platform.OS === 'web' && styles.rootWeb]} accessibilityViewIsModal>
         <View style={[styles.column, { width: sheetWidth }]}>
-          <Pressable style={styles.backdropPress} onPress={closeMenu} accessibilityLabel="Close quick actions">
+          <Pressable style={styles.backdropPress} onPress={requestClose} accessibilityLabel="Close quick actions">
             <Animated.View style={[styles.backdrop, scrimStyle]} />
           </Pressable>
 
@@ -175,40 +198,44 @@ export function QuickActionMenu() {
             accessibilityRole="menu"
             accessibilityLabel="Quick actions"
           >
-            <View style={styles.handle} />
-            <AppText style={styles.title}>Quick actions</AppText>
+            <View style={styles.dragRegion} {...dismissPanHandlers}>
+              <View style={styles.handle} />
+              <AppText style={styles.title}>Quick actions</AppText>
+            </View>
             <View style={styles.list}>
-              {actions.map((action) => {
+              {actions.map((action, index) => {
                 const { Icon } = action
+                const entering = quickActionRowEntering(index, reduceMotion)
                 return (
-                  <Pressable
-                    key={action.id}
-                    onPress={() => {
-                      lightHaptic()
-                      action.onSelect()
-                    }}
-                    style={({ pressed }) => [
-                      styles.rowPressable,
-                      webPressableReset,
-                      pressed && styles.rowPressed,
-                    ]}
-                    accessibilityRole="menuitem"
-                    accessibilityLabel={`${action.label}. ${action.subtitle}`}
-                  >
-                    <View style={[styles.row, Platform.OS === 'web' && styles.rowWeb]}>
-                      <View style={styles.rowIcon}>
-                        <Icon size={22} color={colors.green} weight="duotone" />
+                  <Animated.View key={action.id} entering={entering}>
+                    <Pressable
+                      onPress={() => {
+                        lightHaptic()
+                        action.onSelect()
+                      }}
+                      style={({ pressed }) => [
+                        styles.rowPressable,
+                        webPressableReset,
+                        pressed && styles.rowPressed,
+                      ]}
+                      accessibilityRole="menuitem"
+                      accessibilityLabel={`${action.label}. ${action.subtitle}`}
+                    >
+                      <View style={[styles.row, Platform.OS === 'web' && styles.rowWeb]}>
+                        <View style={styles.rowIcon}>
+                          <Icon size={22} color={colors.green} weight="duotone" />
+                        </View>
+                        <View style={styles.rowText}>
+                          <AppText variant="bodySemiBold" style={styles.rowLabel}>
+                            {action.label}
+                          </AppText>
+                          <AppText variant="caption" style={styles.subtitle} numberOfLines={2}>
+                            {action.subtitle}
+                          </AppText>
+                        </View>
                       </View>
-                      <View style={styles.rowText}>
-                        <AppText variant="bodySemiBold" style={styles.rowLabel}>
-                          {action.label}
-                        </AppText>
-                        <AppText variant="caption" style={styles.subtitle} numberOfLines={2}>
-                          {action.subtitle}
-                        </AppText>
-                      </View>
-                    </View>
-                  </Pressable>
+                    </Pressable>
+                  </Animated.View>
                 )
               })}
             </View>
@@ -252,6 +279,9 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingTop: 12,
+  },
+  dragRegion: {
+    width: '100%',
   },
   handle: {
     alignSelf: 'center',

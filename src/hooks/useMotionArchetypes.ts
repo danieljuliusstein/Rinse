@@ -34,17 +34,15 @@ export function usePillPopScale(selected: boolean) {
   }))
 }
 
-/** success-pop — brief 1 → 1.02 → 1 scale (submit done, badge emphasis). */
+/** success-pop — brief spring overshoot (submit done, badge emphasis). */
 export function useSuccessPopScale(active: boolean) {
   const reduceMotion = useReduceMotion()
   const scale = useSharedValue(1)
 
   useEffect(() => {
     if (!active || reduceMotion) return
-    scale.value = withSequence(
-      withTiming(1.02, { duration: motion.sheetMs * 0.45, easing: Easing.out(Easing.cubic) }),
-      withTiming(1, { duration: motion.sheetMs * 0.55, easing: Easing.out(Easing.cubic) }),
-    )
+    scale.value = 1.04
+    scale.value = withSpring(1, motion.spring)
   }, [active, reduceMotion, scale])
 
   return useAnimatedStyle(() => ({

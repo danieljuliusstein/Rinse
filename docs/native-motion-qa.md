@@ -28,10 +28,12 @@ PW_NO_SERVER=1 NATIVE_VISUAL_URL=http://127.0.0.1:8081 npm run motion-smoke
 
 | Test | Archetype | Pass criteria |
 |------|-----------|---------------|
-| Quick actions open/close | `sheet-enter` + row stagger | Menu slides up, rows appear, backdrop dismisses |
-| `/jobs/new` sheet | `sheet-enter` / exit | Title + close affordances; panel uses spring slide |
+| Quick actions open/close | `sheet-enter` + row stagger | Menu springs up, rows stagger in, backdrop / drag dismisses |
+| `/jobs/new` sheet | `sheet-enter` / exit | Title + close affordances; panel uses spring slide (drag handle dismisses on device) |
 | `/jobs` list | `list-stagger` | Data visible after stagger window |
 | Reduced motion | a11y | `prefers-reduced-motion: reduce` still opens FAB |
+
+Sheets use Reanimated `withSpring` (`motion.spring` / `motion.snappy`) for the panel; scrim stays timed (`fadeMs` / `fastMs`). Drag-to-dismiss uses RN `PanResponder` on the handle/header (avoids RNGH Fabric `install()` on stale native binaries). Timing mirrors below remain the smoke budgets, not the spring curve.
 
 Timing mirrors PWA `tokens.css` (`280ms` sheet/scrim, `50ms` stagger steps).
 

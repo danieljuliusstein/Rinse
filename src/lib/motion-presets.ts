@@ -32,12 +32,10 @@ export function sheetPanelExiting(reduceMotion: boolean): ExitingAnimation {
   return springExit(motion.fastMs)
 }
 
-/** PWA quick-action-row-in — soft fade/slide, no spring bounce. */
+/** FAB quick-action rows — spring stagger to match sheet-enter. */
 export function quickActionRowEntering(index: number, reduceMotion: boolean): EnteringAnimation | undefined {
   if (reduceMotion) return FadeIn.duration(0)
-  return FadeInDown.duration(motion.listStaggerMs)
-    .easing(Easing.out(Easing.cubic))
-    .delay(index * motion.staggerStepMs)
+  return springEnter(motion.listStaggerMs).delay(index * motion.staggerStepMs)
 }
 
 export function listStaggerEntering(index: number, reduceMotion: boolean): EnteringAnimation | undefined {

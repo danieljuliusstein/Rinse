@@ -17,6 +17,7 @@ import {
   ScreenLoading,
   SearchField,
   SectionGroup,
+  StaggeredListItem,
   SwipeableRow,
 } from '@/src/components/ui'
 import { useDataRefresh } from '@/src/providers/DataRefreshProvider'
@@ -155,7 +156,7 @@ export default function JobsScreen() {
     Alert.alert(job.client?.name ?? 'Job', 'Job actions', actions)
   }
 
-  const renderJobRow = (job: JobWithRelations, grouped: boolean, isLast: boolean) => {
+  const renderJobRow = (job: JobWithRelations, grouped: boolean, isLast: boolean, staggerIndex: number) => {
     const iconTone = jobListIconTone(job)
     const row = (
       <ListRow
@@ -202,18 +203,19 @@ export default function JobsScreen() {
     }
 
     return (
-      <SwipeableRow
-        key={job.id}
-        rowId={job.id}
-        openRowId={openSwipeId}
-        onOpenChange={setOpenSwipeId}
-        onEdit={() => router.push(`/jobs/edit/${job.id}`)}
-        onDelete={
-          job.status === 'scheduled' || job.status === 'in_progress' ? cancelJob : () => showJobActions(job)
-        }
-      >
-        {row}
-      </SwipeableRow>
+      <StaggeredListItem key={job.id} index={staggerIndex}>
+        <SwipeableRow
+          rowId={job.id}
+          openRowId={openSwipeId}
+          onOpenChange={setOpenSwipeId}
+          onEdit={() => router.push(`/jobs/edit/${job.id}`)}
+          onDelete={
+            job.status === 'scheduled' || job.status === 'in_progress' ? cancelJob : () => showJobActions(job)
+          }
+        >
+          {row}
+        </SwipeableRow>
+      </StaggeredListItem>
     )
   }
 
@@ -290,7 +292,7 @@ export default function JobsScreen() {
               <SectionGroup key={section.key} title={section.label}>
                 <View style={styles.groupCard}>
                   {visible.map((job, index) =>
-                    renderJobRow(job, true, index >= visible.length - 1 && hidden <= 0),
+                    renderJobRow(job, true, index >= visible.length - 1 && hidden <= 0, index),
                   )}
                   {hidden > 0 ? (
                     <Pressable
