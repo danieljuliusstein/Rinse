@@ -16,7 +16,9 @@ function isElementType(v: unknown): v is ElementType {
     v === 'meta' ||
     v === 'lineItems' ||
     v === 'totals' ||
-    v === 'notes'
+    v === 'notes' ||
+    v === 'bodyText' ||
+    v === 'service'
   )
 }
 
@@ -37,6 +39,9 @@ function parseElement(raw: unknown): PlacedElement | null {
     color: typeof o.color === 'string' ? o.color : '#22c55e',
     locked: o.locked === true,
     spacing: typeof o.spacing === 'number' ? o.spacing : 12,
+    text: typeof o.text === 'string' ? o.text : undefined,
+    serviceDescription: typeof o.serviceDescription === 'string' ? o.serviceDescription : undefined,
+    serviceAmount: typeof o.serviceAmount === 'number' ? o.serviceAmount : undefined,
   }
 }
 

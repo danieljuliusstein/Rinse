@@ -1,6 +1,6 @@
-import type { PlacedElement } from './types'
+import type { DropGhost, PlacedElement } from './types'
 
-function overlapsX(a: PlacedElement, b: PlacedElement): boolean {
+function overlapsX(a: Pick<PlacedElement, 'x' | 'w'>, b: Pick<PlacedElement, 'x' | 'w'>): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x
 }
 
@@ -74,3 +74,79 @@ export function applyElementSpacing(
   )
   return reflowElementStack(withSpacing)
 }
+
+/**
+ * Live drag rearrange from a drag-start baseline of elements.
+ * Dragged block follows the finger; peers in the same column open a slot (ghost).
+ */
+export function liveDragRearrange(
+  baseline: PlacedElement[],
+  draggingId: string,
+  dragX: number,
+  dragY: number,
+): { elements: PlacedElement[]; ghost: DropGhost | null } {
+  const dragging = baseline.find((e) => e.id === draggingId)
+  if (!dragging) return { elements: baseline, ghost: null }
+
+  const probe = { x: dragX, w: dragging.w }
+  const peers = baseline
+    .filter((e) => e.id !== draggingId && overlapsX(probe, e))
+    .map((e) => ({ ...e }))
+    .sort((a, b) => a.y - b.y || a.x - b.x || a.id.localeCompare(b.id))
+
+  const dragCenter = dragY + dragging.h / 2
+  let insertAt = peers.length
+  for (let i = 0; i < peers.length; i++) {
+    const mid = peers[i]!.y + peers[i]!.h / 2
+    if (dragCenter < mid) {
+      insertAt = i
+      break
+    }
+  }
+
+  // Column top must include the dragged block's baseline Y. Using only peers[0].y
+  // made the top slot unreachable — dragging the first/second block always
+  // re-anchored under the next peer, so items ratcheted downward.
+  const topAnchor = Math.max(
+    0,
+    peers.reduce((minY, peer) => Math.min(minY, peer.y), dragging.y),
+  )
+
+  let cursor = topAnchor
+  const placedPeers: PlacedElement[] = []
+  let ghostY = cursor
+
+  for (let i = 0; i <= peers.length; i++) {
+    if (i === insertAt) {
+      ghostY = cursor
+      cursor = ghostY + dragging.h + Math.max(0, dragging.spacing ?? 0)
+    }
+    const peer = peers[i]
+    if (!peer) continue
+    peer.y = cursor
+    placedPeers.push(peer)
+    cursor = stackBottom(peer)
+  }
+  if (insertAt === peers.length) {
+    ghostY = cursor
+  }
+
+  const byId = new Map(placedPeers.map((el) => [el.id, el]))
+  const next = baseline.map((el) => {
+    if (el.id === draggingId) {
+      return { ...el, x: dragX, y: dragY }
+    }
+    return byId.get(el.id) ?? el
+  })
+
+  return {
+    elements: next,
+    ghost: {
+      x: dragX,
+      y: ghostY,
+      w: dragging.w,
+      h: dragging.h,
+    },
+  }
+}
+

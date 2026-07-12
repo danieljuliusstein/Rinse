@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
-import { PanResponder, type GestureResponderHandlers } from 'react-native'
-import { type SharedValue } from 'react-native-reanimated'
+import { PanResponder, Platform, type GestureResponderHandlers } from 'react-native'
+import { cancelAnimation, type SharedValue } from 'react-native-reanimated'
 import {
   clampSheetDrag,
   closeSheetSpring,
@@ -11,13 +11,14 @@ import { lightHaptic } from '@/src/lib/haptics'
 import { motion } from '@/src/theme/motion'
 
 /**
- * Pan on handle/header only — downward drag dismisses past distance/velocity
- * thresholds; otherwise springs back. Disabled when `enabled` is false (e.g. reduced motion).
+ * Pan on the sheet handle only (attach handlers to a dedicated hit target —
+ * not the title row / close button).
  *
- * Uses RN PanResponder (not RNGH) so sheet dismiss works without a native rebuild
- * when GestureHandlerRootView's Fabric `install()` is unavailable.
+ * Uses RN PanResponder + Reanimated shared values on the JS thread.
+ * RNGH GestureDetector requires a native rebuild; this stays safe on the
+ * current expo-dev-client until that lands.
  */
-export function useSheetDismissPanHandlers(
+export function useSheetDismissGesture(
   translateY: SharedValue<number>,
   scrimOpacity: SharedValue<number>,
   offscreen: number,
@@ -27,10 +28,10 @@ export function useSheetDismissPanHandlers(
   const onDismissRef = useRef(onDismiss)
   onDismissRef.current = onDismiss
 
+  const active = enabled && Platform.OS !== 'web'
+
   return useMemo(() => {
-    if (!enabled) {
-      return {}
-    }
+    if (!active) return {}
 
     const finish = () => {
       lightHaptic()
@@ -38,17 +39,24 @@ export function useSheetDismissPanHandlers(
     }
 
     const responder = PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_evt, gesture) =>
-        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-      onMoveShouldSetPanResponderCapture: (_evt, gesture) =>
-        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        gesture.dy > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx) * 1.2,
+      // Never capture — capturing was stealing the close button / page gestures
+      // and left the sheet transform fighting the modal stack.
+      onPanResponderTerminationRequest: () => true,
+      onPanResponderGrant: () => {
+        cancelAnimation(translateY)
+        cancelAnimation(scrimOpacity)
+      },
       onPanResponderMove: (_evt, gesture) => {
         const y = clampSheetDrag(gesture.dy)
         translateY.value = y
         scrimOpacity.value = scrimOpacityForDrag(y, offscreen)
       },
       onPanResponderRelease: (_evt, gesture) => {
-        const flick = gesture.vy > 0.85 || gesture.vy * 1000 > motion.sheetDismissVelocity
+        const velocityY = gesture.vy * 1000
+        const flick = velocityY > motion.sheetDismissVelocity
         if (gesture.dy > motion.sheetDismissDistance || flick) {
           closeSheetSpring(translateY, scrimOpacity, offscreen, finish)
         } else {
@@ -61,5 +69,8 @@ export function useSheetDismissPanHandlers(
     })
 
     return responder.panHandlers
-  }, [enabled, offscreen, scrimOpacity, translateY])
+  }, [active, offscreen, scrimOpacity, translateY])
 }
+
+/** @deprecated Prefer `useSheetDismissGesture`. */
+export const useSheetDismissPanHandlers = useSheetDismissGesture

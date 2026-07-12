@@ -6,11 +6,18 @@ import {
   ListBullets,
   Note,
   Plus,
+  TextT,
+  Wrench,
   type Icon,
 } from 'phosphor-react-native'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { AppText } from '@/src/components/ui'
-import { EDITOR_CHROME, PALETTE, type ElementType } from '@/src/lib/invoice-editor'
+import {
+  EDITOR_CHROME,
+  PALETTE,
+  isMultiInstanceType,
+  type ElementType,
+} from '@/src/lib/invoice-editor'
 import { webInlinePressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
@@ -19,6 +26,8 @@ const ICONS: Record<ElementType, Icon> = {
   business: Buildings,
   meta: FileText,
   lineItems: ListBullets,
+  service: Wrench,
+  bodyText: TextT,
   totals: Calculator,
   notes: Note,
 }
@@ -30,7 +39,7 @@ export function ElementPalette({
 }: {
   placedTypes: Set<ElementType>
   selectedType: ElementType | null
-  /** Add if missing, otherwise select the existing block. */
+  /** Add if missing (or always add for multi-instance), otherwise select existing. */
   onPick: (type: ElementType) => void
 }) {
   return (
@@ -38,41 +47,47 @@ export function ElementPalette({
       <AppText style={styles.label}>Elements</AppText>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {PALETTE.map((item) => {
+          const multi = isMultiInstanceType(item.type)
           const placed = placedTypes.has(item.type)
           const selected = selectedType === item.type
           const ItemIcon = ICONS[item.type]
+          const showAdd = multi || !placed
           return (
             <Pressable
               key={item.type}
               onPress={() => onPick(item.type)}
               style={({ pressed }) => [
                 styles.chip,
-                placed ? styles.chipPlaced : null,
-                selected ? styles.chipSelected : null,
+                placed && !multi ? styles.chipPlaced : null,
+                selected && !multi ? styles.chipSelected : null,
                 pressed ? styles.chipPressed : null,
                 webInlinePressableReset,
               ]}
               accessibilityRole="button"
-              accessibilityState={{ selected }}
-              accessibilityLabel={placed ? `Select ${item.label} block` : `Add ${item.label} block`}
+              accessibilityState={{ selected: selected && !multi }}
+              accessibilityLabel={
+                showAdd ? `Add ${item.label} block` : `Select ${item.label} block`
+              }
             >
               <View style={styles.chipInner}>
-                {placed ? (
+                {showAdd ? (
+                  <Plus size={14} color={EDITOR_CHROME.green} weight="bold" />
+                ) : (
                   <ItemIcon
                     size={14}
                     color={selected ? EDITOR_CHROME.green : EDITOR_CHROME.text}
                     weight="duotone"
                   />
-                ) : (
-                  <Plus size={14} color={EDITOR_CHROME.green} weight="bold" />
                 )}
                 <AppText
                   style={[
                     styles.chipText,
-                    placed ? styles.chipTextPlaced : null,
-                    selected ? styles.chipTextSelected : null,
+                    placed && !multi ? styles.chipTextPlaced : null,
+                    selected && !multi ? styles.chipTextSelected : null,
                   ]}
-                >{item.label}</AppText>
+                >
+                  {item.label}
+                </AppText>
               </View>
             </Pressable>
           )

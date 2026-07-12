@@ -6,3 +6,13 @@ export const webQueueStore: {
   created_at: string
   retries: number
 }[] = []
+
+export const webDraftStore = new Map<
+  string,
+  {
+    entity: string
+    entity_id: string
+    payload: string
+    updated_at: string
+  }
+>()

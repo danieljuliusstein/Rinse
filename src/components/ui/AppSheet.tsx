@@ -6,7 +6,7 @@ import { useNavigation } from 'expo-router'
 import { initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
-import { useSheetDismissPanHandlers } from '@/src/hooks/useSheetDismissGesture'
+import { useSheetDismissGesture } from '@/src/hooks/useSheetDismissGesture'
 import { tabDockSafeBottom } from '@/src/hooks/useTabDockPadding'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
 import { lightHaptic, mediumHaptic } from '@/src/lib/haptics'
@@ -14,11 +14,6 @@ import { closeSheetSpring, openSheetSpring } from '@/src/lib/sheet-motion'
 import { safeGoBack } from '@/src/lib/safe-go-back'
 import { colors, radii, shadows, spacing } from '@/src/theme/colors'
 
-/**
- * Screen `safeAreaInsets: { bottom: 0 }` lets the sheet bleed to the physical
- * bottom (avoids the tab-dock gap). Context insets may then read 0 — fall back
- * to window metrics, then tighten like the tab dock so the footer isn't floating.
- */
 function useSheetSafeBottom(): number {
   const insets = useSafeAreaInsets()
   const windowBottom = initialWindowMetrics?.insets.bottom ?? 0
@@ -31,12 +26,7 @@ interface AppSheetProps {
   children: ReactNode
   footer?: ReactNode
   onClose?: () => void
-  /**
-   * `route` — full-screen stack route (jobs/new, clients/edit, …).
-   * `modal` — overlay opened from within a screen (invoice actions, …).
-   */
   presentation?: 'route' | 'modal'
-  /** Required when `presentation="modal"`. Ignored for route sheets. */
   visible?: boolean
 }
 
@@ -85,7 +75,7 @@ export function AppSheet({
     closeSheetSpring(sheetTranslateY, scrimOpacity, SHEET_OFFSCREEN, finishClose)
   }, [finishClose, reduceMotion, scrimOpacity, sheetTranslateY])
 
-  const dismissPanHandlers = useSheetDismissPanHandlers(
+  const dismissPanHandlers = useSheetDismissGesture(
     sheetTranslateY,
     scrimOpacity,
     SHEET_OFFSCREEN,
@@ -104,17 +94,28 @@ export function AppSheet({
   const body = (
     <View style={styles.root}>
       <Pressable style={styles.scrimPress} onPress={requestClose} accessibilityLabel="Close sheet">
-        <Animated.View style={[styles.scrim, scrimStyle]} />
+        <Animated.View style={[styles.scrim, scrimStyle]} pointerEvents="none" />
       </Pressable>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboard}
-        pointerEvents="box-none"
-      >
-        <Animated.View style={[styles.sheet, sheetStyle, { paddingBottom: safeBottom }]}>
-          <View style={styles.dragRegion} {...dismissPanHandlers}>
-            <View style={styles.handle} />
+      {/*
+        Transform the whole bottom stack so KeyboardAvoidingView padding and
+        translateY don't fight while dragging the handle.
+      */}
+      <Animated.View style={[styles.sheetLift, sheetStyle]} pointerEvents="box-none">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboard}
+          pointerEvents="box-none"
+        >
+          <View style={[styles.sheet, { paddingBottom: safeBottom }]}>
+            <View
+              style={styles.handleHit}
+              {...dismissPanHandlers}
+              accessibilityLabel="Drag to dismiss"
+            >
+              <View style={styles.handle} />
+            </View>
+
             <View style={styles.header}>
               <View style={styles.headerText}>
                 <AppText variant="h2">{title}</AppText>
@@ -130,21 +131,21 @@ export function AppSheet({
                 </View>
               </Pressable>
             </View>
+
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+            >
+              {children}
+            </ScrollView>
+
+            {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>
-
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            {children}
-          </ScrollView>
-
-          {footer ? <View style={styles.footer}>{footer}</View> : null}
-        </Animated.View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </Animated.View>
     </View>
   )
 
@@ -172,9 +173,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
   },
-  keyboard: {
+  sheetLift: {
     width: '100%',
     maxHeight: SHEET_MAX_HEIGHT,
+    justifyContent: 'flex-end',
+  },
+  keyboard: {
+    width: '100%',
+    maxHeight: '100%',
     justifyContent: 'flex-end',
   },
   sheet: {
@@ -186,17 +192,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadows.card,
   },
-  dragRegion: {
+  handleHit: {
     width: '100%',
+    alignItems: 'center',
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   handle: {
-    alignSelf: 'center',
     width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.border,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
   },
   header: {
     flexDirection: 'row',

@@ -1,10 +1,10 @@
 import * as WebBrowser from 'expo-web-browser'
 import { appApiJson } from './app-api'
 
-export type BillingPlanId = 'starter'
+export type BillingPlanId = 'starter' | 'early'
 
 export async function startBillingCheckout(plan: BillingPlanId = 'starter'): Promise<void> {
-  const data = await appApiJson<{ url?: string; error?: string }>('/api/billing/checkout', {
+  const data = await appApiJson<{ url?: string; error?: string; plan?: string }>('/api/billing/checkout', {
     method: 'POST',
     body: JSON.stringify({ plan }),
   })

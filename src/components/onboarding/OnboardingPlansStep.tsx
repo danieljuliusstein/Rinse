@@ -11,9 +11,13 @@ import {
   type OnboardingStepSlug,
 } from '@/src/lib/onboarding'
 import { activateFreePlan, fetchOrgSubscription } from '@/src/lib/subscription-fetch'
-import { trialDaysLeft, type OrgSubscription } from '@/src/lib/subscription-types'
+import {
+  isFoundingMember,
+  trialDaysLeft,
+  type OrgSubscription,
+} from '@/src/lib/subscription-types'
 import type { AppSettings } from '@/src/lib/settings-store'
-import { FREE_PLAN, STARTER_PLAN, STARTER_TRIAL_DAYS } from '@/src/lib/plans'
+import { EARLY_PLAN, FREE_PLAN, FOUNDING_PLAN, STARTER_PLAN, STARTER_TRIAL_DAYS } from '@/src/lib/plans'
 import { colors } from '@/src/theme/colors'
 
 export function OnboardingPlansStep({
@@ -37,17 +41,22 @@ export function OnboardingPlansStep({
   }, [])
 
   const daysLeft = org ? trialDaysLeft(org) : null
+  const founding = org ? isFoundingMember(org) : false
+
+  const finishOnboarding = async () => {
+    await completeOnboarding({
+      firstInvoiceCreated: Boolean(settings.onboarding_first_invoice_at),
+    })
+    setSheetVisible(false)
+    router.replace('/(tabs)')
+  }
 
   const handleContinueFree = async () => {
     setBusy(true)
     setError('')
     try {
-      await activateFreePlan()
-      await completeOnboarding({
-        firstInvoiceCreated: Boolean(settings.onboarding_first_invoice_at),
-      })
-      setSheetVisible(false)
-      router.replace('/(tabs)')
+      if (!founding) await activateFreePlan()
+      await finishOnboarding()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not finish setup')
     } finally {
@@ -60,11 +69,7 @@ export function OnboardingPlansStep({
     setError('')
     try {
       await startStarterUpgrade()
-      await completeOnboarding({
-        firstInvoiceCreated: Boolean(settings.onboarding_first_invoice_at),
-      })
-      setSheetVisible(false)
-      router.replace('/(tabs)')
+      await finishOnboarding()
     } catch (e) {
       if (e instanceof IapPurchaseError && e.code === 'cancelled') return
       setError(e instanceof Error ? e.message : 'Could not start checkout')
@@ -95,8 +100,9 @@ export function OnboardingPlansStep({
         onContinue={() => setSheetVisible(true)}
       >
         <AppText style={styles.lead}>
-          Start on {FREE_PLAN.name} ({FREE_PLAN.priceLabel}), or try {STARTER_PLAN.name} free for{' '}
-          {STARTER_TRIAL_DAYS} days ({STARTER_PLAN.priceLabel} after) for booking, billing, and pipeline.
+          {founding
+            ? `You’re on ${FOUNDING_PLAN.name} (${FOUNDING_PLAN.priceLabel} lifetime).`
+            : `Start on ${FREE_PLAN.name} (${FREE_PLAN.priceLabel}), try ${STARTER_PLAN.name} free for ${STARTER_TRIAL_DAYS} days, or lock Early at ${EARLY_PLAN.priceLabel} while seats last (${STARTER_PLAN.priceLabel} after).`}
         </AppText>
       </OnboardingShell>
 
@@ -106,6 +112,7 @@ export function OnboardingPlansStep({
         busy={busy}
         checkoutBusy={checkoutBusy}
         error={error}
+        isFounding={founding}
         onContinueFree={() => void handleContinueFree()}
         onSubscribe={() => void handleSubscribe()}
         onClose={handleSheetClose}

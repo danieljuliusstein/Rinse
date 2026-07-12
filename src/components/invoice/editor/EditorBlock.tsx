@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { Lock } from 'phosphor-react-native'
 import { PanResponder, Pressable, StyleSheet, View } from 'react-native'
 import { BlockContent } from '@/src/components/invoice/editor/BlockContent'
-import type { EditorPreviewData, PlacedElement, SnapGuide } from '@/src/lib/invoice-editor'
+import type { DropGhost, EditorPreviewData, PlacedElement, SnapGuide } from '@/src/lib/invoice-editor'
 import { EDITOR_CHROME } from '@/src/lib/invoice-editor'
 import { webInlinePressableReset } from '@/src/theme/colors'
 
@@ -43,7 +43,9 @@ export function EditorBlock({
   const onMoveEndRef = useRef(onMoveEnd)
   onMoveEndRef.current = onMoveEnd
 
-  // Stable responder — must not recreate when x/y change mid-drag.
+  const isLogo = element.type === 'logo'
+  const hasLogoImage = Boolean(logoUrl)
+
   const pan = useMemo(
     () =>
       PanResponder.create({
@@ -74,15 +76,18 @@ export function EditorBlock({
       {...pan.panHandlers}
       style={[
         styles.block,
+        isLogo ? styles.blockLogo : null,
         {
           left: element.x,
           top: element.y,
           width: element.w,
+          height: isLogo ? element.h : undefined,
           minHeight: element.h,
-          // Selection chrome includes the gap after this block (does not change x/y).
-          paddingBottom: selected ? Math.max(element.spacing ?? 0, 0) : 4,
+          // Logo chrome hugs the image; other blocks show spacing in selection.
+          padding: isLogo ? 0 : 4,
+          paddingBottom: isLogo ? 0 : selected ? Math.max(element.spacing ?? 0, 0) : 4,
         },
-        selected ? styles.blockSelected : styles.blockIdle,
+        selected ? styles.blockSelected : isLogo && hasLogoImage ? styles.blockLogoIdle : styles.blockIdle,
         element.locked ? styles.blockLocked : null,
       ]}
     >
@@ -101,6 +106,8 @@ export function EditorBlock({
             align={element.align}
             logoUrl={logoUrl}
             documentTitle={documentTitle}
+            element={element}
+            logoSize={isLogo ? element.w : undefined}
           />
         </Pressable>
         {element.locked ? (
@@ -110,6 +117,23 @@ export function EditorBlock({
         ) : null}
       </View>
     </View>
+  )
+}
+
+export function DropGhostBox({ ghost }: { ghost: DropGhost }) {
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.ghost,
+        {
+          left: ghost.x,
+          top: ghost.y,
+          width: ghost.w,
+          height: ghost.h,
+        },
+      ]}
+    />
   )
 }
 
@@ -143,6 +167,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: 'transparent',
   },
+  blockLogo: {
+    overflow: 'hidden',
+    borderRadius: 8,
+  },
   blockInner: {
     position: 'relative',
   },
@@ -150,6 +178,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderStyle: 'dashed',
     borderColor: '#c7c7cc',
+  },
+  /** Logo with image: no idle dashed chrome — selection still shows solid green. */
+  blockLogoIdle: {
+    borderWidth: 0,
   },
   blockSelected: {
     borderWidth: 1.5,
@@ -159,6 +191,14 @@ const styles = StyleSheet.create({
   blockLocked: {
     borderStyle: 'solid',
     borderColor: '#aeaeb2',
+  },
+  ghost: {
+    position: 'absolute',
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: EDITOR_CHROME.green,
+    backgroundColor: 'rgba(34, 197, 94, 0.08)',
   },
   lockBadge: {
     position: 'absolute',

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Controller, useForm, type Resolver } from 'react-hook-form'
@@ -9,7 +9,6 @@ import {
   type Client,
   type Package,
   type QuoteFormValues,
-  type VehicleType,
 } from '@rinse/core'
 import { CalendarBlank, CheckCircle, MagnifyingGlass, Plus } from 'phosphor-react-native'
 import { FormField } from '@/src/components/FormField'
@@ -19,6 +18,7 @@ import { AppText } from '@/src/components/ui/AppText'
 import { ScreenLoading } from '@/src/components/ui/ScreenLoading'
 import { SheetSubmitButton } from '@/src/components/ui/SheetSubmitButton'
 import { AppSheet } from '@/src/components/ui/AppSheet'
+import { useAutoSaveDraft } from '@/src/hooks/useAutoSaveDraft'
 import { listClients, listPackages } from '@/src/lib/api'
 import { deriveInitials } from '@/src/lib/client-relationship-logic'
 import { localCalendarDate } from '@/src/lib/job-create'
@@ -67,6 +67,8 @@ export function QuoteCreateForm({
     handleSubmit,
     setValue,
     watch,
+    reset,
+    getValues,
     formState: { errors, isValid, isSubmitting },
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema) as Resolver<QuoteFormValues>,
@@ -83,6 +85,21 @@ export function QuoteCreateForm({
     mode: 'onChange',
   })
 
+  const draftKey = initialClientId ? `new:${initialClientId}` : 'new'
+  const formSnapshot = watch()
+  const appliedRestoreRef = useRef(false)
+  const { restored, restoredAt, hydrated, clearDraft } = useAutoSaveDraft<QuoteFormValues>({
+    entity: 'quote',
+    entityId: draftKey,
+    value: formSnapshot,
+    enabled: !loadingMeta && !done,
+    isEmpty: (v) =>
+      !v.client_id &&
+      !v.notes?.trim() &&
+      !v.package_id &&
+      (v.subtotal == null || v.subtotal === 0),
+  })
+
   const clientId = watch('client_id')
   const packageId = watch('package_id')
   const quoteDate = watch('date')
@@ -92,24 +109,49 @@ export function QuoteCreateForm({
   useEffect(() => {
     void Promise.all([listClients(), listPackages()])
       .then(([c, p]) => {
-        const active = p.filter((pkg) => pkg.active !== false)
         setClients(c)
-        setPackages(active)
-
-        const preferredPkg =
-          (initialPackageId && active.find((pkg) => pkg.id === initialPackageId)) || active[0]
-        if (preferredPkg) {
-          setValue('package_id', preferredPkg.id, { shouldValidate: true })
-          setValue('subtotal', preferredPkg.base_price, { shouldValidate: true })
-        }
+        setPackages(p.filter((pkg) => pkg.active !== false))
       })
       .finally(() => setLoadingMeta(false))
-  }, [initialPackageId, setValue])
+  }, [])
 
   useEffect(() => {
-    if (!initialClientId) return
-    setValue('client_id', initialClientId, { shouldValidate: true })
-  }, [initialClientId, setValue])
+    if (loadingMeta || !hydrated || appliedRestoreRef.current) return
+
+    if (restored) {
+      appliedRestoreRef.current = true
+      reset({
+        ...getValues(),
+        ...restored,
+        vehicle_type: restored.vehicle_type || initialVehicleType || getValues('vehicle_type'),
+        location_type: restored.location_type || initialLocationType || getValues('location_type'),
+      })
+      return
+    }
+
+    appliedRestoreRef.current = true
+    const preferredPkg =
+      (initialPackageId && packages.find((pkg) => pkg.id === initialPackageId)) || packages[0]
+    if (preferredPkg) {
+      setValue('package_id', preferredPkg.id, { shouldValidate: true })
+      setValue('subtotal', preferredPkg.base_price, { shouldValidate: true })
+    }
+    if (initialClientId) {
+      setValue('client_id', initialClientId, { shouldValidate: true })
+    }
+  }, [
+    loadingMeta,
+    hydrated,
+    restored,
+    packages,
+    reset,
+    getValues,
+    setValue,
+    initialPackageId,
+    initialClientId,
+    initialVehicleType,
+    initialLocationType,
+  ])
 
   const filteredClients = useMemo(() => {
     const q = clientSearch.trim().toLowerCase()
@@ -157,6 +199,7 @@ export function QuoteCreateForm({
         notes: values.notes?.trim() || undefined,
         valid_until: values.valid_until,
       })
+      await clearDraft()
       setDone(true)
       trackProductEvent('quote_created', {
         vehicle_type: values.vehicle_type,
@@ -186,6 +229,11 @@ export function QuoteCreateForm({
         <ScreenLoading label="Loading form…" />
       ) : (
         <View style={styles.root}>
+          {restoredAt ? (
+            <AppText variant="caption" style={styles.draftBanner} accessibilityLiveRegion="polite">
+              Draft restored — picks up where you left off
+            </AppText>
+          ) : null}
           <View style={styles.section}>
             <AppText variant="sectionLabel" style={styles.sectionLabel}>
               Client
@@ -427,6 +475,10 @@ const styles = StyleSheet.create({
   root: {
     gap: spacing.lg,
     paddingBottom: spacing.sm,
+  },
+  draftBanner: {
+    color: colors.greenText,
+    fontWeight: '600',
   },
   section: {
     gap: spacing.sm,

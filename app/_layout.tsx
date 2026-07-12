@@ -18,7 +18,7 @@ import { DetailOverlayProvider } from '@/src/providers/DetailOverlayProvider'
 import { PaywallGateProvider } from '@/src/providers/PaywallGateProvider'
 import { ScreenshotModeBootstrap } from '@/src/components/ScreenshotModeBootstrap'
 import { getPostHog } from '@/src/lib/posthog'
-import { initSentry, Sentry } from '@/src/lib/sentry'
+import { initSentry, wrapRoot } from '@/src/lib/sentry'
 
 import { fonts } from '@/src/theme/typography'
 
@@ -117,4 +117,4 @@ function RootLayout() {
   )
 }
 
-export default Sentry.wrap(RootLayout)
+export default wrapRoot(RootLayout)

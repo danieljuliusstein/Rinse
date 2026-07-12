@@ -17,14 +17,18 @@ import {
   createLayoutFromTemplate,
   DEFAULT_DOCUMENT_TITLE,
   EDITOR_CHROME,
+  isMultiInstanceType,
+  liveDragRearrange,
   PAPER_WIDTH,
   resolveElementOverlaps,
   snapDragPosition,
   useEditorHistory,
+  type DropGhost,
   type ElementAlign,
   type ElementType,
   type InvoiceEditorLayout,
   type InvoiceEditorTemplateId,
+  type PlacedElement,
   type SnapGuide,
 } from '@/src/lib/invoice-editor'
 
@@ -66,9 +70,13 @@ export function InvoiceLayoutEditor({
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [guides, setGuides] = useState<SnapGuide[]>([])
+  const [dropGhost, setDropGhost] = useState<DropGhost | null>(null)
   const [templateOpen, setTemplateOpen] = useState(false)
   const [dragging, setDragging] = useState(false)
   const dragBeforeRef = useRef<InvoiceEditorLayout | null>(null)
+  const dragBaselineRef = useRef<PlacedElement[] | null>(null)
+  const dropGhostRef = useRef<DropGhost | null>(null)
+  const draggingIdRef = useRef<string | null>(null)
 
   const scale = Math.min(1, (windowWidth - 24) / PAPER_WIDTH)
   const selected = layout.elements.find((e) => e.id === selectedId) ?? null
@@ -116,24 +124,29 @@ export function InvoiceLayoutEditor({
 
       if (!dragBeforeRef.current) {
         dragBeforeRef.current = current
+        dragBaselineRef.current = current.elements.map((item) => ({ ...item }))
+        draggingIdRef.current = id
         setDragging(true)
       }
 
+      const baseline = dragBaselineRef.current ?? current.elements
       const snapped = snapDragPosition({
         x,
         y,
         width: el.w,
         height: el.h,
-        elements: current.elements,
+        elements: baseline,
         draggingId: id,
         enabled: current.snapEnabled,
       })
       setGuides(snapped.guides)
+
+      const rearranged = liveDragRearrange(baseline, id, snapped.x, snapped.y)
+      dropGhostRef.current = rearranged.ghost
+      setDropGhost(rearranged.ghost)
       setLayoutLive({
         ...current,
-        elements: current.elements.map((item) =>
-          item.id === id ? { ...item, x: snapped.x, y: snapped.y } : item,
-        ),
+        elements: rearranged.elements,
       })
     },
     [layoutRef, setLayoutLive],
@@ -141,13 +154,27 @@ export function InvoiceLayoutEditor({
 
   const handleMoveEnd = useCallback(() => {
     setGuides([])
+    setDropGhost(null)
     setDragging(false)
     const before = dragBeforeRef.current
+    const ghost = dropGhostRef.current
+    const draggedId = draggingIdRef.current
     dragBeforeRef.current = null
+    dragBaselineRef.current = null
+    dropGhostRef.current = null
+    draggingIdRef.current = null
     if (!before) return
+
+    // Snap the dragged block into the ghost slot, then pack remaining overlaps.
+    let elements = layoutRef.current.elements
+    if (draggedId && ghost) {
+      elements = elements.map((el) =>
+        el.id === draggedId ? { ...el, x: ghost.x, y: ghost.y } : el,
+      )
+    }
     const packed = {
       ...layoutRef.current,
-      elements: resolveElementOverlaps(layoutRef.current.elements),
+      elements: resolveElementOverlaps(elements),
     }
     layoutRef.current = packed
     commitFrom(before, packed)
@@ -155,10 +182,12 @@ export function InvoiceLayoutEditor({
 
   const handlePickElement = useCallback(
     (type: ElementType) => {
-      const existing = layout.elements.find((e) => e.type === type)
-      if (existing) {
-        setSelectedId(existing.id)
-        return
+      if (!isMultiInstanceType(type)) {
+        const existing = layout.elements.find((e) => e.type === type)
+        if (existing) {
+          setSelectedId(existing.id)
+          return
+        }
       }
       const next = createDefaultElement(type, layout.accentColor, layout.elements)
       setLayout((prev) => ({
@@ -238,6 +267,7 @@ export function InvoiceLayoutEditor({
           documentTitle={layout.documentTitle ?? DEFAULT_DOCUMENT_TITLE}
           scale={scale}
           guides={guides}
+          dropGhost={dropGhost}
           dragging={dragging}
           onSelect={setSelectedId}
           onDeselect={() => setSelectedId(null)}
@@ -296,6 +326,14 @@ export function InvoiceLayoutEditor({
               documentTitle: next,
             }))
           }
+          onBodyTextChange={(text) => {
+            if (!selected) return
+            patchElement(selected.id, { text })
+          }}
+          onServiceChange={(patch) => {
+            if (!selected) return
+            patchElement(selected.id, patch)
+          }}
           onChangeLogo={() => void pickLogo()}
           onRemoveLogo={() => void onLogoRemove()}
           logoBusy={logoUploading}

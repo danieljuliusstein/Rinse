@@ -1,12 +1,17 @@
+import { useEffect, useState } from 'react'
 import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { Crown, Sparkle } from 'phosphor-react-native'
-import { useState } from 'react'
 import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
 import { useOrgSubscription } from '@/src/hooks/useOrgSubscription'
 import { IapPurchaseError, startStarterUpgrade } from '@/src/lib/iap-purchase'
-import { FREE_PLAN, STARTER_PLAN } from '@/src/lib/plans'
+import { EARLY_PLAN, FREE_PLAN, STARTER_PLAN } from '@/src/lib/plans'
+import {
+  fetchBillingPricing,
+  upgradePriceLabel,
+  type BillingPricing,
+} from '@/src/lib/billing-pricing'
 import { clearOrgSubscriptionCache } from '@/src/lib/subscription-fetch'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
@@ -24,19 +29,29 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
   const insets = useSafeAreaInsets()
   const { daysLeft, showTrialBanner, founding, refresh } = useOrgSubscription()
   const [busy, setBusy] = useState(false)
+  const [pricing, setPricing] = useState<BillingPricing | null>(null)
+
+  useEffect(() => {
+    if (!visible || founding) return
+    void fetchBillingPricing().then(setPricing)
+  }, [visible, founding])
+
+  const paidLabel = upgradePriceLabel(pricing)
+  const earlyAvailable = pricing?.early.available === true
+  const paidName = earlyAvailable ? EARLY_PLAN.name : STARTER_PLAN.name
 
   const lead =
     mode === 'nudge'
       ? featureLabel
-        ? `Keep ${featureLabel} — upgrade to Starter before your trial ends.`
-        : 'Upgrade to Starter before your trial ends to keep full access.'
+        ? `Keep ${featureLabel} — upgrade to ${paidName} before your trial ends.`
+        : `Upgrade to ${paidName} before your trial ends to keep full access.`
       : mode === 'free'
         ? featureLabel
-          ? `${featureLabel} is on Starter. Upgrade to unlock.`
-          : 'Upgrade to Starter to unlock booking, billing, and pipeline.'
+          ? `${featureLabel} is on ${paidName}. Upgrade to unlock.`
+          : `Upgrade to ${paidName} to unlock booking, billing, and pipeline.`
         : featureLabel
-          ? `${featureLabel} requires an active Starter subscription.`
-          : 'Subscribe to Starter to unlock premium actions in Rinse.'
+          ? `${featureLabel} requires an active ${paidName} subscription.`
+          : `Subscribe to ${paidName} to unlock premium actions in Rinse.`
 
   const handleBilling = () => {
     onClose()
@@ -83,7 +98,7 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
             <Crown size={28} color={colors.greenText} weight="duotone" />
           </View>
           <AppText variant="h2" style={styles.title}>
-            {mode === 'free' ? 'Upgrade to Starter' : 'Upgrade to keep going'}
+            {mode === 'free' ? `Upgrade to ${paidName}` : 'Upgrade to keep going'}
           </AppText>
           <AppText style={styles.lead}>{lead}</AppText>
 
@@ -119,12 +134,14 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
               <View style={[styles.planCard, styles.planCardFeatured]}>
                 <View style={styles.planHead}>
                   <View style={styles.planCopy}>
-                    <AppText style={styles.planName}>{STARTER_PLAN.name}</AppText>
+                    <AppText style={styles.planName}>{paidName}</AppText>
                     <AppText variant="caption" style={styles.planTagline}>
-                      {STARTER_PLAN.tagline}
+                      {earlyAvailable ? EARLY_PLAN.tagline : STARTER_PLAN.tagline}
                     </AppText>
                   </View>
-                  <AppText style={styles.planPrice}>{STARTER_PLAN.priceLabel}</AppText>
+                  <AppText style={styles.planPrice}>
+                    {Platform.OS === 'ios' ? STARTER_PLAN.priceLabel : paidLabel}
+                  </AppText>
                 </View>
               </View>
             </>
@@ -137,7 +154,7 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
               busy
                 ? 'Purchasing…'
                 : Platform.OS === 'ios'
-                  ? 'Upgrade to Starter'
+                  ? `Upgrade to ${STARTER_PLAN.name}`
                   : 'View plans & billing'
             }
             onPress={handleUpgrade}

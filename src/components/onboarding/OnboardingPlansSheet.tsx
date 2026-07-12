@@ -1,8 +1,14 @@
+import { useEffect, useState } from 'react'
 import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Sparkle } from 'phosphor-react-native'
 import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
-import { FREE_PLAN, STARTER_PLAN } from '@/src/lib/plans'
+import { EARLY_PLAN, FREE_PLAN, FOUNDING_PLAN, STARTER_PLAN } from '@/src/lib/plans'
+import {
+  fetchBillingPricing,
+  upgradePriceLabel,
+  type BillingPricing,
+} from '@/src/lib/billing-pricing'
 import { confirmNativeAction } from '@/src/lib/native-dialogs'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
@@ -13,6 +19,7 @@ export function OnboardingPlansSheet({
   busy,
   checkoutBusy,
   error,
+  isFounding,
   onContinueFree,
   onSubscribe,
   onClose,
@@ -22,24 +29,77 @@ export function OnboardingPlansSheet({
   busy: boolean
   checkoutBusy: boolean
   error: string
+  isFounding?: boolean
   onContinueFree: () => void
   onSubscribe: () => void
   onClose: () => void
 }) {
   const insets = useSafeAreaInsets()
+  const [pricing, setPricing] = useState<BillingPricing | null>(null)
   const showTrialCount =
     typeof trialDaysLeft === 'number' && Number.isFinite(trialDaysLeft) && trialDaysLeft > 0
   const iosBilling = Platform.OS === 'ios'
+  const paidLabel = upgradePriceLabel(pricing)
+  const earlyAvailable = pricing?.early.available === true
+  const foundingOpen = (pricing?.founding.remaining ?? 0) > 0
+
+  useEffect(() => {
+    if (!visible) return
+    void fetchBillingPricing().then(setPricing)
+  }, [visible])
 
   const handleSubscribePress = () => {
+    const planName = earlyAvailable ? EARLY_PLAN.name : STARTER_PLAN.name
     confirmNativeAction({
-      title: 'Upgrade to Starter',
+      title: `Upgrade to ${planName}`,
       message: iosBilling
         ? `${STARTER_PLAN.priceLabel} — billed through your Apple ID. Cancel anytime in Settings → Subscriptions.`
-        : `${STARTER_PLAN.priceLabel} — checkout opens in Safari.`,
+        : `${paidLabel} — checkout opens in Safari.`,
       confirmLabel: iosBilling ? 'Subscribe' : 'Continue in Safari',
       onConfirm: onSubscribe,
     })
+  }
+
+  if (isFounding) {
+    return (
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={onClose}
+      >
+        <View style={[styles.root, { paddingTop: spacing.md, paddingBottom: insets.bottom + spacing.md }]}>
+          <View style={styles.handle} />
+          <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+            <AppText variant="h2" style={styles.title}>
+              You’re a founding member
+            </AppText>
+            <AppText style={styles.subtitle}>
+              Seat claimed — {FOUNDING_PLAN.priceLabel} lifetime Starter access.
+            </AppText>
+            <View style={[styles.planCard, styles.planCardFeatured]}>
+              <View style={styles.planHead}>
+                <AppText style={styles.planName}>{FOUNDING_PLAN.name}</AppText>
+                <AppText style={styles.planPrice}>{FOUNDING_PLAN.priceLabel}</AppText>
+              </View>
+              <AppText style={styles.planTagline}>{FOUNDING_PLAN.tagline}</AppText>
+              {FOUNDING_PLAN.features.map((feature) => (
+                <AppText key={feature} variant="caption" style={styles.feature}>
+                  · {feature}
+                </AppText>
+              ))}
+            </View>
+          </ScrollView>
+          <View style={styles.footer}>
+            <PrimaryButton
+              label={busy ? 'Starting…' : 'Continue'}
+              onPress={onContinueFree}
+              loading={busy}
+            />
+          </View>
+        </View>
+      </Modal>
+    )
   }
 
   return (
@@ -55,7 +115,10 @@ export function OnboardingPlansSheet({
           <AppText variant="h2" style={styles.title}>
             Your plan
           </AppText>
-          <AppText style={styles.subtitle}>Start on Free, or upgrade to Starter anytime</AppText>
+          <AppText style={styles.subtitle}>
+            Free forever, or unlock Starter
+            {earlyAvailable ? ` at ${EARLY_PLAN.priceLabel}` : ` at ${STARTER_PLAN.priceLabel}`}
+          </AppText>
 
           <View style={[styles.planCard, styles.planCardMuted]}>
             <View style={styles.planHead}>
@@ -70,6 +133,19 @@ export function OnboardingPlansSheet({
             ))}
           </View>
 
+          {foundingOpen ? (
+            <View style={styles.planCard}>
+              <View style={styles.planHead}>
+                <AppText style={styles.planName}>{FOUNDING_PLAN.name}</AppText>
+                <AppText style={styles.planPrice}>{FOUNDING_PLAN.priceLabel}</AppText>
+              </View>
+              <AppText style={styles.planTagline}>
+                {pricing?.founding.remaining ?? 0} of {pricing?.founding.limit ?? 20} seats left —
+                claimed automatically on signup.
+              </AppText>
+            </View>
+          ) : null}
+
           {showTrialCount ? (
             <View style={styles.trialRow}>
               <Sparkle size={14} color={colors.greenText} weight="fill" />
@@ -81,18 +157,30 @@ export function OnboardingPlansSheet({
 
           <View style={[styles.planCard, styles.planCardFeatured]}>
             <View style={styles.planHead}>
-              <AppText style={styles.planName}>{STARTER_PLAN.name}</AppText>
-              <AppText style={styles.planPrice}>{STARTER_PLAN.priceLabel}</AppText>
-            </View>
-            <AppText style={styles.planTagline}>{STARTER_PLAN.tagline}</AppText>
-            {STARTER_PLAN.features.slice(0, 6).map((feature) => (
-              <AppText key={feature} variant="caption" style={styles.feature}>
-                · {feature}
+              <AppText style={styles.planName}>
+                {earlyAvailable ? EARLY_PLAN.name : STARTER_PLAN.name}
               </AppText>
-            ))}
-            <AppText variant="caption" style={styles.feature}>
-              · Plus booking widget, auto-messages, receipt scan, and more
+              <AppText style={styles.planPrice}>{paidLabel}</AppText>
+            </View>
+            <AppText style={styles.planTagline}>
+              {earlyAvailable ? EARLY_PLAN.tagline : STARTER_PLAN.tagline}
             </AppText>
+            {(earlyAvailable ? EARLY_PLAN.features : STARTER_PLAN.features.slice(0, 6)).map(
+              (feature) => (
+                <AppText key={feature} variant="caption" style={styles.feature}>
+                  · {feature}
+                </AppText>
+              ),
+            )}
+            {!earlyAvailable ? (
+              <AppText variant="caption" style={styles.feature}>
+                · Plus booking widget, auto-messages, receipt scan, and more
+              </AppText>
+            ) : (
+              <AppText variant="caption" style={styles.feature}>
+                · {pricing?.early.remaining ?? 0} early seats left · then {STARTER_PLAN.priceLabel}
+              </AppText>
+            )}
           </View>
 
           {error ? (
@@ -115,7 +203,9 @@ export function OnboardingPlansSheet({
                 ? iosBilling
                   ? 'Purchasing…'
                   : 'Opening checkout…'
-                : 'Upgrade to Starter'
+                : earlyAvailable
+                  ? `Upgrade · ${EARLY_PLAN.priceLabel}`
+                  : 'Upgrade to Starter'
             }
             onPress={handleSubscribePress}
             disabled={checkoutBusy || busy}

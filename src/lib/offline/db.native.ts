@@ -35,6 +35,15 @@ function ensureOrgSchema(database: SQLite.SQLiteDatabase): void {
       PRIMARY KEY (collection, id)
     );
     CREATE INDEX IF NOT EXISTS idx_records_org ON records(organization_id, collection);
+
+    CREATE TABLE IF NOT EXISTS drafts (
+      entity TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (entity, entity_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_drafts_updated_at ON drafts(updated_at);
   `)
 }
 
@@ -95,7 +104,7 @@ export function resetOfflineDb(orgId?: string): void {
   const targetOrgId = orgId ?? orgDbFor
   if (targetOrgId) {
     const database = openOrgOfflineDb(targetOrgId)
-    database.execSync('DELETE FROM queue; DELETE FROM records;')
+    database.execSync('DELETE FROM queue; DELETE FROM records; DELETE FROM drafts;')
   }
 
   if (orgDb) {

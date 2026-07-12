@@ -47,6 +47,13 @@ import type { QueueOperation } from '@rinse/core'
 
 export function describeQueueOperation(op: QueueOperation): string {
   if (op.type === 'createClient' || op.type === 'createJob') return `${op.type} ${op.recordId}`
+  if (op.type === 'createDamageDoc') return `${op.type} ${op.localDamageId}`
+  if (op.type === 'createVehicle') return `${op.type} ${op.localVehicleId}`
+  if (op.type === 'uploadJobPhoto') return `${op.type} ${op.params.jobId}`
+  if (op.type === 'createInvoiceForJob') return `${op.type} ${op.params.jobId}`
   if ('params' in op && op.params && 'id' in op.params) return `${op.type} ${String(op.params.id)}`
+  if ('params' in op && op.params && 'invoiceId' in op.params) {
+    return `${op.type} ${String(op.params.invoiceId)}`
+  }
   return op.type
 }

@@ -1,5 +1,20 @@
-import { DEFAULT_DOCUMENT_TITLE, DEFAULT_ELEMENT_SIZE, PAPER_MARGIN, PAPER_WIDTH, STABLE_ELEMENT_ID } from './constants'
-import type { ElementType, InvoiceEditorLayout, InvoiceEditorTemplateId, PlacedElement } from './types'
+import {
+  DEFAULT_BODY_TEXT,
+  DEFAULT_DOCUMENT_TITLE,
+  DEFAULT_ELEMENT_SIZE,
+  DEFAULT_SERVICE_AMOUNT,
+  DEFAULT_SERVICE_DESCRIPTION,
+  PAPER_MARGIN,
+  PAPER_WIDTH,
+  STABLE_ELEMENT_ID,
+} from './constants'
+import {
+  isMultiInstanceType,
+  type ElementType,
+  type InvoiceEditorLayout,
+  type InvoiceEditorTemplateId,
+  type PlacedElement,
+} from './types'
 
 const CONTENT_W = PAPER_WIDTH - PAPER_MARGIN * 2
 
@@ -8,11 +23,16 @@ function el(
   x: number,
   y: number,
   accent: string,
-  overrides?: Partial<Pick<PlacedElement, 'w' | 'h' | 'align' | 'locked' | 'spacing'>>,
+  overrides?: Partial<
+    Pick<
+      PlacedElement,
+      'w' | 'h' | 'align' | 'locked' | 'spacing' | 'text' | 'serviceDescription' | 'serviceAmount' | 'id'
+    >
+  >,
 ): PlacedElement {
   const size = DEFAULT_ELEMENT_SIZE[type]
   return {
-    id: STABLE_ELEMENT_ID[type],
+    id: overrides?.id ?? STABLE_ELEMENT_ID[type],
     type,
     x,
     y,
@@ -22,13 +42,13 @@ function el(
     color: accent,
     locked: overrides?.locked ?? false,
     spacing: overrides?.spacing ?? 12,
+    text: overrides?.text,
+    serviceDescription: overrides?.serviceDescription,
+    serviceAmount: overrides?.serviceAmount,
   }
 }
 
-export function presetElements(
-  id: InvoiceEditorTemplateId,
-  accent = '#22c55e',
-): PlacedElement[] {
+export function presetElements(id: InvoiceEditorTemplateId, accent = '#22c55e'): PlacedElement[] {
   switch (id) {
     case 'classic':
       return [
@@ -81,8 +101,10 @@ export function createDefaultElement(
 ): PlacedElement {
   const size = DEFAULT_ELEMENT_SIZE[type]
   const maxY = existing.reduce((m, e) => Math.max(m, e.y + e.h), PAPER_MARGIN)
-  return {
-    id: `${type}-${Date.now()}`,
+  const base: PlacedElement = {
+    id: isMultiInstanceType(type)
+      ? `${type}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`
+      : `${type}-${Date.now()}`,
     type,
     x: PAPER_MARGIN,
     y: maxY + 16,
@@ -93,4 +115,12 @@ export function createDefaultElement(
     locked: false,
     spacing: 12,
   }
+  if (type === 'bodyText') {
+    base.text = DEFAULT_BODY_TEXT
+  }
+  if (type === 'service') {
+    base.serviceDescription = DEFAULT_SERVICE_DESCRIPTION
+    base.serviceAmount = DEFAULT_SERVICE_AMOUNT
+  }
+  return base
 }

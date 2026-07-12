@@ -1,9 +1,10 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { EditorBlock, SnapGuideLines } from '@/src/components/invoice/editor/EditorBlock'
+import { DropGhostBox, EditorBlock, SnapGuideLines } from '@/src/components/invoice/editor/EditorBlock'
 import {
   EDITOR_CHROME,
   PAPER_HEIGHT,
   PAPER_WIDTH,
+  type DropGhost,
   type EditorPreviewData,
   type PlacedElement,
   type SnapGuide,
@@ -18,6 +19,7 @@ export function EditorPaper({
   documentTitle,
   scale,
   guides,
+  dropGhost,
   dragging,
   onSelect,
   onDeselect,
@@ -32,6 +34,7 @@ export function EditorPaper({
   documentTitle?: string
   scale: number
   guides: SnapGuide[]
+  dropGhost?: DropGhost | null
   dragging?: boolean
   onSelect: (id: string) => void
   onDeselect: () => void
@@ -61,7 +64,6 @@ export function EditorPaper({
             {
               width: PAPER_WIDTH,
               height: PAPER_HEIGHT,
-              // RN scales from center — offset so the paper fills the shell from top-left.
               left: -((PAPER_WIDTH * (1 - scale)) / 2),
               top: -((PAPER_HEIGHT * (1 - scale)) / 2),
               transform: [{ scale }],
@@ -73,6 +75,7 @@ export function EditorPaper({
             onPress={onDeselect}
             accessibilityLabel="Deselect block"
           />
+          {dropGhost ? <DropGhostBox ghost={dropGhost} /> : null}
           {guides.length > 0 ? <SnapGuideLines guides={guides} scale={scale} /> : null}
           {elements.map((el) => (
             <EditorBlock

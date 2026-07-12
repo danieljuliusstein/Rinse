@@ -69,13 +69,13 @@ export function isSubscribedOnStripe(org: OrgSubscription | null): boolean {
   )
 }
 
-/** Paid Starter (or active trial preview) — unlocks premium actions. */
+/** Paid Starter / Early (or active trial preview) — unlocks premium actions. */
 export function hasStarterAccess(org: OrgSubscription | null, now = new Date()): boolean {
   if (!org) return false
   if (isFoundingMember(org)) return true
   // Free pass / Free plan never inherits leftover trial privileges.
   if (org.plan === 'free') return false
-  if (org.plan === 'starter' && isSubscribedOnStripe(org)) return true
+  if ((org.plan === 'starter' || org.plan === 'early') && isSubscribedOnStripe(org)) return true
   if (String(org.subscription_status ?? '') === 'trialing' && isSubscriptionActive(org, now)) return true
   return false
 }
@@ -111,6 +111,7 @@ export function billingMenuSubtitle(
   const trialLabel = formatTrialLengthLabel(org, trialLengthDays, now)
   if (trialLabel) return trialLabel
   if (org.plan === 'free') return 'Free plan'
+  if (org.plan === 'early' && hasStarterAccess(org, now)) return 'Early · $6/mo'
   if (hasStarterAccess(org, now)) return 'Starter'
   return 'Plan, trial, and subscription'
 }

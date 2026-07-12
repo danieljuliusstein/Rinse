@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { Briefcase, FileText, Flask, Funnel, Receipt, Wallet, type Icon } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
-import { useSheetDismissPanHandlers } from '@/src/hooks/useSheetDismissGesture'
+import { useSheetDismissGesture } from '@/src/hooks/useSheetDismissGesture'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
 import { lightHaptic, mediumHaptic } from '@/src/lib/haptics'
 import { closeSheetSpring, openSheetSpring } from '@/src/lib/sheet-motion'
@@ -31,7 +31,6 @@ export function QuickActionMenu() {
   const reduceMotion = useReduceMotion()
   const { menuOpen, closeMenu } = useQuickAction()
   const [mounted, setMounted] = useState(menuOpen)
-  /** Pan dismiss already sprang the panel away — skip a second close animation. */
   const skipCloseAnimation = useRef(false)
 
   const sheetWidth =
@@ -69,7 +68,7 @@ export function QuickActionMenu() {
     closeMenu()
   }, [closeMenu])
 
-  const dismissPanHandlers = useSheetDismissPanHandlers(
+  const dismissPanHandlers = useSheetDismissGesture(
     sheetTranslateY,
     scrimOpacity,
     SHEET_OFFSCREEN,
@@ -190,7 +189,7 @@ export function QuickActionMenu() {
       <View style={[styles.root, Platform.OS === 'web' && styles.rootWeb]} accessibilityViewIsModal>
         <View style={[styles.column, { width: sheetWidth }]}>
           <Pressable style={styles.backdropPress} onPress={requestClose} accessibilityLabel="Close quick actions">
-            <Animated.View style={[styles.backdrop, scrimStyle]} />
+            <Animated.View style={[styles.backdrop, scrimStyle]} pointerEvents="none" />
           </Pressable>
 
           <Animated.View
@@ -198,10 +197,10 @@ export function QuickActionMenu() {
             accessibilityRole="menu"
             accessibilityLabel="Quick actions"
           >
-            <View style={styles.dragRegion} {...dismissPanHandlers}>
+            <View style={styles.handleHit} {...dismissPanHandlers} accessibilityLabel="Drag to dismiss">
               <View style={styles.handle} />
-              <AppText style={styles.title}>Quick actions</AppText>
             </View>
+            <AppText style={styles.title}>Quick actions</AppText>
             <View style={styles.list}>
               {actions.map((action, index) => {
                 const { Icon } = action
@@ -278,18 +277,18 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
     paddingHorizontal: spacing.md,
-    paddingTop: 12,
+    paddingTop: 4,
   },
-  dragRegion: {
+  handleHit: {
     width: '100%',
+    alignItems: 'center',
+    paddingVertical: 12,
   },
   handle: {
-    alignSelf: 'center',
     width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.border,
-    marginBottom: spacing.md,
   },
   title: {
     marginBottom: 12,
@@ -318,7 +317,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: spacing.sm,
   },
-  /** RN Web maps Pressable → <button>; flex display keeps the label column from collapsing. */
   rowWeb: {
     display: 'flex',
   },

@@ -35,6 +35,7 @@ async function confirmApplePurchase(signedTransaction: string): Promise<ConfirmR
  */
 export async function startStarterUpgrade(): Promise<'apple' | 'stripe'> {
   if (Platform.OS !== 'ios') {
+    // Server picks Early ($6) while seats remain, otherwise Starter ($12).
     await startBillingCheckout('starter')
     return 'stripe'
   }

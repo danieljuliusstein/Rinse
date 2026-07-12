@@ -3,6 +3,9 @@ import { generatePocketBaseId } from '@rinse/core'
 import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
+import { isOfflineWritesEnabled } from './subscription-fetch'
+import { enqueue } from './offline/queue'
+import { fileUriToDataUrl } from './offline/sync-files'
 
 function pb() {
   const client = getPocketBase()
@@ -42,6 +45,11 @@ function mapDamage(record: Record<string, unknown>): DamageRecord {
     note: String(record.note ?? ''),
     date: String(record.date ?? ''),
     captured_at: String(record.captured_at ?? ''),
+    uploaded_at: record.uploaded_at
+      ? String(record.uploaded_at)
+      : record.created
+        ? String(record.created)
+        : undefined,
     photo_url: damagePhotoUrl(record),
     linked_job_id: record.job_id ? String(record.job_id) : undefined,
   }
@@ -103,21 +111,58 @@ export async function createDamageDoc(
   filename: string,
   mimeType: string
 ): Promise<DamageRecord> {
-  if (!(await isOnline())) throw new Error('Uploading damage photos requires an internet connection')
-
   const orgId = requireOrganizationId()
-  const formData = new FormData()
-  formData.append('organization_id', orgId)
-  formData.append('vehicle_id', input.vehicle_id)
-  formData.append('area', input.area)
-  formData.append('note', input.note)
-  formData.append('date', input.date)
-  formData.append('captured_at', input.captured_at)
-  if (input.linked_job_id) formData.append('job_id', input.linked_job_id)
-  formData.append('photo', { uri: fileUri, name: filename, type: mimeType } as unknown as Blob)
+  const offlineEnabled = await isOfflineWritesEnabled()
+  const online = await isOnline()
 
-  const record = await pb().collection('damage_docs').create(formData)
-  return mapDamage(record as Record<string, unknown>)
+  const tryOnline = async (): Promise<DamageRecord> => {
+    const formData = new FormData()
+    formData.append('organization_id', orgId)
+    formData.append('vehicle_id', input.vehicle_id)
+    formData.append('area', input.area)
+    formData.append('note', input.note)
+    formData.append('date', input.date)
+    // Device-reported capture time only — server sets uploaded_at.
+    formData.append('captured_at', input.captured_at)
+    if (input.linked_job_id) formData.append('job_id', input.linked_job_id)
+    formData.append('photo', { uri: fileUri, name: filename, type: mimeType } as unknown as Blob)
+
+    const record = await pb().collection('damage_docs').create(formData)
+    return mapDamage(record as Record<string, unknown>)
+  }
+
+  if (online) {
+    try {
+      return await tryOnline()
+    } catch (err) {
+      if (!offlineEnabled) throw err
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!/network|fetch|timeout|abort|unreachable|failed to connect/i.test(msg)) throw err
+    }
+  }
+
+  if (!offlineEnabled) {
+    throw new Error('Uploading damage photos requires an internet connection')
+  }
+
+  const localDamageId = generatePocketBaseId()
+  const photo_url = await fileUriToDataUrl(fileUri, mimeType)
+  await enqueue({
+    type: 'createDamageDoc',
+    params: { ...input, photo_url },
+    localDamageId,
+  })
+
+  return {
+    id: localDamageId,
+    vehicle_id: input.vehicle_id,
+    area: input.area,
+    note: input.note,
+    date: input.date,
+    captured_at: input.captured_at,
+    photo_url: fileUri,
+    linked_job_id: input.linked_job_id,
+  }
 }
 
 export function vehicleDisplayName(vehicle: Vehicle): string {

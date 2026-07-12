@@ -71,10 +71,12 @@ export function InvoiceLayoutDocument({
             key={el.id}
             style={[
               styles.block,
+              el.type === 'logo' ? styles.blockLogo : null,
               {
                 left: el.x,
                 top: el.y,
                 width: el.w,
+                height: el.type === 'logo' ? el.h : undefined,
                 minHeight: el.h,
               },
             ]}
@@ -86,6 +88,8 @@ export function InvoiceLayoutDocument({
               align={el.align}
               logoUrl={model.logoUrl}
               documentTitle={documentTitle}
+              element={el}
+              logoSize={el.type === 'logo' ? el.w : undefined}
             />
           </View>
         ))}
@@ -109,5 +113,10 @@ const styles = StyleSheet.create({
   block: {
     position: 'absolute',
     padding: 2,
+  },
+  blockLogo: {
+    padding: 0,
+    overflow: 'hidden',
+    borderRadius: 8,
   },
 })

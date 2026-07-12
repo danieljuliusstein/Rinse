@@ -14,7 +14,8 @@ import {
 import { SignOutBlockedError } from '@/src/lib/auth'
 import { openManageSubscription } from '@/src/lib/billing-web'
 import { IapPurchaseError, restoreApplePurchases, startStarterUpgrade } from '@/src/lib/iap-purchase'
-import { PLAN_LABELS, FREE_PLAN, STARTER_PLAN, STARTER_TRIAL_DAYS } from '@/src/lib/plans'
+import { PLAN_LABELS, EARLY_PLAN, FREE_PLAN, STARTER_PLAN, STARTER_TRIAL_DAYS } from '@/src/lib/plans'
+import { fetchBillingPricing, upgradePriceLabel, type BillingPricing } from '@/src/lib/billing-pricing'
 import { useAuth } from '@/src/providers/AuthProvider'
 import { useOffline } from '@/src/providers/OfflineProvider'
 import { fetchOrgSubscription } from '@/src/lib/subscription-fetch'
@@ -59,6 +60,7 @@ export default function SettingsBillingScreen() {
   const { signOut } = useAuth()
   const { pendingCount } = useOffline()
   const [org, setOrg] = useState<OrgSubscription | null>(null)
+  const [pricing, setPricing] = useState<BillingPricing | null>(null)
   const [loading, setLoading] = useState(true)
   const [signingOut, setSigningOut] = useState(false)
   const [upgradeBusy, setUpgradeBusy] = useState(false)
@@ -67,8 +69,9 @@ export default function SettingsBillingScreen() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const record = await fetchOrgSubscription(true)
+      const [record, ladder] = await Promise.all([fetchOrgSubscription(true), fetchBillingPricing()])
       setOrg(record)
+      setPricing(ladder)
     } finally {
       setLoading(false)
     }
@@ -163,7 +166,14 @@ export default function SettingsBillingScreen() {
   const currentPlanLabel = founding
     ? 'Founding'
     : PLAN_LABELS[org?.plan ?? 'free'] ?? org?.plan ?? FREE_PLAN.name
-  const showPlanFeatures = founding ? null : starterAccess && !onFreeTier ? STARTER_PLAN : null
+  const showPlanFeatures =
+    founding ? null : starterAccess && !onFreeTier
+      ? org?.plan === 'early'
+        ? EARLY_PLAN
+        : STARTER_PLAN
+      : null
+  const paidPriceLabel = upgradePriceLabel(pricing)
+  const earlyAvailable = pricing?.early.available === true
 
   return (
     <SettingsScreen title="Billing">
@@ -215,17 +225,24 @@ export default function SettingsBillingScreen() {
 
             <Card style={styles.planCardFeatured}>
               <View style={styles.cardRow}>
-                <AppText style={styles.cardTitle}>{STARTER_PLAN.name}</AppText>
-                <PlanBadge kind="starter" />
+                <AppText style={styles.cardTitle}>
+                  {earlyAvailable ? EARLY_PLAN.name : STARTER_PLAN.name}
+                </AppText>
+                <PlanBadge kind={earlyAvailable ? 'early' : 'starter'} />
               </View>
               <Text style={styles.leadTight}>
-                <Text style={styles.price}>{STARTER_PLAN.priceLabel}</Text>
-                {' — unlock booking, billing, pipeline, and receipt scan'}
+                <Text style={styles.price}>{paidPriceLabel}</Text>
+                {earlyAvailable
+                  ? ` — locked Early price · ${pricing?.early.remaining ?? 0} seats left`
+                  : ' — unlock booking, billing, pipeline, and receipt scan'}
               </Text>
-              <PlanFeatureList features={STARTER_PLAN.features.slice(0, 6)} compact />
+              <PlanFeatureList
+                features={(earlyAvailable ? EARLY_PLAN.features : STARTER_PLAN.features).slice(0, 6)}
+                compact
+              />
               <AppText variant="caption" style={styles.webNote}>
                 {Platform.OS === 'ios'
-                  ? 'Billed through your Apple ID. Cancel anytime in Settings → Subscriptions.'
+                  ? `Billed at ${STARTER_PLAN.priceLabel} through your Apple ID. Cancel anytime in Settings → Subscriptions.`
                   : 'Subscribe securely via rinsehq.com (Stripe).'}
               </AppText>
               <PrimaryButton
@@ -236,7 +253,9 @@ export default function SettingsBillingScreen() {
                       : 'Opening checkout…'
                     : Platform.OS === 'ios'
                       ? 'Upgrade with Apple'
-                      : 'Upgrade on rinsehq.com'
+                      : earlyAvailable
+                        ? `Upgrade · ${EARLY_PLAN.priceLabel}`
+                        : 'Upgrade on rinsehq.com'
                 }
                 onPress={handleUpgrade}
                 disabled={upgradeBusy || restoreBusy}

@@ -1,11 +1,31 @@
-import type { ClientInput, JobEditData, QueueItem, QuickJobData } from '@rinse/core'
-import { generatePocketBaseId } from '@rinse/core'
+import type {
+  ClientInput,
+  DamageRecordInput,
+  Invoice,
+  JobEditData,
+  Payment,
+  PhotoMeta,
+  QueueItem,
+  QuickJobData,
+  VehicleInput,
+} from '@rinse/core'
+import {
+  buildInvoiceFromJob,
+  generateInvoiceNumber,
+  generatePocketBaseId,
+  isJobPhotoTypeAtLimit,
+  jobPhotoLimitMessage,
+  normalizeInvoice,
+} from '@rinse/core'
 import { ClientResponseError } from 'pocketbase'
 import { refreshAuthOnce } from '../auth'
 import { jobPbCreateFields } from '../job-create'
+import { recalculateInvoiceTotals } from '../invoice-totals'
+import { mapInvoiceFromRecord } from '../invoices-api'
 import { getPocketBase } from '../pocketbase'
 import { isOnline } from '../network'
 import { formatPocketBaseError } from '../pocketbase-errors'
+import { requireOrganizationId } from '../org'
 import {
   describeQueueOperation,
   isDiscardableSyncError,
@@ -13,6 +33,7 @@ import {
   SyncConflictError,
   SyncNetworkError,
 } from './sync-errors'
+import { dataUrlToTempFile } from './sync-files'
 import {
   getNextQueueItem,
   getQueueCount,
@@ -97,6 +118,37 @@ async function assertNoConflict(collection: string, id: string, localUpdated?: s
   }
 }
 
+async function listInvoiceRecords(): Promise<Invoice[]> {
+  const pb = getPocketBase()
+  const orgId = requireOrganizationId()
+  const escaped = orgId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  const records = await pb.collection('invoices').getFullList({
+    filter: `organization_id = "${escaped}"`,
+  })
+  return records.map((r) => mapInvoiceFromRecord(r as Record<string, unknown>))
+}
+
+async function getInvoiceByJobId(jobId: string): Promise<Invoice | null> {
+  const pb = getPocketBase()
+  const escaped = jobId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  const records = await pb.collection('invoices').getFullList({
+    filter: `job_id = "${escaped}"`,
+  })
+  if (records.length === 0) return null
+  return mapInvoiceFromRecord(records[0] as Record<string, unknown>)
+}
+
+async function getInvoice(invoiceId: string): Promise<Invoice | null> {
+  const pb = getPocketBase()
+  try {
+    const record = await pb.collection('invoices').getOne(invoiceId)
+    return mapInvoiceFromRecord(record as Record<string, unknown>)
+  } catch (err) {
+    if (err instanceof ClientResponseError && err.status === 404) return null
+    throw err
+  }
+}
+
 async function processQueueItem(item: QueueItem): Promise<void> {
   const pb = getPocketBase()
   const op = item.operation
@@ -177,6 +229,235 @@ async function processQueueItem(item: QueueItem): Promise<void> {
     case 'deleteClient': {
       try {
         await pb.collection('clients').delete(op.params.id)
+      } catch (err) {
+        if (!(err instanceof ClientResponseError && err.status === 404)) throw err
+      }
+      break
+    }
+    case 'createInvoiceForJob': {
+      const existing = await getInvoiceByJobId(op.params.jobId)
+      if (existing) break
+      const orgId = requireOrganizationId()
+      const job = await pb.collection('jobs').getOne(op.params.jobId)
+      const all = await listInvoiceRecords()
+      const draft = buildInvoiceFromJob({
+        jobId: op.params.jobId,
+        clientId: String(job.client_id),
+        revenue: Number(job.revenue ?? 0),
+        tip: Number(job.tip ?? 0),
+        invoiceNumber: generateInvoiceNumber(all),
+      })
+      const created = await pb.collection('invoices').create({
+        organization_id: orgId,
+        invoice_number: draft.invoice_number,
+        job_id: op.params.jobId,
+        client_id: draft.client_id,
+        subtotal: draft.subtotal,
+        tip: draft.tip,
+        total: draft.total,
+        status: draft.status,
+        payments: draft.payments,
+        amount_paid: draft.amount_paid,
+        balance_due: draft.balance_due,
+        terms: draft.terms,
+      })
+      await pb.collection('jobs').update(op.params.jobId, {
+        invoice_id: created.id,
+        status: 'invoiced',
+      })
+      break
+    }
+    case 'markInvoiceSent': {
+      await pb.collection('invoices').update(op.params.invoiceId, {
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      })
+      break
+    }
+    case 'addPayment': {
+      const current = await getInvoice(op.params.invoiceId)
+      if (!current) throw new Error('Invoice not found')
+      const payments = [...current.payments, op.params.payment]
+      const normalized = normalizeInvoice({ ...current, payments })
+      await pb.collection('invoices').update(op.params.invoiceId, {
+        payments,
+        amount_paid: normalized.amount_paid,
+        balance_due: normalized.balance_due,
+        status: normalized.status,
+        paid_at: normalized.paid_at ?? '',
+      })
+      if (normalized.status === 'paid') {
+        await pb.collection('jobs').update(normalized.job_id, { status: 'paid' })
+      }
+      break
+    }
+    case 'markInvoicePaid': {
+      const invoice = await getInvoice(op.params.invoiceId)
+      if (!invoice) throw new Error('Invoice not found')
+      if (invoice.balance_due <= 0) break
+      const payment: Payment = {
+        amount: invoice.balance_due,
+        method: op.params.method,
+        date: new Date().toISOString().split('T')[0],
+      }
+      const payments = [...invoice.payments, payment]
+      const normalized = normalizeInvoice({ ...invoice, payments })
+      await pb.collection('invoices').update(op.params.invoiceId, {
+        payments,
+        amount_paid: normalized.amount_paid,
+        balance_due: normalized.balance_due,
+        status: normalized.status,
+        paid_at: normalized.paid_at ?? '',
+      })
+      if (normalized.status === 'paid') {
+        await pb.collection('jobs').update(normalized.job_id, { status: 'paid' })
+      }
+      break
+    }
+    case 'updateInvoice': {
+      const current = await getInvoice(op.params.invoiceId)
+      if (!current) throw new Error('Invoice not found')
+      const merged = recalculateInvoiceTotals({ ...current, ...op.params.patch })
+      const payload: Record<string, unknown> = {
+        total: merged.total,
+        balance_due: merged.balance_due,
+        amount_paid: merged.amount_paid,
+        status: merged.status,
+      }
+      const patch = op.params.patch
+      if (patch.discount_amount !== undefined) payload.discount_amount = merged.discount_amount ?? 0
+      if (patch.tax_rate !== undefined) {
+        payload.tax_rate = merged.tax_rate ?? 0
+        payload.tax_amount = merged.tax_amount ?? 0
+      }
+      if (patch.po_number !== undefined) payload.po_number = merged.po_number ?? ''
+      if (patch.terms !== undefined) payload.terms = merged.terms ?? ''
+      if (patch.notes !== undefined) payload.notes = merged.notes ?? ''
+      if (patch.extra_line_items !== undefined) payload.extra_line_items = merged.extra_line_items ?? []
+      if (patch.subtotal !== undefined) payload.subtotal = merged.subtotal
+      await pb.collection('invoices').update(op.params.invoiceId, payload)
+      break
+    }
+    case 'deleteInvoice': {
+      try {
+        await pb.collection('invoices').delete(op.params.invoiceId)
+      } catch (err) {
+        if (!(err instanceof ClientResponseError && err.status === 404)) throw err
+      }
+      break
+    }
+    case 'duplicateInvoice': {
+      const current = await getInvoice(op.params.invoiceId)
+      if (!current) throw new Error('Invoice not found')
+      const orgId = requireOrganizationId()
+      const all = await listInvoiceRecords()
+      await pb.collection('invoices').create({
+        organization_id: orgId,
+        invoice_number: generateInvoiceNumber(all),
+        job_id: current.job_id,
+        client_id: current.client_id,
+        subtotal: current.subtotal,
+        tip: current.tip,
+        discount_amount: current.discount_amount ?? 0,
+        tax_rate: current.tax_rate ?? 0,
+        tax_amount: current.tax_amount ?? 0,
+        total: current.total,
+        status: 'draft',
+        payments: [],
+        amount_paid: 0,
+        balance_due: current.total,
+        terms: current.terms ?? '',
+        notes: current.notes ?? '',
+        po_number: current.po_number ?? '',
+        extra_line_items: current.extra_line_items ?? [],
+      })
+      break
+    }
+    case 'uploadJobPhoto': {
+      const record = await pb.collection('jobs').getOne(op.params.jobId)
+      const existingMeta = Array.isArray(record.photo_meta) ? [...(record.photo_meta as PhotoMeta[])] : []
+      const typeCount = existingMeta.filter((m) => m.type === op.params.photoType).length
+      if (isJobPhotoTypeAtLimit(typeCount)) {
+        throw new Error(jobPhotoLimitMessage(op.params.photoType))
+      }
+      const file = await dataUrlToTempFile(op.params.dataUrl, op.params.filename)
+      const formData = new FormData()
+      formData.append('photos+', {
+        uri: file.uri,
+        name: file.filename,
+        type: file.mimeType,
+      } as unknown as Blob)
+      const updated = await pb.collection('jobs').update(op.params.jobId, formData)
+      const filenames = Array.isArray(updated.photos) ? (updated.photos as string[]) : []
+      const newFilename =
+        filenames.find((f) => !existingMeta.some((m) => m.filename === f)) ??
+        filenames[filenames.length - 1]
+      if (newFilename) {
+        existingMeta.push({ filename: newFilename, type: op.params.photoType })
+        await pb.collection('jobs').update(op.params.jobId, { photo_meta: existingMeta })
+      }
+      break
+    }
+    case 'deleteJobPhoto': {
+      const record = await pb.collection('jobs').getOne(op.params.jobId)
+      const meta = Array.isArray(record.photo_meta)
+        ? (record.photo_meta as PhotoMeta[]).filter((m) => m.filename !== op.params.filename)
+        : []
+      const formData = new FormData()
+      formData.append('photos-', op.params.filename)
+      await pb.collection('jobs').update(op.params.jobId, formData)
+      await pb.collection('jobs').update(op.params.jobId, { photo_meta: meta })
+      break
+    }
+    case 'createVehicle': {
+      const orgId = requireOrganizationId()
+      const input = op.params as VehicleInput
+      await pb.collection('vehicles').create({
+        id: op.localVehicleId,
+        organization_id: orgId,
+        client_id: input.client_id,
+        year: input.year ?? null,
+        make: input.make,
+        model: input.model,
+        color: input.color ?? '',
+        color_hex: input.color_hex ?? '',
+        vin: input.vin ?? '',
+        plate: input.plate ?? '',
+        type: input.type ?? 'sedan',
+      })
+      break
+    }
+    case 'createDamageDoc': {
+      const orgId = requireOrganizationId()
+      const input = op.params as DamageRecordInput
+      const formData = new FormData()
+      formData.append('id', op.localDamageId)
+      formData.append('organization_id', orgId)
+      formData.append('vehicle_id', input.vehicle_id)
+      formData.append('area', input.area)
+      formData.append('note', input.note ?? '')
+      formData.append('date', input.date)
+      // Device-reported only — server hook overwrites uploaded_at.
+      formData.append('captured_at', input.captured_at)
+      if (input.linked_job_id) formData.append('job_id', input.linked_job_id)
+      if (input.photo_url?.startsWith('data:')) {
+        const file = await dataUrlToTempFile(input.photo_url, `damage_${op.localDamageId}.jpg`)
+        formData.append('photo', {
+          uri: file.uri,
+          name: file.filename,
+          type: file.mimeType,
+        } as unknown as Blob)
+      }
+      await pb.collection('damage_docs').create(formData)
+      break
+    }
+    case 'updateDamageDocNote': {
+      await pb.collection('damage_docs').update(op.params.id, { note: op.params.note })
+      break
+    }
+    case 'deleteDamageDoc': {
+      try {
+        await pb.collection('damage_docs').delete(op.params.id)
       } catch (err) {
         if (!(err instanceof ClientResponseError && err.status === 404)) throw err
       }

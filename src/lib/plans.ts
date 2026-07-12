@@ -3,6 +3,12 @@
 /** Signup / Starter trial length in days (matches server signup seed). */
 export const STARTER_TRIAL_DAYS = 14
 
+/** First N orgs get lifetime Founding ($0). */
+export const FOUNDING_SEAT_LIMIT = 20
+
+/** Next N paid orgs after founding get Early ($6/mo). */
+export const EARLY_SEAT_LIMIT = 100
+
 export const FREE_PLAN = {
   id: 'free' as const,
   name: 'Free',
@@ -14,6 +20,33 @@ export const FREE_PLAN = {
     'Basic scheduling & job notes',
     'Business profile & settings',
     'Upgrade anytime to unlock booking, billing, and pipeline',
+  ],
+} as const
+
+export const FOUNDING_PLAN = {
+  id: 'founding' as const,
+  name: 'Founding',
+  priceLabel: '$0',
+  listPriceLabel: '$12/mo',
+  tagline: `Lifetime Starter for the first ${FOUNDING_SEAT_LIMIT} operators.`,
+  features: [
+    'Everything in Starter — forever',
+    'Founding member badge',
+    'Locked in at $0 — no card required',
+    `Limited to ${FOUNDING_SEAT_LIMIT} seats`,
+  ],
+} as const
+
+export const EARLY_PLAN = {
+  id: 'early' as const,
+  name: 'Early',
+  priceLabel: '$6/mo',
+  listPriceLabel: '$12/mo',
+  tagline: `Starter locked at $6/mo for the next ${EARLY_SEAT_LIMIT} after founding.`,
+  features: [
+    'Everything in Starter',
+    'Price locked at $6/mo',
+    `Limited to ${EARLY_SEAT_LIMIT} seats after founding`,
   ],
 } as const
 
@@ -41,10 +74,11 @@ export const STARTER_PLAN = {
   ],
 } as const
 
-export const PLAN_OPTIONS = [FREE_PLAN, STARTER_PLAN] as const
+export const PLAN_OPTIONS = [FREE_PLAN, FOUNDING_PLAN, EARLY_PLAN, STARTER_PLAN] as const
 
 export const PLAN_LABELS: Record<string, string> = {
-  founding: 'Founding',
+  founding: FOUNDING_PLAN.name,
+  early: EARLY_PLAN.name,
   free: FREE_PLAN.name,
   starter: STARTER_PLAN.name,
 }

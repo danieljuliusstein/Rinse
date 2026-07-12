@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native'
-import { Crown, Leaf, Tag } from 'phosphor-react-native'
+import { Crown, Leaf, Sparkle, Tag } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
 import {
   hasStarterAccess,
@@ -8,7 +8,7 @@ import {
 } from '@/src/lib/subscription-types'
 import { fonts } from '@/src/theme/typography'
 
-export type PlanBadgeKind = 'founding' | 'starter' | 'free'
+export type PlanBadgeKind = 'founding' | 'early' | 'starter' | 'free'
 
 const PLAN_BADGE: Record<
   PlanBadgeKind,
@@ -28,6 +28,14 @@ const PLAN_BADGE: Record<
     text: '#92400e',
     border: 'rgba(180, 120, 20, 0.35)',
     icon: '#b45309',
+  },
+  early: {
+    label: 'Early',
+    Icon: Sparkle,
+    bg: 'rgba(59, 130, 246, 0.12)',
+    text: '#1d4ed8',
+    border: 'rgba(59, 130, 246, 0.35)',
+    icon: '#2563eb',
   },
   starter: {
     label: 'Starter',
@@ -51,6 +59,7 @@ const PLAN_BADGE: Record<
 export function resolvePlanBadgeKind(org: OrgSubscription | null): PlanBadgeKind {
   if (!org) return 'free'
   if (isFoundingMember(org)) return 'founding'
+  if (org.plan === 'early' && hasStarterAccess(org)) return 'early'
   if (hasStarterAccess(org)) return 'starter'
   return 'free'
 }

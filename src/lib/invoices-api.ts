@@ -2,6 +2,7 @@ import type { Invoice, InvoiceStatus, JobPhoto, Payment, PhotoMeta, PhotoType } 
 import {
   buildInvoiceFromJob,
   generateInvoiceNumber,
+  generatePocketBaseId,
   isJobPhotoTypeAtLimit,
   jobPhotoLimitMessage,
   normalizeInvoice,
@@ -10,6 +11,9 @@ import { recalculateInvoiceTotals } from './invoice-totals'
 import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
+import { isOfflineWritesEnabled } from './subscription-fetch'
+import { enqueue } from './offline/queue'
+import { fileUriToDataUrl } from './offline/sync-files'
 
 export function mapInvoiceFromRecord(record: Record<string, unknown>): Invoice {
   const payments = Array.isArray(record.payments) ? (record.payments as Payment[]) : []
@@ -228,32 +232,63 @@ export async function uploadJobPhoto(
   mimeType: string,
   type: PhotoType
 ): Promise<JobPhoto> {
-  await assertOnline('Uploading photo')
-  const record = await pb().collection('jobs').getOne(jobId)
-  const existingMeta = Array.isArray(record.photo_meta) ? [...(record.photo_meta as PhotoMeta[])] : []
-  const typeCount = existingMeta.filter((m) => m.type === type).length
-  if (isJobPhotoTypeAtLimit(typeCount)) {
-    throw new Error(jobPhotoLimitMessage(type))
+  const offlineEnabled = await isOfflineWritesEnabled()
+  const online = await isOnline()
+
+  const tryOnline = async (): Promise<JobPhoto> => {
+    const record = await pb().collection('jobs').getOne(jobId)
+    const existingMeta = Array.isArray(record.photo_meta) ? [...(record.photo_meta as PhotoMeta[])] : []
+    const typeCount = existingMeta.filter((m) => m.type === type).length
+    if (isJobPhotoTypeAtLimit(typeCount)) {
+      throw new Error(jobPhotoLimitMessage(type))
+    }
+
+    const formData = new FormData()
+    formData.append('photos+', { uri: fileUri, name: filename, type: mimeType } as unknown as Blob)
+
+    const updated = await pb().collection('jobs').update(jobId, formData)
+    const filenames = Array.isArray(updated.photos) ? (updated.photos as string[]) : []
+    const newFilename =
+      filenames.find((f) => !existingMeta.some((m) => m.filename === f)) ?? filenames[filenames.length - 1]
+
+    if (newFilename) {
+      existingMeta.push({ filename: newFilename, type })
+      await pb().collection('jobs').update(jobId, { photo_meta: existingMeta })
+    }
+
+    const final = await pb().collection('jobs').getOne(jobId)
+    const name = newFilename ?? filename
+    return {
+      filename: name,
+      url: photoUrl(final as Record<string, unknown>, name),
+      type,
+    }
   }
 
-  const formData = new FormData()
-  formData.append('photos+', { uri: fileUri, name: filename, type: mimeType } as unknown as Blob)
-
-  const updated = await pb().collection('jobs').update(jobId, formData)
-  const filenames = Array.isArray(updated.photos) ? (updated.photos as string[]) : []
-  const newFilename =
-    filenames.find((f) => !existingMeta.some((m) => m.filename === f)) ?? filenames[filenames.length - 1]
-
-  if (newFilename) {
-    existingMeta.push({ filename: newFilename, type })
-    await pb().collection('jobs').update(jobId, { photo_meta: existingMeta })
+  if (online) {
+    try {
+      return await tryOnline()
+    } catch (err) {
+      if (!offlineEnabled) throw err
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!/network|fetch|timeout|abort|unreachable|failed to connect/i.test(msg)) throw err
+    }
   }
 
-  const final = await pb().collection('jobs').getOne(jobId)
-  const name = newFilename ?? filename
+  if (!offlineEnabled) {
+    throw new Error('Uploading photo requires an internet connection')
+  }
+
+  const dataUrl = await fileUriToDataUrl(fileUri, mimeType)
+  const queuedName = filename || `photo_${generatePocketBaseId()}.jpg`
+  await enqueue({
+    type: 'uploadJobPhoto',
+    params: { jobId, dataUrl, photoType: type, filename: queuedName },
+  })
+
   return {
-    filename: name,
-    url: photoUrl(final as Record<string, unknown>, name),
+    filename: queuedName,
+    url: fileUri,
     type,
   }
 }

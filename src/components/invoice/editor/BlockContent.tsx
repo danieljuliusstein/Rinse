@@ -2,8 +2,16 @@ import { Image, StyleSheet, View } from 'react-native'
 import { fmt } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
 import { resolveBusinessLogoSrc } from '@/src/lib/business-logo'
-import type { EditorPreviewData, ElementAlign, ElementType } from '@/src/lib/invoice-editor'
-import { DEFAULT_DOCUMENT_TITLE } from '@/src/lib/invoice-editor'
+import {
+  DEFAULT_BODY_TEXT,
+  DEFAULT_DOCUMENT_TITLE,
+  DEFAULT_SERVICE_AMOUNT,
+  DEFAULT_SERVICE_DESCRIPTION,
+  type EditorPreviewData,
+  type ElementAlign,
+  type ElementType,
+  type PlacedElement,
+} from '@/src/lib/invoice-editor'
 import { fonts } from '@/src/theme/typography'
 
 export function BlockContent({
@@ -13,6 +21,8 @@ export function BlockContent({
   align,
   logoUrl,
   documentTitle = DEFAULT_DOCUMENT_TITLE,
+  element,
+  logoSize,
 }: {
   type: ElementType
   preview: EditorPreviewData
@@ -20,19 +30,28 @@ export function BlockContent({
   align: ElementAlign
   logoUrl?: string | null
   documentTitle?: string
+  /** Optional placed element for custom body/service copy. */
+  element?: Pick<PlacedElement, 'text' | 'serviceDescription' | 'serviceAmount' | 'w' | 'h'>
+  /** Exact logo box size — defaults to 56. */
+  logoSize?: number
 }) {
   const textAlign = align
   const logoSrc = resolveBusinessLogoSrc(logoUrl ?? preview.logoUrl)
   const title = documentTitle.trim() || DEFAULT_DOCUMENT_TITLE
+  const size = logoSize ?? element?.w ?? 56
 
   switch (type) {
     case 'logo':
       return (
-        <View style={styles.logoWrap}>
+        <View style={{ width: size, height: size }}>
           {logoSrc ? (
-            <Image source={{ uri: logoSrc }} style={styles.logo} resizeMode="cover" />
+            <Image
+              source={{ uri: logoSrc }}
+              style={{ width: size, height: size, borderRadius: 8 }}
+              resizeMode="cover"
+            />
           ) : (
-            <View style={styles.logoPlaceholder}>
+            <View style={[styles.logoPlaceholder, { width: size, height: size }]}>
               <AppText style={styles.logoLabel}>LOGO</AppText>
             </View>
           )}
@@ -89,6 +108,26 @@ export function BlockContent({
         </View>
       )
 
+    case 'service': {
+      const desc = element?.serviceDescription?.trim() || DEFAULT_SERVICE_DESCRIPTION
+      const amount = element?.serviceAmount ?? DEFAULT_SERVICE_AMOUNT
+      return (
+        <View style={styles.lineRow}>
+          <AppText style={styles.lineDesc} numberOfLines={2}>
+            {desc}
+          </AppText>
+          <AppText style={styles.lineAmt}>{fmt(amount)}</AppText>
+        </View>
+      )
+    }
+
+    case 'bodyText':
+      return (
+        <AppText style={[styles.bodyText, { textAlign }]}>
+          {element?.text?.trim() || DEFAULT_BODY_TEXT}
+        </AppText>
+      )
+
     case 'totals':
       return (
         <View style={styles.block}>
@@ -123,22 +162,8 @@ const styles = StyleSheet.create({
   block: {
     gap: 2,
   },
-  logoWrap: {
-    width: 56,
-    height: 56,
-  },
-  logo: {
-    width: 56,
-    height: 56,
-    borderRadius: 8,
-  },
   logoPlaceholder: {
-    width: 56,
-    height: 56,
     borderRadius: 8,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#c7c7cc',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#f2f2f7',
@@ -159,6 +184,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8e8e93',
     lineHeight: 16,
+  },
+  bodyText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: '#111',
+    lineHeight: 18,
   },
   label: {
     fontFamily: fonts.bodySemiBold,

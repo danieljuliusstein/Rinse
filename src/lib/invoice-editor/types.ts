@@ -1,4 +1,19 @@
-export type ElementType = 'logo' | 'business' | 'meta' | 'lineItems' | 'totals' | 'notes'
+export type ElementType =
+  | 'logo'
+  | 'business'
+  | 'meta'
+  | 'lineItems'
+  | 'totals'
+  | 'notes'
+  | 'bodyText'
+  | 'service'
+
+/** Types that may appear more than once on a layout. */
+export const MULTI_INSTANCE_TYPES: readonly ElementType[] = ['bodyText', 'service']
+
+export function isMultiInstanceType(type: ElementType): boolean {
+  return type === 'bodyText' || type === 'service'
+}
 
 export type ElementAlign = 'left' | 'center' | 'right'
 
@@ -16,6 +31,11 @@ export interface PlacedElement {
   locked: boolean
   /** Vertical gap after this block when used in flow contexts. */
   spacing?: number
+  /** Custom body paragraph (`bodyText`). */
+  text?: string
+  /** Custom service row (`service`). */
+  serviceDescription?: string
+  serviceAmount?: number
 }
 
 export interface InvoiceEditorLayout {
@@ -39,6 +59,14 @@ export interface SnapResult {
   x: number
   y: number
   guides: SnapGuide[]
+}
+
+/** Dashed slot shown while dragging — where the block will land in the stack. */
+export interface DropGhost {
+  x: number
+  y: number
+  w: number
+  h: number
 }
 
 export interface EditorPreviewData {

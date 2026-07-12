@@ -26,6 +26,8 @@ export function PropertiesPanel({
   onDelete,
   onTermsChange,
   onDocumentTitleChange,
+  onBodyTextChange,
+  onServiceChange,
   onChangeLogo,
   onRemoveLogo,
   logoBusy,
@@ -42,13 +44,15 @@ export function PropertiesPanel({
   onDelete: () => void
   onTermsChange: (next: string) => void
   onDocumentTitleChange: (next: string) => void
+  onBodyTextChange?: (text: string) => void
+  onServiceChange?: (patch: { serviceDescription?: string; serviceAmount?: number }) => void
   onChangeLogo?: () => void
   onRemoveLogo?: () => void
   logoBusy?: boolean
 }) {
   if (!block) {
     return (
-      <View style={styles.wrap}>
+      <View style={[styles.wrap, styles.wrapContent]}>
         <AppText style={styles.label}>Properties</AppText>
         <AppText style={styles.empty}>Select a block on the canvas</AppText>
       </View>
@@ -56,7 +60,12 @@ export function PropertiesPanel({
   }
 
   const spacingIdx = spacingIndex(block.spacing ?? 12)
-  const blockLabel = block.type === 'lineItems' ? 'line items' : block.type
+  const blockLabel =
+    block.type === 'lineItems'
+      ? 'line items'
+      : block.type === 'bodyText'
+        ? 'body text'
+        : block.type
   const blockColor = block.color || accentColor
 
   return (
@@ -193,6 +202,50 @@ export function PropertiesPanel({
           <Plus size={14} color={EDITOR_CHROME.text} weight="bold" />
         </Pressable>
       </View>
+
+      {block.type === 'bodyText' && onBodyTextChange ? (
+        <View>
+          <AppText style={styles.heading}>Body text</AppText>
+          <TextInput
+            style={styles.terms}
+            value={block.text ?? ''}
+            onChangeText={onBodyTextChange}
+            multiline
+            placeholder="Write a paragraph for this invoice…"
+            placeholderTextColor={EDITOR_CHROME.textMuted}
+          />
+        </View>
+      ) : null}
+
+      {block.type === 'service' && onServiceChange ? (
+        <View style={styles.textSection}>
+          <AppText style={styles.heading}>Service</AppText>
+          <TextInput
+            style={styles.titleInput}
+            value={block.serviceDescription ?? ''}
+            onChangeText={(serviceDescription) => onServiceChange({ serviceDescription })}
+            placeholder="Service name"
+            placeholderTextColor={EDITOR_CHROME.textMuted}
+          />
+          <AppText style={styles.heading}>Amount</AppText>
+          <TextInput
+            style={styles.titleInput}
+            value={
+              block.serviceAmount == null || Number.isNaN(block.serviceAmount)
+                ? ''
+                : String(block.serviceAmount)
+            }
+            onChangeText={(raw) => {
+              const cleaned = raw.replace(/[^0-9.]/g, '')
+              const n = cleaned === '' ? 0 : Number(cleaned)
+              onServiceChange({ serviceAmount: Number.isFinite(n) ? n : 0 })
+            }}
+            keyboardType="decimal-pad"
+            placeholder="0"
+            placeholderTextColor={EDITOR_CHROME.textMuted}
+          />
+        </View>
+      ) : null}
 
       {block.type === 'notes' ? (
         <View>

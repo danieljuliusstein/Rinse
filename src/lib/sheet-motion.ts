@@ -6,18 +6,17 @@ import {
 } from 'react-native-reanimated'
 import { motion } from '@/src/theme/motion'
 
-/** Open: panel springs to rest; scrim fades in on a short timing curve. */
+/** Open: panel springs to rest; scrim fades in. Call from JS. */
 export function openSheetSpring(
   translateY: SharedValue<number>,
   scrimOpacity: SharedValue<number>,
 ): void {
-  'worklet'
   scrimOpacity.value = withTiming(1, { duration: motion.fadeMs })
   translateY.value = withSpring(0, motion.sheet)
 }
 
 /**
- * Close: panel springs off-screen; scrim fades out faster.
+ * Close: panel springs off-screen; scrim fades out.
  * Invokes `onFinished` on the JS thread when the panel spring completes.
  */
 export function closeSheetSpring(
@@ -26,7 +25,6 @@ export function closeSheetSpring(
   offscreen: number,
   onFinished?: () => void,
 ): void {
-  'worklet'
   scrimOpacity.value = withTiming(0, { duration: motion.fastMs })
   translateY.value = withSpring(offscreen, motion.sheet, (finished) => {
     'worklet'
@@ -36,31 +34,22 @@ export function closeSheetSpring(
   })
 }
 
-/** Snap panel back to resting position after a cancelled drag. */
+/** Snap panel back to rest after a cancelled drag. */
 export function springSheetBack(
   translateY: SharedValue<number>,
   scrimOpacity: SharedValue<number>,
 ): void {
-  'worklet'
   translateY.value = withSpring(0, motion.sheet)
   scrimOpacity.value = withTiming(1, { duration: motion.fastMs })
 }
 
-/** Scrim opacity while dragging — maps translateY 0 → offscreen to opacity 1 → ~0.15. */
+/** Scrim opacity while dragging. */
 export function scrimOpacityForDrag(translateY: number, offscreen: number): number {
-  'worklet'
   if (offscreen <= 0) return 1
   const t = Math.min(1, Math.max(0, translateY / offscreen))
   return 1 - t * 0.85
 }
 
-export function shouldDismissSheet(translationY: number, velocityY: number): boolean {
-  'worklet'
-  return translationY > motion.sheetDismissDistance || velocityY > motion.sheetDismissVelocity
-}
-
-/** Downward-only rubber band: ignore upward drag past rest. */
 export function clampSheetDrag(translationY: number): number {
-  'worklet'
   return Math.max(0, translationY)
 }

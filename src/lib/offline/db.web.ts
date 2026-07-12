@@ -1,6 +1,6 @@
 /** Web preview stub — offline SQLite is native-only. */
 
-import { webMirrorStore, webQueueStore } from './memory-store.web'
+import { webDraftStore, webMirrorStore, webQueueStore } from './memory-store.web'
 
 const DB_NAME = 'rinse_offline_v1'
 
@@ -38,5 +38,6 @@ export function resetOfflineDb(_orgId?: string): void {
   authProfileJson = null
   webMirrorStore.clear()
   webQueueStore.length = 0
+  webDraftStore.clear()
 }
 

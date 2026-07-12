@@ -15,6 +15,8 @@ export const PALETTE: { type: ElementType; label: string }[] = [
   { type: 'business', label: 'Business' },
   { type: 'meta', label: 'Meta' },
   { type: 'lineItems', label: 'Line items' },
+  { type: 'service', label: 'Service' },
+  { type: 'bodyText', label: 'Body text' },
   { type: 'totals', label: 'Totals' },
   { type: 'notes', label: 'Notes' },
 ]
@@ -24,6 +26,8 @@ export const DEFAULT_ELEMENT_SIZE: Record<ElementType, { w: number; h: number }>
   business: { w: 240, h: 72 },
   meta: { w: 564, h: 48 },
   lineItems: { w: 564, h: 140 },
+  service: { w: 564, h: 36 },
+  bodyText: { w: 564, h: 48 },
   totals: { w: 240, h: 88 },
   notes: { w: 564, h: 40 },
 }
@@ -33,6 +37,8 @@ export const STABLE_ELEMENT_ID: Record<ElementType, string> = {
   business: 'block-business',
   meta: 'block-meta',
   lineItems: 'block-line-items',
+  service: 'block-service',
+  bodyText: 'block-body-text',
   totals: 'block-totals',
   notes: 'block-notes',
 }
@@ -58,6 +64,10 @@ export const DOCUMENT_TITLE_OPTIONS = [
 ] as const
 
 export const DEFAULT_DOCUMENT_TITLE = 'Invoice'
+
+export const DEFAULT_BODY_TEXT = 'Add body copy for this invoice…'
+export const DEFAULT_SERVICE_DESCRIPTION = 'Custom service'
+export const DEFAULT_SERVICE_AMOUNT = 0
 
 export const EDITOR_CHROME = {
   bg: '#1c1c1e',
