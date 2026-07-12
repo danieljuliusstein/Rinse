@@ -24,7 +24,8 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_POSTHOG_KEY": "phc_wyxJULDswY6PGpmNsVnZ67KWU8qH7vNjucmC4oz6PFoT",
-        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://1a84c04c06f79d1ff6247c0080131173@o4511718252806144.ingest.us.sentry.io/4511718269911040"
       }
     }
   },
