@@ -1,5 +1,6 @@
 import type { DamageRecord, DamageRecordInput, Vehicle, VehicleInput } from '@rinse/core'
 import { generatePocketBaseId } from '@rinse/core'
+import { appendPhotoToFormData } from './form-data-file'
 import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
@@ -105,6 +106,20 @@ export async function getDamageDocsForVehicle(vehicleId: string): Promise<Damage
   }
 }
 
+export async function getDamageDocsForJob(jobId: string): Promise<DamageRecord[]> {
+  if (!(await isOnline())) return []
+  const escaped = jobId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  try {
+    const records = await pb().collection('damage_docs').getFullList({
+      filter: `job_id = "${escaped}"`,
+      sort: '-uploaded_at,-created',
+    })
+    return records.map((r) => mapDamage(r as Record<string, unknown>))
+  } catch {
+    return []
+  }
+}
+
 export async function createDamageDoc(
   input: DamageRecordInput,
   fileUri: string,
@@ -125,10 +140,28 @@ export async function createDamageDoc(
     // Device-reported capture time only — server sets uploaded_at.
     formData.append('captured_at', input.captured_at)
     if (input.linked_job_id) formData.append('job_id', input.linked_job_id)
-    formData.append('photo', { uri: fileUri, name: filename, type: mimeType } as unknown as Blob)
+    await appendPhotoToFormData(formData, 'photo', fileUri, filename, mimeType)
 
-    const record = await pb().collection('damage_docs').create(formData)
-    return mapDamage(record as Record<string, unknown>)
+    try {
+      const record = await pb().collection('damage_docs').create(formData)
+      return mapDamage(record as Record<string, unknown>)
+    } catch (err) {
+      // Surface PocketBase validation details when present.
+      if (err && typeof err === 'object' && 'response' in err) {
+        const response = (err as { response?: { message?: string; data?: Record<string, { message?: string }> } })
+          .response
+        const fieldMsg = response?.data
+          ? Object.entries(response.data)
+              .map(([k, v]) => (v?.message ? `${k}: ${v.message}` : null))
+              .filter(Boolean)
+              .join('; ')
+          : ''
+        if (fieldMsg || response?.message) {
+          throw new Error(fieldMsg || response?.message || 'Upload failed')
+        }
+      }
+      throw err
+    }
   }
 
   if (online) {
@@ -160,6 +193,8 @@ export async function createDamageDoc(
     note: input.note,
     date: input.date,
     captured_at: input.captured_at,
+    /** Pending sync — UI should label as "Uploading…" until server stamp lands. */
+    uploaded_at: undefined,
     photo_url: fileUri,
     linked_job_id: input.linked_job_id,
   }

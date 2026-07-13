@@ -18,13 +18,14 @@ import { colors, layout, webInlinePressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 import { motion } from '@/src/theme/motion'
 import { tabDockSafeBottom } from '@/src/hooks/useTabDockPadding'
+import { useTranslation } from 'react-i18next'
 
 type TabKey = 'index' | 'jobs' | 'clients' | 'reports'
 
 interface NavTab {
   key: TabKey
   routeName: string
-  label: string
+  labelKey: 'tabs.home' | 'tabs.jobs' | 'tabs.clients' | 'tabs.business'
   Icon: typeof SquaresFour
 }
 
@@ -45,13 +46,13 @@ type OperatorBottomNavProps = {
 }
 
 const LEFT_TABS: NavTab[] = [
-  { key: 'index', routeName: 'index', label: 'Home', Icon: SquaresFour },
-  { key: 'jobs', routeName: 'jobs', label: 'Jobs', Icon: Briefcase },
+  { key: 'index', routeName: 'index', labelKey: 'tabs.home', Icon: SquaresFour },
+  { key: 'jobs', routeName: 'jobs', labelKey: 'tabs.jobs', Icon: Briefcase },
 ]
 
 const RIGHT_TABS: NavTab[] = [
-  { key: 'clients', routeName: 'clients', label: 'Clients', Icon: Users },
-  { key: 'reports', routeName: 'reports', label: 'Business', Icon: ChartBar },
+  { key: 'clients', routeName: 'clients', labelKey: 'tabs.clients', Icon: Users },
+  { key: 'reports', routeName: 'reports', labelKey: 'tabs.business', Icon: ChartBar },
 ]
 
 const FAB_COLUMN_WIDTH = 72
@@ -74,8 +75,10 @@ function NavTabButton({
   active: boolean
   onPress: () => void
 }) {
+  const { t } = useTranslation()
   const reduceMotion = useReduceMotion()
   const { Icon } = tab
+  const label = t(tab.labelKey)
   const tint = active ? colors.green : colors.textDim
   const scale = useSharedValue(1)
   const underline = useSharedValue(active ? 1 : 0)
@@ -108,7 +111,7 @@ function NavTabButton({
       style={({ pressed }) => [styles.tab, webInlinePressableReset, pressed && styles.tabPressed]}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
-      accessibilityLabel={tab.label}
+      accessibilityLabel={label}
     >
       <Animated.View style={[styles.tabIcon, iconStyle]}>
         <Icon size={22} color={tint} weight={active ? 'fill' : 'regular'} />
@@ -117,7 +120,7 @@ function NavTabButton({
         variant="caption"
         style={[styles.tabLabel, { color: tint, fontFamily: active ? fonts.bodySemiBold : fonts.body }]}
       >
-        {tab.label}
+        {label}
       </AppText>
       <Animated.View style={[styles.tabUnderline, underlineStyle]} />
     </Pressable>

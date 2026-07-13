@@ -20,17 +20,26 @@ import {
   type PremiumAction,
 } from '@/src/lib/subscription-gates'
 
+type PaywallMode = 'nudge' | 'lapsed' | 'free' | 'vault'
+
+function modeFromReason(reason: GateReason): PaywallMode {
+  if (reason === 'nudge') return 'nudge'
+  if (reason === 'free') return 'free'
+  if (reason === 'vault') return 'vault'
+  return 'lapsed'
+}
+
 interface PaywallSheetState {
   visible: boolean
   featureLabel: string
-  mode: 'nudge' | 'lapsed' | 'free'
+  mode: PaywallMode
   action: PremiumAction | null
 }
 
 interface PaywallGateContextValue {
   subscriptionMode: GateReason
   runGated: (action: PremiumAction, callback: () => void) => boolean
-  openPaywall: (options?: { mode?: 'nudge' | 'lapsed' | 'free'; featureLabel?: string }) => void
+  openPaywall: (options?: { mode?: PaywallMode; featureLabel?: string }) => void
 }
 
 const PaywallGateContext = createContext<PaywallGateContextValue | null>(null)
@@ -48,12 +57,10 @@ export function PaywallGateProvider({ children }: { children: ReactNode }) {
   const subscriptionMode = resolveSubscriptionMode(org, loading)
 
   const openPaywall = useCallback(
-    (options?: { mode?: 'nudge' | 'lapsed' | 'free'; featureLabel?: string }) => {
+    (options?: { mode?: PaywallMode; featureLabel?: string }) => {
       pendingActionRef.current = null
       const resolved = resolveSubscriptionMode(org, loading)
-      const mode =
-        options?.mode ??
-        (resolved === 'nudge' ? 'nudge' : resolved === 'free' ? 'free' : 'lapsed')
+      const mode = options?.mode ?? modeFromReason(resolved)
       setSheet({
         visible: true,
         featureLabel: options?.featureLabel ?? '',
@@ -80,12 +87,7 @@ export function PaywallGateProvider({ children }: { children: ReactNode }) {
         setSheet({
           visible: true,
           featureLabel: result.featureLabel,
-          mode:
-            result.reason === 'nudge'
-              ? 'nudge'
-              : result.reason === 'free'
-                ? 'free'
-                : 'lapsed',
+          mode: modeFromReason(result.reason),
           action,
         })
       }

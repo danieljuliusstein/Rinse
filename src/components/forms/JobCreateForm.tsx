@@ -40,6 +40,7 @@ import { deriveInitials } from '@/src/lib/client-relationship-logic'
 import { localCalendarDate } from '@/src/lib/job-create'
 import { formatMoneyInput, parseMoneyInput } from '@/src/lib/money-input'
 import { recordSuccessfulJobAndMaybePromptReview } from '@/src/lib/app-review'
+import { confirmUnblockDayIfNeeded } from '@/src/lib/confirm-unblock-day'
 import { selectionHaptic } from '@/src/lib/haptics'
 import { checkPremiumGate } from '@/src/lib/subscription'
 import { trackProductEvent } from '@/src/lib/telemetry'
@@ -171,6 +172,9 @@ export function JobCreateForm({ initialClientId, initialDate, onSubmit }: JobCre
     try {
       const gate = await checkPremiumGate('create_job')
       if (!gate.allowed) return
+
+      const unblocked = await confirmUnblockDayIfNeeded(values.date)
+      if (!unblocked) return
 
       const cadence = values.recurrence_cadence === 'none' ? undefined : values.recurrence_cadence
       await onSubmit(

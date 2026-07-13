@@ -1,0 +1,225 @@
+{
+  "url": "https://www.perspective.co/",
+  "slug": "perspective.co",
+  "scrapedAt": "2026-07-12T19:37:37.410Z",
+  "durationMs": 1866,
+  "screenshot": "perspective.co.png",
+  "title": "Perspective Funnels - Build breathtaking Funnels easily",
+  "metaDescription": "Perspective is the #1 Mobile Funnel Builder. Easily get more appointments, applications & leads in minutes.",
+  "body": {
+    "tag": "body",
+    "text": "Consent Management\n\nWe use cookies and other/similar technologies (together: cookies) on our website. Some of them are e",
+    "color": "rgb(20, 20, 20)",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "fontFamily": "\"Inter F\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "lineHeight": "22.4px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "hero": {
+    "h1": {
+      "tag": "h1",
+      "text": "Double Your Business with Perspective Funnels™",
+      "color": "rgb(20, 20, 20)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Inter F\", sans-serif",
+      "fontSize": "72px",
+      "fontWeight": "700",
+      "lineHeight": "79.2px",
+      "letterSpacing": "-0.72px",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "h2": {
+      "tag": "h2",
+      "text": "Build & Optimize Funnels with AI",
+      "color": "rgb(20, 20, 20)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Inter F\", sans-serif",
+      "fontSize": "32px",
+      "fontWeight": "600",
+      "lineHeight": "40px",
+      "letterSpacing": "-0.32px",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px 0px 16px"
+    },
+    "supporting": {
+      "tag": "p",
+      "text": "Easily create mobile-first, interactive, and personalized lead gen and sales funnels with market-leading conversion rate",
+      "color": "rgb(79, 79, 79)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Inter F\", sans-serif",
+      "fontSize": "20px",
+      "fontWeight": "400",
+      "lineHeight": "32px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "24px 0px 0px"
+    }
+  },
+  "nav": {
+    "tag": "nav",
+    "text": "New: Perspective MCP. Claude now builds and optimizes your funnels.\nWatch Release\nProduct\nTemplates\nReviews\nPricing\nPart",
+    "color": "rgb(20, 20, 20)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "\"Inter F\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "lineHeight": "22.4px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "primaryCta": {
+    "tag": "a",
+    "text": "Try for free",
+    "color": "rgb(255, 255, 255)",
+    "backgroundColor": "rgb(0, 113, 235)",
+    "fontFamily": "\"Inter F\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "600",
+    "lineHeight": "25.6px",
+    "letterSpacing": "normal",
+    "borderRadius": "8px",
+    "boxShadow": "rgba(0, 0, 0, 0.08) 0px 0px 1px 0px, rgba(0, 0, 0, 0.12) 0px 1px 4px 0px",
+    "padding": "8px 16px",
+    "margin": "0px"
+  },
+  "palette": [
+    {
+      "value": "rgb(20, 20, 20)",
+      "count": 146
+    },
+    {
+      "value": "rgb(74, 74, 74)",
+      "count": 128
+    },
+    {
+      "value": "rgb(255, 255, 255)",
+      "count": 37
+    },
+    {
+      "value": "rgb(156, 163, 175)",
+      "count": 28
+    },
+    {
+      "value": "rgb(0, 113, 235)",
+      "count": 20
+    },
+    {
+      "value": "rgb(79, 79, 79)",
+      "count": 14
+    },
+    {
+      "value": "rgb(16, 47, 59)",
+      "count": 8
+    },
+    {
+      "value": "rgb(5, 71, 149)",
+      "count": 4
+    },
+    {
+      "value": "rgb(76, 9, 103)",
+      "count": 4
+    },
+    {
+      "value": "rgb(104, 69, 16)",
+      "count": 4
+    },
+    {
+      "value": "rgb(21, 64, 85)",
+      "count": 4
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.1)",
+      "count": 3
+    }
+  ],
+  "fonts": [
+    {
+      "value": "\"Inter F\", sans-serif",
+      "count": 194
+    },
+    {
+      "value": "Arial, sans-serif",
+      "count": 5
+    },
+    {
+      "value": "WistiaPlayerInter, Helvetica, sans-serif",
+      "count": 1
+    }
+  ],
+  "radii": [
+    {
+      "value": "16px",
+      "count": 11
+    },
+    {
+      "value": "8px",
+      "count": 5
+    },
+    {
+      "value": "12px",
+      "count": 4
+    },
+    {
+      "value": "1440px",
+      "count": 4
+    },
+    {
+      "value": "6px",
+      "count": 3
+    },
+    {
+      "value": "24px",
+      "count": 3
+    },
+    {
+      "value": "8.55px",
+      "count": 2
+    },
+    {
+      "value": "60px",
+      "count": 1
+    }
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.08) 0px 0px 1px 0px, rgba(0, 0, 0, 0.12) 0px 1px 4px 0px",
+      "count": 8
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.12) 0px 1px 4px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px",
+      "count": 4
+    }
+  ],
+  "cssVariables": {
+    "--steel-blue": "#0071eb",
+    "--hover-blue": "#0062cc",
+    "--dark-grey": "#333",
+    "--border-primary": "#e5e7eb",
+    "--gray-200": "#e5e7eb"
+  },
+  "layoutNotes": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hasStickyHeader": true,
+    "sectionCount": 9
+  },
+  "category": "funnels-crm"
+}

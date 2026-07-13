@@ -1,28 +1,34 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { Image as ImageIcon } from 'phosphor-react-native'
 import {
+  countJobPhotosByType,
   jobExpensesForDisplay,
+  jobHasBeforeAndAfter,
+  jobHasPreJobInspection,
+  jobPhotoCompletenessMessage,
   mapJobStatusForDisplay,
   marginPct,
   netProfit,
   effectiveRate,
+  requiresPreJobInspection,
 } from '@rinse/core'
-import type { Invoice, JobWithRelations } from '@rinse/core'
+import type { Invoice, JobPhoto, JobWithRelations } from '@rinse/core'
 import { completeJob, deleteJob, getJob, openMaps, openSms, updateJob } from '@/src/lib/api'
 import { formatStartTimeLabel } from '@/src/lib/home-dashboard'
-import { composeSmsFromTemplate } from '@/src/lib/messages-api'
+import { composeSmsFromTemplate, sendSmsTemplate } from '@/src/lib/messages-api'
 import { loadSettings } from '@/src/lib/settings-store'
 import { resolveSuppliesUsed } from '@/src/lib/supplies-logic'
 import { checkRecordConflict, refreshRecordFromServer } from '@/src/lib/conflict'
-import { createInvoiceForJob, getInvoiceByJobId } from '@/src/lib/invoices-api'
+import { createInvoiceForJob, getInvoiceByJobId, getJobPhotos } from '@/src/lib/invoices-api'
 import { invoiceStatusChip } from '@/src/lib/invoices-list'
 import { formatJobDate } from '@/src/lib/format-dates'
 import { formatNextServiceLabel, suggestNextServiceDate } from '@/src/lib/next-service'
 import { requireOrganizationId } from '@/src/lib/org'
 import { checkPremiumGate } from '@/src/lib/subscription'
-import { createPortalLink, shareInvoicePdf } from '@/src/lib/share'
+import { createPortalLink, shareInvoicePdf, shareTransformationPdf } from '@/src/lib/share'
 import { ShareLinkActions } from '@/src/components/portal/ShareLinkActions'
 import { JobTimer } from '@/src/components/jobs/JobTimer'
 import { ConflictBanner } from '@/src/components/ConflictBanner'
@@ -54,6 +60,7 @@ function statusBadgeTone(status: string): 'green' | 'blue' | 'amber' | 'red' | '
 }
 
 export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailBodyProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const dockPadding = useTabDockPadding(variant === 'screen')
   const [job, setJob] = useState<JobWithRelations | null>(null)
@@ -61,6 +68,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
   const [refreshing, setRefreshing] = useState(false)
   const [hasConflict, setHasConflict] = useState(false)
   const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [photos, setPhotos] = useState<JobPhoto[]>([])
   const [creatingInvoice, setCreatingInvoice] = useState(false)
   const [completing, setCompleting] = useState(false)
   const [cancelling, setCancelling] = useState(false)
@@ -75,6 +83,11 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       setInvoice(row.invoice ?? (await getInvoiceByJobId(jobId)))
     } else {
       setInvoice(null)
+    }
+    try {
+      setPhotos(await getJobPhotos(jobId))
+    } catch {
+      setPhotos([])
     }
     const conflict = await checkRecordConflict('jobs', jobId)
     setHasConflict(conflict.hasConflict)
@@ -111,7 +124,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
     }
   }
 
-  if (loading) return <LoadingState label="Loading job…" />
+  if (loading) return <LoadingState label={t('jobDetail.loading')} />
 
   if (error || !job) {
     return (
@@ -157,7 +170,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
     try {
       const updated = await completeJob(jobId, suppliesUsed)
       setJob(updated)
-      Alert.alert('Job complete', 'You can invoice or share from this screen.')
+      Alert.alert(t('jobDetail.jobCompleteTitle'), t('jobDetail.jobCompleteBody'))
     } catch (e) {
       Alert.alert('Complete', e instanceof Error ? e.message : 'Could not mark complete')
     } finally {
@@ -197,11 +210,36 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
     void Linking.openURL(openSms(job.client.phone, body))
   }
 
+  const handleOnMyWay = async () => {
+    if (!job?.client?.phone) {
+      Alert.alert(t('jobDetail.noPhoneTitle'), t('jobDetail.noPhoneBody'))
+      return
+    }
+    try {
+      const result = await sendSmsTemplate({
+        templateId: 'on_my_way',
+        clientId: job.client_id,
+        jobId: job.id,
+        force: true,
+      })
+      if (result.dryRun) {
+        Alert.alert(
+          'On my way (dry run)',
+          'Twilio is not configured yet — message was logged. Set TWILIO_* on the API to deliver for real.',
+        )
+        return
+      }
+      Alert.alert(t('jobDetail.sentTitle'), t('jobDetail.onMyWaySent'))
+    } catch (e) {
+      Alert.alert('SMS', e instanceof Error ? e.message : 'Could not send')
+    }
+  }
+
   const handleCancel = () => {
-    Alert.alert('Cancel appointment?', 'This frees the slot and removes the job.', [
-      { text: 'Keep', style: 'cancel' },
+    Alert.alert(t('jobDetail.cancelConfirm'), t('jobDetail.cancelBody'), [
+      { text: t('common.keep'), style: 'cancel' },
       {
-        text: 'Cancel job',
+        text: t('jobs.cancelJob'),
         style: 'destructive',
         onPress: () => {
           setCancelling(true)
@@ -211,7 +249,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
               if (variant === 'screen') router.replace('/(tabs)/jobs')
             } else {
               setCancelling(false)
-              Alert.alert('Cancel', result.error ?? 'Could not cancel job')
+              Alert.alert(t('common.cancel'), result.error ?? 'Could not cancel job')
             }
           })
         },
@@ -241,7 +279,48 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
     }
   }
 
+  const handleShareTransformation = async () => {
+    if (!jobHasBeforeAndAfter(photos)) {
+      Alert.alert('Before & after required', jobPhotoCompletenessMessage(countJobPhotosByType(photos)), [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Add photos',
+          onPress: () => {
+            onClose?.()
+            router.push(`/(tabs)/jobs/${jobId}/photos` as never)
+          },
+        },
+      ])
+      return
+    }
+    try {
+      const gate = await checkPremiumGate('export_pdf')
+      if (!gate.allowed) return
+      await shareTransformationPdf(jobId)
+    } catch (e) {
+      Alert.alert('PDF', e instanceof Error ? e.message : 'Export failed')
+    }
+  }
+
   const handleTimerStop = async (hours: number) => {
+    const nextStatus = job.status === 'scheduled' ? 'in_progress' : job.status
+    if (requiresPreJobInspection(job.status, nextStatus) && !jobHasPreJobInspection(job)) {
+      Alert.alert(
+        'Walkthrough required',
+        'Complete the pre-job liability walkthrough before starting this job.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open walkthrough',
+            onPress: () => {
+              onClose?.()
+              router.push(`/jobs/${jobId}/inspection` as never)
+            },
+          },
+        ],
+      )
+      return
+    }
     const updated = await updateJob(jobId, {
       date: job.date,
       packageId: job.package_id,
@@ -251,7 +330,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       tip: job.tip,
       hours_worked: Math.round(hours * 100) / 100,
       start_time: job.start_time,
-      status: job.status === 'scheduled' ? 'in_progress' : job.status,
+      status: nextStatus,
       notes: job.notes,
     })
     setJob(updated)
@@ -270,7 +349,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       {variant === 'overlay' ? (
         <View style={styles.overlayHeader}>
           <View style={styles.overlayTitleBlock}>
-            <AppText variant="h1">{job.client?.name ?? 'Job'}</AppText>
+            <AppText variant="h1">{job.client?.name ?? t('jobDetail.titleFallback')}</AppText>
             <AppText variant="caption" style={styles.muted}>
               {dateLabel}
             </AppText>
@@ -285,31 +364,56 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
 
       {isUpcoming ? (
         <PrimaryButton
-          label={completing ? 'Marking complete…' : 'Mark job complete'}
+          label={completing ? t('jobDetail.markingComplete') : t('jobDetail.markComplete')}
           loading={completing}
           onPress={() => promptComplete()}
         />
+      ) : null}
+
+      {job.status === 'scheduled' || job.status === 'in_progress' ? (
+        <View style={styles.card}>
+          <AppText variant="sectionLabel">{t('jobDetail.liability')}</AppText>
+          {jobHasPreJobInspection(job) ? (
+            <AppText variant="caption" style={styles.muted}>
+              Completed — view docs or export PDF
+            </AppText>
+          ) : (
+            <AppText variant="caption" style={styles.muted}>
+              Required before moving to In progress
+            </AppText>
+          )}
+          <PrimaryButton
+            label={jobHasPreJobInspection(job) ? t('jobDetail.viewWalkthrough') : t('jobDetail.startWalkthrough')}
+            onPress={() => {
+              onClose?.()
+              router.push(`/jobs/${job.id}/inspection` as never)
+            }}
+          />
+        </View>
       ) : null}
 
       <JobTimer jobId={job.id} onStopped={(hours) => void handleTimerStop(hours)} />
 
       <View style={styles.card}>
         <View style={styles.kvGrid}>
-          <KvCell label="Package" value={job.package?.name ?? '—'} />
-          <KvCell label="Vehicle" value={capitalize(job.vehicle_type)} />
-          <KvCell label="Location" value={capitalize(job.location_type)} />
-          <KvCell label="Hours worked" value={job.hours_worked > 0 ? `${job.hours_worked} hrs` : '—'} />
+          <KvCell label={t('common.package')} value={job.package?.name ?? '—'} />
+          <KvCell label={t('common.vehicle')} value={capitalize(job.vehicle_type)} />
+          <KvCell label={t('common.location')} value={capitalize(job.location_type)} />
+          <KvCell
+            label={t('jobDetail.hoursWorked')}
+            value={job.hours_worked > 0 ? t('jobDetail.hoursValue', { hours: job.hours_worked }) : '—'}
+          />
         </View>
       </View>
 
       <View style={styles.card}>
         <View style={styles.moneyRow}>
-          <AppText variant="body">Revenue</AppText>
+          <AppText variant="body">{t('common.revenue')}</AppText>
           <CurrencyAmount value={job.revenue + job.tip} variant="revenue" />
         </View>
         <View style={styles.divider} />
         <View style={styles.moneyRow}>
-          <AppText variant="bodySemiBold">Net profit</AppText>
+          <AppText variant="bodySemiBold">{t('jobDetail.netProfit')}</AppText>
           <CurrencyAmount value={profit} variant="profit" />
         </View>
         <View style={styles.rateRow}>
@@ -332,12 +436,12 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
 
       {nextServiceDate ? (
         <View style={styles.card}>
-          <AppText variant="sectionLabel">Next service</AppText>
+          <AppText variant="sectionLabel">{t('jobDetail.nextService')}</AppText>
           <AppText variant="body" style={styles.nextCopy}>
             Suggested: {formatNextServiceLabel(nextServiceDate)} ({returnDays}-day cadence)
           </AppText>
           <PrimaryButton
-            label="Book next"
+            label={t('jobDetail.bookNext')}
             onPress={() => {
               onClose?.()
               router.push(`/jobs/new?client=${job.client_id}&date=${nextServiceDate}` as never)
@@ -348,21 +452,21 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
 
       {job.location_type === 'mobile' && job.client?.address ? (
         <SecondaryButton
-          label="Directions"
+          label={t('common.directions')}
           onPress={() => void Linking.openURL(openMaps(job.client!.address!))}
         />
       ) : null}
 
       {job.client?.phone ? (
-        <SecondaryButton
-          label="Text client"
-          onPress={() => void handleTextClient()}
-        />
+        <>
+          <PrimaryButton label={t('jobDetail.onMyWay')} onPress={() => void handleOnMyWay()} />
+          <SecondaryButton label={t('jobDetail.textClient')} onPress={() => void handleTextClient()} />
+        </>
       ) : null}
 
       {expenses.length > 0 ? (
         <View style={styles.section}>
-          <AppText variant="sectionLabel">Expenses</AppText>
+          <AppText variant="sectionLabel">{t('common.expenses')}</AppText>
           {expenses.map((e, i) => (
             <View key={`${e.category}-${i}`} style={styles.expenseRow}>
               <AppText variant="body">{e.description || e.category}</AppText>
@@ -373,7 +477,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       ) : null}
 
       <SecondaryButton
-        label="Create quote"
+        label={t('jobDetail.createQuote')}
         onPress={() => {
           onClose?.()
           router.push(`/quotes/new?clientId=${job.client_id}&jobId=${job.id}` as never)
@@ -381,7 +485,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       />
 
       <View style={styles.section}>
-        <AppText variant="sectionLabel">Invoice</AppText>
+        <AppText variant="sectionLabel">{t('common.invoice')}</AppText>
         {invoice ? (
           <>
             <Pressable
@@ -406,7 +510,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
           </>
         ) : (
           <PrimaryButton
-            label={creatingInvoice ? 'Creating…' : 'Create invoice'}
+            label={creatingInvoice ? t('jobDetail.creating') : t('jobDetail.createInvoice')}
             loading={creatingInvoice}
             onPress={() => void handleCreateInvoice()}
           />
@@ -421,8 +525,13 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
           jobId={job.id}
           context={invoice ? 'invoice' : isUpcoming ? 'appointment' : 'full'}
           invoiceNumber={invoice?.invoice_number}
+          hasBeforeAndAfter={jobHasBeforeAndAfter(photos)}
+          onRequirePhotos={() => {
+            onClose?.()
+            router.push(`/(tabs)/jobs/${jobId}/photos` as never)
+          }}
           onPdf={invoice ? () => void handleSharePdf() : undefined}
-          pdfLabel="Share PDF"
+          pdfLabel={t('jobDetail.sharePdf')}
         />
       ) : null}
 
@@ -430,18 +539,24 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
         <ListRow
           icon={<ImageIcon size={18} color={iconTonePalette.green.fg} weight="duotone" />}
           iconTone="green"
-          title="Photos"
-          subtitle="No photos yet"
+          title={t('common.photos')}
+          subtitle={jobPhotoCompletenessMessage(countJobPhotosByType(photos))}
           onPress={() => {
             onClose?.()
             router.push(`/(tabs)/jobs/${jobId}/photos` as never)
           }}
         />
+        {jobHasBeforeAndAfter(photos) ? (
+          <SecondaryButton
+            label={t('jobDetail.shareBeforeAfter')}
+            onPress={() => void handleShareTransformation()}
+          />
+        ) : null}
       </View>
 
       {job.notes ? (
         <View style={styles.section}>
-          <AppText variant="sectionLabel">Notes</AppText>
+          <AppText variant="sectionLabel">{t('common.notes')}</AppText>
           <View style={styles.card}>
             <AppText variant="body">{job.notes}</AppText>
           </View>
@@ -449,12 +564,12 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       ) : null}
 
       {variant === 'screen' ? (
-        <SecondaryButton label="Edit job" onPress={() => router.push(`/jobs/edit/${jobId}`)} />
+        <SecondaryButton label={t('jobDetail.editJob')} onPress={() => router.push(`/jobs/edit/${jobId}`)} />
       ) : null}
 
       {isUpcoming ? (
         <SecondaryButton
-          label={cancelling ? 'Cancelling…' : 'Cancel appointment'}
+          label={cancelling ? t('jobDetail.cancelling') : t('jobDetail.cancelAppointment')}
           onPress={handleCancel}
         />
       ) : null}

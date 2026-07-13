@@ -1,16 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import type { Invoice, JobWithRelations } from '@rinse/core'
+import { useTranslation } from 'react-i18next'
+import type { Invoice, JobPhoto, JobWithRelations } from '@rinse/core'
+import {
+  countJobPhotosByType,
+  formatShareEmailBody,
+  getShareEmailCopy,
+  jobHasBeforeAndAfter,
+  jobPhotoCompletenessMessage,
+  sumLineAmounts,
+  transformationPdfMissingMessage,
+} from '@rinse/core'
 import { getJob } from '@/src/lib/api'
 import {
   addPayment,
   getInvoice,
+  getJobPhotos,
   markInvoiceSent,
   updateInvoice,
 } from '@/src/lib/invoices-api'
 import { checkPremiumGate } from '@/src/lib/subscription'
-import { createPortalLink, shareInvoicePdf, sharePortalUrl } from '@/src/lib/share'
+import {
+  createPortalLink,
+  shareInvoicePdf,
+  sharePortalUrl,
+  shareTransformationPdf,
+} from '@/src/lib/share'
 import {
   InvoiceAdjustmentsSheet,
   InvoicePaymentSheet,
@@ -31,11 +47,13 @@ import { loadSettings, type AppSettings } from '@/src/lib/settings-store'
 import { colors, spacing } from '@/src/theme/colors'
 
 export default function InvoiceDetailScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { openJob } = useDetailNavigation()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [job, setJob] = useState<JobWithRelations | null>(null)
+  const [jobPhotos, setJobPhotos] = useState<JobPhoto[]>([])
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [portalUrl, setPortalUrl] = useState<string | undefined>()
   const [loading, setLoading] = useState(true)
@@ -57,8 +75,14 @@ export default function InvoiceDetailScreen() {
     if (row?.job_id) {
       const jobRow = await getJob(row.job_id)
       setJob(jobRow)
+      try {
+        setJobPhotos(await getJobPhotos(row.job_id))
+      } catch {
+        setJobPhotos([])
+      }
     } else {
       setJob(null)
+      setJobPhotos([])
     }
     if (row?.client_id && row.job_id) {
       try {
@@ -104,8 +128,29 @@ export default function InvoiceDetailScreen() {
     }
   }
 
+  const photoCounts = useMemo(() => countJobPhotosByType(jobPhotos), [jobPhotos])
+  const hasTransformation = jobHasBeforeAndAfter(jobPhotos)
+
+  const requireTransformationPhotos = (): boolean => {
+    if (hasTransformation) return true
+    Alert.alert('Before & after required', transformationPdfMissingMessage(), [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Add photos',
+        onPress: () => {
+          if (invoice?.job_id) {
+            setSendOpen(false)
+            router.push(`/(tabs)/jobs/${invoice.job_id}/photos` as never)
+          }
+        },
+      },
+    ])
+    return false
+  }
+
   const ensureSent = async () => {
     if (!invoice) throw new Error('No invoice')
+    if (!requireTransformationPhotos()) return
     if (invoice.status === 'draft') {
       const gate = await checkPremiumGate('send_invoice')
       if (!gate.allowed) return
@@ -116,6 +161,7 @@ export default function InvoiceDetailScreen() {
 
   const openSendFlow = () => {
     if (!invoice) return
+    if (!requireTransformationPhotos()) return
     if (invoice.status === 'draft') {
       setPendingSendAfterCustomize(true)
       setCustomizeOpen(true)
@@ -131,7 +177,7 @@ export default function InvoiceDetailScreen() {
       tax_rate: values.tax_rate,
       po_number: values.po_number,
       extra_line_items: values.extra_line_items,
-      subtotal: job.revenue + values.extra_line_items.reduce((s, l) => s + l.default_amount, 0),
+      subtotal: job.revenue + sumLineAmounts(values.extra_line_items),
     })
     setCustomizeOpen(false)
     setPendingSendAfterCustomize(false)
@@ -147,11 +193,22 @@ export default function InvoiceDetailScreen() {
       scope: 'invoice',
       jobId: invoice.job_id,
     })
-    const subject = `Invoice ${invoice.invoice_number} from ${settings.business_name}`
-    const body = `View and pay your invoice using the secure link below.\n\n${link.url}`
+    const copy = getShareEmailCopy('invoice', settings.document_locale)
+    const subject = copy.subject({
+      businessName: settings.business_name,
+      invoiceNumber: invoice.invoice_number,
+    })
+    const body = formatShareEmailBody(copy.bodyIntro, link.url)
     await Linking.openURL(
       `mailto:${encodeURIComponent(job.client.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
     )
+    if (invoice.job_id) {
+      try {
+        await shareTransformationPdf(invoice.job_id)
+      } catch {
+        // Companion PDF share is best-effort after mailto.
+      }
+    }
     setSendOpen(false)
   }
 
@@ -189,13 +246,20 @@ export default function InvoiceDetailScreen() {
     setSendOpen(false)
   }
 
-  if (loading) return <LoadingState label="Loading invoice…" />
+  const handleTransformationPdf = async () => {
+    if (!invoice?.job_id) throw new Error('This invoice is not linked to a job.')
+    if (!requireTransformationPhotos()) return
+    await shareTransformationPdf(invoice.job_id)
+    setSendOpen(false)
+  }
+
+  if (loading) return <LoadingState label={t('invoices.detail.loading')} />
 
   if (error || !invoice || !model || !settings || !job) {
     return (
-      <ScreenShell title="Invoice" headerRight={<DetailHeaderActions onBack={() => router.back()} />}>
+      <ScreenShell title={t('invoices.detail.title')} headerRight={<DetailHeaderActions onBack={() => router.back()} />}>
         <AppText variant="body" style={styles.error}>
-          {error ?? 'Invoice not found'}
+          {error ?? t('invoices.detail.notFound')}
         </AppText>
       </ScreenShell>
     )
@@ -213,18 +277,21 @@ export default function InvoiceDetailScreen() {
         <InvoiceDocumentBody model={model} />
 
         <View style={styles.actions}>
+          <AppText variant="caption" style={styles.photoHint}>
+            {jobPhotoCompletenessMessage(photoCounts)}
+          </AppText>
           <PrimaryButton
-            label={invoice.status === 'draft' ? 'Send invoice' : 'Resend / share'}
+            label={invoice.status === 'draft' ? t('invoices.detail.send') : t('invoices.detail.resend')}
             loading={busy}
             onPress={openSendFlow}
           />
 
           {invoice.balance_due > 0 && invoice.status !== 'draft' ? (
-            <SecondaryButton label="Log payment" loading={busy} onPress={() => setPaymentOpen(true)} />
+            <SecondaryButton label={t('invoices.detail.logPayment')} loading={busy} onPress={() => setPaymentOpen(true)} />
           ) : null}
 
           <SecondaryButton
-            label={extrasCount > 0 ? `Edit lines (${extrasCount} extras)` : 'Edit line items'}
+            label={extrasCount > 0 ? t('invoices.detail.editLinesCount', { count: extrasCount }) : t('invoices.detail.editLines')}
             loading={busy}
             onPress={() => {
               setPendingSendAfterCustomize(false)
@@ -232,12 +299,12 @@ export default function InvoiceDetailScreen() {
             }}
           />
 
-          <SecondaryButton label="Quick adjustments" loading={busy} onPress={() => setAdjustOpen(true)} />
+          <SecondaryButton label={t('invoices.detail.quickAdjustments')} loading={busy} onPress={() => setAdjustOpen(true)} />
 
-          <SecondaryButton label="Preview & customize" onPress={() => router.push('/settings/invoicing')} />
+          <SecondaryButton label={t('invoices.detail.previewCustomize')} onPress={() => router.push('/settings/invoicing')} />
 
           {invoice.job_id ? (
-            <SecondaryButton label="View job" onPress={() => openJob(invoice.job_id)} />
+            <SecondaryButton label={t('invoices.detail.viewJob')} onPress={() => openJob(invoice.job_id)} />
           ) : null}
         </View>
       </ScrollView>
@@ -246,11 +313,13 @@ export default function InvoiceDetailScreen() {
         visible={sendOpen}
         onClose={() => setSendOpen(false)}
         canEmail={Boolean(job.client?.email)}
+        canTransformationPdf={hasTransformation}
         busy={busy}
         linkCopied={linkCopied}
         onEmail={() => void runAction('Send', handleEmailSend)}
         onCopyLink={() => void runAction('Copy link', handleCopyLink)}
         onPdf={() => void runAction('PDF', handlePdf)}
+        onTransformationPdf={() => void runAction('Before/after PDF', handleTransformationPdf)}
       />
 
       <InvoicePaymentSheet
@@ -275,6 +344,7 @@ export default function InvoiceDetailScreen() {
       <InvoiceAdjustmentsSheet
         visible={adjustOpen}
         onClose={() => setAdjustOpen(false)}
+        invoiceId={invoice.id}
         discount={invoice.discount_amount ?? 0}
         taxRate={invoice.tax_rate ?? 0}
         poNumber={invoice.po_number ?? ''}
@@ -313,6 +383,10 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: spacing.sm,
+  },
+  photoHint: {
+    color: colors.textMuted,
+    marginBottom: spacing.xs,
   },
   error: {
     color: colors.danger,

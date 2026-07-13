@@ -1,4 +1,5 @@
 import type { Client, Package, Quote, QuoteInput, QuoteWithRelations } from '@rinse/core'
+import { normalizeBillingLines } from '@rinse/core'
 import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
@@ -42,6 +43,11 @@ function mapQuote(record: Record<string, unknown>, expand?: Record<string, unkno
     location_type: (record.location_type as Quote['location_type']) ?? 'mobile',
     date: String(record.date ?? ''),
     subtotal: Number(record.subtotal ?? 0),
+    extra_line_items: normalizeBillingLines(
+      Array.isArray(record.extra_line_items)
+        ? (record.extra_line_items as Quote['extra_line_items'])
+        : [],
+    ),
     status: (record.status as Quote['status']) ?? 'draft',
     notes: record.notes ? String(record.notes) : undefined,
     valid_until: record.valid_until ? String(record.valid_until) : undefined,
@@ -93,6 +99,7 @@ export async function createQuote(input: QuoteInput): Promise<Quote> {
     location_type: input.location_type,
     date: input.date,
     subtotal: input.subtotal,
+    extra_line_items: normalizeBillingLines(input.extra_line_items),
     notes: input.notes ?? '',
     status: 'draft',
     valid_until: input.valid_until ?? '',

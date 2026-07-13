@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { CalendarBlank, MapPin } from 'phosphor-react-native'
 import { AppText, SecondaryButton } from '@/src/components/ui'
 import type { TodayJobCardData } from '@/src/lib/home-dashboard'
@@ -13,16 +14,17 @@ interface TodayJobCardProps {
 }
 
 export function TodayJobCard({ job, onDirections, onOpenJob, onSchedule }: TodayJobCardProps) {
+  const { t } = useTranslation()
   if (!job) {
     return (
       <View style={styles.emptyCard}>
         <CalendarBlank size={28} color={colors.textMuted} weight="duotone" />
         <AppText variant="body" style={styles.emptyText}>
-          No jobs scheduled for today
+          {t('home.noJobsToday')}
         </AppText>
         <Pressable style={styles.scheduleBtn} onPress={onSchedule} accessibilityRole="button">
           <AppText variant="bodyMedium" style={styles.scheduleBtnText}>
-            Schedule a job
+            {t('home.scheduleJob')}
           </AppText>
         </Pressable>
       </View>
@@ -63,14 +65,14 @@ export function TodayJobCard({ job, onDirections, onOpenJob, onSchedule }: Today
       <View style={styles.actions}>
         <View style={styles.actionHalf}>
           <SecondaryButton
-            label="Directions"
+            label={t('common.directions')}
             onPress={() => job.address && onDirections(job.address)}
             disabled={!hasAddress}
           />
         </View>
         <Pressable style={styles.openBtn} onPress={() => onOpenJob(job.id)} accessibilityRole="button">
           <AppText variant="bodySemiBold" style={styles.openBtnText}>
-            Open job
+            {t('home.openJob')}
           </AppText>
         </Pressable>
       </View>

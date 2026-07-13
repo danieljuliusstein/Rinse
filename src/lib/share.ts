@@ -86,13 +86,56 @@ export async function shareInvoicePdf(jobId: string, invoice: Invoice, portalUrl
   }
 
   const arrayBuffer = await res.arrayBuffer()
+  await sharePdfBuffer(arrayBuffer, `${invoice.invoice_number}.pdf`)
+}
 
+export async function shareInspectionPdf(jobId: string): Promise<void> {
+  const gate = await checkPremiumGate('export_pdf')
+  if (!gate.allowed) {
+    throw new Error('Active subscription required')
+  }
+
+  const res = await appApiFetch('/api/pdf/inspection', {
+    method: 'POST',
+    body: JSON.stringify({ jobId }),
+  })
+
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(data.error ?? 'Inspection PDF export failed')
+  }
+
+  const arrayBuffer = await res.arrayBuffer()
+  await sharePdfBuffer(arrayBuffer, `inspection-${jobId.slice(0, 8)}.pdf`)
+}
+
+export async function shareTransformationPdf(jobId: string): Promise<void> {
+  const gate = await checkPremiumGate('export_pdf')
+  if (!gate.allowed) {
+    throw new Error('Active subscription required')
+  }
+
+  const res = await appApiFetch('/api/pdf/transformation', {
+    method: 'POST',
+    body: JSON.stringify({ jobId }),
+  })
+
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(data.error ?? 'Transformation PDF export failed')
+  }
+
+  const arrayBuffer = await res.arrayBuffer()
+  await sharePdfBuffer(arrayBuffer, `transform-${jobId.slice(0, 8)}.pdf`)
+}
+
+async function sharePdfBuffer(arrayBuffer: ArrayBuffer, filename: string): Promise<void> {
   if (Platform.OS === 'web') {
     const blob = new Blob([arrayBuffer], { type: 'application/pdf' })
     const objectUrl = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = objectUrl
-    anchor.download = `${invoice.invoice_number}.pdf`
+    anchor.download = filename
     document.body.appendChild(anchor)
     anchor.click()
     anchor.remove()
@@ -101,11 +144,11 @@ export async function shareInvoicePdf(jobId: string, invoice: Invoice, portalUrl
   }
 
   const base64 = arrayBufferToBase64(arrayBuffer)
-  const path = `${FileSystem.cacheDirectory}${invoice.invoice_number}.pdf`
+  const path = `${FileSystem.cacheDirectory}${filename}`
   await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 })
 
   if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(path, { mimeType: 'application/pdf', dialogTitle: invoice.invoice_number })
+    await Sharing.shareAsync(path, { mimeType: 'application/pdf', dialogTitle: filename })
   } else {
     await Share.share({ url: path })
   }

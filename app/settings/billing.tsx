@@ -22,8 +22,10 @@ import { fetchOrgSubscription } from '@/src/lib/subscription-fetch'
 import {
   formatTrialLengthLabel,
   hasStarterAccess,
+  isCancelGrace,
   isFoundingMember,
   isOnFreeTier,
+  isVaultAccess,
   type OrgSubscription,
 } from '@/src/lib/subscription-types'
 import { buildBillingMailto, getBillingEmail } from '@/src/lib/support-config'
@@ -156,24 +158,29 @@ export default function SettingsBillingScreen() {
   }
 
   const founding = org ? isFoundingMember(org) : false
+  const vault = org ? isVaultAccess(org) : false
+  const cancelGrace = org ? isCancelGrace(org) : false
   const starterAccess = org ? hasStarterAccess(org) : false
   const onFreeTier = org ? isOnFreeTier(org) : false
   const trialLabel = org ? formatTrialLengthLabel(org, STARTER_TRIAL_DAYS) : null
   const trialing = Boolean(trialLabel)
-  const subscribed = subscribedOnStripe(org)
+  const subscribed = subscribedOnStripe(org) && !vault
   const billingEmail = getBillingEmail()
   const planKind = resolvePlanBadgeKind(org)
   const currentPlanLabel = founding
     ? 'Founding'
-    : PLAN_LABELS[org?.plan ?? 'free'] ?? org?.plan ?? FREE_PLAN.name
+    : vault
+      ? 'Vault (read-only)'
+      : PLAN_LABELS[org?.plan ?? 'free'] ?? org?.plan ?? FREE_PLAN.name
   const showPlanFeatures =
-    founding ? null : starterAccess && !onFreeTier
+    founding || vault ? null : starterAccess && !onFreeTier
       ? org?.plan === 'early'
         ? EARLY_PLAN
         : STARTER_PLAN
       : null
   const paidPriceLabel = upgradePriceLabel(pricing)
   const earlyAvailable = pricing?.early.available === true
+  const periodEnd = org?.current_period_end?.slice(0, 10)
 
   return (
     <SettingsScreen title="Billing">
@@ -186,7 +193,9 @@ export default function SettingsBillingScreen() {
           <AppText style={styles.lead}>
             {founding
               ? 'You’re on a founding member plan with lifetime access.'
-              : `Plan: ${currentPlanLabel}`}
+              : vault
+                ? 'Subscription canceled. Your data stays readable forever — export anytime. Resubscribe to create or edit again. No further charges while canceled.'
+                : `Plan: ${currentPlanLabel}`}
           </AppText>
           {!founding && trialLabel ? (
             <AppText variant="caption" style={styles.statusLine}>
@@ -194,9 +203,19 @@ export default function SettingsBillingScreen() {
               {org?.trial_ends_at ? ` · ends ${org.trial_ends_at.slice(0, 10)}` : ''}
             </AppText>
           ) : null}
-          {!founding && org?.current_period_end && subscribed ? (
+          {!founding && cancelGrace && periodEnd ? (
             <AppText variant="caption" style={styles.statusLine}>
-              Renews {org.current_period_end}
+              Access until {periodEnd}, then read-only vault. No charge after that date.
+            </AppText>
+          ) : null}
+          {!founding && !cancelGrace && periodEnd && subscribed ? (
+            <AppText variant="caption" style={styles.statusLine}>
+              Renews {periodEnd}
+            </AppText>
+          ) : null}
+          {!founding && vault && org?.canceled_at ? (
+            <AppText variant="caption" style={styles.statusLine}>
+              Vault since {org.canceled_at.slice(0, 10)}
             </AppText>
           ) : null}
           {showPlanFeatures ? (
@@ -208,20 +227,33 @@ export default function SettingsBillingScreen() {
           ) : null}
         </Card>
 
-        {!founding && onFreeTier ? (
+        {!founding && (onFreeTier || vault) ? (
           <View style={styles.planStack}>
-            <Card style={styles.planCardMuted}>
-              <View style={styles.cardRow}>
-                <AppText style={styles.cardTitle}>{FREE_PLAN.name}</AppText>
-                <PlanBadge kind="free" />
-              </View>
-              <Text style={styles.leadTight}>
-                <Text style={styles.price}>{FREE_PLAN.priceLabel}</Text>
-                {' — '}
-                {FREE_PLAN.tagline}
-              </Text>
-              <PlanFeatureList features={FREE_PLAN.features} />
-            </Card>
+            {vault ? (
+              <Card style={styles.planCardMuted}>
+                <View style={styles.cardRow}>
+                  <AppText style={styles.cardTitle}>Vault</AppText>
+                  <PlanBadge kind="vault" />
+                </View>
+                <AppText style={styles.leadTight}>
+                  Signed in, read-only. Export from Settings → Access and data anytime. Public booking
+                  stays off until you resubscribe.
+                </AppText>
+              </Card>
+            ) : (
+              <Card style={styles.planCardMuted}>
+                <View style={styles.cardRow}>
+                  <AppText style={styles.cardTitle}>{FREE_PLAN.name}</AppText>
+                  <PlanBadge kind="free" />
+                </View>
+                <Text style={styles.leadTight}>
+                  <Text style={styles.price}>{FREE_PLAN.priceLabel}</Text>
+                  {' — '}
+                  {FREE_PLAN.tagline}
+                </Text>
+                <PlanFeatureList features={FREE_PLAN.features} />
+              </Card>
+            )}
 
             <Card style={styles.planCardFeatured}>
               <View style={styles.cardRow}>
@@ -232,9 +264,11 @@ export default function SettingsBillingScreen() {
               </View>
               <Text style={styles.leadTight}>
                 <Text style={styles.price}>{paidPriceLabel}</Text>
-                {earlyAvailable
-                  ? ` — locked Early price · ${pricing?.early.remaining ?? 0} seats left`
-                  : ' — unlock booking, billing, pipeline, and receipt scan'}
+                {vault
+                  ? ' — restore full write access'
+                  : earlyAvailable
+                    ? ` — locked Early price · ${pricing?.early.remaining ?? 0} seats left`
+                    : ' — unlock booking, billing, pipeline, and receipt scan'}
               </Text>
               <PlanFeatureList
                 features={(earlyAvailable ? EARLY_PLAN.features : STARTER_PLAN.features).slice(0, 6)}
@@ -242,8 +276,8 @@ export default function SettingsBillingScreen() {
               />
               <AppText variant="caption" style={styles.webNote}>
                 {Platform.OS === 'ios'
-                  ? `Billed at ${STARTER_PLAN.priceLabel} through your Apple ID. Cancel anytime in Settings → Subscriptions.`
-                  : 'Subscribe securely via rinsehq.com (Stripe).'}
+                  ? `Billed at ${STARTER_PLAN.priceLabel} through your Apple ID. Cancel anytime in Settings → Subscriptions — you keep access until the period ends, then vault.`
+                  : 'Subscribe securely via rinsehq.com (Stripe). Cancel anytime — access until period end, then read-only vault. No post-cancel charge.'}
               </AppText>
               <PrimaryButton
                 label={
@@ -252,10 +286,14 @@ export default function SettingsBillingScreen() {
                       ? 'Purchasing…'
                       : 'Opening checkout…'
                     : Platform.OS === 'ios'
-                      ? 'Upgrade with Apple'
+                      ? vault
+                        ? 'Resubscribe with Apple'
+                        : 'Upgrade with Apple'
                       : earlyAvailable
                         ? `Upgrade · ${EARLY_PLAN.priceLabel}`
-                        : 'Upgrade on rinsehq.com'
+                        : vault
+                          ? 'Resubscribe on rinsehq.com'
+                          : 'Upgrade on rinsehq.com'
                 }
                 onPress={handleUpgrade}
                 disabled={upgradeBusy || restoreBusy}
@@ -275,6 +313,11 @@ export default function SettingsBillingScreen() {
 
         {!founding && subscribed ? (
           <Card style={styles.card}>
+            <AppText style={styles.leadTight}>
+              {cancelGrace && periodEnd
+                ? `Cancel is scheduled. You keep full access until ${periodEnd}, then read-only vault forever. No charge after that date.`
+                : 'Cancel anytime. You keep access until the current period ends, then your data stays in a read-only vault — no further charges.'}
+            </AppText>
             <SecondaryButton
               label={
                 org?.billing_provider === 'apple' || org?.apple_original_transaction_id

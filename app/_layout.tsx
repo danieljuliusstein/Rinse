@@ -10,8 +10,8 @@ import {
   useFonts as useDMSans,
 } from '@expo-google-fonts/dm-sans'
 import { Syne_600SemiBold, Syne_700Bold, useFonts as useSyne } from '@expo-google-fonts/syne'
-import { PostHogProvider } from 'posthog-react-native'
 import { AuthProvider } from '@/src/providers/AuthProvider'
+import { I18nProvider } from '@/src/providers/I18nProvider'
 import { OfflineProvider } from '@/src/providers/OfflineProvider'
 import { DataRefreshProvider } from '@/src/providers/DataRefreshProvider'
 import { DetailOverlayProvider } from '@/src/providers/DetailOverlayProvider'
@@ -55,7 +55,6 @@ function RootLayout() {
   })
 
   const loaded = syneLoaded && dmLoaded
-  const posthog = getPostHog()
 
   useEffect(() => {
     if (loaded) {
@@ -63,57 +62,58 @@ function RootLayout() {
     }
   }, [loaded])
 
-  if (!loaded) return null
-
-  const tree = (
-    <AuthProvider>
-      <OfflineProvider>
-        <DataRefreshProvider>
-          <DetailOverlayProvider>
-            <PaywallGateProvider>
-              <ScreenshotModeBootstrap />
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="welcome" />
-                <Stack.Screen name="intro" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="jobs/new" options={sheetScreenOptions} />
-                <Stack.Screen name="jobs/edit/[id]" options={sheetScreenOptions} />
-                <Stack.Screen name="jobs/[id]/invoice" options={{ presentation: 'card' }} />
-                <Stack.Screen name="clients/new" options={sheetScreenOptions} />
-                <Stack.Screen name="clients/edit/[id]" options={sheetScreenOptions} />
-                <Stack.Screen name="clients/import" options={sheetScreenOptions} />
-                <Stack.Screen name="clients/[id]/vehicles/new" options={sheetScreenOptions} />
-                <Stack.Screen name="clients/[id]/vehicles/edit/[vehicleId]" options={sheetScreenOptions} />
-                <Stack.Screen name="inventory/new" options={sheetScreenOptions} />
-                <Stack.Screen name="inventory/buy" options={sheetScreenOptions} />
-                <Stack.Screen name="inventory/supply/[id]" options={sheetScreenOptions} />
-                <Stack.Screen name="inventory/equipment/[id]" options={sheetScreenOptions} />
-                <Stack.Screen name="inventory/wishlist/[id]" options={sheetScreenOptions} />
-                <Stack.Screen name="expenses/new" options={sheetScreenOptions} />
-                <Stack.Screen name="invoices/[id]" options={{ presentation: 'card' }} />
-                <Stack.Screen name="invoices/new" options={sheetScreenOptions} />
-                <Stack.Screen name="quotes/new" options={sheetScreenOptions} />
-                <Stack.Screen name="quotes/[id]" options={{ presentation: 'card' }} />
-                <Stack.Screen name="leads/new" options={sheetScreenOptions} />
-                <Stack.Screen name="pipeline/[id]" options={{ presentation: 'card' }} />
-                <Stack.Screen name="settings" />
-              </Stack>
-            </PaywallGateProvider>
-          </DetailOverlayProvider>
-        </DataRefreshProvider>
-      </OfflineProvider>
-    </AuthProvider>
-  )
-
-  if (!posthog) return tree
+  // Warm analytics off the render path — never block/blank the tree on storage errors.
+  useEffect(() => {
+    try {
+      getPostHog()
+    } catch {
+      // ignore
+    }
+  }, [])
 
   return (
-    <PostHogProvider client={posthog} autocapture={false}>
-      {tree}
-    </PostHogProvider>
+    <I18nProvider>
+      <AuthProvider>
+        <OfflineProvider>
+          <DataRefreshProvider>
+            <DetailOverlayProvider>
+              <PaywallGateProvider>
+                <ScreenshotModeBootstrap />
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="welcome" />
+                  <Stack.Screen name="intro" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="onboarding" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="jobs/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="jobs/edit/[id]" options={sheetScreenOptions} />
+                  <Stack.Screen name="jobs/[id]/invoice" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="clients/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="clients/edit/[id]" options={sheetScreenOptions} />
+                  <Stack.Screen name="clients/import" options={sheetScreenOptions} />
+                  <Stack.Screen name="clients/[id]/vehicles/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="clients/[id]/vehicles/edit/[vehicleId]" options={sheetScreenOptions} />
+                  <Stack.Screen name="inventory/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="inventory/buy" options={sheetScreenOptions} />
+                  <Stack.Screen name="inventory/supply/[id]" options={sheetScreenOptions} />
+                  <Stack.Screen name="inventory/equipment/[id]" options={sheetScreenOptions} />
+                  <Stack.Screen name="inventory/wishlist/[id]" options={sheetScreenOptions} />
+                  <Stack.Screen name="expenses/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="invoices/[id]" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="invoices/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="quotes/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="quotes/[id]" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="leads/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="pipeline/[id]" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="settings" />
+                </Stack>
+              </PaywallGateProvider>
+            </DetailOverlayProvider>
+          </DataRefreshProvider>
+        </OfflineProvider>
+      </AuthProvider>
+    </I18nProvider>
   )
 }
 

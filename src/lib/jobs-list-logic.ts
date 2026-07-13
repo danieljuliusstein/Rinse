@@ -5,8 +5,9 @@ import { normalizeJobDate } from '@/src/lib/jobs-list'
 export type JobsListFilter = 'all' | 'scheduled' | 'in_progress' | 'recurring'
 
 export interface JobListSection {
-  key: string
-  label: string
+  key: 'today' | 'week' | 'month' | 'older' | string
+  /** Localized date fragment for the today section (e.g. JUL 12). */
+  dateHint?: string
   jobs: JobWithRelations[]
 }
 
@@ -154,15 +155,15 @@ export function groupJobsByPeriod(jobs: JobWithRelations[]): JobListSection[] {
 
   const sections: JobListSection[] = []
   const todayLabel = new Date(today + 'T12:00:00')
-    .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    .toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     .toUpperCase()
-  if (todayJobs.length) sections.push({ key: 'today', label: `Today · ${todayLabel}`, jobs: todayJobs })
-  if (weekJobs.length) sections.push({ key: 'week', label: 'This week', jobs: weekJobs })
-  if (monthJobs.length) sections.push({ key: 'month', label: 'Earlier this month', jobs: monthJobs })
+  if (todayJobs.length) sections.push({ key: 'today', dateHint: todayLabel, jobs: todayJobs })
+  if (weekJobs.length) sections.push({ key: 'week', jobs: weekJobs })
+  if (monthJobs.length) sections.push({ key: 'month', jobs: monthJobs })
 
   const groupedIds = new Set([...todayJobs, ...weekJobs, ...monthJobs].map((j) => j.id))
   const olderJobs = sorted.filter((j) => !groupedIds.has(j.id))
-  if (olderJobs.length) sections.push({ key: 'older', label: 'Earlier', jobs: olderJobs })
+  if (olderJobs.length) sections.push({ key: 'older', jobs: olderJobs })
 
   return sections
 }
@@ -177,9 +178,9 @@ export function jobListStatusLabel(job: JobWithRelations): string {
   return 'Complete'
 }
 
-export const JOB_FILTER_CHIPS: { key: JobsListFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'scheduled', label: 'Scheduled' },
-  { key: 'in_progress', label: 'In progress' },
-  { key: 'recurring', label: 'Recurring' },
+export const JOB_FILTER_CHIPS: { key: JobsListFilter; labelKey: string }[] = [
+  { key: 'all', labelKey: 'jobs.filters.all' },
+  { key: 'scheduled', labelKey: 'jobs.filters.scheduled' },
+  { key: 'in_progress', labelKey: 'jobs.filters.inProgress' },
+  { key: 'recurring', labelKey: 'jobs.filters.recurring' },
 ]

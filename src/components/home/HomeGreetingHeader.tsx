@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { ChatCircle, Funnel, GearSix, MagnifyingGlass } from 'phosphor-react-native'
 import { AppText, IconHeaderButton } from '@/src/components/ui'
 import { TrialPlanBadge } from '@/src/components/subscription/TrialPlanBadge'
@@ -27,6 +28,7 @@ export function HomeGreetingHeader({
   searchActive = false,
 }: HomeGreetingHeaderProps) {
   const router = useRouter()
+  const { t } = useTranslation()
   const title = displayName ? `${greeting}, ${displayName}` : greeting
 
   return (
@@ -36,7 +38,7 @@ export function HomeGreetingHeader({
           onPress={() => router.push('/settings/account')}
           style={({ pressed }) => [styles.avatar, webInlinePressableReset, pressed && styles.avatarPressed]}
           accessibilityRole="button"
-          accessibilityLabel="Account"
+          accessibilityLabel={t('home.account')}
         >
           <View style={styles.avatarInner}>
             <AppText style={styles.avatarText}>{avatarInitial}</AppText>
@@ -53,17 +55,17 @@ export function HomeGreetingHeader({
       <View style={styles.actions}>
         <TrialPlanBadge placement="inline" />
         <IconHeaderButton
-          label="Pipeline"
+          label={t('home.pipeline')}
           onPress={() => router.push('/(tabs)/pipeline')}
           badge={pipelineBadge > 0 ? pipelineBadge : undefined}
         >
           <Funnel size={18} color={colors.textSecondary} weight="duotone" />
         </IconHeaderButton>
-        <IconHeaderButton label="Messages" onPress={() => router.push('/(tabs)/messages')}>
+        <IconHeaderButton label={t('home.messages')} onPress={() => router.push('/(tabs)/messages')}>
           <ChatCircle size={18} color={colors.textSecondary} weight="duotone" />
         </IconHeaderButton>
         {onSearchPress ? (
-          <IconHeaderButton label="Search" onPress={onSearchPress} active={searchActive}>
+          <IconHeaderButton label={t('home.search')} onPress={onSearchPress} active={searchActive}>
             <MagnifyingGlass
               size={18}
               color={searchActive ? colors.greenText : colors.textSecondary}
@@ -71,7 +73,7 @@ export function HomeGreetingHeader({
             />
           </IconHeaderButton>
         ) : null}
-        <IconHeaderButton label="Settings" onPress={() => router.push('/(tabs)/settings')} dot={settingsDot}>
+        <IconHeaderButton label={t('home.settings')} onPress={() => router.push('/(tabs)/settings')} dot={settingsDot}>
           <GearSix size={18} color={colors.textSecondary} weight="duotone" />
         </IconHeaderButton>
       </View>

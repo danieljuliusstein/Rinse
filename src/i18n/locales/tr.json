@@ -1,0 +1,417 @@
+{
+  "common": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "saving": "Kaydediliyor…",
+    "loading": "Yükleniyor…",
+    "signOut": "Çıkış yap",
+    "search": "Ara",
+    "back": "Geri",
+    "done": "Bitti",
+    "error": "Bir sorun oluştu",
+    "offline": "Çevrimdışısınız",
+    "retry": "Yeniden dene",
+    "client": "Müşteri",
+    "detail": "Detay",
+    "close": "Kapat",
+    "keep": "Tut",
+    "clear": "Temizle",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "more": "+ {{count}} daha",
+    "result_one": "{{count}} sonuç",
+    "result_other": "{{count}} sonuç",
+    "changeWaiting_one": "{{count}} değişiklik senkron bekliyor",
+    "changeWaiting_other": "{{count}} değişiklik senkron bekliyor",
+    "export": "Dışa aktar",
+    "directions": "Yol tarifi",
+    "call": "Ara",
+    "text": "Mesaj",
+    "email": "E-posta",
+    "notes": "Notlar",
+    "photos": "Fotoğraflar",
+    "package": "Paket",
+    "vehicle": "Araç",
+    "location": "Konum",
+    "revenue": "Gelir",
+    "expenses": "Giderler",
+    "invoice": "Fatura",
+    "quote": "Teklif",
+    "all": "Tümü"
+  },
+  "tabs": {
+    "home": "Ana sayfa",
+    "jobs": "İşler",
+    "clients": "Müşteriler",
+    "business": "İşletme"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "searchPlaceholder": "Ayarlarda ara",
+    "signOutBlocked": "Çıkmadan önce bekleyen değişiklikleri senkronize edin veya silin.",
+    "cannotSignOut": "Çıkış yapılamıyor",
+    "unsyncedTitle": "Senkronize edilmemiş değişiklikler",
+    "groups": {
+      "account": "Hesap",
+      "business": "İşletme",
+      "preferences": "Tercihler",
+      "management": "Yönetim",
+      "support": "Destek"
+    },
+    "menu": {
+      "account": {
+        "title": "Hesap",
+        "subtitle": "E-posta, şifre ve giriş"
+      },
+      "business": {
+        "title": "İşletmeniz",
+        "subtitle": "Profil ve çevrimiçi rezervasyon"
+      },
+      "schedule": {
+        "title": "Program ve izin",
+        "subtitle": "Saatler, öğle ve engelli günler"
+      },
+      "invoicing": {
+        "title": "Faturalama",
+        "subtitle": "Çevrimiçi ödemeler ve fatura görünümü"
+      },
+      "billing": {
+        "title": "Abonelik",
+        "subtitle": "Plan, deneme ve abonelik"
+      },
+      "progress": {
+        "title": "İlerleme",
+        "subtitle": "İş faaliyetinizin kilometre taşları"
+      },
+      "preferences": {
+        "title": "Uygulama tercihleri",
+        "subtitle": "Hatırlatmalar ve bildirimler"
+      },
+      "language": {
+        "title": "Dil",
+        "subtitle": "Uygulama ve müşteri belgeleri"
+      },
+      "quietHours": {
+        "title": "Sessiz saatler",
+        "subtitle": "Gece otomatik e-postaları durdur"
+      },
+      "access": {
+        "title": "Erişim ve veri",
+        "subtitle": "Yedekler, dışa aktarma ve gizlilik"
+      },
+      "inventory": {
+        "title": "Envanter",
+        "subtitle": "Malzemeler ve stok"
+      },
+      "packages": {
+        "title": "Hizmet paketleri",
+        "subtitle": "Tekliflerinizi yönetin"
+      },
+      "invoices": {
+        "title": "Tüm faturalar",
+        "subtitle": "Mali kayıtlar"
+      },
+      "tools": {
+        "title": "Araçlar",
+        "subtitle": "Fatura, gider ve daha fazlası için kısayollar"
+      },
+      "expenses": {
+        "title": "Giderler",
+        "subtitle": "Genel giderler ve işletme maliyetleri"
+      },
+      "support": {
+        "title": "Yardım ve destek",
+        "subtitle": "İletişim, SSS ve sorun giderme"
+      }
+    }
+  },
+  "language": {
+    "title": "Dil",
+    "subtitle": "Rinse’in sizinle ve müşterilerinizle nasıl konuşacağını seçin",
+    "sectionApp": "Uygulama dili",
+    "sectionDocs": "Şunlara da uygulanır",
+    "docsHint": "Teklifler, faturalar ve müşteri portalı aynı dili kullanır.",
+    "deviceDefault": "Cihaza uy ({{lang}})",
+    "saved": "Dil güncellendi",
+    "saveFailed": "Dil kaydedilemedi",
+    "searchPlaceholder": "Dil ara",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "Faturalama",
+    "subtitle": "Ödemeler ve fatura görünümü",
+    "appearance": "Görünüm",
+    "previewCustomize": "Önizleme ve özelleştir",
+    "previewSubtitle": "Düzen, vurgu, logo ve koşullar — tüm faturalara uygulanır"
+  },
+  "auth": {
+    "checkingSession": "Oturum kontrol ediliyor…",
+    "starting": "Rinse başlatılıyor…"
+  },
+  "home": {
+    "goodMorning": "Günaydın",
+    "goodAfternoon": "İyi günler",
+    "goodEvening": "İyi akşamlar",
+    "greetingNamed": "{{greeting}}, {{name}}",
+    "searchPlaceholder": "İş, müşteri, paket ara…",
+    "noMatch": "“{{query}}” ile eşleşen iş yok.",
+    "jobReadiness": "İş hazırlığı",
+    "collected": "Tahsil edilen",
+    "calendar": "Takvim",
+    "todaysJobs": "Bugünün işleri",
+    "alsoToday": "Bugün ayrıca",
+    "upcoming": "Yaklaşan",
+    "serviceMix": "Hizmet karışımı",
+    "account": "Hesap",
+    "pipeline": "Boru hattı",
+    "messages": "Mesajlar",
+    "search": "Ara",
+    "settings": "Ayarlar",
+    "sendInvoice": "Fatura gönder",
+    "newJob": "Yeni iş",
+    "newQuote": "Yeni teklif",
+    "outstanding": "Bekleyen",
+    "invoiced": "Faturalandı",
+    "unpaid": "ödenmemiş",
+    "openCount": "{{count}} açık",
+    "collectedThisMonth": " bu ay tahsil edildi",
+    "viewInvoices": "Faturaları gör",
+    "noJobsToday": "Bugün planlanmış iş yok",
+    "scheduleJob": "İş planla",
+    "openJob": "İşi aç",
+    "statusConfirmed": "Onaylandı",
+    "statusPending": "Beklemede",
+    "completeProfile": "Profilinizi tamamlayın",
+    "nextStep": "Sonraki: {{label}}",
+    "finishSetup": "Kurulumu bitir",
+    "continueSetup": "Kuruluma devam",
+    "checkingWeather": "Hava kontrol ediliyor…"
+  },
+  "quickActions": {
+    "title": "Hızlı işlemler",
+    "close": "Hızlı işlemleri kapat",
+    "drag": "Kapatmak için sürükleyin",
+    "newLead": "Yeni potansiyel",
+    "newLeadSub": "Talebi kaydet",
+    "newJob": "Yeni iş",
+    "newJobSub": "İş planla veya kaydet",
+    "createInvoice": "Fatura oluştur",
+    "createInvoiceSub": "İş seç ve gönder",
+    "logExpense": "Gider kaydet",
+    "logExpenseSub": "Tek seferlik işletme maliyeti",
+    "buySupplies": "Malzeme al",
+    "buySuppliesSub": "Stok + gider birlikte",
+    "newQuote": "Yeni teklif",
+    "newQuoteSub": "Fiyat tahmini gönder"
+  },
+  "jobs": {
+    "title": "İşler",
+    "add": "İş ekle",
+    "create": "İş oluştur",
+    "searchPlaceholder": "Marka, renk, plaka, müşteri ara…",
+    "emptyTitle": "İş bulunamadı",
+    "emptyFiltered": "Farklı arama veya filtre deneyin.",
+    "emptyDefault": "Geliri izlemek için ilk işinizi planlayın.",
+    "shown": "{{count}} gösteriliyor",
+    "totalPeriod": "{{count}} toplam · {{period}}",
+    "onDate": "{{date}} tarihinde {{count}}",
+    "showingDate": "{{date}} gösteriliyor · Temizle",
+    "editJob": "İşi düzenle",
+    "cancelAppointment": "Randevuyu iptal et",
+    "cancelAppointmentConfirm": "Randevu iptal edilsin mi?",
+    "cancelAppointmentBody": "Bu, slotu boşaltır ve işi kaldırır.",
+    "cancelJob": "İşi iptal et",
+    "jobActions": "İş işlemleri",
+    "loadFailed": "İşler yüklenemedi",
+    "moreJobs": "+ {{count}} daha",
+    "sections": {
+      "today": "Bugün · {{date}}",
+      "week": "Bu hafta",
+      "month": "Bu ayın öncesi",
+      "older": "Daha eski"
+    },
+    "filters": {
+      "all": "Tümü",
+      "scheduled": "Planlandı",
+      "inProgress": "Devam ediyor",
+      "recurring": "Tekrarlayan"
+    },
+    "status": {
+      "scheduled": "Planlandı",
+      "inProgress": "Devam ediyor",
+      "paid": "Ödendi",
+      "invoiced": "Faturalandı",
+      "awaitingPayment": "Ödeme bekleniyor",
+      "complete": "Tamamlandı"
+    }
+  },
+  "clients": {
+    "title": "Müşteriler",
+    "add": "Müşteri ekle",
+    "import": "Müşteri içe aktar",
+    "export": "Müşteri CSV dışa aktar",
+    "searchPlaceholder": "Ad, telefon, e-posta ara…",
+    "emptyTitle": "Henüz müşteri yok",
+    "emptyFiltered": "Müşteri bulunamadı",
+    "emptyDefault": "Rezervasyon için ilk müşterinizi ekleyin.",
+    "emptySearch": "Başka segment veya arama deneyin.",
+    "followUp": "Takip",
+    "topClients": "En iyi müşteriler",
+    "allClients": "Tüm müşteriler",
+    "moreClients_one": "+ {{count}} müşteri daha",
+    "moreClients_other": "+ {{count}} müşteri daha",
+    "sortBy": "Sırala",
+    "loadFailed": "Müşteriler yüklenemedi",
+    "filters": {
+      "all": "Tümü",
+      "followup": "Takip",
+      "top": "En iyi",
+      "new": "Yeni"
+    },
+    "sort": {
+      "revenue": "Gelir",
+      "name": "Ad",
+      "recent": "Son hizmet"
+    }
+  },
+  "business": {
+    "title": "İşletme",
+    "searchPlaceholder": "Hizmet, gider, iş ara…",
+    "netProfit": "Net kâr",
+    "netLoss": "Net zarar",
+    "revenue": "Gelir",
+    "expenses": "Giderler",
+    "avgJobValue": "Ort. iş değeri",
+    "fromJobs": "işlerden",
+    "perJob": "iş başına",
+    "invoices": "Faturalar",
+    "quotes": "Teklifler",
+    "revenueByService": "Hizmete göre gelir",
+    "expenseBreakdown": "Gider dökümü",
+    "custom": "Özel",
+    "startDate": "Başlangıç YYYY-AA-GG",
+    "endDate": "Bitiş YYYY-AA-GG",
+    "exportCsv": "CSV dışa aktar",
+    "exportPdf": "PDF dışa aktar",
+    "expense": {
+      "supplies": "Malzeme",
+      "travel": "Seyahat",
+      "equipment": "Ekipman",
+      "marketing": "Pazarlama",
+      "labor": "İşçilik",
+      "overhead": "Genel gider",
+      "business": "İşletme",
+      "other": "Diğer"
+    },
+    "ranges": {
+      "this_week": "Bu hafta",
+      "this_month": "Bu ay",
+      "last_month": "Geçen ay",
+      "this_year": "Bu yıl",
+      "lifetime": "Tüm zamanlar"
+    }
+  },
+  "invoices": {
+    "title": "Faturalar",
+    "openBalance": "Açık bakiye",
+    "searchPlaceholder": "Fatura ara…",
+    "emptyTitle": "Fatura yok",
+    "emptyDescription": "Ödemeleri izlemek için tamamlanan işten fatura oluşturun.",
+    "unavailable": "Faturalar kullanılamıyor",
+    "loadFailed": "Faturalar yüklenemedi",
+    "markSent": "Gönderildi işaretle",
+    "markPaid": "Ödendi işaretle",
+    "actions": "Fatura işlemleri",
+    "due": "vade",
+    "sectionTotal": "Bölüm toplamı",
+    "filters": {
+      "all": "Tümü",
+      "open": "Açık",
+      "overdue": "Gecikmiş",
+      "paid": "Ödendi",
+      "draft": "Taslak"
+    },
+    "detail": {
+      "loading": "Fatura yükleniyor…",
+      "title": "Fatura",
+      "notFound": "Fatura bulunamadı",
+      "send": "Fatura gönder",
+      "resend": "Yeniden gönder / paylaş",
+      "logPayment": "Ödeme kaydet",
+      "editLines": "Kalemleri düzenle",
+      "editLinesCount": "Satırları düzenle ({{count}} ekstra)",
+      "quickAdjustments": "Hızlı ayarlar",
+      "previewCustomize": "Önizle ve özelleştir",
+      "viewJob": "İşi gör"
+    }
+  },
+  "jobDetail": {
+    "loading": "İş yükleniyor…",
+    "titleFallback": "İş",
+    "markComplete": "İşi tamamlandı işaretle",
+    "markingComplete": "Tamamlandı işaretleniyor…",
+    "liability": "Sorumluluk turu",
+    "viewWalkthrough": "Turu görüntüle",
+    "startWalkthrough": "Turu başlat",
+    "hoursWorked": "Çalışılan saat",
+    "hoursValue": "{{hours}} sa",
+    "netProfit": "Net kâr",
+    "nextService": "Sonraki hizmet",
+    "bookNext": "Sonrakini rezerve et",
+    "onMyWay": "Yoldayım",
+    "textClient": "Müşteriye yaz",
+    "createQuote": "Teklif oluştur",
+    "createInvoice": "Fatura oluştur",
+    "creating": "Oluşturuluyor…",
+    "sharePdf": "PDF paylaş",
+    "shareBeforeAfter": "Önce/sonra PDF paylaş",
+    "editJob": "İşi düzenle",
+    "cancelAppointment": "Randevuyu iptal et",
+    "cancelling": "İptal ediliyor…",
+    "jobCompleteTitle": "İş tamamlandı",
+    "jobCompleteBody": "Bu ekrandan faturalandırabilir veya paylaşabilirsiniz.",
+    "noPhoneTitle": "Telefon yok",
+    "noPhoneBody": "Önce müşteri profiline telefon numarası ekleyin.",
+    "sentTitle": "Gönderildi",
+    "onMyWaySent": "“Yoldayım” mesajı gönderildi.",
+    "cancelConfirm": "Randevu iptal edilsin mi?",
+    "cancelBody": "Bu, slotu boşaltır ve işi kaldırır."
+  },
+  "clientDetail": {
+    "newJob": "Yeni iş",
+    "quote": "Teklif",
+    "invoice": "Fatura",
+    "totalRevenue": "Toplam gelir",
+    "totalJobs": "Toplam iş",
+    "avgJob": "Ort. iş",
+    "leadSource": "Potansiyel kaynağı",
+    "notes": "Notlar",
+    "quotes": "Teklifler",
+    "vehicles": "Araçlar",
+    "addVehicle": "Araç ekle",
+    "upcoming": "Yaklaşan",
+    "jobHistory": "İş geçmişi",
+    "contact": "İletişim",
+    "editClient": "Müşteriyi düzenle",
+    "directions": "Yol tarifi",
+    "call": "Ara",
+    "text": "Mesaj",
+    "email": "E-posta"
+  }
+}

@@ -39,13 +39,23 @@ function locationLabel(locationType: 'mobile' | 'fixed'): string {
   return locationType === 'mobile' ? 'Mobile detail' : 'Shop detail'
 }
 
-export function formatStartTimeLabel(startTime?: string): string | null {
+export function formatStartTimeLabel(startTime?: string, arrivalWindowEnd?: string): string | null {
   if (!startTime?.trim()) return null
-  const [h, m] = startTime.split(':').map(Number)
-  if (Number.isNaN(h)) return null
-  const dt = new Date()
-  dt.setHours(h, m ?? 0)
-  return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const startLabel = (() => {
+    const [h, m] = startTime.split(':').map(Number)
+    if (Number.isNaN(h)) return null
+    const dt = new Date()
+    dt.setHours(h, m ?? 0)
+    return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  })()
+  if (!startLabel) return null
+  if (!arrivalWindowEnd?.trim()) return startLabel
+  const [eh, em] = arrivalWindowEnd.split(':').map(Number)
+  if (Number.isNaN(eh)) return startLabel
+  const end = new Date()
+  end.setHours(eh, em ?? 0)
+  const endLabel = end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return `${startLabel} – ${endLabel}`
 }
 
 export function jobsForDate(jobs: JobWithRelations[], date: string): JobWithRelations[] {
@@ -72,7 +82,7 @@ export function buildTodayJobCard(jobs: JobWithRelations[]): TodayJobCardData | 
     packageName: job.package?.name ?? 'Detail',
     vehicleType: capitalize(job.vehicle_type),
     locationLabel: locationLabel(job.location_type),
-    startTimeLabel: formatStartTimeLabel(job.start_time),
+    startTimeLabel: formatStartTimeLabel(job.start_time, job.arrival_window_end),
     address: job.client?.address,
   }
 }
@@ -88,7 +98,7 @@ export function buildMoreTodayJobs(jobs: JobWithRelations[]): TodayJobCardData[]
     packageName: job.package?.name ?? 'Detail',
     vehicleType: capitalize(job.vehicle_type),
     locationLabel: locationLabel(job.location_type),
-    startTimeLabel: formatStartTimeLabel(job.start_time),
+    startTimeLabel: formatStartTimeLabel(job.start_time, job.arrival_window_end),
     address: job.client?.address,
   }))
 }

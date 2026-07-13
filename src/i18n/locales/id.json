@@ -1,0 +1,417 @@
+{
+  "common": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "saving": "Menyimpan…",
+    "loading": "Memuat…",
+    "signOut": "Keluar",
+    "search": "Cari",
+    "back": "Kembali",
+    "done": "Selesai",
+    "error": "Terjadi kesalahan",
+    "offline": "Anda sedang offline",
+    "retry": "Coba lagi",
+    "client": "Klien",
+    "detail": "Detailing",
+    "close": "Tutup",
+    "keep": "Simpan",
+    "clear": "Hapus",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "more": "+ {{count}} lagi",
+    "result_one": "{{count}} hasil",
+    "result_other": "{{count}} hasil",
+    "changeWaiting_one": "{{count}} perubahan menunggu sinkronisasi",
+    "changeWaiting_other": "{{count}} perubahan menunggu sinkronisasi",
+    "export": "Ekspor",
+    "directions": "Petunjuk arah",
+    "call": "Telepon",
+    "text": "Pesan",
+    "email": "Email",
+    "notes": "Catatan",
+    "photos": "Foto",
+    "package": "Paket",
+    "vehicle": "Kendaraan",
+    "location": "Lokasi",
+    "revenue": "Pendapatan",
+    "expenses": "Pengeluaran",
+    "invoice": "Faktur",
+    "quote": "Penawaran",
+    "all": "Semua"
+  },
+  "tabs": {
+    "home": "Beranda",
+    "jobs": "Pekerjaan",
+    "clients": "Klien",
+    "business": "Bisnis"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "searchPlaceholder": "Cari pengaturan",
+    "signOutBlocked": "Sinkronkan atau buang perubahan tertunda sebelum keluar.",
+    "cannotSignOut": "Tidak dapat keluar",
+    "unsyncedTitle": "Perubahan belum disinkronkan",
+    "groups": {
+      "account": "Akun",
+      "business": "Bisnis",
+      "preferences": "Preferensi",
+      "management": "Manajemen",
+      "support": "Dukungan"
+    },
+    "menu": {
+      "account": {
+        "title": "Akun",
+        "subtitle": "Email, kata sandi, dan masuk"
+      },
+      "business": {
+        "title": "Bisnis Anda",
+        "subtitle": "Profil dan booking online"
+      },
+      "schedule": {
+        "title": "Jadwal & cuti",
+        "subtitle": "Jam, makan siang, dan hari diblokir"
+      },
+      "invoicing": {
+        "title": "Faktur",
+        "subtitle": "Pembayaran online & tampilan faktur"
+      },
+      "billing": {
+        "title": "Langganan",
+        "subtitle": "Paket, uji coba, dan langganan"
+      },
+      "progress": {
+        "title": "Progres Anda",
+        "subtitle": "Tonggak aktivitas bisnis"
+      },
+      "preferences": {
+        "title": "Preferensi aplikasi",
+        "subtitle": "Pengingat dan notifikasi"
+      },
+      "language": {
+        "title": "Bahasa",
+        "subtitle": "Aplikasi dan dokumen pelanggan"
+      },
+      "quietHours": {
+        "title": "Jam tenang",
+        "subtitle": "Jeda email otomatis di malam hari"
+      },
+      "access": {
+        "title": "Akses dan data",
+        "subtitle": "Cadangan, ekspor, dan privasi"
+      },
+      "inventory": {
+        "title": "Inventaris",
+        "subtitle": "Persediaan dan stok"
+      },
+      "packages": {
+        "title": "Paket layanan",
+        "subtitle": "Kelola penawaran Anda"
+      },
+      "invoices": {
+        "title": "Semua faktur",
+        "subtitle": "Catatan keuangan"
+      },
+      "tools": {
+        "title": "Alat",
+        "subtitle": "Pintasan faktur, pengeluaran, dan lainnya"
+      },
+      "expenses": {
+        "title": "Pengeluaran",
+        "subtitle": "Biaya overhead dan bisnis"
+      },
+      "support": {
+        "title": "Bantuan & dukungan",
+        "subtitle": "Kontak, FAQ, dan pemecahan masalah"
+      }
+    }
+  },
+  "language": {
+    "title": "Bahasa",
+    "subtitle": "Pilih bagaimana Rinse berbicara dengan Anda dan pelanggan",
+    "sectionApp": "Bahasa aplikasi",
+    "sectionDocs": "Juga berlaku untuk",
+    "docsHint": "Penawaran, faktur, dan portal klien menggunakan bahasa yang sama.",
+    "deviceDefault": "Ikuti perangkat ({{lang}})",
+    "saved": "Bahasa diperbarui",
+    "saveFailed": "Tidak dapat menyimpan bahasa",
+    "searchPlaceholder": "Cari bahasa",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "Faktur",
+    "subtitle": "Pembayaran dan tampilan faktur",
+    "appearance": "Tampilan",
+    "previewCustomize": "Pratinjau & sesuaikan",
+    "previewSubtitle": "Tata letak, aksen, logo, dan syarat — untuk semua faktur"
+  },
+  "auth": {
+    "checkingSession": "Memeriksa sesi…",
+    "starting": "Memulai Rinse…"
+  },
+  "home": {
+    "goodMorning": "Selamat pagi",
+    "goodAfternoon": "Selamat siang",
+    "goodEvening": "Selamat malam",
+    "greetingNamed": "{{greeting}}, {{name}}",
+    "searchPlaceholder": "Cari pekerjaan, klien, paket…",
+    "noMatch": "Tidak ada pekerjaan yang cocok dengan “{{query}}”.",
+    "jobReadiness": "Kesiapan pekerjaan",
+    "collected": "Terkumpul",
+    "calendar": "Kalender",
+    "todaysJobs": "Pekerjaan hari ini",
+    "alsoToday": "Juga hari ini",
+    "upcoming": "Mendatang",
+    "serviceMix": "Campuran layanan",
+    "account": "Akun",
+    "pipeline": "Pipeline",
+    "messages": "Pesan",
+    "search": "Cari",
+    "settings": "Pengaturan",
+    "sendInvoice": "Kirim faktur",
+    "newJob": "Pekerjaan baru",
+    "newQuote": "Penawaran baru",
+    "outstanding": "Tertunggak",
+    "invoiced": "Difakturkan",
+    "unpaid": "belum dibayar",
+    "openCount": "{{count}} terbuka",
+    "collectedThisMonth": " terkumpul bulan ini",
+    "viewInvoices": "Lihat faktur",
+    "noJobsToday": "Tidak ada pekerjaan terjadwal hari ini",
+    "scheduleJob": "Jadwalkan pekerjaan",
+    "openJob": "Buka pekerjaan",
+    "statusConfirmed": "Dikonfirmasi",
+    "statusPending": "Menunggu",
+    "completeProfile": "Lengkapi profil Anda",
+    "nextStep": "Berikutnya: {{label}}",
+    "finishSetup": "Selesaikan pengaturan",
+    "continueSetup": "Lanjutkan pengaturan",
+    "checkingWeather": "Memeriksa cuaca…"
+  },
+  "quickActions": {
+    "title": "Tindakan cepat",
+    "close": "Tutup tindakan cepat",
+    "drag": "Seret untuk menutup",
+    "newLead": "Prospek baru",
+    "newLeadSub": "Catat pertanyaan",
+    "newJob": "Pekerjaan baru",
+    "newJobSub": "Jadwalkan atau catat kerja",
+    "createInvoice": "Buat faktur",
+    "createInvoiceSub": "Pilih pekerjaan dan kirim",
+    "logExpense": "Catat pengeluaran",
+    "logExpenseSub": "Biaya bisnis sekali",
+    "buySupplies": "Beli perlengkapan",
+    "buySuppliesSub": "Stok + pengeluaran sekaligus",
+    "newQuote": "Penawaran baru",
+    "newQuoteSub": "Kirim estimasi harga"
+  },
+  "jobs": {
+    "title": "Pekerjaan",
+    "add": "Tambah pekerjaan",
+    "create": "Buat pekerjaan",
+    "searchPlaceholder": "Cari merek, warna, plat, klien…",
+    "emptyTitle": "Tidak ada pekerjaan",
+    "emptyFiltered": "Coba pencarian atau filter lain.",
+    "emptyDefault": "Jadwalkan pekerjaan pertama untuk mulai melacak pendapatan.",
+    "shown": "{{count}} ditampilkan",
+    "totalPeriod": "{{count}} keseluruhan · {{period}}",
+    "onDate": "{{count}} pada {{date}}",
+    "showingDate": "Menampilkan {{date}} · Hapus",
+    "editJob": "Edit pekerjaan",
+    "cancelAppointment": "Batalkan janji",
+    "cancelAppointmentConfirm": "Batalkan janji?",
+    "cancelAppointmentBody": "Ini membebaskan slot dan menghapus pekerjaan.",
+    "cancelJob": "Batalkan pekerjaan",
+    "jobActions": "Tindakan pekerjaan",
+    "loadFailed": "Gagal memuat pekerjaan",
+    "moreJobs": "+ {{count}} lagi",
+    "sections": {
+      "today": "Hari ini · {{date}}",
+      "week": "Minggu ini",
+      "month": "Lebih awal bulan ini",
+      "older": "Lebih lama"
+    },
+    "filters": {
+      "all": "Semua",
+      "scheduled": "Terjadwal",
+      "inProgress": "Berlangsung",
+      "recurring": "Berulang"
+    },
+    "status": {
+      "scheduled": "Terjadwal",
+      "inProgress": "Berlangsung",
+      "paid": "Lunas",
+      "invoiced": "Difakturkan",
+      "awaitingPayment": "Menunggu pembayaran",
+      "complete": "Selesai"
+    }
+  },
+  "clients": {
+    "title": "Klien",
+    "add": "Tambah klien",
+    "import": "Impor klien",
+    "export": "Ekspor CSV klien",
+    "searchPlaceholder": "Cari nama, telepon, email…",
+    "emptyTitle": "Belum ada klien",
+    "emptyFiltered": "Klien tidak ditemukan",
+    "emptyDefault": "Tambahkan klien pertama untuk mulai memesan.",
+    "emptySearch": "Coba segmen atau kata kunci lain.",
+    "followUp": "Tindak lanjut",
+    "topClients": "Klien terbaik",
+    "allClients": "Semua klien",
+    "moreClients_one": "+ {{count}} klien lagi",
+    "moreClients_other": "+ {{count}} klien lagi",
+    "sortBy": "Urutkan",
+    "loadFailed": "Gagal memuat klien",
+    "filters": {
+      "all": "Semua",
+      "followup": "Tindak lanjut",
+      "top": "Teratas",
+      "new": "Baru"
+    },
+    "sort": {
+      "revenue": "Pendapatan",
+      "name": "Nama",
+      "recent": "Layanan terakhir"
+    }
+  },
+  "business": {
+    "title": "Bisnis",
+    "searchPlaceholder": "Cari layanan, pengeluaran, pekerjaan…",
+    "netProfit": "Laba bersih",
+    "netLoss": "Rugi bersih",
+    "revenue": "Pendapatan",
+    "expenses": "Pengeluaran",
+    "avgJobValue": "Nilai rata-rata pekerjaan",
+    "fromJobs": "dari pekerjaan",
+    "perJob": "per pekerjaan",
+    "invoices": "Faktur",
+    "quotes": "Penawaran",
+    "revenueByService": "Pendapatan per layanan",
+    "expenseBreakdown": "Rincian pengeluaran",
+    "custom": "Kustom",
+    "startDate": "Mulai YYYY-MM-DD",
+    "endDate": "Akhir YYYY-MM-DD",
+    "exportCsv": "Ekspor CSV",
+    "exportPdf": "Ekspor PDF",
+    "expense": {
+      "supplies": "Perlengkapan",
+      "travel": "Perjalanan",
+      "equipment": "Peralatan",
+      "marketing": "Pemasaran",
+      "labor": "Tenaga kerja",
+      "overhead": "Biaya umum",
+      "business": "Bisnis",
+      "other": "Lainnya"
+    },
+    "ranges": {
+      "this_week": "Minggu ini",
+      "this_month": "Bulan ini",
+      "last_month": "Bulan lalu",
+      "this_year": "Tahun ini",
+      "lifetime": "Sepanjang waktu"
+    }
+  },
+  "invoices": {
+    "title": "Faktur",
+    "openBalance": "Saldo terbuka",
+    "searchPlaceholder": "Cari faktur…",
+    "emptyTitle": "Tidak ada faktur",
+    "emptyDescription": "Buat faktur dari pekerjaan selesai untuk melacak pembayaran.",
+    "unavailable": "Faktur tidak tersedia",
+    "loadFailed": "Gagal memuat faktur",
+    "markSent": "Tandai terkirim",
+    "markPaid": "Tandai lunas",
+    "actions": "Tindakan faktur",
+    "due": "jatuh tempo",
+    "sectionTotal": "Total bagian",
+    "filters": {
+      "all": "Semua",
+      "open": "Terbuka",
+      "overdue": "Terlambat",
+      "paid": "Lunas",
+      "draft": "Draf"
+    },
+    "detail": {
+      "loading": "Memuat faktur…",
+      "title": "Faktur",
+      "notFound": "Faktur tidak ditemukan",
+      "send": "Kirim faktur",
+      "resend": "Kirim ulang / bagikan",
+      "logPayment": "Catat pembayaran",
+      "editLines": "Edit item baris",
+      "editLinesCount": "Edit baris ({{count}} ekstra)",
+      "quickAdjustments": "Penyesuaian cepat",
+      "previewCustomize": "Pratinjau & sesuaikan",
+      "viewJob": "Lihat pekerjaan"
+    }
+  },
+  "jobDetail": {
+    "loading": "Memuat pekerjaan…",
+    "titleFallback": "Pekerjaan",
+    "markComplete": "Tandai pekerjaan selesai",
+    "markingComplete": "Menandai selesai…",
+    "liability": "Pemeriksaan tanggung jawab",
+    "viewWalkthrough": "Lihat pemeriksaan",
+    "startWalkthrough": "Mulai pemeriksaan",
+    "hoursWorked": "Jam kerja",
+    "hoursValue": "{{hours}} jam",
+    "netProfit": "Laba bersih",
+    "nextService": "Layanan berikutnya",
+    "bookNext": "Pesan berikutnya",
+    "onMyWay": "Dalam perjalanan",
+    "textClient": "Pesan klien",
+    "createQuote": "Buat penawaran",
+    "createInvoice": "Buat faktur",
+    "creating": "Membuat…",
+    "sharePdf": "Bagikan PDF",
+    "shareBeforeAfter": "Bagikan PDF sebelum/sesudah",
+    "editJob": "Edit pekerjaan",
+    "cancelAppointment": "Batalkan janji",
+    "cancelling": "Membatalkan…",
+    "jobCompleteTitle": "Pekerjaan selesai",
+    "jobCompleteBody": "Anda dapat membuat faktur atau membagikan dari layar ini.",
+    "noPhoneTitle": "Tidak ada telepon",
+    "noPhoneBody": "Tambahkan nomor telepon di profil klien terlebih dahulu.",
+    "sentTitle": "Terkirim",
+    "onMyWaySent": "Pesan “dalam perjalanan” terkirim.",
+    "cancelConfirm": "Batalkan janji?",
+    "cancelBody": "Ini membebaskan slot dan menghapus pekerjaan."
+  },
+  "clientDetail": {
+    "newJob": "Pekerjaan baru",
+    "quote": "Penawaran",
+    "invoice": "Faktur",
+    "totalRevenue": "Total pendapatan",
+    "totalJobs": "Total pekerjaan",
+    "avgJob": "Rata-rata pekerjaan",
+    "leadSource": "Sumber prospek",
+    "notes": "Catatan",
+    "quotes": "Penawaran",
+    "vehicles": "Kendaraan",
+    "addVehicle": "Tambah kendaraan",
+    "upcoming": "Mendatang",
+    "jobHistory": "Riwayat pekerjaan",
+    "contact": "Kontak",
+    "editClient": "Edit klien",
+    "directions": "Petunjuk arah",
+    "call": "Telepon",
+    "text": "Pesan",
+    "email": "Email"
+  }
+}

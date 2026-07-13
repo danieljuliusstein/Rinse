@@ -1,0 +1,261 @@
+{
+  "url": "https://www.close.com/",
+  "slug": "close.com",
+  "scrapedAt": "2026-07-12T19:37:50.500Z",
+  "durationMs": 2068,
+  "screenshot": "close.com.png",
+  "title": "Close CRM | Sales CRM with Built-In AI Sales Agent",
+  "metaDescription": "Close is the sales CRM for growing teams with built-in calling, email, SMS, and Chloe: your AI sales agent that helps qualify, follow up, and act on every lead.",
+  "body": {
+    "tag": "body",
+    "text": "Product\nChloe AI agent\nNEW\nResources\nPricing\nDemo\nLog In\nTry for free\nThe sales CRM built for calling, emailing, texting",
+    "color": "rgb(0, 0, 0)",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "fontFamily": "\"Innovatorgroteskvf Vf\", Arial, sans-serif",
+    "fontSize": "15px",
+    "fontWeight": "400",
+    "lineHeight": "24px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "hero": {
+    "h1": {
+      "tag": "h1",
+      "text": "The sales CRM built for calling, emailing, texting, automation and action",
+      "color": "rgb(255, 255, 255)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Innovatorgroteskvf Vf\", Arial, sans-serif",
+      "fontSize": "96px",
+      "fontWeight": "700",
+      "lineHeight": "96px",
+      "letterSpacing": "-3.84px",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "-1px"
+    },
+    "h2": {
+      "tag": "h2",
+      "text": "What is Close?",
+      "color": "rgb(0, 0, 0)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Innovatorgroteskvf Vf\", Arial, sans-serif",
+      "fontSize": "48px",
+      "fontWeight": "700",
+      "lineHeight": "55.2px",
+      "letterSpacing": "-1.44px",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px 0px 30px"
+    },
+    "supporting": {
+      "tag": "section",
+      "text": "The sales CRM built for\ncalling\nTry for free\nNo credit card required",
+      "color": "rgb(255, 255, 255)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Innovatorgroteskvf Vf\", Arial, sans-serif",
+      "fontSize": "15px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "128px 80px 32px",
+      "margin": "0px"
+    }
+  },
+  "nav": {
+    "tag": "header",
+    "text": "Product\nChloe AI agent\nNEW\nResources\nPricing\nDemo\nLog In\nTry for free",
+    "color": "rgb(0, 0, 0)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "\"Innovatorgroteskvf Vf\", Arial, sans-serif",
+    "fontSize": "15px",
+    "fontWeight": "400",
+    "lineHeight": "24px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "primaryCta": {
+    "tag": "a",
+    "text": "BlogSales playbooks & AI deep-dives",
+    "color": "rgb(255, 255, 255)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "\"Innovatorgroteskvf Vf\", Arial, sans-serif",
+    "fontSize": "15px",
+    "fontWeight": "600",
+    "lineHeight": "21.75px",
+    "letterSpacing": "normal",
+    "borderRadius": "12px",
+    "boxShadow": "none",
+    "padding": "14px",
+    "margin": "0px"
+  },
+  "palette": [
+    {
+      "value": "rgba(255, 255, 255, 0.7)",
+      "count": 90
+    },
+    {
+      "value": "rgb(255, 255, 255)",
+      "count": 87
+    },
+    {
+      "value": "rgb(70, 74, 255)",
+      "count": 58
+    },
+    {
+      "value": "rgb(20, 99, 255)",
+      "count": 25
+    },
+    {
+      "value": "rgb(0, 0, 0)",
+      "count": 12
+    },
+    {
+      "value": "rgba(255, 255, 255, 0.5)",
+      "count": 6
+    },
+    {
+      "value": "rgba(255, 255, 255, 0.05)",
+      "count": 3
+    },
+    {
+      "value": "rgba(255, 255, 255, 0.15)",
+      "count": 3
+    },
+    {
+      "value": "rgba(255, 255, 255, 0.08)",
+      "count": 3
+    },
+    {
+      "value": "rgb(51, 51, 51)",
+      "count": 2
+    },
+    {
+      "value": "rgb(37, 197, 90)",
+      "count": 2
+    },
+    {
+      "value": "rgba(255, 255, 255, 0.17)",
+      "count": 1
+    }
+  ],
+  "fonts": [
+    {
+      "value": "\"Innovatorgroteskvf Vf\", Arial, sans-serif",
+      "count": 130
+    },
+    {
+      "value": "Innovatorgrotesk, Arial, sans-serif",
+      "count": 8
+    }
+  ],
+  "radii": [
+    {
+      "value": "12px",
+      "count": 21
+    },
+    {
+      "value": "14px",
+      "count": 11
+    },
+    {
+      "value": "10px",
+      "count": 5
+    },
+    {
+      "value": "6px",
+      "count": 3
+    },
+    {
+      "value": "50%",
+      "count": 3
+    },
+    {
+      "value": "20px",
+      "count": 1
+    }
+  ],
+  "shadows": [],
+  "cssVariables": {
+    "--black": "black",
+    "--_2025---link": "#1e42fa",
+    "--_2025---text-dark": "#0f0d1f",
+    "--white": "white",
+    "--blue": "#1463ff",
+    "--black-60": "#0009",
+    "--crimson": "#d61549",
+    "--white-smoke": "#f5f5f7",
+    "--gold": "#ffbc00",
+    "--medium-sea-green": "#4ec375",
+    "--_2025---off-white-gray": "#fafafa",
+    "--_2025---black": "#000",
+    "--_2025---true-white": "white",
+    "--purple": "#9c40e3",
+    "--cyan": "#00d4ff",
+    "--black-40": "#0006",
+    "--coral": "#e67190",
+    "--light-blue": "#f0f4fb",
+    "--_2025---true-black": "#000",
+    "--_2025---white": "white",
+    "--new-blue": "#1463ff",
+    "--_2025---blue": "#3e2fee",
+    "--_2025---coral": "#fb4f45",
+    "--_2025---text-medium": "#0f0d16cc",
+    "--_2025---text-light": "#0a071499",
+    "--_2025---border-dark": "#0000002e",
+    "--_2025---white-button-background": "#ffffff4d",
+    "--_2025---white-button-hover": "#315bae33",
+    "--_2025---black-button-border": "#000",
+    "--_2025---black-button-background": "#000",
+    "--_2025---black-button-hover": "#292929",
+    "--_2025---transparent-button-hover": "#0000001a",
+    "--_2025---blue-button-border": "#2015a6",
+    "--_2025---blue-button-hover": "#4148f3",
+    "--_2025---off-white": "#edf1ff",
+    "--_2025---nav-hover-2": "#004de60f",
+    "--_2025---border-light": "#0000000d",
+    "--_2025---border": "#0000001a",
+    "--_2025---card-border": "white",
+    "--_2025---card": "#edf1ff80",
+    "--_2025---pink": "#fe3b87",
+    "--_2025---orange": "#f90",
+    "--_2025---green": "#25c55a",
+    "--_2025---tab-bg": "#366cea1a",
+    "--_2025---field-active": "#fff6",
+    "--_2025---border-solid-light": "#e1e5f2",
+    "--_2025---surface-light": "#ffffff08",
+    "--_2025---nav-hover": "#315bae14",
+    "--_2025---field-enabled": "#ffffff1f",
+    "--_2025---border-solid": "#d5d9e5",
+    "--_2025---h5-rich-text-bg": "#004dff14",
+    "--_2025---h6-rich-text-bg": "#0608270a",
+    "--_2025---quote-bg": "#ffffff08",
+    "--_2025---purple": "#7732f1",
+    "--bg": "#854beb21",
+    "--ic": "#854beb",
+    "--cp-radius": "22px",
+    "--cp-accent-light": "#5c95ff",
+    "--_2025---tab-fill": "#66688508",
+    "--_2025---cyan": "#0098ff",
+    "--_2025---yellow": "#ffbc00",
+    "--_2025---nav-background": "#f1f4ff"
+  },
+  "layoutNotes": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hasStickyHeader": true,
+    "sectionCount": 12
+  },
+  "category": "crm"
+}

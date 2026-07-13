@@ -5,15 +5,18 @@ import {
   generatePocketBaseId,
   isJobPhotoTypeAtLimit,
   jobPhotoLimitMessage,
+  normalizeBillingLines,
   normalizeInvoice,
 } from '@rinse/core'
 import { recalculateInvoiceTotals } from './invoice-totals'
 import { getPocketBase } from './pocketbase'
+import { formatPocketBaseError } from './pocketbase-errors'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
 import { isOfflineWritesEnabled } from './subscription-fetch'
 import { enqueue } from './offline/queue'
 import { fileUriToDataUrl } from './offline/sync-files'
+import { uploadPocketBaseFile } from './upload-file'
 
 export function mapInvoiceFromRecord(record: Record<string, unknown>): Invoice {
   const payments = Array.isArray(record.payments) ? (record.payments as Payment[]) : []
@@ -38,7 +41,7 @@ export function mapInvoiceFromRecord(record: Record<string, unknown>): Invoice {
     tax_amount: record.tax_amount != null ? Number(record.tax_amount) : undefined,
     po_number: record.po_number ? String(record.po_number) : undefined,
     extra_line_items: Array.isArray(record.extra_line_items)
-      ? (record.extra_line_items as Invoice['extra_line_items'])
+      ? normalizeBillingLines(record.extra_line_items as Invoice['extra_line_items'])
       : undefined,
   })
 }
@@ -205,21 +208,31 @@ export async function markInvoicePaid(invoiceId: string, method: string): Promis
   })
 }
 
-function photoUrl(record: Record<string, unknown>, filename: string): string {
-  return pb().files.getURL(record, filename)
+function photoUrl(record: Record<string, unknown>, filename: string, fileToken?: string): string {
+  return pb().files.getURL(record, filename, fileToken ? { token: fileToken } : undefined)
 }
 
 export async function getJobPhotos(jobId: string): Promise<JobPhoto[]> {
   await assertOnline('Loading photos')
-  const record = await pb().collection('jobs').getOne(jobId)
+  const client = pb()
+  const record = await client.collection('jobs').getOne(jobId)
   const filenames = Array.isArray(record.photos) ? (record.photos as string[]) : []
   const meta = Array.isArray(record.photo_meta) ? (record.photo_meta as PhotoMeta[]) : []
+
+  let fileToken: string | undefined
+  if (filenames.length > 0) {
+    try {
+      fileToken = await client.files.getToken()
+    } catch {
+      fileToken = undefined
+    }
+  }
 
   return filenames.map((filename) => {
     const entry = meta.find((m) => m.filename === filename)
     return {
       filename,
-      url: photoUrl(record as Record<string, unknown>, filename),
+      url: photoUrl(record as Record<string, unknown>, filename, fileToken),
       type: entry?.type ?? 'after',
     }
   })
@@ -236,31 +249,49 @@ export async function uploadJobPhoto(
   const online = await isOnline()
 
   const tryOnline = async (): Promise<JobPhoto> => {
-    const record = await pb().collection('jobs').getOne(jobId)
+    const client = pb()
+    const record = await client.collection('jobs').getOne(jobId)
     const existingMeta = Array.isArray(record.photo_meta) ? [...(record.photo_meta as PhotoMeta[])] : []
     const typeCount = existingMeta.filter((m) => m.type === type).length
     if (isJobPhotoTypeAtLimit(typeCount)) {
       throw new Error(jobPhotoLimitMessage(type))
     }
 
-    const formData = new FormData()
-    formData.append('photos+', { uri: fileUri, name: filename, type: mimeType } as unknown as Blob)
+    let updated: Record<string, unknown>
+    try {
+      updated = await uploadPocketBaseFile({
+        collection: 'jobs',
+        recordId: jobId,
+        field: 'photos+',
+        fileUri,
+        filename,
+        mimeType,
+      })
+    } catch (err) {
+      throw new Error(formatPocketBaseError(err, 'Upload failed'))
+    }
 
-    const updated = await pb().collection('jobs').update(jobId, formData)
     const filenames = Array.isArray(updated.photos) ? (updated.photos as string[]) : []
     const newFilename =
       filenames.find((f) => !existingMeta.some((m) => m.filename === f)) ?? filenames[filenames.length - 1]
 
-    if (newFilename) {
-      existingMeta.push({ filename: newFilename, type })
-      await pb().collection('jobs').update(jobId, { photo_meta: existingMeta })
+    if (!newFilename) {
+      throw new Error('Photo upload did not return a filename')
     }
 
-    const final = await pb().collection('jobs').getOne(jobId)
-    const name = newFilename ?? filename
+    existingMeta.push({ filename: newFilename, type })
+    await client.collection('jobs').update(jobId, { photo_meta: existingMeta })
+
+    const final = await client.collection('jobs').getOne(jobId)
+    let fileToken: string | undefined
+    try {
+      fileToken = await client.files.getToken()
+    } catch {
+      fileToken = undefined
+    }
     return {
-      filename: name,
-      url: photoUrl(final as Record<string, unknown>, name),
+      filename: newFilename,
+      url: photoUrl(final as Record<string, unknown>, newFilename, fileToken),
       type,
     }
   }

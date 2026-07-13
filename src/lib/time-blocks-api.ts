@@ -50,6 +50,11 @@ export async function getTimeBlocks(fromDate: string, toDate: string): Promise<T
   }
 }
 
+export async function getTimeBlocksOnDate(date: string): Promise<TimeBlock[]> {
+  const day = date.slice(0, 10)
+  return getTimeBlocks(day, day)
+}
+
 export async function createTimeBlock(input: TimeBlockInput): Promise<TimeBlock> {
   if (!(await isOnline())) throw new Error('You are offline')
   const orgId = requireOrganizationId()
@@ -80,4 +85,14 @@ export async function deleteTimeBlock(id: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+/** Deletes every time-off block on a calendar day. Returns how many were removed. */
+export async function deleteTimeBlocksOnDate(date: string): Promise<number> {
+  const blocks = await getTimeBlocksOnDate(date)
+  let removed = 0
+  for (const block of blocks) {
+    if (await deleteTimeBlock(block.id)) removed += 1
+  }
+  return removed
 }

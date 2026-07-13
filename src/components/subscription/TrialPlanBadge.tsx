@@ -16,16 +16,20 @@ type TrialPlanBadgeProps = {
 /** Trial indicator — exclamation circle in home header, left of pipeline. */
 export function TrialPlanBadge({ placement = 'inline' }: TrialPlanBadgeProps) {
   const router = useRouter()
-  const { org, loading, daysLeft, lapsed } = useOrgSubscription()
+  const { org, loading, daysLeft, lapsed, vault } = useOrgSubscription()
   const { openPaywall } = usePaywallGateContext()
 
   if (!shouldShowTrialBadge(org, loading, daysLeft)) return null
   if (isScreenshotMode()) return null
 
-  const urgent = lapsed || (daysLeft != null && daysLeft <= 3)
+  const urgent = lapsed || vault || (daysLeft != null && daysLeft <= 3)
   const onFree = org?.plan === 'free'
 
   const handlePress = () => {
+    if (vault) {
+      openPaywall({ mode: 'vault' })
+      return
+    }
     if (lapsed) {
       openPaywall({ mode: 'lapsed' })
       return
@@ -37,13 +41,15 @@ export function TrialPlanBadge({ placement = 'inline' }: TrialPlanBadgeProps) {
     router.push('/settings/billing')
   }
 
-  const accessibilityLabel = lapsed
-    ? 'Trial ended. Subscribe to Starter.'
-    : onFree
-      ? 'On Free plan. Upgrade to Starter.'
-      : daysLeft != null && Number.isFinite(daysLeft)
-        ? `Starter trial, ${daysLeft} days left. Open billing.`
-        : `${STARTER_PLAN.name}. Open billing.`
+  const accessibilityLabel = vault
+    ? 'Read-only vault. Resubscribe to edit.'
+    : lapsed
+      ? 'Trial ended. Subscribe to Starter.'
+      : onFree
+        ? 'On Free plan. Upgrade to Starter.'
+        : daysLeft != null && Number.isFinite(daysLeft)
+          ? `Starter trial, ${daysLeft} days left. Open billing.`
+          : `${STARTER_PLAN.name}. Open billing.`
 
   return (
     <Pressable

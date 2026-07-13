@@ -30,7 +30,10 @@ export function AutoMessageCard({
   onEdit,
   isLast = false,
 }: AutoMessageCardProps) {
-  const previewBody = mergeTemplateBodyForContext(template.emailBody, PREVIEW_CTX)
+  const previewBody = mergeTemplateBodyForContext(
+    template.smsBody?.trim() || template.emailBody,
+    PREVIEW_CTX,
+  )
 
   return (
     <View style={[styles.wrap, isLast ? styles.wrapLast : null]}>
@@ -96,13 +99,14 @@ export function AutoMessageCard({
 
       {expanded ? (
         <View style={styles.expand}>
-          <AppText variant="caption" style={styles.hint}>
-            Use {'{{name}}'}, {'{{package}}'}, {'{{date}}'}, {'{{time}}'} — email auto-sends; SMS opens in Messages.
-          </AppText>
           <View style={styles.preview}>
             <View style={styles.badgeRow}>
               <Badge tone="green" label="Email auto" />
-              <Badge tone="blue" label="SMS via Messages" />
+              {template.preferSms ? (
+                <Badge tone="blue" label="SMS preferred" />
+              ) : (
+                <Badge tone="blue" label="SMS optional" />
+              )}
             </View>
             <AppText variant="body" style={styles.previewBody}>
               {previewBody}
@@ -121,8 +125,9 @@ const styles = StyleSheet.create({
   wrap: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
   },
   wrapLast: {
     borderBottomWidth: 0,
@@ -131,6 +136,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    minHeight: 44,
   },
   mainPress: {
     flex: 1,
@@ -145,13 +151,13 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     flexShrink: 0,
   },
   iconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   iconBtnInner: {
     flex: 1,
@@ -167,9 +173,6 @@ const styles = StyleSheet.create({
   expand: {
     marginTop: spacing.sm,
     gap: spacing.sm,
-  },
-  hint: {
-    color: colors.textMuted,
   },
   preview: {
     backgroundColor: colors.bg,
@@ -187,6 +190,7 @@ const styles = StyleSheet.create({
   previewBody: {
     fontSize: 14,
     lineHeight: 20,
+    color: colors.textPrimary,
   },
   previewMeta: {
     color: colors.textMuted,

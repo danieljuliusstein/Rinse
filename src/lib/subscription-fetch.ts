@@ -28,6 +28,9 @@ export async function fetchOrgSubscription(force = false): Promise<OrgSubscripti
       apple_original_transaction_id: record.apple_original_transaction_id
         ? String(record.apple_original_transaction_id)
         : undefined,
+      access_mode: record.access_mode ? String(record.access_mode) : undefined,
+      cancel_at_period_end: Boolean(record.cancel_at_period_end),
+      canceled_at: record.canceled_at ? String(record.canceled_at) : undefined,
     }
     cacheAt = now
     return cachedOrg
@@ -52,6 +55,9 @@ export async function activateFreePlan(): Promise<OrgSubscription | null> {
     plan: 'free',
     subscription_status: 'none',
     trial_ends_at: '',
+    access_mode: 'free',
+    cancel_at_period_end: false,
+    canceled_at: '',
   })
   clearOrgSubscriptionCache()
   return fetchOrgSubscription(true)

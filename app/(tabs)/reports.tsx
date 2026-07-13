@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { CaretRight, FileText, Receipt } from 'phosphor-react-native'
 import { Dimensions } from 'react-native'
 import Svg, { Rect } from 'react-native-svg'
@@ -32,15 +33,15 @@ import { buildWaterfallData } from '@/src/lib/reports-metrics'
 import { showError } from '@/src/lib/user-message'
 import { colors, spacing } from '@/src/theme/colors'
 
-const EXPENSE_LABELS: { key: keyof ReturnType<typeof computePLReport>['expenses']; label: string }[] = [
-  { key: 'supplies', label: 'Supplies' },
-  { key: 'travel', label: 'Travel' },
-  { key: 'equipment', label: 'Equipment' },
-  { key: 'marketing', label: 'Marketing' },
-  { key: 'labor', label: 'Labor' },
-  { key: 'overhead', label: 'Overhead' },
-  { key: 'business', label: 'Business' },
-  { key: 'other', label: 'Other' },
+const EXPENSE_LABELS: { key: keyof ReturnType<typeof computePLReport>['expenses']; labelKey: string }[] = [
+  { key: 'supplies', labelKey: 'business.expense.supplies' },
+  { key: 'travel', labelKey: 'business.expense.travel' },
+  { key: 'equipment', labelKey: 'business.expense.equipment' },
+  { key: 'marketing', labelKey: 'business.expense.marketing' },
+  { key: 'labor', labelKey: 'business.expense.labor' },
+  { key: 'overhead', labelKey: 'business.expense.overhead' },
+  { key: 'business', labelKey: 'business.expense.business' },
+  { key: 'other', labelKey: 'business.expense.other' },
 ]
 
 function StatCard({
@@ -82,6 +83,7 @@ function StatCard({
 }
 
 export default function ReportsScreen() {
+  const { t } = useTranslation()
   const dockPadding = useTabDockPadding()
   const router = useRouter()
   const [range, setRange] = useState<DateRangeKey | 'custom'>('this_month')
@@ -146,9 +148,10 @@ export default function ReportsScreen() {
 
   const rangeLabel = useMemo(() => {
     if (range === 'custom' && customStart && customEnd) return `${customStart} – ${customEnd}`
-    if (range === 'custom') return 'Custom range'
-    return REPORT_FILTER_CHIPS.find((c) => c.key === range)?.label ?? 'This month'
-  }, [range, customStart, customEnd])
+    if (range === 'custom') return t('business.custom')
+    const chip = REPORT_FILTER_CHIPS.find((c) => c.key === range)
+    return chip ? t(chip.labelKey) : t('business.ranges.this_month')
+  }, [range, customStart, customEnd, t])
 
   const arSummary = useMemo(() => computeArSummary(invoices), [invoices])
   const revenueGrowth = useMemo(() => growthPct(report.revenue, prior.revenue), [report.revenue, prior.revenue])
@@ -161,8 +164,8 @@ export default function ReportsScreen() {
   const searchQ = query.trim().toLowerCase()
   const matchedExpenseLabels = useMemo(() => {
     if (!searchQ) return EXPENSE_LABELS
-    return EXPENSE_LABELS.filter(({ label, key }) => label.toLowerCase().includes(searchQ) || key.includes(searchQ))
-  }, [searchQ])
+    return EXPENSE_LABELS.filter(({ labelKey, key }) => t(labelKey).toLowerCase().includes(searchQ) || key.includes(searchQ))
+  }, [searchQ, t])
 
   const matchedPeriodJobs = useMemo(() => {
     if (!searchQ) return periodJobs
@@ -228,8 +231,8 @@ export default function ReportsScreen() {
 
   return (
     <OperatorScreen
-      title="Business"
-      subtitle={`${rangeLabel} · ${report.jobCount} job${report.jobCount === 1 ? '' : 's'}`}
+      title={t('business.title')}
+      subtitle={`${rangeLabel} · ${report.jobCount} ${report.jobCount === 1 ? 'job' : 'jobs'}`}
       headerRight={
         <ModuleHeaderActions onSearchPress={toggleSearch} searchActive={searchActive} />
       }
@@ -239,7 +242,7 @@ export default function ReportsScreen() {
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search services, expenses, jobs…"
+          placeholder={t('business.searchPlaceholder')}
           autoCapitalize="none"
           autoCorrect={false}
           autoFocus
@@ -258,8 +261,8 @@ export default function ReportsScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
             <PillGroup
               options={[
-                ...REPORT_FILTER_CHIPS.map((c) => ({ value: c.key, label: c.label })),
-                { value: 'custom' as const, label: 'Custom' },
+                ...REPORT_FILTER_CHIPS.map((c) => ({ value: c.key, label: t(c.labelKey) })),
+                { value: 'custom' as const, label: t('business.custom') },
               ]}
               value={range}
               onChange={setRange}
@@ -272,14 +275,14 @@ export default function ReportsScreen() {
                 style={styles.dateInput}
                 value={customStart}
                 onChangeText={setCustomStart}
-                placeholder="Start YYYY-MM-DD"
+                placeholder={t('business.startDate')}
                 placeholderTextColor={colors.textMuted}
               />
               <TextInput
                 style={styles.dateInput}
                 value={customEnd}
                 onChangeText={setCustomEnd}
-                placeholder="End YYYY-MM-DD"
+                placeholder={t('business.endDate')}
                 placeholderTextColor={colors.textMuted}
               />
             </View>
@@ -287,7 +290,7 @@ export default function ReportsScreen() {
 
           <View style={[styles.hero, loss ? styles.heroLoss : styles.heroProfit]}>
             <AppText variant="sectionLabel" style={styles.heroLabel}>
-              {loss ? 'Net loss' : 'Net profit'}
+              {loss ? t('business.netLoss') : t('business.netProfit')}
             </AppText>
             <CurrencyAmount value={report.netProfit} variant="profit" size="hero" />
             {loss && report.revenue > 0 ? (
@@ -301,21 +304,21 @@ export default function ReportsScreen() {
 
           <View style={styles.statGrid}>
             <StatCard
-              label="Revenue"
+              label={t('business.revenue')}
               value={report.revenue}
               variant="revenue"
               sub={`${report.jobCount} jobs`}
               growth={revenueGrowth}
             />
             <StatCard
-              label="Expenses"
+              label={t('business.expenses')}
               value={report.totalExpenses}
               variant="expense"
               unsigned
               sub={`${expenseCategories} categories`}
             />
-            <StatCard label="Net profit" value={report.netProfit} variant="profit" sub="from jobs" />
-            <StatCard label="Avg job value" value={avgJob} variant="neutral" sub="per job" />
+            <StatCard label={t('business.netProfit')} value={report.netProfit} variant="profit" sub={t('business.fromJobs')} />
+            <StatCard label={t('business.avgJobValue')} value={avgJob} variant="neutral" sub={t('business.perJob')} />
           </View>
 
           {report.revenue > 0 ? (
@@ -327,31 +330,31 @@ export default function ReportsScreen() {
           <View style={styles.contextLinks}>
             <Pressable style={styles.contextLink} onPress={() => router.push('/(tabs)/invoices')}>
               <Receipt size={18} color={colors.textSecondary} />
-              <AppText variant="bodySemiBold">Invoices</AppText>
+              <AppText variant="bodySemiBold">{t('business.invoices')}</AppText>
               <CaretRight size={16} color={colors.textMuted} style={styles.contextCaret} />
             </Pressable>
             <Pressable style={styles.contextLink} onPress={() => router.push('/(tabs)/quotes')}>
               <FileText size={18} color={colors.textSecondary} />
-              <AppText variant="bodySemiBold">Quotes</AppText>
+              <AppText variant="bodySemiBold">{t('business.quotes')}</AppText>
               <CaretRight size={16} color={colors.textMuted} style={styles.contextCaret} />
             </Pressable>
           </View>
 
           <View style={styles.card}>
-            <AppText variant="sectionLabel">Revenue by service</AppText>
+            <AppText variant="sectionLabel">{t('business.revenueByService')}</AppText>
             <ReportRevenueByService jobs={matchedPeriodJobs} />
           </View>
 
           <View style={styles.card}>
-            <AppText variant="sectionLabel">Expense breakdown</AppText>
-            {matchedExpenseLabels.map(({ key, label }) => {
+            <AppText variant="sectionLabel">{t('business.expenseBreakdown')}</AppText>
+            {matchedExpenseLabels.map(({ key, labelKey }) => {
               const amount = report.expenses[key]
               if (amount <= 0) return null
               const barWidth = ((Dimensions.get('window').width - 64) * amount) / maxExpense
               return (
                 <View key={key} style={styles.expenseRow}>
                   <View style={styles.expenseMeta}>
-                    <AppText variant="caption">{label}</AppText>
+                    <AppText variant="caption">{t(labelKey)}</AppText>
                     <AppText variant="bodySemiBold">{fmt(amount)}</AppText>
                   </View>
                   <Svg width="100%" height={8}>
@@ -362,7 +365,7 @@ export default function ReportsScreen() {
             })}
             {searchQ && matchedExpenseLabels.every(({ key }) => report.expenses[key] <= 0) ? (
               <AppText variant="caption" style={styles.searchEmpty}>
-                No expenses match “{query.trim()}”.
+                {t('home.noMatch', { query: query.trim() })}
               </AppText>
             ) : null}
           </View>
@@ -395,8 +398,8 @@ export default function ReportsScreen() {
           </View>
 
           <View style={styles.exportRow}>
-            <PrimaryButton label="Export CSV" loading={exporting} onPress={() => void handleCsv()} style={styles.exportBtn} />
-            <SecondaryButton label="Export PDF" loading={exporting} onPress={() => void handlePdf()} style={styles.exportBtn} />
+            <PrimaryButton label={t('business.exportCsv')} loading={exporting} onPress={() => void handleCsv()} style={styles.exportBtn} />
+            <SecondaryButton label={t('business.exportPdf')} loading={exporting} onPress={() => void handlePdf()} style={styles.exportBtn} />
           </View>
         </ScrollView>
       )}

@@ -55,21 +55,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const healthy = await checkPocketBaseHealth()
-      if (!cancelled) setBackendHealthy(healthy)
+      try {
+        const healthy = await Promise.race([
+          checkPocketBaseHealth(),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 6000)),
+        ])
+        if (!cancelled) setBackendHealthy(healthy)
 
-      const restored = await auth.restoreAuth()
-      if (restored) {
-        const orgId = getOrganizationId()
-        if (orgId) openOrgOfflineDb(orgId)
-        void auth.refreshAuthOnce().then((ok) => {
-          if (!cancelled) setUser(ok ? auth.getCurrentUser() : null)
-        })
-      }
+        const restored = await Promise.race([
+          auth.restoreAuth(),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 4000)),
+        ])
+        if (restored) {
+          const orgId = getOrganizationId()
+          if (orgId) {
+            try {
+              openOrgOfflineDb(orgId)
+            } catch {
+              // Offline DB is best-effort during boot.
+            }
+          }
+          void auth.refreshAuthOnce().then((ok) => {
+            if (!cancelled) setUser(ok ? auth.getCurrentUser() : null)
+          })
+        }
 
-      if (!cancelled) {
-        setUser(restored ? auth.getCurrentUser() : null)
-        setLoading(false)
+        if (!cancelled) {
+          setUser(restored ? auth.getCurrentUser() : null)
+        }
+      } catch (err) {
+        console.warn('[auth] boot failed:', err instanceof Error ? err.message : err)
+        if (!cancelled) {
+          setBackendHealthy(false)
+          setUser(null)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
 

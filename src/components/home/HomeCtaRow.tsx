@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { FileText, PaperPlaneTilt, Plus } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui'
 import { colors, radii, spacing } from '@/src/theme/colors'
 
 export function HomeCtaRow() {
   const router = useRouter()
+  const { t } = useTranslation()
 
   return (
     <View style={styles.wrap}>
@@ -13,11 +15,11 @@ export function HomeCtaRow() {
         style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
         onPress={() => router.push('/invoices/new')}
         accessibilityRole="button"
-        accessibilityLabel="Send invoice"
+        accessibilityLabel={t('home.sendInvoice')}
       >
         <View style={styles.ctaInner}>
           <PaperPlaneTilt size={18} color="#fff" weight="fill" />
-          <AppText style={styles.primaryLabel}>Send invoice</AppText>
+          <AppText style={styles.primaryLabel}>{t('home.sendInvoice')}</AppText>
         </View>
       </Pressable>
 
@@ -26,21 +28,22 @@ export function HomeCtaRow() {
           style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
           onPress={() => router.push('/jobs/new')}
           accessibilityRole="button"
+          accessibilityLabel={t('home.newJob')}
         >
           <View style={styles.ctaInner}>
             <Plus size={18} color={colors.text} weight="bold" />
-            <AppText style={styles.secondaryLabel}>New job</AppText>
+            <AppText style={styles.secondaryLabel}>{t('home.newJob')}</AppText>
           </View>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
           onPress={() => router.push('/quotes/new')}
           accessibilityRole="button"
-          accessibilityLabel="New quote"
+          accessibilityLabel={t('home.newQuote')}
         >
           <View style={styles.ctaInner}>
             <FileText size={18} color={colors.text} weight="duotone" />
-            <AppText style={styles.secondaryLabel}>New quote</AppText>
+            <AppText style={styles.secondaryLabel}>{t('home.newQuote')}</AppText>
           </View>
         </Pressable>
       </View>

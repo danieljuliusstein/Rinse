@@ -77,7 +77,7 @@ export default function DeleteAccountScreen() {
             Deleting your account removes your business, clients, jobs, invoices, and all related data from Rinse.
           </AppText>
           <AppText variant="caption" style={styles.hint}>
-            Billing is managed at rinsehq.com — cancel any subscription there before deleting.
+            Billing is managed at rinsehq.com or Apple — cancel any subscription before deleting. Cancel alone leaves a read-only vault; delete permanently removes data.
           </AppText>
         </Card>
 

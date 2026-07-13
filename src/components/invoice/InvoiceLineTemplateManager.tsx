@@ -1,21 +1,32 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Pressable, StyleSheet, View } from 'react-native'
 import { Plus, Trash } from 'phosphor-react-native'
-import type { InvoiceLineTemplate } from '@rinse/core'
+import {
+  INVOICE_LINE_UNIT_OPTIONS,
+  formatBillingLineDetail,
+  lineAmount,
+  normalizeBillingLine,
+  type InvoiceLineTemplate,
+  type InvoiceLineUnit,
+} from '@rinse/core'
 import { BusinessFilledField } from '@/src/components/settings/BusinessFilledField'
-import { AppText } from '@/src/components/ui'
+import { AffixField } from '@/src/components/ui/AffixField'
+import { AppText, PillGroup } from '@/src/components/ui'
 import {
   deleteInvoiceLineTemplate,
   getInvoiceLineTemplates,
   saveInvoiceLineTemplate,
 } from '@/src/lib/invoice-line-templates-api'
+import { formatInvoiceMoney } from '@/src/lib/invoice-layout'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
 export function InvoiceLineTemplateManager() {
   const [templates, setTemplates] = useState<InvoiceLineTemplate[]>([])
   const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
+  const [quantity, setQuantity] = useState('1')
+  const [unitPrice, setUnitPrice] = useState('')
+  const [unit, setUnit] = useState<InvoiceLineUnit>('each')
   const [busy, setBusy] = useState(false)
 
   const refresh = useCallback(async () => {
@@ -26,14 +37,36 @@ export function InvoiceLineTemplateManager() {
     void refresh()
   }, [refresh])
 
+  const preview = normalizeBillingLine({
+    description: description.trim() || 'Line',
+    quantity: Number.parseFloat(quantity) || 1,
+    unit_price: Number.parseFloat(unitPrice) || 0,
+    unit,
+  })
+
   const handleAdd = async () => {
-    const parsed = Number(amount)
-    if (!description.trim() || !parsed || parsed <= 0) return
+    const qty = Number.parseFloat(quantity)
+    const price = Number.parseFloat(unitPrice)
+    if (!description.trim() || !(qty > 0) || !(price >= 0) || !(qty * price > 0)) return
     setBusy(true)
     try {
-      await saveInvoiceLineTemplate({ description: description.trim(), default_amount: parsed })
+      const line = normalizeBillingLine({
+        description: description.trim(),
+        quantity: qty,
+        unit_price: price,
+        unit,
+      })
+      await saveInvoiceLineTemplate({
+        description: line.description,
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        unit: line.unit,
+        default_amount: line.default_amount,
+      })
       setDescription('')
-      setAmount('')
+      setQuantity('1')
+      setUnitPrice('')
+      setUnit('each')
       await refresh()
     } catch (e) {
       Alert.alert('Could not save line', e instanceof Error ? e.message : 'Try again')
@@ -69,22 +102,41 @@ export function InvoiceLineTemplateManager() {
     <View style={styles.wrap}>
       <AppText style={styles.title}>Line item library</AppText>
       <AppText style={styles.lead}>
-        Reusable lines for multi-item invoices — add them when customizing before send.
+        Reusable qty × rate lines for quotes and invoices — e.g. 2.5 hr @ $50/hr.
       </AppText>
 
       <BusinessFilledField label="Description" value={description} onChangeText={setDescription} />
-      <BusinessFilledField
-        label="Default amount"
-        value={amount}
-        onChangeText={setAmount}
-        keyboardType="decimal-pad"
-        prefix="$"
+      <View style={styles.row}>
+        <View style={styles.qty}>
+          <BusinessFilledField
+            label="Qty"
+            value={quantity}
+            onChangeText={setQuantity}
+            keyboardType="decimal-pad"
+          />
+        </View>
+        <AffixField
+          label="Unit price"
+          value={unitPrice}
+          onChangeText={setUnitPrice}
+          keyboardType="decimal-pad"
+          style={styles.price}
+        />
+      </View>
+      <PillGroup
+        label="Unit"
+        options={INVOICE_LINE_UNIT_OPTIONS}
+        value={unit}
+        onChange={setUnit}
       />
+      <AppText variant="caption" style={styles.preview}>
+        Preview: {formatBillingLineDetail(preview) ?? 'Flat'} · {formatInvoiceMoney(lineAmount(preview))}
+      </AppText>
 
       <Pressable
         accessibilityRole="button"
         onPress={() => void handleAdd()}
-        disabled={busy || !description.trim() || !(Number(amount) > 0)}
+        disabled={busy || !description.trim() || !(lineAmount(preview) > 0)}
         style={({ pressed }) => [styles.addBtn, pressed ? styles.addBtnPressed : null]}
       >
         <Plus size={16} color={colors.textPrimary} weight="bold" />
@@ -93,23 +145,28 @@ export function InvoiceLineTemplateManager() {
 
       {templates.length > 0 ? (
         <View style={styles.list}>
-          {templates.map((template) => (
-            <View key={template.id} style={styles.row}>
-              <View style={styles.rowCopy}>
-                <AppText variant="bodySemiBold">{template.description}</AppText>
-                <AppText variant="caption" style={styles.amount}>
-                  ${template.default_amount}
-                </AppText>
+          {templates.map((template) => {
+            const line = normalizeBillingLine(template)
+            return (
+              <View key={template.id} style={styles.rowItem}>
+                <View style={styles.rowCopy}>
+                  <AppText variant="bodySemiBold">{line.description}</AppText>
+                  <AppText variant="caption" style={styles.amount}>
+                    {formatBillingLineDetail(line)
+                      ? `${formatBillingLineDetail(line)} · ${formatInvoiceMoney(lineAmount(line))}`
+                      : formatInvoiceMoney(lineAmount(line))}
+                  </AppText>
+                </View>
+                <Pressable
+                  accessibilityLabel={`Delete ${template.description}`}
+                  onPress={() => handleDelete(template)}
+                  style={styles.deleteBtn}
+                >
+                  <Trash size={18} color={colors.danger} />
+                </Pressable>
               </View>
-              <Pressable
-                accessibilityLabel={`Delete ${template.description}`}
-                onPress={() => handleDelete(template)}
-                style={styles.deleteBtn}
-              >
-                <Trash size={18} color={colors.danger} />
-              </Pressable>
-            </View>
-          ))}
+            )
+          })}
         </View>
       ) : (
         <AppText style={styles.empty}>No saved lines yet.</AppText>
@@ -132,6 +189,19 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: spacing.xs,
   },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  qty: {
+    width: 88,
+  },
+  price: {
+    flex: 1,
+  },
+  preview: {
+    color: colors.textMuted,
+  },
   list: {
     marginTop: spacing.sm,
     borderRadius: 12,
@@ -139,7 +209,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
   },
-  row: {
+  rowItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

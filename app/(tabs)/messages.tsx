@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import {
   Alert,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,7 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AutoMessageCard } from '@/src/components/messages/AutoMessageCard'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
@@ -36,13 +37,19 @@ import {
 } from '@/src/lib/messages-api'
 import { formatSentAt } from '@/src/lib/format-dates'
 import { useSafeBack } from '@/src/lib/safe-go-back'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors, layout, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
 type MessagesTab = 'all' | 'auto'
 
+function titleCase(value: string): string {
+  if (!value) return value
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 export default function MessagesScreen() {
   const goBack = useSafeBack()
+  const router = useRouter()
   const dockPadding = useTabDockPadding()
   const insets = useSafeAreaInsets()
   const [tab, setTab] = useState<MessagesTab>('all')
@@ -87,7 +94,7 @@ export default function MessagesScreen() {
 
   const openEditor = (tpl: AutoMessageTemplate) => {
     setEditing(tpl)
-    setEditBody(tpl.emailBody)
+    setEditBody((tpl.preferSms ? tpl.smsBody : undefined)?.trim() || tpl.emailBody)
   }
 
   const saveEditor = async () => {
@@ -95,7 +102,13 @@ export default function MessagesScreen() {
     setSavingTemplate(true)
     try {
       await persistTemplates(
-        templates.map((t) => (t.id === editing.id ? { ...t, emailBody: editBody } : t)),
+        templates.map((t) => {
+          if (t.id !== editing.id) return t
+          if (t.preferSms) {
+            return { ...t, smsBody: editBody, emailBody: t.emailBody || editBody }
+          }
+          return { ...t, emailBody: editBody }
+        }),
       )
       setEditing(null)
     } finally {
@@ -103,8 +116,18 @@ export default function MessagesScreen() {
     }
   }
 
+  const sheetPad = Math.max(insets.bottom, spacing.md) + spacing.sm
+
   return (
-    <OperatorScreen customHeader={<SettingsHeader title="Messages" onBack={goBack} />}>
+    <OperatorScreen
+      customHeader={
+        <SettingsHeader
+          title="Messages"
+          subtitle="Auto emails, SMS, and sent history"
+          onBack={goBack}
+        />
+      }
+    >
       {loading ? (
         <ScreenLoading variant="list" />
       ) : (
@@ -114,37 +137,49 @@ export default function MessagesScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />
           }
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <PillGroup
-            options={[
-              { value: 'all', label: 'All messages' },
-              { value: 'auto', label: 'Auto messages' },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
+          <View style={styles.pills}>
+            <PillGroup
+              options={[
+                { value: 'all', label: 'All messages' },
+                { value: 'auto', label: 'Auto messages' },
+              ]}
+              value={tab}
+              onChange={setTab}
+            />
+          </View>
 
           {tab === 'all' ? (
             sent.length === 0 ? (
-              <EmptyState
-                illustration="messages"
-                title="No messages sent yet"
-                description="Turn on auto messages for email, or text clients from their profile or a job."
-                actionLabel="Set up auto messages"
-                onAction={() => setTab('auto')}
-              />
+              <View style={styles.emptyWrap}>
+                <EmptyState
+                  illustration="messages"
+                  title="No messages sent yet"
+                  description="Turn on auto messages for email/SMS, or text clients from a job."
+                  actionLabel="Set up auto messages"
+                  onAction={() => setTab('auto')}
+                />
+              </View>
             ) : (
-              <SectionGroup title="Sent">
-                {sent.map((msg) => (
+              <SectionGroup title="Sent" meta={`${sent.length}`}>
+                {sent.map((msg, index) => (
                   <ListRow
                     key={msg.id}
                     title={msg.client_name}
                     subtitle={msg.preview || msg.body.slice(0, 80)}
                     meta={formatSentAt(msg.sent_at)}
+                    grouped
+                    isLast={index === sent.length - 1}
                     badges={
                       <View style={styles.badgeRow}>
-                        <Badge tone={msg.channel === 'sms' ? 'blue' : 'green'} label={msg.channel} />
-                        <Badge tone={msg.status === 'failed' ? 'red' : 'green'} label={msg.status} />
+                        <Badge tone={msg.channel === 'sms' ? 'blue' : 'green'} label={titleCase(msg.channel)} />
+                        <Badge
+                          tone={
+                            msg.status === 'failed' ? 'red' : msg.status === 'queued' ? 'blue' : 'green'
+                          }
+                          label={titleCase(msg.status)}
+                        />
                       </View>
                     }
                     onPress={() => setSelectedSent(msg)}
@@ -153,8 +188,15 @@ export default function MessagesScreen() {
               </SectionGroup>
             )
           ) : (
-            <SectionGroup title="Templates">
-              <View style={styles.templateList}>
+            <>
+              <SectionGroup title="Delivery">
+                <ListRow
+                  title="Quiet hours"
+                  subtitle="Pause auto emails overnight in your timezone"
+                  onPress={() => router.push('/settings/quiet-hours')}
+                />
+              </SectionGroup>
+              <SectionGroup title="Templates" meta={`${templates.filter((t) => t.enabled).length} on`}>
                 {templates.map((tpl, index) => (
                   <AutoMessageCard
                     key={tpl.id}
@@ -168,8 +210,8 @@ export default function MessagesScreen() {
                     isLast={index === templates.length - 1}
                   />
                 ))}
-              </View>
-            </SectionGroup>
+              </SectionGroup>
+            </>
           )}
         </ScrollView>
       )}
@@ -182,24 +224,26 @@ export default function MessagesScreen() {
       >
         <View style={styles.modalRoot}>
           <Pressable style={styles.scrim} onPress={() => setEditing(null)} accessibilityLabel="Close" />
-          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.md }]}>
-            <View style={styles.handle} />
-            <AppText variant="h2">{editing?.name}</AppText>
-            <AppText variant="caption" style={styles.muted}>
-              Use {'{{name}}'}, {'{{package}}'}, {'{{date}}'}, {'{{time}}'}
-            </AppText>
-            <TextInput
-              value={editBody}
-              onChangeText={setEditBody}
-              multiline
-              style={styles.editor}
-              textAlignVertical="top"
-              placeholder="Message body"
-              placeholderTextColor={colors.textDim}
-            />
-            <View style={styles.modalActions}>
-              <PrimaryButton label="Save template" onPress={() => void saveEditor()} loading={savingTemplate} />
-              <SecondaryButton label="Cancel" onPress={() => setEditing(null)} />
+          <View style={[styles.modalColumn, Platform.OS === 'web' && styles.modalColumnWeb]}>
+            <View style={[styles.modalSheet, { paddingBottom: sheetPad }]}>
+              <View style={styles.handle} />
+              <AppText variant="h2">{editing?.name}</AppText>
+              <AppText variant="caption" style={styles.muted}>
+                {editing?.preferSms ? 'SMS template' : 'Email template'}
+              </AppText>
+              <TextInput
+                value={editBody}
+                onChangeText={setEditBody}
+                multiline
+                style={styles.editor}
+                textAlignVertical="top"
+                placeholder="Message body"
+                placeholderTextColor={colors.textDim}
+              />
+              <View style={styles.modalActions}>
+                <PrimaryButton label="Save template" onPress={() => void saveEditor()} loading={savingTemplate} />
+                <SecondaryButton label="Cancel" onPress={() => setEditing(null)} />
+              </View>
             </View>
           </View>
         </View>
@@ -217,38 +261,48 @@ export default function MessagesScreen() {
             onPress={() => setSelectedSent(null)}
             accessibilityLabel="Close"
           />
-          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.md }]}>
-            <View style={styles.handle} />
-            <AppText variant="h2">{selectedSent?.client_name}</AppText>
-            <View style={styles.badgeRow}>
-              {selectedSent ? (
-                <>
-                  <Badge
-                    tone={selectedSent.channel === 'sms' ? 'blue' : 'green'}
-                    label={selectedSent.channel}
-                  />
-                  <Badge
-                    tone={selectedSent.status === 'failed' ? 'red' : 'green'}
-                    label={selectedSent.status}
-                  />
-                </>
-              ) : null}
-            </View>
-            <AppText variant="caption" style={styles.muted}>
-              {selectedSent ? formatSentAt(selectedSent.sent_at) : ''}
-            </AppText>
-            <ScrollView style={styles.sentBodyScroll} showsVerticalScrollIndicator={false}>
-              <AppText variant="body">{selectedSent?.body || selectedSent?.preview}</AppText>
-            </ScrollView>
-            <View style={styles.modalActions}>
-              <PrimaryButton
-                label="Share message"
-                onPress={() => {
-                  if (!selectedSent?.body) return
-                  void Share.share({ message: selectedSent.body })
-                }}
-              />
-              <SecondaryButton label="Close" onPress={() => setSelectedSent(null)} />
+          <View style={[styles.modalColumn, Platform.OS === 'web' && styles.modalColumnWeb]}>
+            <View style={[styles.modalSheet, { paddingBottom: sheetPad }]}>
+              <View style={styles.handle} />
+              <AppText variant="h2">{selectedSent?.client_name}</AppText>
+              <View style={styles.badgeRow}>
+                {selectedSent ? (
+                  <>
+                    <Badge
+                      tone={selectedSent.channel === 'sms' ? 'blue' : 'green'}
+                      label={titleCase(selectedSent.channel)}
+                    />
+                    <Badge
+                      tone={
+                        selectedSent.status === 'failed'
+                          ? 'red'
+                          : selectedSent.status === 'queued'
+                            ? 'blue'
+                            : 'green'
+                      }
+                      label={titleCase(selectedSent.status)}
+                    />
+                  </>
+                ) : null}
+              </View>
+              <AppText variant="caption" style={styles.muted}>
+                {selectedSent ? formatSentAt(selectedSent.sent_at) : ''}
+              </AppText>
+              <ScrollView style={styles.sentBodyScroll} showsVerticalScrollIndicator={false}>
+                <AppText variant="body" style={styles.sentBody}>
+                  {selectedSent?.body || selectedSent?.preview}
+                </AppText>
+              </ScrollView>
+              <View style={styles.modalActions}>
+                <PrimaryButton
+                  label="Share message"
+                  onPress={() => {
+                    if (!selectedSent?.body) return
+                    void Share.share({ message: selectedSent.body })
+                  }}
+                />
+                <SecondaryButton label="Close" onPress={() => setSelectedSent(null)} />
+              </View>
             </View>
           </View>
         </View>
@@ -259,15 +313,24 @@ export default function MessagesScreen() {
 
 const styles = StyleSheet.create({
   scroll: {
+    paddingTop: spacing.sm,
     gap: spacing.md,
+  },
+  pills: {
+    marginBottom: spacing.xs,
+  },
+  emptyWrap: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    marginTop: spacing.xs,
   },
   badgeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-  },
-  templateList: {
-    marginHorizontal: -spacing.md,
   },
   muted: {
     color: colors.textSecondary,
@@ -275,6 +338,13 @@ const styles = StyleSheet.create({
   modalRoot: {
     flex: 1,
     justifyContent: 'flex-end',
+    alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
+  },
+  modalColumn: {
+    width: '100%',
+  },
+  modalColumnWeb: {
+    maxWidth: layout.phoneColumnWidth,
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
@@ -288,6 +358,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     gap: spacing.sm,
     maxHeight: '85%',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
   },
   handle: {
     alignSelf: 'center',
@@ -304,6 +376,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.md,
     fontSize: 15,
+    lineHeight: 22,
     fontFamily: fonts.body,
     color: colors.textPrimary,
     backgroundColor: colors.bg,
@@ -314,5 +387,8 @@ const styles = StyleSheet.create({
   },
   sentBodyScroll: {
     maxHeight: 280,
+  },
+  sentBody: {
+    lineHeight: 22,
   },
 })

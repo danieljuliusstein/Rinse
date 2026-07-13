@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { PencilSimple, Plus } from 'phosphor-react-native'
 import type { DamageRecord, Vehicle } from '@rinse/core'
+import { CarDamageMap, OFF_MAP_AREAS } from '@/src/components/crm/CarDamageMap'
 import { DamageListRow } from '@/src/components/crm/DamageListRow'
 import { FormField } from '@/src/components/FormField'
 import { DetailHeaderActions } from '@/src/components/DetailHeaderActions'
@@ -12,11 +12,11 @@ import {
   AppText,
   EmptyState,
   ListRow,
-  PillGroup,
   PrimaryButton,
   SecondaryButton,
   SectionGroup,
 } from '@/src/components/ui'
+import { BackHeaderButton } from '@/src/components/ui/BackHeaderButton'
 import { LoadingState } from '@/src/components/ui/ScreenLoading'
 import { IconHeaderButton } from '@/src/components/ui/IconHeaderButton'
 import {
@@ -25,24 +25,11 @@ import {
   getVehicle,
   vehicleDisplayName,
 } from '@/src/lib/damage-api'
-import { persistPhotoToSandbox } from '@/src/lib/photo-sandbox'
+import { photoMimeType, photoUploadFilename } from '@/src/lib/form-data-file'
+import { launchCameraSafe, launchLibrarySafe, prepareLocalPhotoUri } from '@/src/lib/pick-image'
 import { normalizeVehicleColorHex, vehicleIconColorOnPaint } from '@/src/lib/vehicle-color'
 import { VehicleTypeIcon } from '@/src/lib/vehicle-type-icons'
 import { colors, radii, shadows, spacing, webInlinePressableReset } from '@/src/theme/colors'
-
-const DAMAGE_AREAS = [
-  'Front bumper',
-  'Hood',
-  'Driver door',
-  'Passenger door',
-  'Roof',
-  'Rear bumper',
-  'Trunk',
-  'Tailgate',
-  'Wheels',
-  'Interior',
-  'Other',
-] as const
 
 function capitalizeType(type: string): string {
   return type.charAt(0).toUpperCase() + type.slice(1)
@@ -180,6 +167,7 @@ export default function VehicleProfileScreen() {
       <AddDamageModal
         visible={showAdd}
         vehicleId={vehicle.id}
+        markedAreas={records.map((r) => r.area)}
         onClose={() => setShowAdd(false)}
         onSaved={(doc) => {
           setRecords((prev) => [doc, ...prev])
@@ -193,62 +181,63 @@ export default function VehicleProfileScreen() {
 function AddDamageModal({
   visible,
   vehicleId,
+  markedAreas,
   onClose,
   onSaved,
 }: {
   visible: boolean
   vehicleId: string
+  markedAreas: string[]
   onClose: () => void
   onSaved: (doc: DamageRecord) => void
 }) {
   const [photoUri, setPhotoUri] = useState<string | null>(null)
-  const [area, setArea] = useState<string>(DAMAGE_AREAS[0])
+  const [photoMime, setPhotoMime] = useState('image/jpeg')
+  const [area, setArea] = useState<string | null>(null)
   const [customArea, setCustomArea] = useState('')
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [mapCalibrating, setMapCalibrating] = useState(false)
 
-  const resolvedArea = area === 'Other' ? customArea.trim() : area
+  const resolvedArea = area === 'Other' ? customArea.trim() : (area ?? '')
+  const areaReady = Boolean(resolvedArea)
 
   const reset = () => {
     setPhotoUri(null)
-    setArea(DAMAGE_AREAS[0])
+    setPhotoMime('image/jpeg')
+    setArea(null)
     setCustomArea('')
     setNote('')
+    setMapCalibrating(false)
   }
 
   const pickPhoto = async (source: 'camera' | 'library') => {
-    const perm =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (!perm.granted) {
-      Alert.alert('Permission needed', 'Enable camera or photo access in Settings.')
-      return
-    }
     const result =
       source === 'camera'
-        ? await ImagePicker.launchCameraAsync({ quality: 0.85 })
-        : await ImagePicker.launchImageLibraryAsync({ quality: 0.85 })
-    if (!result.canceled && result.assets[0]) {
-      setPhotoUri(result.assets[0].uri)
+        ? await launchCameraSafe({ quality: 0.85 })
+        : await launchLibrarySafe({ quality: 0.85 })
+    if (result && !result.canceled && result.assets[0]) {
+      const asset = result.assets[0]
+      setPhotoUri(asset.uri)
+      setPhotoMime(asset.mimeType ?? 'image/jpeg')
     }
   }
 
   const handleSave = async () => {
-    if (!photoUri) {
-      Alert.alert('Photo required', 'Add a damage photo before saving.')
+    if (!areaReady) {
+      Alert.alert('Area required', 'Tap a dot on the car, or choose Interior / Other.')
       return
     }
-    if (!resolvedArea) {
-      Alert.alert('Area required', 'Select or enter a damage area.')
+    if (!photoUri) {
+      Alert.alert('Photo required', 'Add a damage photo before saving.')
       return
     }
 
     setSaving(true)
     try {
-      const ext = photoUri.split('.').pop() ?? 'jpg'
-      const filename = `damage-${Date.now()}.${ext}`
-      const sandboxUri = await persistPhotoToSandbox(photoUri, `damage/${vehicleId}`, filename)
+      const mime = photoMimeType(photoUri, photoMime)
+      const filename = photoUploadFilename(photoUri)
+      const sandboxUri = await prepareLocalPhotoUri(photoUri, `damage/${vehicleId}`, filename)
       const today = new Date().toISOString().split('T')[0]
       const doc = await createDamageDoc(
         {
@@ -260,48 +249,128 @@ function AddDamageModal({
         },
         sandboxUri,
         filename,
-        'image/jpeg',
+        mime,
       )
       reset()
       onSaved(doc)
     } catch (e) {
-      Alert.alert('Save failed', e instanceof Error ? e.message : 'Try again')
+      const msg =
+        e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string'
+          ? (e as { message: string }).message
+          : e instanceof Error
+            ? e.message
+            : 'Try again'
+      Alert.alert('Save failed', msg)
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.modal}>
-        <AppText variant="h2" style={styles.modalTitle}>
-          Add damage
-        </AppText>
-        {!photoUri ? (
-          <View style={styles.pickRow}>
-            <SecondaryButton label="Camera" onPress={() => void pickPhoto('camera')} />
-            <SecondaryButton label="Library" onPress={() => void pickPhoto('library')} />
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle={mapCalibrating ? 'fullScreen' : 'pageSheet'}
+      onRequestClose={onClose}
+    >
+      <ScrollView
+        style={styles.modal}
+        contentContainerStyle={styles.modalContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!mapCalibrating}
+        bounces={!mapCalibrating}
+        nestedScrollEnabled={false}
+      >
+        <View style={styles.modalHeader}>
+          <View style={styles.modalHeaderSide}>
+            <BackHeaderButton
+              onPress={() => {
+                reset()
+                onClose()
+              }}
+            />
+          </View>
+          <View style={styles.modalHeaderTitle} pointerEvents="none">
+            <AppText variant="h2" style={styles.modalTitle} numberOfLines={1}>
+              Add damage
+            </AppText>
+          </View>
+          <View style={styles.modalHeaderSide} />
+        </View>
+
+        <CarDamageMap
+          selectedArea={area}
+          onSelectArea={(next) => {
+            setArea(next)
+            if (next !== 'Other') setCustomArea('')
+          }}
+          markedAreas={markedAreas}
+          onCalibrateChange={setMapCalibrating}
+        />
+
+        <View style={styles.offMapRow}>
+          {OFF_MAP_AREAS.map((opt) => {
+            const on = area === opt
+            return (
+              <Pressable
+                key={opt}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                onPress={() => setArea(opt)}
+                style={[styles.offMapPill, webInlinePressableReset, on ? styles.offMapPillOn : null]}
+              >
+                <AppText variant="bodySemiBold" style={on ? styles.offMapLabelOn : styles.offMapLabel}>
+                  {opt}
+                </AppText>
+              </Pressable>
+            )
+          })}
+        </View>
+
+        {area === 'Other' ? (
+          <FormField label="Custom area" value={customArea} onChangeText={setCustomArea} placeholder="e.g. Tailgate" />
+        ) : null}
+
+        {areaReady ? (
+          <View style={styles.docBlock}>
+            <AppText variant="caption" style={styles.docLabel}>
+              Documentation
+            </AppText>
+            {photoUri ? (
+              <View style={styles.photoPreview}>
+                <Image source={{ uri: photoUri }} style={styles.photoImage} resizeMode="cover" />
+                <Pressable
+                  style={[styles.retake, webInlinePressableReset]}
+                  onPress={() => setPhotoUri(null)}
+                  accessibilityRole="button"
+                >
+                  <AppText variant="caption" style={styles.retakeLabel}>
+                    Change photo
+                  </AppText>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.pickRow}>
+                <SecondaryButton label="Camera" onPress={() => void pickPhoto('camera')} />
+                <SecondaryButton label="Library" onPress={() => void pickPhoto('library')} />
+              </View>
+            )}
+            <FormField label="Note" value={note} onChangeText={setNote} multiline placeholder="Optional details" />
           </View>
         ) : null}
-        <PillGroup
-          label="Area"
-          options={DAMAGE_AREAS.map((a) => ({ value: a, label: a }))}
-          value={area}
-          onChange={setArea}
-        />
-        {area === 'Other' ? (
-          <FormField label="Custom area" value={customArea} onChangeText={setCustomArea} />
-        ) : null}
-        <FormField label="Note" value={note} onChangeText={setNote} multiline placeholder="Optional details" />
-        <PrimaryButton label="Save damage doc" loading={saving} onPress={() => void handleSave()} />
-        <SecondaryButton
-          label="Cancel"
-          onPress={() => {
-            reset()
-            onClose()
-          }}
-        />
-      </View>
+
+        <View style={styles.footerActions}>
+          <PrimaryButton label="Save damage doc" loading={saving} onPress={() => void handleSave()} />
+          <SecondaryButton
+            label="Cancel"
+            onPress={() => {
+              reset()
+              onClose()
+            }}
+          />
+        </View>
+      </ScrollView>
     </Modal>
   )
 }
@@ -373,14 +442,103 @@ const styles = StyleSheet.create({
   modal: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  modalContent: {
     padding: spacing.md,
     gap: spacing.sm,
+    paddingBottom: spacing.xl,
+  },
+  /** Equal side rails keep the title optically centered when Back is present. */
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 44,
+    marginBottom: spacing.xs,
+  },
+  modalHeaderSide: {
+    width: 88,
+    minWidth: 88,
+    flexGrow: 0,
+    flexShrink: 0,
+    justifyContent: 'center',
+  },
+  modalHeaderTitle: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 0,
   },
   modalTitle: {
-    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  offMapRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  offMapPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  offMapPillOn: {
+    backgroundColor: colors.greenSoft,
+    borderColor: colors.greenBorder,
+  },
+  offMapLabel: {
+    color: colors.textSecondary,
+    fontSize: 13,
+  },
+  offMapLabelOn: {
+    color: colors.greenText,
+    fontSize: 13,
+  },
+  docBlock: {
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  docLabel: {
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    fontSize: 11,
+  },
+  photoPreview: {
+    height: 140,
+    borderRadius: radii.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  retake: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    borderRadius: radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  retakeLabel: {
+    color: '#fff',
+    fontSize: 11,
   },
   pickRow: {
     gap: spacing.sm,
-    marginBottom: spacing.md,
+  },
+  footerActions: {
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
 })

@@ -1,29 +1,36 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
-import { DetailOverlayPanel } from '@/src/components/detail/DetailOverlayPanel'
+import {
+  DetailOverlayContext,
+  type DetailOverlayTarget,
+} from '@/src/providers/detail-overlay-context'
 
-export type DetailOverlayTarget =
-  | { kind: 'job'; id: string }
-  | { kind: 'client'; id: string }
-  | { kind: 'quote'; id: string; onRefresh?: () => void }
+export type { DetailOverlayTarget } from '@/src/providers/detail-overlay-context'
+export { useDetailOverlay } from '@/src/providers/detail-overlay-context'
 
 interface DetailOverlayState {
   target: DetailOverlayTarget
 }
 
-interface DetailOverlayContextValue {
-  open: (target: DetailOverlayTarget) => void
-  close: () => void
-  isOpen: boolean
+/**
+ * Lazy-require the panel so provider ↔ panel ↔ navigation never forms a
+ * Metro require cycle (which left context hooks uninitialized and blanked the tree).
+ */
+function DetailOverlayPanelLazy({
+  target,
+  onClose,
+}: {
+  target: DetailOverlayTarget
+  onClose: () => void
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { DetailOverlayPanel } = require('@/src/components/detail/DetailOverlayPanel') as typeof import('@/src/components/detail/DetailOverlayPanel')
+  return <DetailOverlayPanel target={target} onClose={onClose} />
 }
-
-const DetailOverlayContext = createContext<DetailOverlayContextValue | null>(null)
 
 export function DetailOverlayProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DetailOverlayState | null>(null)
@@ -46,19 +53,7 @@ export function DetailOverlayProvider({ children }: { children: ReactNode }) {
   return (
     <DetailOverlayContext.Provider value={value}>
       {children}
-      {state ? <DetailOverlayPanel target={state.target} onClose={close} /> : null}
+      {state ? <DetailOverlayPanelLazy target={state.target} onClose={close} /> : null}
     </DetailOverlayContext.Provider>
   )
-}
-
-export function useDetailOverlay() {
-  const ctx = useContext(DetailOverlayContext)
-  if (!ctx) {
-    return {
-      open: () => {},
-      close: () => {},
-      isOpen: false,
-    }
-  }
-  return ctx
 }

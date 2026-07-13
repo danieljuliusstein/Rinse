@@ -1,9 +1,8 @@
+import { formatLiabilityTimestamp, liabilityTimestamp, type DamageRecord } from '@rinse/core'
 import { Image, StyleSheet } from 'react-native'
 import { Image as ImageIcon } from 'phosphor-react-native'
-import type { DamageRecord } from '@rinse/core'
 import { AppText } from '@/src/components/ui/AppText'
 import { ListRow } from '@/src/components/ui/ListRow'
-import { formatJobDate } from '@/src/lib/format-dates'
 import { colors } from '@/src/theme/colors'
 
 interface DamageListRowProps {
@@ -20,6 +19,13 @@ export function DamageListRow({ damage, onPress, grouped = true, isLast = false 
     <ImageIcon size={20} color={colors.amber} weight="duotone" />
   )
 
+  const stamped = liabilityTimestamp(damage)
+  const trailingLabel = stamped
+    ? formatLiabilityTimestamp(stamped)
+    : damage.uploaded_at
+      ? formatLiabilityTimestamp(damage.uploaded_at)
+      : 'Uploading…'
+
   return (
     <ListRow
       grouped={grouped}
@@ -29,11 +35,9 @@ export function DamageListRow({ damage, onPress, grouped = true, isLast = false 
       title={damage.area}
       subtitle={damage.note || undefined}
       trailing={
-        damage.date ? (
-          <AppText variant="caption" style={styles.date}>
-            {formatJobDate(damage.date)}
-          </AppText>
-        ) : null
+        <AppText variant="caption" style={styles.date}>
+          {trailingLabel}
+        </AppText>
       }
       onPress={onPress}
     />
@@ -49,5 +53,7 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 11,
     color: colors.textMuted,
+    maxWidth: 110,
+    textAlign: 'right',
   },
 })

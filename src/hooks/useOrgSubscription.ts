@@ -5,6 +5,7 @@ import {
   isFoundingMember,
   isSubscribedOnStripe,
   isSubscriptionActive,
+  isVaultAccess,
   trialDaysLeft,
   type OrgSubscription,
 } from '@/src/lib/subscription-types'
@@ -48,12 +49,14 @@ export function useOrgSubscription() {
   const active = org ? isSubscriptionActive(org) : true
   const daysLeft = org ? trialDaysLeft(org) : null
   const subscribed = isSubscribedOnStripe(org)
-  const lapsed = !loading && !founding && !active
+  const vault = !loading && isVaultAccess(org)
+  const lapsed = !loading && !founding && (!active || vault)
 
   const showTrialBanner =
     !loading &&
     !founding &&
     !subscribed &&
+    !vault &&
     daysLeft != null &&
     Number.isFinite(daysLeft) &&
     daysLeft <= 7
@@ -64,6 +67,7 @@ export function useOrgSubscription() {
     founding,
     active,
     lapsed,
+    vault,
     daysLeft,
     subscribed,
     showTrialBanner,

@@ -32,6 +32,7 @@ function mapClient(record: Record<string, unknown>): Client {
     address: record.address ? String(record.address) : undefined,
     lead_source: record.lead_source ? String(record.lead_source) : undefined,
     notes: record.notes ? String(record.notes) : undefined,
+    parent_client_id: record.parent_client_id ? String(record.parent_client_id) : undefined,
     created: record.created ? String(record.created) : undefined,
   }
 }
@@ -60,6 +61,7 @@ function mapJob(record: Record<string, unknown>, expand?: Record<string, unknown
     id: String(record.id),
     date: String(record.date ?? ''),
     start_time: record.start_time ? String(record.start_time) : undefined,
+    arrival_window_end: record.arrival_window_end ? String(record.arrival_window_end) : undefined,
     hours_worked: Number(record.hours_worked ?? 0),
     location_type: (record.location_type as JobWithRelations['location_type']) ?? 'mobile',
     package_id: String(record.package_id ?? ''),
@@ -78,6 +80,12 @@ function mapJob(record: Record<string, unknown>, expand?: Record<string, unknown
     notes: record.notes ? String(record.notes) : undefined,
     photo_count: Number(record.photo_count ?? 0),
     invoice_id: record.invoice_id ? String(record.invoice_id) : undefined,
+    inspection_completed_at: record.inspection_completed_at
+      ? String(record.inspection_completed_at)
+      : undefined,
+    inspection_vehicle_id: record.inspection_vehicle_id
+      ? String(record.inspection_vehicle_id)
+      : undefined,
     created: record.created ? String(record.created) : undefined,
     updated: record.updated ? String(record.updated) : undefined,
   }
@@ -229,6 +237,7 @@ export async function createClient(input: ClientFormValues): Promise<Client> {
     address: input.address,
     lead_source: input.lead_source,
     notes: input.notes,
+    parent_client_id: input.parent_client_id?.trim() || undefined,
   }
 
   const mirrorData: Record<string, unknown> = {
@@ -239,6 +248,7 @@ export async function createClient(input: ClientFormValues): Promise<Client> {
     email: payload.email ?? '',
     address: payload.address ?? '',
     notes: payload.notes ?? '',
+    parent_client_id: payload.parent_client_id ?? '',
   }
 
   const result = await executeWrite({
@@ -257,6 +267,7 @@ export async function createClient(input: ClientFormValues): Promise<Client> {
         notes: payload.notes ?? '',
         tags: [],
         ...(payload.lead_source ? { lead_source: payload.lead_source } : {}),
+        ...(payload.parent_client_id ? { parent_client_id: payload.parent_client_id } : {}),
       })
       return mapClient(created as Record<string, unknown>)
     },
@@ -282,6 +293,10 @@ export async function updateClient(id: string, input: Partial<ClientFormValues>)
     address: input.address ?? existing.address,
     lead_source: input.lead_source ?? existing.lead_source,
     notes: input.notes ?? existing.notes,
+    parent_client_id:
+      input.parent_client_id !== undefined
+        ? input.parent_client_id.trim() || undefined
+        : existing.parent_client_id,
   }
 
   const mirrorData: Record<string, unknown> = {
@@ -304,6 +319,7 @@ export async function updateClient(id: string, input: Partial<ClientFormValues>)
         email: merged.email ?? '',
         address: merged.address ?? '',
         notes: merged.notes ?? '',
+        parent_client_id: merged.parent_client_id ?? '',
         ...(merged.lead_source ? { lead_source: merged.lead_source } : {}),
       })
       return mapClient(updated as Record<string, unknown>)
@@ -431,6 +447,12 @@ export async function updateJob(id: string, data: JobEditData): Promise<JobWithR
       if (data.vehicleType !== undefined) patch.vehicle_type = data.vehicleType
       if (data.packageId !== undefined) patch.package_id = data.packageId
       if (data.hours_worked !== undefined) patch.hours_worked = data.hours_worked
+      if (data.inspection_completed_at !== undefined) {
+        patch.inspection_completed_at = data.inspection_completed_at
+      }
+      if (data.inspection_vehicle_id !== undefined) {
+        patch.inspection_vehicle_id = data.inspection_vehicle_id
+      }
       const updated = await pb.collection('jobs').update(id, patch)
       return mapJob(updated as Record<string, unknown>)
     },
@@ -522,6 +544,11 @@ export async function completeJob(id: string, suppliesUsed?: JobWithRelations['s
     recurrence_cadence: existing.recurrence_cadence,
     recurrence_anchor_date: existing.recurrence_anchor_date,
   })
+}
+
+export async function listChildClients(parentId: string): Promise<Client[]> {
+  const all = await listClients(500)
+  return all.filter((c) => c.parent_client_id === parentId)
 }
 
 export async function importClientsFromCsv(csv: string): Promise<number> {

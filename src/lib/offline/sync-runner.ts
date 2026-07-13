@@ -213,6 +213,12 @@ async function processQueueItem(item: QueueItem): Promise<void> {
       if (patch.vehicleType !== undefined) data.vehicle_type = patch.vehicleType
       if (patch.packageId !== undefined) data.package_id = patch.packageId
       if (patch.hours_worked !== undefined) data.hours_worked = patch.hours_worked
+      if (patch.inspection_completed_at !== undefined) {
+        data.inspection_completed_at = patch.inspection_completed_at
+      }
+      if (patch.inspection_vehicle_id !== undefined) {
+        data.inspection_vehicle_id = patch.inspection_vehicle_id
+      }
       const updated = await pb.collection('jobs').update(op.params.id, data)
       const orgId = String(updated.organization_id ?? '')
       if (orgId) upsertMirrorRecord('jobs', op.params.id, orgId, updated as Record<string, unknown>)
@@ -381,13 +387,15 @@ async function processQueueItem(item: QueueItem): Promise<void> {
         throw new Error(jobPhotoLimitMessage(op.params.photoType))
       }
       const file = await dataUrlToTempFile(op.params.dataUrl, op.params.filename)
-      const formData = new FormData()
-      formData.append('photos+', {
-        uri: file.uri,
-        name: file.filename,
-        type: file.mimeType,
-      } as unknown as Blob)
-      const updated = await pb.collection('jobs').update(op.params.jobId, formData)
+      const { uploadPocketBaseFile } = await import('../upload-file')
+      const updated = await uploadPocketBaseFile({
+        collection: 'jobs',
+        recordId: op.params.jobId,
+        field: 'photos+',
+        fileUri: file.uri,
+        filename: file.filename,
+        mimeType: file.mimeType,
+      })
       const filenames = Array.isArray(updated.photos) ? (updated.photos as string[]) : []
       const newFilename =
         filenames.find((f) => !existingMeta.some((m) => m.filename === f)) ??

@@ -15,7 +15,7 @@ export function usePremiumGate(action: PremiumAction) {
     action,
     featureLabel,
     subscriptionMode,
-    isPremiumLocked: subscriptionMode === 'lapsed',
+    isPremiumLocked: subscriptionMode === 'lapsed' || subscriptionMode === 'vault',
     openPaywall,
     runGated,
   }

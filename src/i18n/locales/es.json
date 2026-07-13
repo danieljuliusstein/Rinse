@@ -1,0 +1,421 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saving": "Guardando…",
+    "loading": "Cargando…",
+    "signOut": "Cerrar sesión",
+    "search": "Buscar",
+    "back": "Atrás",
+    "done": "Listo",
+    "error": "Algo salió mal",
+    "offline": "Sin conexión",
+    "retry": "Reintentar",
+    "client": "Cliente",
+    "detail": "Detalle",
+    "close": "Cerrar",
+    "keep": "Conservar",
+    "clear": "Borrar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "more": "+ {{count}} más",
+    "result_one": "{{count}} resultado",
+    "result_other": "{{count}} resultados",
+    "changeWaiting_one": "{{count}} cambio pendiente de sincronizar",
+    "changeWaiting_other": "{{count}} cambios pendientes de sincronizar",
+    "export": "Exportar",
+    "directions": "Indicaciones",
+    "call": "Llamar",
+    "text": "Mensaje",
+    "email": "Correo",
+    "notes": "Notas",
+    "photos": "Fotos",
+    "package": "Paquete",
+    "vehicle": "Vehículo",
+    "location": "Ubicación",
+    "revenue": "Ingresos",
+    "expenses": "Gastos",
+    "invoice": "Factura",
+    "quote": "Cotización",
+    "all": "Todos"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "jobs": "Trabajos",
+    "clients": "Clientes",
+    "business": "Negocio"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "searchPlaceholder": "Buscar ajustes",
+    "signOutBlocked": "Sincronice o descarte los cambios pendientes antes de cerrar sesión.",
+    "cannotSignOut": "No se puede cerrar sesión",
+    "unsyncedTitle": "Cambios sin sincronizar",
+    "groups": {
+      "account": "Cuenta",
+      "business": "Negocio",
+      "preferences": "Preferencias",
+      "management": "Gestión",
+      "support": "Soporte"
+    },
+    "menu": {
+      "account": {
+        "title": "Cuenta",
+        "subtitle": "Correo, contraseña e inicio de sesión"
+      },
+      "business": {
+        "title": "Su negocio",
+        "subtitle": "Perfil y reservas en línea"
+      },
+      "schedule": {
+        "title": "Horario y tiempo libre",
+        "subtitle": "Horas, almuerzo y días bloqueados"
+      },
+      "invoicing": {
+        "title": "Facturación",
+        "subtitle": "Pagos en línea y aspecto de facturas"
+      },
+      "emailDomain": {
+        "title": "Enviar desde tu dominio",
+        "subtitle": "Lista SPF, DKIM, DMARC"
+      },
+      "billing": {
+        "title": "Suscripción",
+        "subtitle": "Plan, prueba y facturación"
+      },
+      "progress": {
+        "title": "Su progreso",
+        "subtitle": "Logros de la actividad de su negocio"
+      },
+      "preferences": {
+        "title": "Preferencias de la app",
+        "subtitle": "Recordatorios y notificaciones"
+      },
+      "language": {
+        "title": "Idioma",
+        "subtitle": "App y documentos para clientes"
+      },
+      "quietHours": {
+        "title": "Horas de silencio",
+        "subtitle": "Pausar correos automáticos por la noche"
+      },
+      "access": {
+        "title": "Acceso y datos",
+        "subtitle": "Copias, exportaciones y privacidad"
+      },
+      "inventory": {
+        "title": "Inventario",
+        "subtitle": "Insumos y existencias"
+      },
+      "packages": {
+        "title": "Paquetes de servicio",
+        "subtitle": "Administre sus ofertas"
+      },
+      "invoices": {
+        "title": "Todas las facturas",
+        "subtitle": "Registros financieros"
+      },
+      "tools": {
+        "title": "Herramientas",
+        "subtitle": "Atajos para facturas, gastos y más"
+      },
+      "expenses": {
+        "title": "Gastos",
+        "subtitle": "Gastos fijos y del negocio"
+      },
+      "support": {
+        "title": "Ayuda y soporte",
+        "subtitle": "Contacto, preguntas y solución de problemas"
+      }
+    }
+  },
+  "language": {
+    "title": "Idioma",
+    "subtitle": "Elija cómo Rinse habla con usted y sus clientes",
+    "sectionApp": "Idioma de la app",
+    "sectionDocs": "También aplica a",
+    "docsHint": "Cotizaciones, facturas y el portal del cliente usan el mismo idioma.",
+    "deviceDefault": "Usar del dispositivo ({{lang}})",
+    "saved": "Idioma actualizado",
+    "saveFailed": "No se pudo guardar el idioma",
+    "english": "English",
+    "spanish": "Español",
+    "searchPlaceholder": "Buscar idiomas",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "Facturación",
+    "subtitle": "Pagos y aspecto de facturas",
+    "appearance": "Apariencia",
+    "previewCustomize": "Vista previa y personalizar",
+    "previewSubtitle": "Diseño, acento, logo y términos — aplica a todas las facturas"
+  },
+  "auth": {
+    "checkingSession": "Comprobando sesión…",
+    "starting": "Iniciando Rinse…"
+  },
+  "home": {
+    "goodMorning": "Buenos días",
+    "goodAfternoon": "Buenas tardes",
+    "goodEvening": "Buenas noches",
+    "greetingNamed": "{{greeting}}, {{name}}",
+    "searchPlaceholder": "Buscar trabajos, clientes, paquetes…",
+    "noMatch": "Ningún trabajo coincide con “{{query}}”.",
+    "jobReadiness": "Preparación del trabajo",
+    "collected": "Cobrado",
+    "calendar": "Calendario",
+    "todaysJobs": "Trabajos de hoy",
+    "alsoToday": "También hoy",
+    "upcoming": "Próximos",
+    "serviceMix": "Mix de servicios",
+    "account": "Cuenta",
+    "pipeline": "Embudo",
+    "messages": "Mensajes",
+    "search": "Buscar",
+    "settings": "Ajustes",
+    "sendInvoice": "Enviar factura",
+    "newJob": "Nuevo trabajo",
+    "newQuote": "Nueva cotización",
+    "outstanding": "Pendiente",
+    "invoiced": "Facturado",
+    "unpaid": "sin pagar",
+    "openCount": "{{count}} abiertas",
+    "collectedThisMonth": " cobrado este mes",
+    "viewInvoices": "Ver facturas",
+    "noJobsToday": "No hay trabajos programados para hoy",
+    "scheduleJob": "Programar trabajo",
+    "openJob": "Abrir trabajo",
+    "statusConfirmed": "Confirmado",
+    "statusPending": "Pendiente",
+    "completeProfile": "Complete su perfil",
+    "nextStep": "Siguiente: {{label}}",
+    "finishSetup": "Terminar configuración",
+    "continueSetup": "Continuar",
+    "checkingWeather": "Comprobando el clima…"
+  },
+  "quickActions": {
+    "title": "Acciones rápidas",
+    "close": "Cerrar acciones rápidas",
+    "drag": "Arrastre para cerrar",
+    "newLead": "Nuevo lead",
+    "newLeadSub": "Capturar una consulta",
+    "newJob": "Nuevo trabajo",
+    "newJobSub": "Programar o registrar trabajo",
+    "createInvoice": "Crear factura",
+    "createInvoiceSub": "Elegir un trabajo y enviar",
+    "logExpense": "Registrar gasto",
+    "logExpenseSub": "Costo puntual del negocio",
+    "buySupplies": "Comprar insumos",
+    "buySuppliesSub": "Stock y gasto juntos",
+    "newQuote": "Nueva cotización",
+    "newQuoteSub": "Enviar un estimado"
+  },
+  "jobs": {
+    "title": "Trabajos",
+    "add": "Añadir trabajo",
+    "create": "Crear trabajo",
+    "searchPlaceholder": "Buscar marca, color, placa, cliente…",
+    "emptyTitle": "No se encontraron trabajos",
+    "emptyFiltered": "Pruebe otra búsqueda o filtro.",
+    "emptyDefault": "Programe su primer trabajo para empezar a registrar ingresos.",
+    "shown": "{{count}} mostrados",
+    "totalPeriod": "{{count}} en total · {{period}}",
+    "onDate": "{{count}} el {{date}}",
+    "showingDate": "Mostrando {{date}} · Borrar",
+    "editJob": "Editar trabajo",
+    "cancelAppointment": "Cancelar cita",
+    "cancelAppointmentConfirm": "¿Cancelar cita?",
+    "cancelAppointmentBody": "Esto libera el horario y elimina el trabajo.",
+    "cancelJob": "Cancelar trabajo",
+    "jobActions": "Acciones del trabajo",
+    "loadFailed": "No se pudieron cargar los trabajos",
+    "moreJobs": "+ {{count}} más",
+    "sections": {
+      "today": "Hoy · {{date}}",
+      "week": "Esta semana",
+      "month": "Antes este mes",
+      "older": "Anteriores"
+    },
+    "filters": {
+      "all": "Todos",
+      "scheduled": "Programados",
+      "inProgress": "En curso",
+      "recurring": "Recurrentes"
+    },
+    "status": {
+      "scheduled": "Programado",
+      "inProgress": "En curso",
+      "paid": "Pagado",
+      "invoiced": "Facturado",
+      "awaitingPayment": "Pendiente de pago",
+      "complete": "Completado"
+    }
+  },
+  "clients": {
+    "title": "Clientes",
+    "add": "Añadir cliente",
+    "import": "Importar clientes",
+    "export": "Exportar CSV de clientes",
+    "searchPlaceholder": "Buscar nombre, teléfono, correo…",
+    "emptyTitle": "Aún no hay clientes",
+    "emptyFiltered": "No se encontraron clientes",
+    "emptyDefault": "Añada su primer cliente para empezar a reservar.",
+    "emptySearch": "Pruebe otro segmento o búsqueda.",
+    "followUp": "Seguimiento",
+    "topClients": "Mejores clientes",
+    "allClients": "Todos los clientes",
+    "moreClients_one": "+ {{count}} cliente más",
+    "moreClients_other": "+ {{count}} clientes más",
+    "sortBy": "Ordenar por",
+    "loadFailed": "No se pudieron cargar los clientes",
+    "filters": {
+      "all": "Todos",
+      "followup": "Seguimiento",
+      "top": "Top",
+      "new": "Nuevos"
+    },
+    "sort": {
+      "revenue": "Ingresos",
+      "name": "Nombre",
+      "recent": "Último servicio"
+    }
+  },
+  "business": {
+    "title": "Negocio",
+    "searchPlaceholder": "Buscar servicios, gastos, trabajos…",
+    "netProfit": "Beneficio neto",
+    "netLoss": "Pérdida neta",
+    "revenue": "Ingresos",
+    "expenses": "Gastos",
+    "avgJobValue": "Valor medio por trabajo",
+    "fromJobs": "de trabajos",
+    "perJob": "por trabajo",
+    "invoices": "Facturas",
+    "quotes": "Cotizaciones",
+    "revenueByService": "Ingresos por servicio",
+    "expenseBreakdown": "Desglose de gastos",
+    "custom": "Personalizado",
+    "startDate": "Inicio AAAA-MM-DD",
+    "endDate": "Fin AAAA-MM-DD",
+    "exportCsv": "Exportar CSV",
+    "exportPdf": "Exportar PDF",
+    "expense": {
+      "supplies": "Insumos",
+      "travel": "Viajes",
+      "equipment": "Equipo",
+      "marketing": "Marketing",
+      "labor": "Mano de obra",
+      "overhead": "Gastos fijos",
+      "business": "Negocio",
+      "other": "Otros"
+    },
+    "ranges": {
+      "this_week": "Esta semana",
+      "this_month": "Este mes",
+      "last_month": "Mes pasado",
+      "this_year": "Este año",
+      "lifetime": "Todo"
+    }
+  },
+  "invoices": {
+    "title": "Facturas",
+    "openBalance": "Saldo pendiente",
+    "searchPlaceholder": "Buscar facturas…",
+    "emptyTitle": "Sin facturas",
+    "emptyDescription": "Cree una factura desde un trabajo completado para seguir los pagos.",
+    "unavailable": "Facturas no disponibles",
+    "loadFailed": "No se pudieron cargar las facturas",
+    "markSent": "Marcar enviada",
+    "markPaid": "Marcar pagada",
+    "actions": "Acciones de factura",
+    "due": "debido",
+    "sectionTotal": "Total de sección",
+    "filters": {
+      "all": "Todas",
+      "open": "Abiertas",
+      "overdue": "Vencidas",
+      "paid": "Pagadas",
+      "draft": "Borrador"
+    },
+    "detail": {
+      "loading": "Cargando factura…",
+      "title": "Factura",
+      "notFound": "Factura no encontrada",
+      "send": "Enviar factura",
+      "resend": "Reenviar / compartir",
+      "logPayment": "Registrar pago",
+      "editLines": "Editar líneas",
+      "editLinesCount": "Editar líneas ({{count}} extras)",
+      "quickAdjustments": "Ajustes rápidos",
+      "previewCustomize": "Vista previa y personalizar",
+      "viewJob": "Ver trabajo"
+    }
+  },
+  "jobDetail": {
+    "loading": "Cargando trabajo…",
+    "titleFallback": "Trabajo",
+    "markComplete": "Marcar trabajo completo",
+    "markingComplete": "Marcando completo…",
+    "liability": "Inspección de responsabilidad",
+    "viewWalkthrough": "Ver inspección",
+    "startWalkthrough": "Iniciar inspección",
+    "hoursWorked": "Horas trabajadas",
+    "hoursValue": "{{hours}} h",
+    "netProfit": "Beneficio neto",
+    "nextService": "Próximo servicio",
+    "bookNext": "Reservar siguiente",
+    "onMyWay": "En camino",
+    "textClient": "Mensaje al cliente",
+    "createQuote": "Crear cotización",
+    "createInvoice": "Crear factura",
+    "creating": "Creando…",
+    "sharePdf": "Compartir PDF",
+    "shareBeforeAfter": "Compartir PDF antes/después",
+    "editJob": "Editar trabajo",
+    "cancelAppointment": "Cancelar cita",
+    "cancelling": "Cancelando…",
+    "jobCompleteTitle": "Trabajo completo",
+    "jobCompleteBody": "Puede facturar o compartir desde esta pantalla.",
+    "noPhoneTitle": "Sin teléfono",
+    "noPhoneBody": "Añada un teléfono en el perfil del cliente primero.",
+    "sentTitle": "Enviado",
+    "onMyWaySent": "Mensaje “en camino” enviado.",
+    "cancelConfirm": "¿Cancelar cita?",
+    "cancelBody": "Esto libera el horario y elimina el trabajo."
+  },
+  "clientDetail": {
+    "newJob": "Nuevo trabajo",
+    "quote": "Cotización",
+    "invoice": "Factura",
+    "totalRevenue": "Ingresos totales",
+    "totalJobs": "Trabajos totales",
+    "avgJob": "Promedio",
+    "leadSource": "Origen",
+    "notes": "Notas",
+    "quotes": "Cotizaciones",
+    "vehicles": "Vehículos",
+    "addVehicle": "Añadir vehículo",
+    "upcoming": "Próximos",
+    "jobHistory": "Historial",
+    "contact": "Contacto",
+    "editClient": "Editar cliente",
+    "directions": "Indicaciones",
+    "call": "Llamar",
+    "text": "Mensaje",
+    "email": "Correo"
+  }
+}

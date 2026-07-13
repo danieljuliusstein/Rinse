@@ -32,7 +32,7 @@ export function openManageSubscription(org: OrgSubscription | null): void {
     void openNativeSubscriptionManagement().catch(() => {
       Alert.alert(
         'Manage in Settings',
-        'Open Settings → Apple ID → Subscriptions to change or cancel your plan.',
+        'Open Settings → Apple ID → Subscriptions to change or cancel. You keep access until the period ends, then read-only vault — no further charges.',
       )
     })
     return

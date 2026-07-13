@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import {
   Car,
   ChatText,
@@ -11,6 +12,7 @@ import {
   Plus,
   Receipt,
   Trash,
+  Users,
 } from 'phosphor-react-native'
 import { fmt, mapJobStatusForDisplay } from '@rinse/core'
 import type { Client, JobWithRelations, QuoteWithRelations, Vehicle } from '@rinse/core'
@@ -19,6 +21,7 @@ import {
   deleteClient,
   getClient,
   getClientJobs,
+  listChildClients,
   openMaps,
   openPhone,
   openSms,
@@ -27,7 +30,7 @@ import { listVehiclesForClient, vehicleDisplayName } from '@/src/lib/damage-api'
 import { getQuotesForClient } from '@/src/lib/quotes-api'
 import { checkRecordConflict, refreshRecordFromServer } from '@/src/lib/conflict'
 import { formatJobDate } from '@/src/lib/format-dates'
-import { jobListBadgeTone, jobListIconTone, jobListStatusLabel } from '@/src/lib/jobs-list'
+import { jobListBadgeTone, jobListIconTone, jobListStatusKey } from '@/src/lib/jobs-list'
 import { VehicleTypeIcon } from '@/src/lib/vehicle-type-icons'
 import { requireOrganizationId } from '@/src/lib/org'
 import { ConflictBanner } from '@/src/components/ConflictBanner'
@@ -55,10 +58,13 @@ function quoteBadgeTone(status: string): 'green' | 'blue' | 'amber' | 'red' | 'g
 }
 
 export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: ClientDetailBodyProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const dockPadding = useTabDockPadding(variant === 'screen')
   const { openJob, openQuote } = useDetailNavigation()
   const [client, setClient] = useState<Client | null>(null)
+  const [parentClient, setParentClient] = useState<Client | null>(null)
+  const [childClients, setChildClients] = useState<Client[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [jobs, setJobs] = useState<JobWithRelations[]>([])
   const [quotes, setQuotes] = useState<QuoteWithRelations[]>([])
@@ -72,14 +78,22 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
     setError(null)
     const row = await getClient(clientId)
     setClient(row)
-    const [vehicleRows, jobRows, quoteRows] = await Promise.all([
+    const [vehicleRows, jobRows, quoteRows, children] = await Promise.all([
       listVehiclesForClient(clientId),
       getClientJobs(clientId),
       getQuotesForClient(clientId),
+      listChildClients(clientId),
     ])
     setVehicles(vehicleRows)
     setJobs(jobRows)
     setQuotes(quoteRows)
+    setChildClients(children)
+    if (row?.parent_client_id) {
+      const parent = await getClient(row.parent_client_id)
+      setParentClient(parent)
+    } else {
+      setParentClient(null)
+    }
     const conflict = await checkRecordConflict('clients', clientId)
     setHasConflict(conflict.hasConflict)
   }, [clientId])
@@ -228,7 +242,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
             >
               <MapPin size={14} color={colors.greenText} weight="bold" />
               <AppText variant="bodySemiBold" style={styles.directionsLabel}>
-                Directions
+                {t('clientDetail.directions')}
               </AppText>
             </Pressable>
           ) : null}
@@ -237,7 +251,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
             onPress={() => navigateAway(`/clients/edit/${clientId}`)}
           >
             <AppText variant="caption" style={styles.editLabel}>
-              Edit client
+              {t('clientDetail.editClient')}
             </AppText>
           </Pressable>
         </View>
@@ -255,7 +269,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
               onPress={() => void handleCallClient()}
             >
               <Phone size={20} color={colors.textMuted} />
-              <AppText variant="caption">Call</AppText>
+              <AppText variant="caption">{t('clientDetail.call')}</AppText>
             </Pressable>
           ) : null}
           {client.phone ? (
@@ -264,7 +278,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
               onPress={() => void handleTextClient()}
             >
               <ChatText size={20} color={colors.textMuted} />
-              <AppText variant="caption">Text</AppText>
+              <AppText variant="caption">{t('clientDetail.text')}</AppText>
             </Pressable>
           ) : null}
           {client.email ? (
@@ -273,17 +287,17 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
               onPress={() => void Linking.openURL(`mailto:${client.email}`)}
             >
               <Envelope size={20} color={colors.textMuted} />
-              <AppText variant="caption">Email</AppText>
+              <AppText variant="caption">{t('clientDetail.email')}</AppText>
             </Pressable>
           ) : null}
         </View>
       ) : null}
 
       <View style={styles.ctaRow}>
-        <SecondaryButton label="New job" onPress={() => navigateAway(`/jobs/new?clientId=${clientId}`)} />
-        <SecondaryButton label="Quote" onPress={() => navigateAway(`/quotes/new?clientId=${clientId}`)} />
+        <SecondaryButton label={t('clientDetail.newJob')} onPress={() => navigateAway(`/jobs/new?clientId=${clientId}`)} />
+        <SecondaryButton label={t('clientDetail.quote')} onPress={() => navigateAway(`/quotes/new?clientId=${clientId}`)} />
         <SecondaryButton
-          label="Invoice"
+          label={t('clientDetail.invoice')}
           disabled={billableJobs.length === 0}
           onPress={() => {
             if (billableJobs.length === 1) {
@@ -297,11 +311,11 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
 
       <View style={styles.card}>
         <View style={styles.statsGrid}>
-          <StatCell label="Total revenue" value={fmt(totalRevenue)} />
-          <StatCell label="Total jobs" value={String(jobs.length)} />
-          <StatCell label="Avg job" value={fmt(avgJob)} />
+          <StatCell label={t('clientDetail.totalRevenue')} value={fmt(totalRevenue)} />
+          <StatCell label={t('clientDetail.totalJobs')} value={String(jobs.length)} />
+          <StatCell label={t('clientDetail.avgJob')} value={fmt(avgJob)} />
           <StatCell
-            label="Lead source"
+            label={t('clientDetail.leadSource')}
             value={client.lead_source?.replace(/_/g, ' ') ?? '—'}
             cap
           />
@@ -310,7 +324,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
 
       {client.notes ? (
         <View style={styles.section}>
-          <AppText variant="sectionLabel">Notes</AppText>
+          <AppText variant="sectionLabel">{t('clientDetail.notes')}</AppText>
           <View style={styles.card}>
             <AppText variant="body">{client.notes}</AppText>
           </View>
@@ -320,7 +334,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
       {recentQuotes.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHead}>
-            <AppText variant="sectionLabel">Quotes</AppText>
+            <AppText variant="sectionLabel">{t('clientDetail.quotes')}</AppText>
             <Pressable onPress={() => navigateAway(`/quotes?client=${clientId}`)}>
               <AppText variant="caption" style={styles.link}>
                 View all
@@ -345,7 +359,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
 
       <View style={styles.section}>
         <View style={styles.sectionHead}>
-          <AppText variant="sectionLabel">Vehicles</AppText>
+          <AppText variant="sectionLabel">{t('clientDetail.vehicles')}</AppText>
           <Pressable onPress={() => navigateAway(`/clients/${clientId}/vehicles/new`)}>
             <AppText variant="caption" style={styles.link}>
               + Add
@@ -354,12 +368,12 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
         </View>
         {vehicles.length === 0 ? (
           <View style={styles.emptyVehicle}>
-            <AppText variant="bodySemiBold">Add a vehicle</AppText>
+            <AppText variant="bodySemiBold">{t('clientDetail.addVehicle')}</AppText>
             <AppText variant="caption" style={styles.muted}>
               Document pre-existing damage on each vehicle.
             </AppText>
             <PrimaryButton
-              label="Add vehicle"
+              label={t('clientDetail.addVehicle')}
               onPress={() => navigateAway(`/clients/${clientId}/vehicles/new`)}
             />
           </View>
@@ -379,17 +393,59 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
         )}
       </View>
 
+      {parentClient ? (
+        <View style={styles.section}>
+          <AppText variant="sectionLabel">Parent account</AppText>
+          <ListRow
+            title={parentClient.name}
+            subtitle="Dealer / fleet"
+            icon={<Users size={18} color={iconTonePalette.purple.fg} weight="duotone" />}
+            iconTone="purple"
+            onPress={() => navigateAway(`/(tabs)/clients/${parentClient.id}`)}
+          />
+        </View>
+      ) : null}
+
+      {!client.parent_client_id ? (
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <AppText variant="sectionLabel">Sub-customers</AppText>
+            <Pressable onPress={() => navigateAway(`/clients/new?parent=${clientId}`)}>
+              <AppText variant="caption" style={styles.link}>
+                + Add
+              </AppText>
+            </Pressable>
+          </View>
+          {childClients.length === 0 ? (
+            <AppText variant="caption" style={styles.muted}>
+              Nest end customers under this dealer or fleet.
+            </AppText>
+          ) : (
+            childClients.map((child) => (
+              <ListRow
+                key={child.id}
+                title={child.name}
+                subtitle={child.phone ?? child.email ?? 'Sub-customer'}
+                icon={<Users size={18} color={iconTonePalette.purple.fg} weight="duotone" />}
+                iconTone="purple"
+                onPress={() => navigateAway(`/(tabs)/clients/${child.id}`)}
+              />
+            ))
+          )}
+        </View>
+      ) : null}
+
       {upcomingJobs.length > 0 ? (
         <View style={styles.section}>
-          <AppText variant="sectionLabel">Upcoming</AppText>
+          <AppText variant="sectionLabel">{t('clientDetail.upcoming')}</AppText>
           {upcomingJobs.map((job) => (
             <ListRow
               key={job.id}
               icon={<Car size={18} color={iconTonePalette.amber.fg} weight="duotone" />}
               iconTone={jobListIconTone(job)}
-              title={job.package?.name ?? 'Job'}
+              title={job.package?.name ?? t('jobDetail.titleFallback')}
               subtitle={`${formatJobDate(job.date)} · Tap to complete`}
-              badgeLabel={jobListStatusLabel(job)}
+              badgeLabel={t(`jobs.status.${jobListStatusKey(job)}`)}
               badgeTone={jobListBadgeTone(job)}
               trailing={<AppText variant="bodySemiBold" style={styles.amount}>{fmt(job.revenue + job.tip)}</AppText>}
               onPress={() => openJob(job.id)}
@@ -400,7 +456,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
 
       {pastJobs.length > 0 ? (
         <View style={styles.section}>
-          <AppText variant="sectionLabel">Job history</AppText>
+          <AppText variant="sectionLabel">{t('clientDetail.jobHistory')}</AppText>
           <View style={styles.groupCard}>
             {pastJobs.slice(0, 8).map((job, index) => (
               <ListRow
@@ -408,7 +464,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
                 grouped={index < Math.min(pastJobs.length, 8) - 1}
                 icon={<Car size={18} color={iconTonePalette.green.fg} weight="duotone" />}
                 iconTone={jobListIconTone(job)}
-                title={job.package?.name ?? 'Job'}
+                title={job.package?.name ?? t('jobDetail.titleFallback')}
                 subtitle={formatJobDate(job.date)}
                 badgeLabel={mapJobStatusForDisplay(job)}
                 badgeTone={jobListBadgeTone(job)}
@@ -422,9 +478,9 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
 
       {variant === 'screen' && client.phone ? (
         <View style={styles.section}>
-          <AppText variant="sectionLabel">Contact</AppText>
-          <SecondaryButton label="Call" onPress={() => void handleCallClient()} />
-          <SecondaryButton label="Text" onPress={() => void handleTextClient()} />
+          <AppText variant="sectionLabel">{t('clientDetail.contact')}</AppText>
+          <SecondaryButton label={t('clientDetail.call')} onPress={() => void handleCallClient()} />
+          <SecondaryButton label={t('clientDetail.text')} onPress={() => void handleTextClient()} />
         </View>
       ) : null}
 

@@ -1,6 +1,7 @@
 import Svg, { Path, Circle } from 'react-native-svg'
 import { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import type { JobWithRelations } from '@rinse/core'
 import { fmt } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
@@ -17,6 +18,7 @@ interface HomeRevenueChartProps {
 }
 
 export function HomeRevenueChart({ jobs }: HomeRevenueChartProps) {
+  const { t } = useTranslation()
   const monthJobs = useMemo(() => filterJobsByRange(jobs, 'this_month'), [jobs])
   const stats = useMemo(() => aggregateJobsRevenue(monthJobs), [monthJobs])
 
@@ -35,7 +37,7 @@ export function HomeRevenueChart({ jobs }: HomeRevenueChartProps) {
 
   return (
     <View style={styles.card}>
-      <AppText variant="sectionLabel">Service mix</AppText>
+      <AppText variant="sectionLabel">{t('home.serviceMix')}</AppText>
       <AppText variant="caption" style={styles.meta}>
         {fmt(stats.totalRevenue)} this month
       </AppText>

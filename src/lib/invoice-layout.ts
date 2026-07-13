@@ -1,4 +1,10 @@
 import { fmt } from '@rinse/core'
+import {
+  formatBillingLineDetail,
+  lineAmount,
+  normalizeBillingLines,
+  sumLineAmounts,
+} from '@rinse/core'
 import type { Invoice, InvoiceStatus, JobWithRelations } from '@rinse/core'
 import { hasCustomBusinessLogo } from '@/src/lib/business-logo'
 import { normalizeAccentColor } from '@/src/lib/brand-color'
@@ -105,7 +111,7 @@ export function formatInvoiceMoney(amount: number): string {
 }
 
 export function extrasTotal(invoice: Invoice): number {
-  return (invoice.extra_line_items ?? []).reduce((s, l) => s + l.default_amount, 0)
+  return sumLineAmounts(normalizeBillingLines(invoice.extra_line_items))
 }
 
 export function buildInvoiceViewModel(
@@ -122,19 +128,21 @@ export function buildInvoiceViewModel(
   const issuedSource = invoice.sent_at?.trim() || job.date
   const { label: statusLabel, tone: statusTone } = statusDisplay(invoice.status)
 
+  const extras = normalizeBillingLines(invoice.extra_line_items)
   const lineItems: InvoiceLineItem[] = [
     {
       description: packageName,
       note: job.notes?.trim() || undefined,
       amount: job.revenue,
     },
-    ...(invoice.extra_line_items ?? []).map((line) => ({
+    ...extras.map((line) => ({
       description: line.description,
-      amount: line.default_amount,
+      note: formatBillingLineDetail(line),
+      amount: lineAmount(line),
     })),
   ]
 
-  const lineSubtotal = job.revenue + extrasTotal(invoice)
+  const lineSubtotal = job.revenue + sumLineAmounts(extras)
   const questionsParts: string[] = []
   if (settings.business_email) questionsParts.push(settings.business_email)
   if (settings.business_phone) questionsParts.push(settings.business_phone)

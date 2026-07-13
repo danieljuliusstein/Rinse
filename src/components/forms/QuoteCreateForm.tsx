@@ -5,29 +5,37 @@ import { Controller, useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   fmt,
+  generatePocketBaseId,
+  normalizeBillingLine,
+  normalizeBillingLines,
   quoteFormSchema,
+  sumLineAmounts,
   type Client,
+  type InvoiceLineTemplate,
   type Package,
   type QuoteFormValues,
+  type Vehicle,
 } from '@rinse/core'
-import { CalendarBlank, CheckCircle, MagnifyingGlass, Plus } from 'phosphor-react-native'
+import { CheckCircle, MagnifyingGlass, Plus } from 'phosphor-react-native'
 import { FormField } from '@/src/components/FormField'
-import { JobLocationToggle } from '@/src/components/jobs/JobLocationToggle'
 import { AffixField } from '@/src/components/ui/AffixField'
 import { AppText } from '@/src/components/ui/AppText'
+import { DraftResumeBanner } from '@/src/components/ui/DraftResumeBanner'
 import { ScreenLoading } from '@/src/components/ui/ScreenLoading'
 import { SheetSubmitButton } from '@/src/components/ui/SheetSubmitButton'
 import { AppSheet } from '@/src/components/ui/AppSheet'
+import { HybridLineEditor } from '@/src/components/invoice/HybridLineEditor'
 import { useAutoSaveDraft } from '@/src/hooks/useAutoSaveDraft'
 import { listClients, listPackages } from '@/src/lib/api'
+import { listVehiclesForClient, vehicleDisplayName } from '@/src/lib/damage-api'
 import { deriveInitials } from '@/src/lib/client-relationship-logic'
 import { localCalendarDate } from '@/src/lib/job-create'
 import { formatMoneyInput, parseMoneyInput } from '@/src/lib/money-input'
+import { getInvoiceLineTemplates } from '@/src/lib/invoice-line-templates-api'
 import { createQuote } from '@/src/lib/quotes-api'
 import { selectionHaptic } from '@/src/lib/haptics'
 import { checkPremiumGate } from '@/src/lib/subscription'
 import { trackProductEvent } from '@/src/lib/telemetry'
-import { VehicleTypePicker } from '@/src/lib/vehicle-type-icons'
 import { colors, radii, spacing, webPressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
@@ -57,6 +65,9 @@ export function QuoteCreateForm({
   const router = useRouter()
   const [clients, setClients] = useState<Client[]>([])
   const [packages, setPackages] = useState<Package[]>([])
+  const [library, setLibrary] = useState<InvoiceLineTemplate[]>([])
+  const [clientVehicles, setClientVehicles] = useState<Vehicle[]>([])
+  const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([])
   const [loadingMeta, setLoadingMeta] = useState(true)
   const [done, setDone] = useState(false)
   const [clientSearch, setClientSearch] = useState('')
@@ -79,6 +90,7 @@ export function QuoteCreateForm({
       vehicle_type: initialVehicleType ?? 'sedan',
       location_type: initialLocationType ?? 'mobile',
       subtotal: 0,
+      extra_line_items: [],
       notes: '',
       valid_until: defaultValidUntil(),
     },
@@ -97,20 +109,39 @@ export function QuoteCreateForm({
       !v.client_id &&
       !v.notes?.trim() &&
       !v.package_id &&
+      !(v.extra_line_items?.length) &&
       (v.subtotal == null || v.subtotal === 0),
   })
+  const [showResumeBanner, setShowResumeBanner] = useState(false)
 
   const clientId = watch('client_id')
   const packageId = watch('package_id')
-  const quoteDate = watch('date')
-  const validUntil = watch('valid_until')
+  const extras = watch('extra_line_items') ?? []
   const selectedClient = clients.find((c) => c.id === clientId)
+  const selectedPackage = packages.find((p) => p.id === packageId)
+  const packagePrice = selectedPackage?.base_price ?? 0
+
+  const recomputeSubtotal = (
+    nextExtras: InvoiceLineTemplate[],
+    pkgPrice = packagePrice,
+  ) => {
+    setValue('subtotal', pkgPrice + sumLineAmounts(nextExtras), { shouldValidate: true })
+  }
+
+  const setExtras = (next: InvoiceLineTemplate[]) => {
+    const normalized = normalizeBillingLines(next)
+    setValue('extra_line_items', normalized as QuoteFormValues['extra_line_items'], {
+      shouldValidate: true,
+    })
+    recomputeSubtotal(normalized)
+  }
 
   useEffect(() => {
-    void Promise.all([listClients(), listPackages()])
-      .then(([c, p]) => {
+    void Promise.all([listClients(), listPackages(), getInvoiceLineTemplates()])
+      .then(([c, p, templates]) => {
         setClients(c)
         setPackages(p.filter((pkg) => pkg.active !== false))
+        setLibrary(templates)
       })
       .finally(() => setLoadingMeta(false))
   }, [])
@@ -126,15 +157,21 @@ export function QuoteCreateForm({
         vehicle_type: restored.vehicle_type || initialVehicleType || getValues('vehicle_type'),
         location_type: restored.location_type || initialLocationType || getValues('location_type'),
       })
+      setShowResumeBanner(true)
       return
     }
 
     appliedRestoreRef.current = true
+    setShowResumeBanner(false)
     const preferredPkg =
       (initialPackageId && packages.find((pkg) => pkg.id === initialPackageId)) || packages[0]
     if (preferredPkg) {
       setValue('package_id', preferredPkg.id, { shouldValidate: true })
-      setValue('subtotal', preferredPkg.base_price, { shouldValidate: true })
+      const restoredExtras = normalizeBillingLines(getValues('extra_line_items'))
+      setValue('extra_line_items', restoredExtras as QuoteFormValues['extra_line_items'])
+      setValue('subtotal', preferredPkg.base_price + sumLineAmounts(restoredExtras), {
+        shouldValidate: true,
+      })
     }
     if (initialClientId) {
       setValue('client_id', initialClientId, { shouldValidate: true })
@@ -153,6 +190,24 @@ export function QuoteCreateForm({
     initialLocationType,
   ])
 
+  useEffect(() => {
+    if (!clientId) {
+      setClientVehicles([])
+      return
+    }
+    let cancelled = false
+    void listVehiclesForClient(clientId)
+      .then((rows) => {
+        if (!cancelled) setClientVehicles(rows)
+      })
+      .catch(() => {
+        if (!cancelled) setClientVehicles([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [clientId])
+
   const filteredClients = useMemo(() => {
     const q = clientSearch.trim().toLowerCase()
     if (!q) return clients.slice(0, 8)
@@ -169,7 +224,11 @@ export function QuoteCreateForm({
   const selectPackage = (pkg: Package) => {
     selectionHaptic()
     setValue('package_id', pkg.id, { shouldValidate: true })
-    setValue('subtotal', pkg.base_price, { shouldValidate: true })
+    if (selectedVehicleIds.length > 0) {
+      syncVehicleLines(selectedVehicleIds, pkg.base_price)
+    } else {
+      recomputeSubtotal(normalizeBillingLines(getValues('extra_line_items')), pkg.base_price)
+    }
   }
 
   const selectClient = (client: Client) => {
@@ -177,11 +236,73 @@ export function QuoteCreateForm({
     setValue('client_id', client.id, { shouldValidate: true })
     setClientSearch('')
     setShowClientList(false)
+    setSelectedVehicleIds([])
+    void listVehiclesForClient(client.id)
+      .then(setClientVehicles)
+      .catch(() => setClientVehicles([]))
   }
 
   const clearClient = () => {
     setValue('client_id', '', { shouldValidate: true })
     setShowClientList(true)
+    setClientVehicles([])
+    setSelectedVehicleIds([])
+  }
+
+  const syncVehicleLines = (ids: string[], pkgPrice: number) => {
+    const existing = normalizeBillingLines(getValues('extra_line_items')).filter(
+      (line) => !String(line.id ?? '').startsWith('veh:'),
+    )
+    const vehicleLines = ids
+      .map((id) => clientVehicles.find((v) => v.id === id))
+      .filter((v): v is Vehicle => Boolean(v))
+      .map((v) =>
+        normalizeBillingLine({
+          id: `veh:${v.id}`,
+          description: vehicleDisplayName(v),
+          quantity: 1,
+          unit_price: pkgPrice,
+          unit: 'each',
+        }),
+      )
+    const next = [...vehicleLines, ...existing]
+    setValue('extra_line_items', next, { shouldValidate: true })
+    recomputeSubtotal(next, pkgPrice)
+    if (vehicleLines[0]) {
+      const first = clientVehicles.find((v) => v.id === ids[0])
+      if (first?.type) setValue('vehicle_type', first.type, { shouldValidate: true })
+    }
+  }
+
+  const toggleVehicle = (vehicleId: string) => {
+    selectionHaptic()
+    const next = selectedVehicleIds.includes(vehicleId)
+      ? selectedVehicleIds.filter((id) => id !== vehicleId)
+      : [...selectedVehicleIds, vehicleId]
+    setSelectedVehicleIds(next)
+    syncVehicleLines(next, selectedPackage?.base_price ?? packagePrice)
+  }
+
+  const discardDraft = () => {
+    void clearDraft().then(() => {
+      appliedRestoreRef.current = true
+      setShowResumeBanner(false)
+      setSelectedVehicleIds([])
+      setClientVehicles([])
+      const preferredPkg =
+        (initialPackageId && packages.find((pkg) => pkg.id === initialPackageId)) || packages[0]
+      reset({
+        client_id: initialClientId ?? '',
+        package_id: preferredPkg?.id ?? '',
+        date: localCalendarDate(),
+        vehicle_type: initialVehicleType ?? 'sedan',
+        location_type: initialLocationType ?? 'mobile',
+        subtotal: preferredPkg?.base_price ?? 0,
+        extra_line_items: [],
+        notes: '',
+        valid_until: defaultValidUntil(),
+      })
+    })
   }
 
   const save = handleSubmit(async (values) => {
@@ -196,6 +317,7 @@ export function QuoteCreateForm({
         location_type: values.location_type,
         date: values.date,
         subtotal: values.subtotal,
+        extra_line_items: normalizeBillingLines(values.extra_line_items),
         notes: values.notes?.trim() || undefined,
         valid_until: values.valid_until,
       })
@@ -229,10 +351,8 @@ export function QuoteCreateForm({
         <ScreenLoading label="Loading form…" />
       ) : (
         <View style={styles.root}>
-          {restoredAt ? (
-            <AppText variant="caption" style={styles.draftBanner} accessibilityLiveRegion="polite">
-              Draft restored — picks up where you left off
-            </AppText>
+          {showResumeBanner ? (
+            <DraftResumeBanner restoredAt={restoredAt} onDiscard={discardDraft} />
           ) : null}
           <View style={styles.section}>
             <AppText variant="sectionLabel" style={styles.sectionLabel}>
@@ -317,40 +437,47 @@ export function QuoteCreateForm({
             )}
           </View>
 
-          <View style={styles.section}>
-            <AppText variant="sectionLabel" style={styles.sectionLabel}>
-              Dates
-            </AppText>
-            <View style={styles.datetimeRow}>
-              <View style={styles.datetimeBox}>
-                <CalendarBlank size={16} color={colors.textMuted} />
-                <TextInput
-                  style={styles.datetimeInput}
-                  value={quoteDate}
-                  onChangeText={(t) => setValue('date', t, { shouldValidate: true })}
-                  placeholder="Proposed"
-                  placeholderTextColor={colors.textDim}
-                  accessibilityLabel="Proposed date"
-                />
-              </View>
-              <View style={styles.datetimeBox}>
-                <CalendarBlank size={16} color={colors.textMuted} />
-                <TextInput
-                  style={styles.datetimeInput}
-                  value={validUntil}
-                  onChangeText={(t) => setValue('valid_until', t, { shouldValidate: true })}
-                  placeholder="Valid until"
-                  placeholderTextColor={colors.textDim}
-                  accessibilityLabel="Valid until"
-                />
+          {selectedClient && clientVehicles.length > 0 ? (
+            <View style={styles.section}>
+              <AppText variant="sectionLabel" style={styles.sectionLabel}>
+                Vehicles on this quote
+              </AppText>
+              <AppText variant="caption" style={styles.hint}>
+                Select one or more — each becomes a line at package price.
+              </AppText>
+              <View style={styles.packageList}>
+                {clientVehicles.map((vehicle) => {
+                  const selected = selectedVehicleIds.includes(vehicle.id)
+                  return (
+                    <Pressable
+                      key={vehicle.id}
+                      onPress={() => toggleVehicle(vehicle.id)}
+                      style={({ pressed }) => [
+                        styles.packageCard,
+                        webPressableReset,
+                        selected && styles.packageCardOn,
+                        pressed && styles.pressed,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                    >
+                      <View style={styles.packageCardInner}>
+                        <View style={styles.packageLeft}>
+                          <AppText style={styles.packageName}>{vehicleDisplayName(vehicle)}</AppText>
+                          <AppText variant="caption" style={styles.clientMeta}>
+                            {vehicle.type}
+                          </AppText>
+                        </View>
+                        {selected ? (
+                          <CheckCircle size={18} weight="fill" color={colors.greenText} />
+                        ) : null}
+                      </View>
+                    </Pressable>
+                  )
+                })}
               </View>
             </View>
-            {errors.date?.message || errors.valid_until?.message ? (
-              <AppText variant="caption" style={styles.error}>
-                {errors.date?.message ?? errors.valid_until?.message}
-              </AppText>
-            ) : null}
-          </View>
+          ) : null}
 
           <View style={styles.section}>
             <AppText variant="sectionLabel" style={styles.sectionLabel}>
@@ -418,36 +545,95 @@ export function QuoteCreateForm({
             ) : null}
           </View>
 
-          <Controller
-            control={control}
-            name="vehicle_type"
-            render={({ field: { value, onChange } }) => (
-              <VehicleTypePicker
-                value={value as VehicleType}
-                onChange={onChange}
-                variant="soft"
-                error={errors.vehicle_type?.message}
-              />
+          <View style={styles.section}>
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>
+              Extra lines
+            </AppText>
+            {extras.length === 0 ? (
+              <AppText variant="caption" style={styles.hint}>
+                Optional qty × rate add-ons (labor, ceramic, etc.).
+              </AppText>
+            ) : (
+              extras.map((line, index) => (
+                <HybridLineEditor
+                  key={`${line.id}-${index}`}
+                  line={line}
+                  onChange={(next) =>
+                    setExtras(extras.map((row, i) => (i === index ? next : row)))
+                  }
+                  onRemove={() => setExtras(extras.filter((_, i) => i !== index))}
+                />
+              ))
             )}
-          />
+            <Pressable
+              onPress={() =>
+                setExtras([
+                  ...extras,
+                  normalizeBillingLine({
+                    id: generatePocketBaseId(),
+                    description: 'Custom line',
+                    quantity: 1,
+                    unit_price: 0,
+                    unit: 'each',
+                  }),
+                ])
+              }
+              style={({ pressed }) => [styles.addPackage, webPressableReset, pressed && styles.pressed]}
+              accessibilityRole="button"
+            >
+              <View style={styles.addPackageInner}>
+                <Plus size={14} color={colors.greenText} weight="bold" />
+                <AppText style={styles.addPackageLabel}>Add custom line</AppText>
+              </View>
+            </Pressable>
+            {library
+              .filter((t) => !extras.some((e) => e.id === t.id))
+              .slice(0, 6)
+              .map((template) => (
+                <Pressable
+                  key={template.id}
+                  onPress={() => setExtras([...extras, normalizeBillingLine(template)])}
+                  style={({ pressed }) => [styles.libraryRow, webPressableReset, pressed && styles.pressed]}
+                >
+                  <AppText variant="bodySemiBold">{template.description}</AppText>
+                  <AppText variant="caption" style={styles.hint}>
+                    {fmt(template.default_amount)}
+                  </AppText>
+                </Pressable>
+              ))}
+          </View>
+
+          <View style={styles.totalRow}>
+            <View>
+              <AppText variant="caption" style={styles.hint}>
+                Package {fmt(packagePrice)}
+                {extras.length > 0 ? ` + extras ${fmt(sumLineAmounts(extras))}` : ''}
+              </AppText>
+              <AppText variant="sectionLabel">Quote total</AppText>
+            </View>
+            <Controller
+              control={control}
+              name="subtotal"
+              render={({ field: { value, onChange } }) => (
+                <AffixField
+                  label="Amount"
+                  value={formatMoneyInput(value)}
+                  onChangeText={(t) => onChange(parseMoneyInput(t))}
+                  error={errors.subtotal?.message}
+                />
+              )}
+            />
+          </View>
 
           <Controller
             control={control}
-            name="location_type"
+            name="valid_until"
             render={({ field: { value, onChange } }) => (
-              <JobLocationToggle value={value} onChange={onChange} />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="subtotal"
-            render={({ field: { value, onChange } }) => (
-              <AffixField
-                label="Amount"
-                value={formatMoneyInput(value)}
-                onChangeText={(t) => onChange(parseMoneyInput(t))}
-                error={errors.subtotal?.message}
+              <FormField
+                label="Valid until"
+                value={value}
+                onChangeText={onChange}
+                error={errors.valid_until?.message}
               />
             )}
           />
@@ -475,10 +661,6 @@ const styles = StyleSheet.create({
   root: {
     gap: spacing.lg,
     paddingBottom: spacing.sm,
-  },
-  draftBanner: {
-    color: colors.greenText,
-    fontWeight: '600',
   },
   section: {
     gap: spacing.sm,
@@ -586,29 +768,6 @@ const styles = StyleSheet.create({
   clientMeta: {
     color: colors.textMuted,
   },
-  datetimeRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  datetimeBox: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  datetimeInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: fonts.body,
-    color: colors.textPrimary,
-    padding: 0,
-  },
   packageList: {
     gap: spacing.sm,
   },
@@ -669,5 +828,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.greenText,
+  },
+  libraryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  totalRow: {
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
 })

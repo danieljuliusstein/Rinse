@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { Car, Plus } from 'phosphor-react-native'
 import { deleteJob, listJobs } from '@/src/lib/api'
 import type { JobWithRelations, Vehicle } from '@rinse/core'
+import { appIntlLocale } from '@/src/i18n'
 import { trackProductEvent } from '@/src/lib/telemetry'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import {
@@ -33,7 +35,7 @@ import {
   jobListIconTone,
   jobListRightTime,
   jobListRowSubtitle,
-  jobListStatusLabel,
+  jobListStatusKey,
 } from '@/src/lib/jobs-list'
 import {
   filterJobsByDate,
@@ -48,10 +50,11 @@ import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 const VISIBLE_PER_SECTION = 4
 
 function jobsPeriodLabel() {
-  return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return new Date().toLocaleDateString(appIntlLocale(), { month: 'long', year: 'numeric' })
 }
 
 export default function JobsScreen() {
+  const { t } = useTranslation()
   const dockPadding = useTabDockPadding()
   const router = useRouter()
   const { date: dateParam } = useLocalSearchParams<{ date?: string }>()
@@ -78,12 +81,12 @@ export default function JobsScreen() {
       setJobs(rows)
       setVehiclesByClient(groupVehiclesByClient(vehicles))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load jobs')
+      setError(e instanceof Error ? e.message : t('jobs.loadFailed'))
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [t])
 
   useFocusEffect(
     useCallback(() => {
@@ -99,7 +102,7 @@ export default function JobsScreen() {
   const searching = query.trim().length > 0
   const jobCount = searching || chip !== 'all' || dateFilter ? filtered.length : jobs.length
   const dateLabel = dateFilter
-    ? new Date(`${dateFilter}T12:00:00`).toLocaleDateString('en-US', {
+    ? new Date(`${dateFilter}T12:00:00`).toLocaleDateString(appIntlLocale(), {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -107,10 +110,10 @@ export default function JobsScreen() {
     : null
   const subtitle =
     dateFilter
-      ? `${filtered.length} on ${dateLabel}`
+      ? t('jobs.onDate', { count: filtered.length, date: dateLabel })
       : searching || chip !== 'all'
-        ? `${filtered.length} shown`
-        : `${jobCount} total · ${jobsPeriodLabel()}`
+        ? t('jobs.shown', { count: filtered.length })
+        : t('jobs.totalPeriod', { count: jobCount, period: jobsPeriodLabel() })
 
   const jobSubtitle = (job: JobWithRelations) => {
     if (!searching) return jobListRowSubtitle(job)
@@ -125,17 +128,17 @@ export default function JobsScreen() {
 
   const showJobActions = (job: JobWithRelations) => {
     const actions: { text: string; onPress?: () => void; style?: 'destructive' | 'cancel' }[] = [
-      { text: 'Edit job', onPress: () => router.push(`/jobs/edit/${job.id}`) },
+      { text: t('jobs.editJob'), onPress: () => router.push(`/jobs/edit/${job.id}`) },
     ]
     if (job.status === 'scheduled' || job.status === 'in_progress') {
       actions.push({
-        text: 'Cancel appointment',
+        text: t('jobs.cancelAppointment'),
         style: 'destructive',
         onPress: () => {
-          Alert.alert('Cancel appointment?', 'This frees the slot and removes the job.', [
-            { text: 'Keep', style: 'cancel' },
+          Alert.alert(t('jobs.cancelAppointmentConfirm'), t('jobs.cancelAppointmentBody'), [
+            { text: t('common.keep'), style: 'cancel' },
             {
-              text: 'Cancel job',
+              text: t('jobs.cancelJob'),
               style: 'destructive',
               onPress: () => {
                 void deleteJob(job.id).then((result) => {
@@ -143,7 +146,7 @@ export default function JobsScreen() {
                     trackProductEvent('job_cancelled', { job_id: job.id, status: job.status })
                     void load(true)
                   } else {
-                    Alert.alert('Cancel', result.error ?? 'Could not cancel job')
+                    Alert.alert(t('common.cancel'), result.error ?? 'Could not cancel job')
                   }
                 })
               },
@@ -152,8 +155,8 @@ export default function JobsScreen() {
         },
       })
     }
-    actions.push({ text: 'Close', style: 'cancel' })
-    Alert.alert(job.client?.name ?? 'Job', 'Job actions', actions)
+    actions.push({ text: t('common.close'), style: 'cancel' })
+    Alert.alert(job.client?.name ?? t('jobs.title'), t('jobs.jobActions'), actions)
   }
 
   const renderJobRow = (job: JobWithRelations, grouped: boolean, isLast: boolean, staggerIndex: number) => {
@@ -164,9 +167,9 @@ export default function JobsScreen() {
         isLast={isLast}
         icon={<Car size={18} color={iconTonePalette[iconTone].fg} weight="duotone" />}
         iconTone={iconTone}
-        title={job.client?.name ?? 'Client'}
+        title={job.client?.name ?? t('common.client')}
         subtitle={jobSubtitle(job)}
-        badgeLabel={jobListStatusLabel(job)}
+        badgeLabel={t(`jobs.status.${jobListStatusKey(job)}`)}
         badgeTone={jobListBadgeTone(job)}
         showChevron={false}
         trailing={
@@ -183,10 +186,10 @@ export default function JobsScreen() {
     )
 
     const cancelJob = () => {
-      Alert.alert('Cancel appointment?', 'This frees the slot and removes the job.', [
-        { text: 'Keep', style: 'cancel' },
+      Alert.alert(t('jobs.cancelAppointmentConfirm'), t('jobs.cancelAppointmentBody'), [
+        { text: t('common.keep'), style: 'cancel' },
         {
-          text: 'Cancel job',
+          text: t('jobs.cancelJob'),
           style: 'destructive',
           onPress: () => {
             void deleteJob(job.id).then((result) => {
@@ -194,7 +197,7 @@ export default function JobsScreen() {
                 trackProductEvent('job_cancelled', { job_id: job.id, status: job.status })
                 void load(true)
               } else {
-                Alert.alert('Cancel', result.error ?? 'Could not cancel job')
+                Alert.alert(t('common.cancel'), result.error ?? 'Could not cancel job')
               }
             })
           },
@@ -221,11 +224,11 @@ export default function JobsScreen() {
 
   return (
     <OperatorScreen
-      title="Jobs"
+      title={t('jobs.title')}
       subtitle={subtitle}
       headerRight={
         <ModuleHeaderActions onSearchPress={toggleSearch} searchActive={searchActive}>
-          <GreenHeaderButton label="Add job" onPress={() => router.push('/jobs/new')}>
+          <GreenHeaderButton label={t('jobs.add')} onPress={() => router.push('/jobs/new')}>
             <Plus size={18} color="#fff" weight="bold" />
           </GreenHeaderButton>
         </ModuleHeaderActions>
@@ -236,7 +239,7 @@ export default function JobsScreen() {
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search make, color, plate, client…"
+          placeholder={t('jobs.searchPlaceholder')}
           autoCapitalize="none"
           autoCorrect={false}
           autoFocus
@@ -244,7 +247,7 @@ export default function JobsScreen() {
       ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
         <PillGroup
-          options={JOB_FILTER_CHIPS.map((c) => ({ value: c.key, label: c.label }))}
+          options={JOB_FILTER_CHIPS.map((c) => ({ value: c.key, label: t(c.labelKey) }))}
           value={chip}
           onChange={setChip}
         />
@@ -257,7 +260,7 @@ export default function JobsScreen() {
           accessibilityRole="button"
         >
           <AppText variant="caption" style={styles.dateBannerText}>
-            Showing {dateLabel} · Clear
+            {t('jobs.showingDate', { date: dateLabel })}
           </AppText>
         </Pressable>
       ) : null}
@@ -271,9 +274,9 @@ export default function JobsScreen() {
       ) : sections.length === 0 ? (
         <EmptyState
           illustration="jobs"
-          title="No jobs found"
-          description={query || chip !== 'all' ? 'Try a different search or filter.' : 'Schedule your first job to start tracking revenue.'}
-          actionLabel="Create job"
+          title={t('jobs.emptyTitle')}
+          description={query || chip !== 'all' ? t('jobs.emptyFiltered') : t('jobs.emptyDefault')}
+          actionLabel={t('jobs.create')}
           onAction={() => router.push('/jobs/new')}
         />
       ) : (
@@ -287,9 +290,17 @@ export default function JobsScreen() {
             const isExpanded = expanded[section.key]
             const visible = isExpanded ? section.jobs : section.jobs.slice(0, VISIBLE_PER_SECTION)
             const hidden = section.jobs.length - visible.length
+            const sectionTitle =
+              section.key === 'today'
+                ? t('jobs.sections.today', { date: section.dateHint })
+                : section.key === 'week'
+                  ? t('jobs.sections.week')
+                  : section.key === 'month'
+                    ? t('jobs.sections.month')
+                    : t('jobs.sections.older')
 
             return (
-              <SectionGroup key={section.key} title={section.label}>
+              <SectionGroup key={section.key} title={sectionTitle}>
                 <View style={styles.groupCard}>
                   {visible.map((job, index) =>
                     renderJobRow(job, true, index >= visible.length - 1 && hidden <= 0, index),
@@ -300,7 +311,7 @@ export default function JobsScreen() {
                       onPress={() => setExpanded((e) => ({ ...e, [section.key]: true }))}
                     >
                       <AppText variant="bodySemiBold" style={styles.moreLabel}>
-                        + {hidden} more
+                        {t('jobs.moreJobs', { count: hidden })}
                       </AppText>
                     </Pressable>
                   ) : null}

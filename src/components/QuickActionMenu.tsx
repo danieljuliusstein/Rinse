@@ -3,6 +3,7 @@ import { Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } fro
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { Briefcase, FileText, Flask, Funnel, Receipt, Wallet, type Icon } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
 import { useSheetDismissGesture } from '@/src/hooks/useSheetDismissGesture'
@@ -26,6 +27,7 @@ const SHEET_OFFSCREEN = 480
 
 export function QuickActionMenu() {
   const router = useRouter()
+  const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const { width: windowWidth } = useWindowDimensions()
   const reduceMotion = useReduceMotion()
@@ -111,8 +113,8 @@ export function QuickActionMenu() {
     () => [
       {
         id: 'new-lead',
-        label: 'New lead',
-        subtitle: 'Capture an inquiry',
+        label: t('quickActions.newLead'),
+        subtitle: t('quickActions.newLeadSub'),
         Icon: Funnel,
         onSelect: () => {
           closeMenu()
@@ -121,8 +123,8 @@ export function QuickActionMenu() {
       },
       {
         id: 'new-job',
-        label: 'New job',
-        subtitle: 'Schedule or log work',
+        label: t('quickActions.newJob'),
+        subtitle: t('quickActions.newJobSub'),
         Icon: Briefcase,
         onSelect: () => {
           closeMenu()
@@ -131,8 +133,8 @@ export function QuickActionMenu() {
       },
       {
         id: 'new-invoice',
-        label: 'Create invoice',
-        subtitle: 'Pick a job and send',
+        label: t('quickActions.createInvoice'),
+        subtitle: t('quickActions.createInvoiceSub'),
         Icon: Receipt,
         onSelect: () => {
           closeMenu()
@@ -141,8 +143,8 @@ export function QuickActionMenu() {
       },
       {
         id: 'log-expense',
-        label: 'Log expense',
-        subtitle: 'One-time business cost',
+        label: t('quickActions.logExpense'),
+        subtitle: t('quickActions.logExpenseSub'),
         Icon: Wallet,
         onSelect: () => {
           closeMenu()
@@ -151,8 +153,8 @@ export function QuickActionMenu() {
       },
       {
         id: 'buy-supplies',
-        label: 'Buy supplies',
-        subtitle: 'Stock + expense together',
+        label: t('quickActions.buySupplies'),
+        subtitle: t('quickActions.buySuppliesSub'),
         Icon: Flask,
         onSelect: () => {
           closeMenu()
@@ -161,8 +163,8 @@ export function QuickActionMenu() {
       },
       {
         id: 'new-quote',
-        label: 'New quote',
-        subtitle: 'Send a price estimate',
+        label: t('quickActions.newQuote'),
+        subtitle: t('quickActions.newQuoteSub'),
         Icon: FileText,
         onSelect: () => {
           closeMenu()
@@ -170,7 +172,7 @@ export function QuickActionMenu() {
         },
       },
     ],
-    [closeMenu, router],
+    [closeMenu, router, t],
   )
 
   if (!mounted) return null
@@ -188,19 +190,19 @@ export function QuickActionMenu() {
     >
       <View style={[styles.root, Platform.OS === 'web' && styles.rootWeb]} accessibilityViewIsModal>
         <View style={[styles.column, { width: sheetWidth }]}>
-          <Pressable style={styles.backdropPress} onPress={requestClose} accessibilityLabel="Close quick actions">
+          <Pressable style={styles.backdropPress} onPress={requestClose} accessibilityLabel={t('quickActions.close')}>
             <Animated.View style={[styles.backdrop, scrimStyle]} pointerEvents="none" />
           </Pressable>
 
           <Animated.View
             style={[styles.sheet, sheetStyle, { width: sheetWidth, paddingBottom: sheetBottomPad }]}
             accessibilityRole="menu"
-            accessibilityLabel="Quick actions"
+            accessibilityLabel={t('quickActions.title')}
           >
-            <View style={styles.handleHit} {...dismissPanHandlers} accessibilityLabel="Drag to dismiss">
+            <View style={styles.handleHit} {...dismissPanHandlers} accessibilityLabel={t('quickActions.drag')}>
               <View style={styles.handle} />
             </View>
-            <AppText style={styles.title}>Quick actions</AppText>
+            <AppText style={styles.title}>{t('quickActions.title')}</AppText>
             <View style={styles.list}>
               {actions.map((action, index) => {
                 const { Icon } = action

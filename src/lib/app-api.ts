@@ -11,6 +11,17 @@ export class AppApiError extends Error {
   }
 }
 
+function networkErrorMessage(base: string, err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err)
+  if (/failed to fetch|network request failed|load failed|could not connect|connection refused/i.test(msg)) {
+    const hint = /localhost|127\.0\.0\.1/i.test(base)
+      ? 'Start apps/api (`npm run dev`) on :3000, or set EXPO_PUBLIC_APP_API_URL to your machine LAN IP for a physical device.'
+      : 'Check your connection and that the API is reachable.'
+    return `Can't reach API at ${base}. ${hint}`
+  }
+  return msg || 'Request failed'
+}
+
 export async function appApiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const base = getAppApiUrl().replace(/\/$/, '')
   if (!base) throw new AppApiError('EXPO_PUBLIC_APP_API_URL is not configured', 0)
@@ -24,10 +35,14 @@ export async function appApiFetch(path: string, init: RequestInit = {}): Promise
   }
   headers.set('Authorization', `Bearer ${token}`)
 
-  return fetch(`${base}${path.startsWith('/') ? path : `/${path}`}`, {
-    ...init,
-    headers,
-  })
+  try {
+    return await fetch(`${base}${path.startsWith('/') ? path : `/${path}`}`, {
+      ...init,
+      headers,
+    })
+  } catch (err) {
+    throw new AppApiError(networkErrorMessage(base, err), 0)
+  }
 }
 
 export async function appApiJson<T>(path: string, init?: RequestInit): Promise<T> {

@@ -149,6 +149,31 @@ export function useAutoSaveDraft<T>({
     }
   }, [value, enabled, hydrated, debounceMs, persist])
 
+  // Flush when the form closes (enabled true → false) so sheet dismiss still persists.
+  const wasEnabledRef = useRef(false)
+  useEffect(() => {
+    if (wasEnabledRef.current && !enabled) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+      const next = valueRef.current
+      if (isEmpty?.(next)) {
+        void clearDraftStore(entity, entityId)
+        lastSavedRef.current = ''
+        setHasDraft(false)
+      } else {
+        const serialized = stableStringify(next)
+        if (serialized && serialized !== lastSavedRef.current) {
+          void saveDraft(entity, entityId, next)
+          lastSavedRef.current = serialized
+          setHasDraft(true)
+        }
+      }
+    }
+    wasEnabledRef.current = enabled
+  }, [enabled, entity, entityId, isEmpty])
+
   // Flush on background
   useEffect(() => {
     const onAppState = (next: AppStateStatus) => {

@@ -16,7 +16,7 @@ import {
   SwipeableRow,
 } from '@/src/components/ui'
 import { bookingPageUrl } from '@/src/lib/booking-embed'
-import { DEFAULT_BOOKING_SCHEDULE, lunchBreakEnabled, SLOT_INTERVALS, type BookingSchedule } from '@/src/lib/booking-schedule'
+import { DEFAULT_BOOKING_SCHEDULE, lunchBreakEnabled, SLOT_INTERVALS, ARRIVAL_WINDOW_OPTIONS, BUFFER_OPTIONS, DRIVE_TIME_PAD_OPTIONS, type BookingSchedule } from '@/src/lib/booking-schedule'
 import { formatStartTimeLabel } from '@/src/lib/home-dashboard'
 import { appOrigin, loadOrganizationSlug } from '@/src/lib/org-slug'
 import { loadSettings, saveSettings } from '@/src/lib/settings-store'
@@ -251,13 +251,95 @@ export default function SettingsScheduleScreen() {
           ) : null}
 
           <View style={styles.section}>
+            <AppText style={styles.sectionHead}>Arrival windows</AppText>
+            <AppText style={styles.sectionDesc}>
+              Customers book a window (e.g. 8–10 AM), not a fixed end time.
+            </AppText>
+            <PillGroup
+              inline
+              options={ARRIVAL_WINDOW_OPTIONS.map((mins) => ({
+                value: String(mins),
+                label: mins >= 60 ? `${mins / 60}h` : `${mins}m`,
+              }))}
+              value={String(schedule.arrival_window_minutes)}
+              onChange={(value) => patchSchedule({ arrival_window_minutes: Number(value) })}
+            />
+          </View>
+
+          <View style={styles.section}>
             <AppText style={styles.sectionHead}>Booking slot interval</AppText>
+            <AppText style={styles.sectionDesc}>How often new windows start on the calendar.</AppText>
             <PillGroup
               inline
               options={INTERVAL_OPTIONS}
               value={String(schedule.slot_interval_minutes)}
-              onChange={(value) => patchSchedule({ slot_interval_minutes: Number(value) })}
+              onChange={(value) => {
+                const slot_interval_minutes = Number(value)
+                patchSchedule({
+                  slot_interval_minutes,
+                  // Keep window aligned when it still matched the previous interval.
+                  arrival_window_minutes:
+                    schedule.arrival_window_minutes === schedule.slot_interval_minutes
+                      ? slot_interval_minutes
+                      : schedule.arrival_window_minutes,
+                })
+              }}
             />
+          </View>
+
+          <View style={styles.section}>
+            <AppText style={styles.sectionHead}>Buffer between jobs</AppText>
+            <AppText style={styles.sectionDesc}>
+              Extra time blocked after each job so the next window cannot overbook.
+            </AppText>
+            <PillGroup
+              inline
+              options={BUFFER_OPTIONS.map((mins) => ({
+                value: String(mins),
+                label: mins === 0 ? 'None' : `${mins}m`,
+              }))}
+              value={String(schedule.buffer_minutes)}
+              onChange={(value) => patchSchedule({ buffer_minutes: Number(value) })}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <AppText style={styles.sectionHead}>Drive-time pad</AppText>
+            <AppText style={styles.sectionDesc}>
+              Travel pad between jobs (static ETA). Added on top of the buffer above. Live traffic comes later.
+            </AppText>
+            <PillGroup
+              inline
+              options={DRIVE_TIME_PAD_OPTIONS.map((mins) => ({
+                value: String(mins),
+                label: mins === 0 ? 'None' : `${mins}m`,
+              }))}
+              value={String(schedule.drive_time_pad_minutes ?? 0)}
+              onChange={(value) => patchSchedule({ drive_time_pad_minutes: Number(value) })}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <BusinessFilledField
+              label="Max jobs per day"
+              value={
+                schedule.max_jobs_per_day > 0 ? String(schedule.max_jobs_per_day) : ''
+              }
+              onChangeText={(text) => {
+                const trimmed = text.trim()
+                if (!trimmed) {
+                  patchSchedule({ max_jobs_per_day: 0 })
+                  return
+                }
+                const n = Number(trimmed)
+                patchSchedule({ max_jobs_per_day: Number.isFinite(n) && n > 0 ? Math.floor(n) : 0 })
+              }}
+              keyboardType="number-pad"
+              optional
+            />
+            <AppText style={styles.fieldHint}>
+              Optional. Leave blank for unlimited — days still auto-block when job time + buffers fill the day.
+            </AppText>
           </View>
 
           <View style={styles.section}>

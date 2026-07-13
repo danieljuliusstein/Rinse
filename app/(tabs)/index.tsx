@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Linking, ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import type { Invoice, JobWithRelations, Package, Supply } from '@rinse/core'
+import { appIntlLocale } from '@/src/i18n'
 import { ArSummaryCard } from '@/src/components/home/ArSummaryCard'
 import { HomeCtaRow } from '@/src/components/home/HomeCtaRow'
 import { HomeGreetingHeader } from '@/src/components/home/HomeGreetingHeader'
@@ -48,6 +50,7 @@ import {
   DEFAULT_BOOKING_SCHEDULE,
   monthDateRange,
 } from '@/src/lib/booking-calendar'
+import { confirmUnblockCalendarDay } from '@/src/lib/confirm-unblock-day'
 import { getTimeBlocks } from '@/src/lib/time-blocks-api'
 import { useOffline } from '@/src/providers/OfflineProvider'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
@@ -56,15 +59,19 @@ import { useDataRefresh } from '@/src/providers/DataRefreshProvider'
 import { useAuth } from '@/src/providers/AuthProvider'
 import { colors, spacing } from '@/src/theme/colors'
 
-function greeting() {
+function greetingKey(): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
   const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return 'goodMorning'
+  if (h < 17) return 'goodAfternoon'
+  return 'goodEvening'
 }
 
 function compactDateLabel() {
-  return new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  return new Date().toLocaleDateString(appIntlLocale(), {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 function displayNameFromUser(name: unknown): string | null {
@@ -79,6 +86,7 @@ function avatarInitial(name: string | null): string {
 }
 
 export default function HomeScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { user } = useAuth()
   const { openJob } = useDetailNavigation()
@@ -109,36 +117,51 @@ export default function HomeScreen() {
 
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
     setWeatherLoading(true)
-    void Promise.all([
-      listJobs(200),
-      listInvoices(),
-      listLeads(),
-      listPackages(),
-      listSupplies(),
-      loadSettings(),
-      fetchWeatherReadiness(),
-    ])
-      .then(([jobRows, invoiceRows, leads, packageRows, supplyRows, settings, weatherResult]) => {
+    setError(null)
+
+    const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => {
+          setTimeout(() => resolve(fallback), ms)
+        }),
+      ])
+
+    void (async () => {
+      try {
+        const [jobRows, invoiceRows, leads, packageRows, supplyRows, settings, weatherResult] =
+          await Promise.all([
+            withTimeout(listJobs(200), 12000, [] as JobWithRelations[]),
+            withTimeout(listInvoices(), 12000, [] as Invoice[]),
+            withTimeout(listLeads(), 12000, [] as Awaited<ReturnType<typeof listLeads>>),
+            withTimeout(listPackages(), 12000, [] as Package[]),
+            withTimeout(listSupplies(), 12000, [] as Supply[]),
+            withTimeout(loadSettings(), 12000, null),
+            withTimeout(fetchWeatherReadiness(), 12000, null),
+          ])
         if (cancelled) return
         setJobs(jobRows)
         setInvoices(invoiceRows)
         setPackages(packageRows)
         setSupplies(supplyRows)
         setPipelineCount(pipelineOpenCount(leads))
-        setProfilePercent(computeProfileCompletion(settings))
-        setHomeModules(settings.home_modules ?? {})
+        if (settings) {
+          setProfilePercent(computeProfileCompletion(settings))
+          setHomeModules(settings.home_modules ?? {})
+        }
         setWeather(weatherResult)
-      })
-      .catch((e) => {
+      } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load dashboard')
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setLoading(false)
           setWeatherLoading(false)
         }
-      })
+      }
+    })()
+
     return () => {
       cancelled = true
     }
@@ -156,6 +179,18 @@ export default function HomeScreen() {
   const handleViewMonthChange = useCallback((year: number, month: number) => {
     setCalendarMonth((prev) => (prev.year === year && prev.month === month ? prev : { year, month }))
   }, [])
+
+  const handleBlockedDatePress = useCallback(
+    (iso: string) => {
+      void (async () => {
+        const unblocked = await confirmUnblockCalendarDay(iso)
+        if (!unblocked) return
+        await loadBlockedDates(calendarMonth.year, calendarMonth.month)
+        setSelectedDate(iso)
+      })()
+    },
+    [calendarMonth.year, calendarMonth.month, loadBlockedDates]
+  )
 
   useEffect(() => {
     void loadBlockedDates(calendarMonth.year, calendarMonth.month)
@@ -179,7 +214,7 @@ export default function HomeScreen() {
 
   const greetingHeader = (
     <HomeGreetingHeader
-      greeting={greeting()}
+      greeting={t(`home.${greetingKey()}`)}
       displayName={displayName}
       dateLabel={compactDateLabel()}
       avatarInitial={avatarInitial(displayName)}
@@ -209,7 +244,7 @@ export default function HomeScreen() {
               ref={inputRef}
               value={query}
               onChangeText={setQuery}
-              placeholder="Search jobs, clients, packages…"
+              placeholder={t('home.searchPlaceholder')}
               autoCapitalize="none"
               autoCorrect={false}
               autoFocus
@@ -220,15 +255,15 @@ export default function HomeScreen() {
             <View style={styles.headerBlock}>
               {searchResults.length === 0 ? (
                 <AppText variant="caption" style={styles.syncHint}>
-                  No jobs match “{query.trim()}”.
+                  {t('home.noMatch', { query: query.trim() })}
                 </AppText>
               ) : (
-                <SectionGroup title={`${searchResults.length} result${searchResults.length === 1 ? '' : 's'}`}>
+                <SectionGroup title={t('common.result', { count: searchResults.length })}>
                   {searchResults.map((job) => (
                     <ListRow
                       key={job.id}
-                      title={job.client?.name ?? 'Client'}
-                      subtitle={`${job.package?.name ?? 'Detail'} · ${normalizeJobDate(job.date)}`}
+                      title={job.client?.name ?? t('common.client')}
+                      subtitle={`${job.package?.name ?? t('common.detail')} · ${normalizeJobDate(job.date)}`}
                       meta={job.start_time || undefined}
                       showChevron={false}
                       onPress={() => openJob(job.id)}
@@ -242,7 +277,7 @@ export default function HomeScreen() {
             {pendingCount > 0 ? (
               <BlockStagger index={0}>
                 <AppText variant="caption" style={styles.syncHint}>
-                  {pendingCount} change{pendingCount === 1 ? '' : 's'} waiting to sync
+                  {t('common.changeWaiting', { count: pendingCount })}
                 </AppText>
               </BlockStagger>
             ) : null}
@@ -267,7 +302,7 @@ export default function HomeScreen() {
 
             {isHomeModuleEnabled(homeModules, 'job_readiness') ? (
               <BlockStagger index={4}>
-                <HomeSection label="Job readiness">
+                <HomeSection label={t('home.jobReadiness')}>
                   <WeatherReadinessCard result={weather} loading={weatherLoading} compact />
                 </HomeSection>
               </BlockStagger>
@@ -275,7 +310,7 @@ export default function HomeScreen() {
 
             {isHomeModuleEnabled(homeModules, 'invoice_month_carousel') && invoiceMonthCarousel.length > 0 ? (
               <BlockStagger index={5}>
-                <HomeSection label="Collected">
+                <HomeSection label={t('home.collected')}>
                   <MonthCarousel items={invoiceMonthCarousel} />
                 </HomeSection>
               </BlockStagger>
@@ -295,11 +330,12 @@ export default function HomeScreen() {
 
             {isHomeModuleEnabled(homeModules, 'month_calendar') ? (
               <BlockStagger index={8}>
-                <HomeSection label="Calendar">
+                <HomeSection label={t('home.calendar')}>
                   <HomeMonthCalendar
                     jobs={jobs}
                     selectedDate={selectedDate}
                     onSelectDate={setSelectedDate}
+                    onBlockedDatePress={handleBlockedDatePress}
                     weatherReadiness={weather}
                     blockedDates={blockedDates}
                     onViewMonthChange={handleViewMonthChange}
@@ -310,7 +346,7 @@ export default function HomeScreen() {
 
             {isHomeModuleEnabled(homeModules, 'today_jobs') ? (
               <BlockStagger index={9}>
-                <HomeSection label="Today's jobs">
+                <HomeSection label={t('home.todaysJobs')}>
                   <TodayJobCard
                     job={todayJob}
                     onDirections={(address) => void Linking.openURL(openMaps(address))}
@@ -323,7 +359,7 @@ export default function HomeScreen() {
 
             {moreTodayJobs.length > 0 && isHomeModuleEnabled(homeModules, 'today_jobs') ? (
               <BlockStagger index={10}>
-                <SectionGroup title="Also today">
+                <SectionGroup title={t('home.alsoToday')}>
                   {moreTodayJobs.map((job) => (
                     <ListRow
                       key={job.id}
@@ -340,7 +376,7 @@ export default function HomeScreen() {
 
             {upcomingJobs.length > 0 && isHomeModuleEnabled(homeModules, 'upcoming') ? (
               <BlockStagger index={11}>
-                <SectionGroup title="Upcoming">
+                <SectionGroup title={t('home.upcoming')}>
                   {upcomingJobs.map((job) => (
                     <ListRow
                       key={job.id}
@@ -349,7 +385,7 @@ export default function HomeScreen() {
                       trailing={
                         <Badge
                           tone={job.statusLabel === 'Pending' ? 'amber' : 'blue'}
-                          label={job.statusLabel}
+                          label={job.statusLabel === 'Pending' ? t('home.statusPending') : t('home.statusConfirmed')}
                         />
                       }
                       showChevron={false}

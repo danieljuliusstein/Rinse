@@ -4,12 +4,12 @@ import { agingBucket, type AgingBucket } from './invoice-aging'
 
 export type InvoiceFilterKey = 'all' | 'open' | 'paid' | 'overdue' | 'draft'
 
-export const INVOICE_FILTERS: { key: InvoiceFilterKey; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'open', label: 'Open' },
-  { key: 'overdue', label: 'Overdue' },
-  { key: 'paid', label: 'Paid' },
-  { key: 'draft', label: 'Draft' },
+export const INVOICE_FILTERS: { key: InvoiceFilterKey; labelKey: string }[] = [
+  { key: 'all', labelKey: 'invoices.filters.all' },
+  { key: 'open', labelKey: 'invoices.filters.open' },
+  { key: 'overdue', labelKey: 'invoices.filters.overdue' },
+  { key: 'paid', labelKey: 'invoices.filters.paid' },
+  { key: 'draft', labelKey: 'invoices.filters.draft' },
 ]
 
 export const AGING_FILTER_BUCKETS: AgingBucket[] = ['1-30', '31-60', '60+']

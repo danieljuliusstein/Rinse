@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { fmt } from '@rinse/core'
+import { fmt, formatBillingLineDetail, lineAmount, normalizeBillingLines, sumLineAmounts } from '@rinse/core'
 import type { QuoteWithRelations } from '@rinse/core'
 import { LoadingState } from '@/src/components/ui/ScreenLoading'
 import { AppText } from '@/src/components/ui/AppText'
@@ -137,6 +137,34 @@ export function QuoteDetailBody({ quoteId, onClose, variant = 'overlay', onRefre
           <AppText variant="caption" style={styles.meta}>
             Valid until {validLabel ?? 'Date TBD'}
           </AppText>
+
+          <View style={styles.lines}>
+            <View style={styles.lineRow}>
+              <AppText variant="body">{quote.package?.name ?? 'Package'}</AppText>
+              <AppText variant="bodySemiBold">
+                {fmt(
+                  Math.max(
+                    0,
+                    quote.subtotal - sumLineAmounts(normalizeBillingLines(quote.extra_line_items)),
+                  ),
+                )}
+              </AppText>
+            </View>
+            {normalizeBillingLines(quote.extra_line_items).map((line) => (
+              <View key={line.id} style={styles.lineRow}>
+                <View style={styles.lineCopy}>
+                  <AppText variant="body">{line.description}</AppText>
+                  {formatBillingLineDetail(line) ? (
+                    <AppText variant="caption" style={styles.meta}>
+                      {formatBillingLineDetail(line)}
+                    </AppText>
+                  ) : null}
+                </View>
+                <AppText variant="bodySemiBold">{fmt(lineAmount(line))}</AppText>
+              </View>
+            ))}
+          </View>
+
           <AppText variant="bodySemiBold" style={styles.amount}>
             {fmt(quote.subtotal)}
           </AppText>
@@ -215,6 +243,20 @@ const styles = StyleSheet.create({
   },
   service: {
     marginBottom: 2,
+  },
+  lines: {
+    marginTop: spacing.sm,
+    gap: spacing.xs,
+  },
+  lineRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  lineCopy: {
+    flex: 1,
+    gap: 2,
   },
   meta: {
     color: colors.textMuted,

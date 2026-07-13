@@ -63,7 +63,9 @@ export default function EditClientScreen() {
           email: client.email ?? '',
           address: client.address ?? '',
           notes: client.notes ?? '',
+          parent_client_id: client.parent_client_id ?? '',
         }}
+        excludeClientId={client.id}
         onSubmit={async (values) => {
           if (!id) return
           await updateClient(id, values)

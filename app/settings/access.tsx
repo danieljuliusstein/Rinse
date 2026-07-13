@@ -34,6 +34,8 @@ import {
 import { listInvoices } from '@/src/lib/invoices-api'
 import { loadSettings, saveSettings } from '@/src/lib/settings-store'
 import { deleteAccount } from '@/src/lib/share'
+import { useOrgSubscription } from '@/src/hooks/useOrgSubscription'
+import { isVaultAccess } from '@/src/lib/subscription-types'
 import { useAuth } from '@/src/providers/AuthProvider'
 import { useOffline } from '@/src/providers/OfflineProvider'
 import { colors, radii, spacing } from '@/src/theme/colors'
@@ -49,6 +51,8 @@ function formatBackupDate(iso?: string): string {
 export default function SettingsAccessScreen() {
   const router = useRouter()
   const { signOut } = useAuth()
+  const { org } = useOrgSubscription()
+  const vault = isVaultAccess(org)
   const { pendingCount, syncing, lastError, syncNow, refresh: refreshOffline } = useOffline()
 
   const [loading, setLoading] = useState(true)
@@ -204,6 +208,16 @@ export default function SettingsAccessScreen() {
   return (
     <SettingsScreen title="Access and data">
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {vault ? (
+          <Card style={styles.dataPanel}>
+            <AppText style={styles.vaultTitle}>Read-only vault</AppText>
+            <AppText style={styles.statusLine}>
+              Your subscription is canceled. Export stays available below. Resubscribe from Billing to
+              create or edit jobs, clients, and invoices.
+            </AppText>
+          </Card>
+        ) : null}
+
         <Card style={styles.dataPanel}>
           <AppText style={styles.statusLine}>Last backup: {formatBackupDate(lastBackupAt)}</AppText>
           <View style={styles.actions}>
@@ -328,6 +342,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     color: colors.textMuted,
+  },
+  vaultTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    fontFamily: fonts.bodySemiBold,
+    marginBottom: 4,
   },
   actions: {
     gap: spacing.sm,

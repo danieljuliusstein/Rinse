@@ -3,6 +3,7 @@ import {
   isFoundingMember,
   isOnFreeTier,
   isSubscribedOnStripe,
+  isVaultAccess,
   trialDaysLeft,
   type OrgSubscription,
 } from './subscription-types'
@@ -18,12 +19,15 @@ export type PremiumAction =
   | 'new_lead'
   | 'receipt_ocr'
 
-export type GateReason = 'full' | 'nudge' | 'lapsed' | 'free' | 'loading'
+export type GateReason = 'full' | 'nudge' | 'lapsed' | 'free' | 'vault' | 'loading'
 
 export const TRIAL_NUDGE_DAYS = 3
 
 /** Actions Free plan may still perform (matches FREE_PLAN marketing). */
 export const FREE_TIER_ALLOWED_ACTIONS: ReadonlySet<PremiumAction> = new Set(['create_job'])
+
+/** Vault keeps export so cancel is not a data hostage. */
+export const VAULT_ALLOWED_ACTIONS: ReadonlySet<PremiumAction> = new Set(['export_pdf'])
 
 export const PREMIUM_ACTION_LABELS: Record<PremiumAction, string> = {
   send_invoice: 'Sending invoices',
@@ -48,12 +52,13 @@ export function resolveSubscriptionMode(
   if (loading) return 'loading'
   if (!org) return 'full'
   if (isFoundingMember(org)) return 'full'
+  if (isVaultAccess(org)) return 'vault'
   if (hasStarterAccess(org, now)) {
     const daysLeft = trialDaysLeft(org, now)
     if (daysLeft != null && daysLeft <= TRIAL_NUDGE_DAYS) return 'nudge'
     return 'full'
   }
-  if (org.plan === 'free') return 'free'
+  if (org.plan === 'free' || org.access_mode === 'free') return 'free'
   return 'lapsed'
 }
 
@@ -63,7 +68,7 @@ export function isSubscriptionLapsed(
   now = new Date(),
 ): boolean {
   const mode = resolveSubscriptionMode(org, loading, now)
-  return mode === 'lapsed' || mode === 'free'
+  return mode === 'lapsed' || mode === 'free' || mode === 'vault'
 }
 
 export function isTrialNudgeDismissed(action: PremiumAction): boolean {
@@ -89,6 +94,7 @@ export function shouldShowTrialBadge(
 ): boolean {
   if (loading || !org) return false
   if (isFoundingMember(org)) return false
+  if (isVaultAccess(org)) return true
   if (isSubscribedOnStripe(org)) return false
   if (org.subscription_status === 'trialing') return true
   if (org.plan === 'free' || isOnFreeTier(org)) return true
@@ -155,6 +161,25 @@ export function resolveGate(
     return {
       allowed: false,
       reason: 'free',
+      featureLabel,
+      showPaywall: true,
+      blockAction: true,
+    }
+  }
+
+  if (reason === 'vault') {
+    if (VAULT_ALLOWED_ACTIONS.has(action)) {
+      return {
+        allowed: true,
+        reason,
+        featureLabel,
+        showPaywall: false,
+        blockAction: false,
+      }
+    }
+    return {
+      allowed: false,
+      reason: 'vault',
       featureLabel,
       showPaywall: true,
       blockAction: true,

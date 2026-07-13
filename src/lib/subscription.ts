@@ -20,7 +20,13 @@ export async function checkPremiumGate(
 
   if (!result.allowed && result.showPaywall) {
     const mode =
-      result.reason === 'nudge' ? 'nudge' : result.reason === 'free' ? 'free' : 'lapsed'
+      result.reason === 'nudge'
+        ? 'nudge'
+        : result.reason === 'free'
+          ? 'free'
+          : result.reason === 'vault'
+            ? 'vault'
+            : 'lapsed'
     trackProductEvent('premium_gate_blocked', {
       action,
       mode,

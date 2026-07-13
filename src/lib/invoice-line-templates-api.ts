@@ -1,4 +1,8 @@
-import type { InvoiceLineTemplate } from '@rinse/core'
+import {
+  normalizeBillingLine,
+  normalizeBillingLines,
+  type InvoiceLineTemplate,
+} from '@rinse/core'
 import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
@@ -10,13 +14,16 @@ function pb() {
 }
 
 function mapTemplate(record: Record<string, unknown>): InvoiceLineTemplate {
-  return {
+  return normalizeBillingLine({
     id: String(record.id),
     description: String(record.description ?? ''),
     default_amount: Number(record.default_amount ?? 0),
+    quantity: record.quantity != null ? Number(record.quantity) : undefined,
+    unit_price: record.unit_price != null ? Number(record.unit_price) : undefined,
+    unit: record.unit as InvoiceLineTemplate['unit'],
     category: record.category ? String(record.category) : undefined,
     active: record.active !== false,
-  }
+  })
 }
 
 export async function getInvoiceLineTemplates(): Promise<InvoiceLineTemplate[]> {
@@ -28,7 +35,7 @@ export async function getInvoiceLineTemplates(): Promise<InvoiceLineTemplate[]> 
       filter: `organization_id = "${escaped}" && active != false`,
       sort: 'description',
     })
-    return records.map((r) => mapTemplate(r as Record<string, unknown>))
+    return normalizeBillingLines(records.map((r) => mapTemplate(r as Record<string, unknown>)))
   } catch {
     return []
   }
@@ -39,11 +46,15 @@ export async function saveInvoiceLineTemplate(
 ): Promise<InvoiceLineTemplate[]> {
   if (!(await isOnline())) throw new Error('You are offline')
   const orgId = requireOrganizationId()
+  const line = normalizeBillingLine({ ...input, description: input.description })
   const payload = {
-    description: input.description,
-    default_amount: input.default_amount,
-    category: input.category ?? '',
-    active: input.active ?? true,
+    description: line.description,
+    default_amount: line.default_amount,
+    quantity: line.quantity,
+    unit_price: line.unit_price,
+    unit: line.unit ?? 'each',
+    category: line.category ?? '',
+    active: line.active ?? true,
   }
   if (input.id) {
     await pb().collection('invoice_line_templates').update(input.id, payload)

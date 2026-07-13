@@ -3,7 +3,7 @@ import type { PremiumAction } from './subscription-gates'
 export type PremiumRequiredPayload = {
   action?: PremiumAction
   featureLabel?: string
-  mode?: 'nudge' | 'lapsed' | 'free'
+  mode?: 'nudge' | 'lapsed' | 'free' | 'vault'
 }
 
 type PremiumListener = (payload: PremiumRequiredPayload) => void

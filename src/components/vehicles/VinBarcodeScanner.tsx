@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Modal, Pressable, StyleSheet, View } from 'react-native'
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Lightning, X } from 'phosphor-react-native'
@@ -26,12 +26,14 @@ export function VinBarcodeScanner({
   const [permission, requestPermission] = useCameraPermissions()
   const [error, setError] = useState<string | null>(null)
   const [torch, setTorch] = useState(false)
+  const [cameraReady, setCameraReady] = useState(false)
   const handledRef = useRef(false)
   const cooldownRef = useRef(0)
 
   useEffect(() => {
     if (!visible) {
       setTorch(false)
+      setCameraReady(false)
       return
     }
     handledRef.current = false
@@ -42,7 +44,7 @@ export function VinBarcodeScanner({
 
   const handleScanned = useCallback(
     ({ data }: { data: string }) => {
-      if (handledRef.current) return
+      if (!cameraReady || handledRef.current) return
       const now = Date.now()
       if (now - cooldownRef.current < 800) return
       cooldownRef.current = now
@@ -56,7 +58,7 @@ export function VinBarcodeScanner({
       onVin(candidate)
       onClose()
     },
-    [onClose, onVin],
+    [cameraReady, onClose, onVin],
   )
 
   if (!visible) return null
@@ -77,6 +79,15 @@ export function VinBarcodeScanner({
               Allow camera access to scan the VIN barcode on the door jamb or windshield.
             </AppText>
             <SecondaryButton label="Allow camera" onPress={() => void requestPermission()} />
+            {onRequestPhotoScan ? (
+              <SecondaryButton
+                label="Scan from photo instead"
+                onPress={() => {
+                  onClose()
+                  onRequestPhotoScan()
+                }}
+              />
+            ) : null}
           </View>
         ) : (
           <View style={styles.cameraWrap}>
@@ -85,11 +96,16 @@ export function VinBarcodeScanner({
               facing="back"
               enableTorch={torch}
               barcodeScannerSettings={{ barcodeTypes: [...VIN_BARCODE_TYPES] }}
-              onBarcodeScanned={handleScanned}
+              onBarcodeScanned={cameraReady ? handleScanned : undefined}
+              onCameraReady={() => setCameraReady(true)}
+              onMountError={(e) => {
+                setCameraReady(false)
+                setError(e.message || 'Camera failed to start — try photo scan instead.')
+              }}
             />
             <View style={styles.frame} pointerEvents="none" />
             <AppText variant="caption" style={styles.hint}>
-              Align the VIN barcode inside the frame
+              {!cameraReady ? 'Starting camera…' : 'Align the VIN barcode inside the frame'}
             </AppText>
           </View>
         )}
@@ -106,7 +122,8 @@ export function VinBarcodeScanner({
               accessibilityRole="button"
               accessibilityLabel={torch ? 'Turn torch off' : 'Turn torch on'}
               onPress={() => setTorch((v) => !v)}
-              style={[styles.torchBtn, torch && styles.torchOn]}
+              disabled={Platform.OS === 'web'}
+              style={[styles.torchBtn, torch && styles.torchOn, Platform.OS === 'web' && styles.torchDisabled]}
             >
               <Lightning size={20} color={torch ? '#071407' : colors.textSecondary} weight={torch ? 'fill' : 'regular'} />
             </Pressable>
@@ -198,6 +215,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+  },
+  torchDisabled: {
+    opacity: 0.4,
   },
   torchOn: {
     backgroundColor: colors.greenSoft,

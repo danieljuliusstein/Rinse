@@ -4,10 +4,10 @@ import { normalizeReturnDays } from '@/src/lib/package-cadence'
 export type ClientSegment = 'all' | 'followup' | 'top' | 'new'
 export type ClientSort = 'revenue' | 'name' | 'recent'
 
-export const CLIENT_SORT_OPTIONS: { key: ClientSort; label: string }[] = [
-  { key: 'revenue', label: 'Revenue' },
-  { key: 'name', label: 'Name' },
-  { key: 'recent', label: 'Last service' },
+export const CLIENT_SORT_OPTIONS: { key: ClientSort; labelKey: string }[] = [
+  { key: 'revenue', labelKey: 'clients.sort.revenue' },
+  { key: 'name', labelKey: 'clients.sort.name' },
+  { key: 'recent', labelKey: 'clients.sort.recent' },
 ]
 export type ClientTag = 'followup' | 'new' | null
 
@@ -150,11 +150,11 @@ export function searchClients(clients: ClientWithStats[], query: string): Client
   })
 }
 
-export const CLIENT_SEGMENT_CHIPS: { key: ClientSegment; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'followup', label: 'Follow up' },
-  { key: 'top', label: 'Top' },
-  { key: 'new', label: 'New' },
+export const CLIENT_SEGMENT_CHIPS: { key: ClientSegment; labelKey: string }[] = [
+  { key: 'all', labelKey: 'clients.filters.all' },
+  { key: 'followup', labelKey: 'clients.filters.followup' },
+  { key: 'top', labelKey: 'clients.filters.top' },
+  { key: 'new', labelKey: 'clients.filters.new' },
 ]
 
 export function countFollowUpClients(clients: ClientWithStats[]): number {

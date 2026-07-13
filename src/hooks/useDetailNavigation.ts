@@ -1,4 +1,4 @@
-import { useDetailOverlay } from '@/src/providers/DetailOverlayProvider'
+import { useDetailOverlay } from '@/src/providers/detail-overlay-context'
 
 export function useDetailNavigation() {
   const overlay = useDetailOverlay()

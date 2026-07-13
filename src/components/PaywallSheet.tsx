@@ -18,7 +18,7 @@ import { fonts } from '@/src/theme/typography'
 
 interface PaywallSheetProps {
   visible: boolean
-  mode: 'nudge' | 'lapsed' | 'free'
+  mode: 'nudge' | 'lapsed' | 'free' | 'vault'
   featureLabel: string
   onClose: () => void
   onNotNow?: () => void
@@ -41,17 +41,26 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
   const paidName = earlyAvailable ? EARLY_PLAN.name : STARTER_PLAN.name
 
   const lead =
-    mode === 'nudge'
-      ? featureLabel
-        ? `Keep ${featureLabel} — upgrade to ${paidName} before your trial ends.`
-        : `Upgrade to ${paidName} before your trial ends to keep full access.`
-      : mode === 'free'
+    mode === 'vault'
+      ? 'Your jobs, clients, and invoices stay readable forever. Export anytime. Resubscribe to create or edit again — you will not be charged while canceled.'
+      : mode === 'nudge'
         ? featureLabel
-          ? `${featureLabel} is on ${paidName}. Upgrade to unlock.`
-          : `Upgrade to ${paidName} to unlock booking, billing, and pipeline.`
-        : featureLabel
-          ? `${featureLabel} requires an active ${paidName} subscription.`
-          : `Subscribe to ${paidName} to unlock premium actions in Rinse.`
+          ? `Keep ${featureLabel} — upgrade to ${paidName} before your trial ends.`
+          : `Upgrade to ${paidName} before your trial ends to keep full access.`
+        : mode === 'free'
+          ? featureLabel
+            ? `${featureLabel} is on ${paidName}. Upgrade to unlock.`
+            : `Upgrade to ${paidName} to unlock booking, billing, and pipeline.`
+          : featureLabel
+            ? `${featureLabel} requires an active ${paidName} subscription.`
+            : `Subscribe to ${paidName} to unlock premium actions in Rinse.`
+
+  const title =
+    mode === 'vault'
+      ? 'Read-only vault'
+      : mode === 'free'
+        ? `Upgrade to ${paidName}`
+        : 'Upgrade to keep going'
 
   const handleBilling = () => {
     onClose()
@@ -98,7 +107,7 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
             <Crown size={28} color={colors.greenText} weight="duotone" />
           </View>
           <AppText variant="h2" style={styles.title}>
-            {mode === 'free' ? `Upgrade to ${paidName}` : 'Upgrade to keep going'}
+            {title}
           </AppText>
           <AppText style={styles.lead}>{lead}</AppText>
 
@@ -117,16 +126,22 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
             </AppText>
           ) : (
             <>
-              {mode === 'free' ? (
+              {mode === 'free' || mode === 'vault' ? (
                 <View style={[styles.planCard, styles.planCardMuted]}>
                   <View style={styles.planHead}>
                     <View style={styles.planCopy}>
-                      <AppText style={styles.planName}>{FREE_PLAN.name}</AppText>
+                      <AppText style={styles.planName}>
+                        {mode === 'vault' ? 'Vault' : FREE_PLAN.name}
+                      </AppText>
                       <AppText variant="caption" style={styles.planTagline}>
-                        {FREE_PLAN.tagline}
+                        {mode === 'vault'
+                          ? 'Read-only · export anytime · no further charges'
+                          : FREE_PLAN.tagline}
                       </AppText>
                     </View>
-                    <AppText style={styles.planPrice}>{FREE_PLAN.priceLabel}</AppText>
+                    <AppText style={styles.planPrice}>
+                      {mode === 'vault' ? '$0' : FREE_PLAN.priceLabel}
+                    </AppText>
                   </View>
                 </View>
               ) : null}

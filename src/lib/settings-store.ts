@@ -9,9 +9,11 @@ import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
 import { appOrigin, loadOrganizationSlug } from './org-slug'
+import { normalizeDocumentLocale, type DocumentLocale } from '@rinse/core'
 
 import type { BookingSchedule } from './booking-schedule'
 import { DEFAULT_BOOKING_SCHEDULE, normalizeBookingSchedule } from './booking-schedule'
+import { normalizeEmailDeliverability } from './email-deliverability'
 
 export type { BookingSchedule } from './booking-schedule'
 export { DEFAULT_BOOKING_SCHEDULE, normalizeBookingSchedule } from './booking-schedule'
@@ -87,11 +89,20 @@ export interface AppSettings {
   track_job_supplies?: boolean
   appearance?: 'light' | 'dark'
   invoice_template?: 'rinse' | 'classic' | 'minimal'
+  /** App + customer-facing quote/invoice/portal language. */
+  document_locale?: DocumentLocale
   home_modules?: HomeModulePrefs
   onboarding_step?: number
   onboarding_completed_at?: string
   onboarding_first_invoice_at?: string
   pb_record_id?: string
+  /** IANA timezone for quiet hours + scheduling (Wave 3B). */
+  timezone?: string
+  quiet_hours_enabled?: boolean
+  quiet_start_hour?: number
+  quiet_end_hour?: number
+  /** Operator checklist for custom sending domain (SPF/DKIM/DMARC). */
+  email_deliverability?: import('./email-deliverability').EmailDeliverabilityChecklist
 }
 
 export const DEFAULT_INVOICE_TERMS = 'Due on receipt. Thank you for your business.'
@@ -154,6 +165,7 @@ function recordToSettings(record: Record<string, unknown>, logoUrl?: string): Ap
       typeof record.travel_rate_per_mile === 'number' ? record.travel_rate_per_mile : undefined,
     track_job_supplies: record.track_job_supplies === true,
     invoice_template: (record.invoice_template as AppSettings['invoice_template']) ?? 'rinse',
+    document_locale: normalizeDocumentLocale(record.document_locale),
     home_modules: (record.home_modules as HomeModulePrefs | undefined) ?? {},
     onboarding_step: typeof record.onboarding_step === 'number' ? record.onboarding_step : undefined,
     onboarding_completed_at: record.onboarding_completed_at
@@ -163,6 +175,21 @@ function recordToSettings(record: Record<string, unknown>, logoUrl?: string): Ap
       ? String(record.onboarding_first_invoice_at).slice(0, 10)
       : undefined,
     pb_record_id: record.id ? String(record.id) : undefined,
+    timezone: record.timezone ? String(record.timezone) : undefined,
+    quiet_hours_enabled: record.quiet_hours_enabled !== false,
+    quiet_start_hour:
+      typeof record.quiet_start_hour === 'number'
+        ? record.quiet_start_hour
+        : typeof record.sms_quiet_start_hour === 'number'
+          ? record.sms_quiet_start_hour
+          : undefined,
+    quiet_end_hour:
+      typeof record.quiet_end_hour === 'number'
+        ? record.quiet_end_hour
+        : typeof record.sms_quiet_end_hour === 'number'
+          ? record.sms_quiet_end_hour
+          : undefined,
+    email_deliverability: normalizeEmailDeliverability(record.email_deliverability),
   }
 }
 
@@ -320,6 +347,7 @@ export async function saveSettings(patch: Partial<AppSettings>): Promise<AppSett
   if (next.travel_rate_per_mile !== undefined) payload.travel_rate_per_mile = next.travel_rate_per_mile ?? 0
   if (next.track_job_supplies !== undefined) payload.track_job_supplies = next.track_job_supplies
   if (next.invoice_template !== undefined) payload.invoice_template = next.invoice_template ?? 'rinse'
+  if (next.document_locale !== undefined) payload.document_locale = next.document_locale ?? 'en'
   if (next.home_modules !== undefined) payload.home_modules = next.home_modules
   if (next.last_backup_at !== undefined) payload.last_backup_at = next.last_backup_at
   if (next.onboarding_step !== undefined) payload.onboarding_step = next.onboarding_step
@@ -328,6 +356,19 @@ export async function saveSettings(patch: Partial<AppSettings>): Promise<AppSett
   }
   if (next.onboarding_first_invoice_at !== undefined) {
     payload.onboarding_first_invoice_at = next.onboarding_first_invoice_at || null
+  }
+  if (next.timezone !== undefined) payload.timezone = next.timezone?.trim() || ''
+  if (next.quiet_hours_enabled !== undefined) payload.quiet_hours_enabled = next.quiet_hours_enabled
+  if (next.quiet_start_hour !== undefined) {
+    payload.quiet_start_hour = next.quiet_start_hour
+    payload.sms_quiet_start_hour = next.quiet_start_hour
+  }
+  if (next.quiet_end_hour !== undefined) {
+    payload.quiet_end_hour = next.quiet_end_hour
+    payload.sms_quiet_end_hour = next.quiet_end_hour
+  }
+  if (next.email_deliverability !== undefined) {
+    payload.email_deliverability = normalizeEmailDeliverability(next.email_deliverability)
   }
 
   let record: Record<string, unknown>

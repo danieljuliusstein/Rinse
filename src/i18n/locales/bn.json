@@ -1,0 +1,417 @@
+{
+  "common": {
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "saving": "সংরক্ষণ হচ্ছে…",
+    "loading": "লোড হচ্ছে…",
+    "signOut": "সাইন আউট",
+    "search": "অনুসন্ধান",
+    "back": "পিছনে",
+    "done": "হয়ে গেছে",
+    "error": "কিছু ভুল হয়েছে",
+    "offline": "আপনি অফলাইন",
+    "retry": "আবার চেষ্টা",
+    "client": "ক্লায়েন্ট",
+    "detail": "ডিটেইল",
+    "close": "বন্ধ",
+    "keep": "রাখুন",
+    "clear": "মুছুন",
+    "edit": "সম্পাদনা",
+    "delete": "মুছুন",
+    "more": "+ আরও {{count}}",
+    "result_one": "{{count}} ফলাফল",
+    "result_other": "{{count}} ফলাফল",
+    "changeWaiting_one": "{{count}} পরিবর্তন সিঙ্কের অপেক্ষায়",
+    "changeWaiting_other": "{{count}} পরিবর্তন সিঙ্কের অপেক্ষায়",
+    "export": "রপ্তানি",
+    "directions": "দিকনির্দেশ",
+    "call": "কল",
+    "text": "টেক্সট",
+    "email": "ইমেইল",
+    "notes": "নোট",
+    "photos": "ছবি",
+    "package": "প্যাকেজ",
+    "vehicle": "যানবাহন",
+    "location": "অবস্থান",
+    "revenue": "আয়",
+    "expenses": "খরচ",
+    "invoice": "চালান",
+    "quote": "কোট",
+    "all": "সব"
+  },
+  "tabs": {
+    "home": "হোম",
+    "jobs": "জব",
+    "clients": "ক্লায়েন্ট",
+    "business": "ব্যবসা"
+  },
+  "settings": {
+    "title": "সেটিংস",
+    "searchPlaceholder": "সেটিংস খুঁজুন",
+    "signOutBlocked": "সাইন আউটের আগে মুলতুবি পরিবর্তন সিঙ্ক বা বাতিল করুন।",
+    "cannotSignOut": "সাইন আউট করা যাচ্ছে না",
+    "unsyncedTitle": "অসিঙ্ক পরিবর্তন",
+    "groups": {
+      "account": "অ্যাকাউন্ট",
+      "business": "ব্যবসা",
+      "preferences": "পছন্দ",
+      "management": "ব্যবস্থাপনা",
+      "support": "সহায়তা"
+    },
+    "menu": {
+      "account": {
+        "title": "অ্যাকাউন্ট",
+        "subtitle": "ইমেইল, পাসওয়ার্ড ও সাইন-ইন"
+      },
+      "business": {
+        "title": "আপনার ব্যবসা",
+        "subtitle": "প্রোফাইল ও অনলাইন বুকিং"
+      },
+      "schedule": {
+        "title": "সময়সূচি ও ছুটি",
+        "subtitle": "ঘণ্টা, লাঞ্চ ও ব্লক দিন"
+      },
+      "invoicing": {
+        "title": "ইনভয়েসিং",
+        "subtitle": "অনলাইন পেমেন্ট ও ইনভয়েস দেখতে"
+      },
+      "billing": {
+        "title": "বিলিং",
+        "subtitle": "প্ল্যান, ট্রায়াল ও সাবস্ক্রিপশন"
+      },
+      "progress": {
+        "title": "আপনার অগ্রগতি",
+        "subtitle": "ব্যবসায়িক কার্যক্রমের মাইলফলক"
+      },
+      "preferences": {
+        "title": "অ্যাপ পছন্দ",
+        "subtitle": "রিমাইন্ডার ও বিজ্ঞপ্তি"
+      },
+      "language": {
+        "title": "ভাষা",
+        "subtitle": "অ্যাপ ও গ্রাহক নথি"
+      },
+      "quietHours": {
+        "title": "নীরব ঘণ্টা",
+        "subtitle": "রাতে অটো ইমেইল থামান"
+      },
+      "access": {
+        "title": "অ্যাক্সেস ও ডেটা",
+        "subtitle": "ব্যাকআপ, এক্সপোর্ট ও গোপনীয়তা"
+      },
+      "inventory": {
+        "title": "ইনভেন্টরি",
+        "subtitle": "সরবরাহ ও স্টক"
+      },
+      "packages": {
+        "title": "সার্ভিস প্যাকেজ",
+        "subtitle": "আপনার অফার পরিচালনা"
+      },
+      "invoices": {
+        "title": "সব ইনভয়েস",
+        "subtitle": "আর্থিক রেকর্ড"
+      },
+      "tools": {
+        "title": "টুলস",
+        "subtitle": "ইনভয়েস, খরচ ইত্যাদির শর্টকাট"
+      },
+      "expenses": {
+        "title": "খরচ",
+        "subtitle": "ওভারহেড ও ব্যবসায়িক খরচ"
+      },
+      "support": {
+        "title": "সাহায্য ও সহায়তা",
+        "subtitle": "যোগাযোগ, FAQ ও সমস্যা সমাধান"
+      }
+    }
+  },
+  "language": {
+    "title": "ভাষা",
+    "subtitle": "Rinse আপনার ও গ্রাহকদের সাথে কীভাবে কথা বলবে বেছে নিন",
+    "sectionApp": "অ্যাপের ভাষা",
+    "sectionDocs": "এতেও প্রযোজ্য",
+    "docsHint": "কোট, ইনভয়েস ও ক্লায়েন্ট পোর্টাল একই ভাষা ব্যবহার করে।",
+    "deviceDefault": "ডিভাইসের সাথে মিলান ({{lang}})",
+    "saved": "ভাষা আপডেট হয়েছে",
+    "saveFailed": "ভাষা সংরক্ষণ করা যায়নি",
+    "searchPlaceholder": "ভাষা খুঁজুন",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "ইনভয়েসিং",
+    "subtitle": "পেমেন্ট ও ইনভয়েস দেখতে",
+    "appearance": "চেহারা",
+    "previewCustomize": "প্রিভিউ ও কাস্টমাইজ",
+    "previewSubtitle": "লেআউট, অ্যাকসেন্ট, লোগো ও শর্তাবলী — সব ইনভয়েসে"
+  },
+  "auth": {
+    "checkingSession": "সেশন যাচাই…",
+    "starting": "Rinse চালু হচ্ছে…"
+  },
+  "home": {
+    "goodMorning": "শুভ সকাল",
+    "goodAfternoon": "শুভ অপরাহ্ন",
+    "goodEvening": "শুভ সন্ধ্যা",
+    "greetingNamed": "{{greeting}}, {{name}}",
+    "searchPlaceholder": "জব, ক্লায়েন্ট, প্যাকেজ খুঁজুন…",
+    "noMatch": "“{{query}}” এর সাথে কোনো জব মিলেনি।",
+    "jobReadiness": "জব প্রস্তুতি",
+    "collected": "সংগৃহীত",
+    "calendar": "ক্যালেন্ডার",
+    "todaysJobs": "আজকের জব",
+    "alsoToday": "আজ আরও",
+    "upcoming": "আসন্ন",
+    "serviceMix": "সেবা মিশ্রণ",
+    "account": "অ্যাকাউন্ট",
+    "pipeline": "পাইপলাইন",
+    "messages": "বার্তা",
+    "search": "খুঁজুন",
+    "settings": "সেটিংস",
+    "sendInvoice": "চালান পাঠান",
+    "newJob": "নতুন জব",
+    "newQuote": "নতুন কোট",
+    "outstanding": "বকেয়া",
+    "invoiced": "বিল করা",
+    "unpaid": "অপরিশোধিত",
+    "openCount": "{{count}} খোলা",
+    "collectedThisMonth": " এই মাসে সংগৃহীত",
+    "viewInvoices": "চালান দেখুন",
+    "noJobsToday": "আজ কোনো জব নির্ধারিত নেই",
+    "scheduleJob": "জব নির্ধারণ করুন",
+    "openJob": "জব খুলুন",
+    "statusConfirmed": "নিশ্চিত",
+    "statusPending": "মুলতুবি",
+    "completeProfile": "প্রোফাইল সম্পূর্ণ করুন",
+    "nextStep": "পরবর্তী: {{label}}",
+    "finishSetup": "সেটআপ শেষ করুন",
+    "continueSetup": "সেটআপ চালিয়ে যান",
+    "checkingWeather": "আবহাওয়া যাচাই…"
+  },
+  "quickActions": {
+    "title": "দ্রুত কাজ",
+    "close": "দ্রুত কাজ বন্ধ করুন",
+    "drag": "বন্ধ করতে টেনে আনুন",
+    "newLead": "নতুন লিড",
+    "newLeadSub": "অনুসন্ধান ধরুন",
+    "newJob": "নতুন জব",
+    "newJobSub": "কাজ নির্ধারণ বা লগ করুন",
+    "createInvoice": "চালান তৈরি",
+    "createInvoiceSub": "জব বেছে পাঠান",
+    "logExpense": "খরচ লগ করুন",
+    "logExpenseSub": "এককালীন ব্যবসায়িক খরচ",
+    "buySupplies": "সরবরাহ কিনুন",
+    "buySuppliesSub": "স্টক ও খরচ একসাথে",
+    "newQuote": "নতুন কোট",
+    "newQuoteSub": "মূল্য অনুমান পাঠান"
+  },
+  "jobs": {
+    "title": "জব",
+    "add": "জব যোগ করুন",
+    "create": "জব তৈরি করুন",
+    "searchPlaceholder": "মেক, রং, প্লেট, ক্লায়েন্ট খুঁজুন…",
+    "emptyTitle": "কোনো জব পাওয়া যায়নি",
+    "emptyFiltered": "অন্য অনুসন্ধান বা ফিল্টার চেষ্টা করুন।",
+    "emptyDefault": "আয় ট্র্যাক করতে প্রথম জব নির্ধারণ করুন।",
+    "shown": "{{count}} দেখানো",
+    "totalPeriod": "{{count}} মোট · {{period}}",
+    "onDate": "{{date}}-এ {{count}}",
+    "showingDate": "{{date}} দেখাচ্ছে · মুছুন",
+    "editJob": "জব সম্পাদনা",
+    "cancelAppointment": "অ্যাপয়েন্টমেন্ট বাতিল",
+    "cancelAppointmentConfirm": "অ্যাপয়েন্টমেন্ট বাতিল করবেন?",
+    "cancelAppointmentBody": "এতে স্লট খালি হবে এবং জব মুছে যাবে।",
+    "cancelJob": "জব বাতিল",
+    "jobActions": "জব অ্যাকশন",
+    "loadFailed": "জব লোড ব্যর্থ",
+    "moreJobs": "+ আরও {{count}}",
+    "sections": {
+      "today": "আজ · {{date}}",
+      "week": "এই সপ্তাহ",
+      "month": "এই মাসের আগে",
+      "older": "আগের"
+    },
+    "filters": {
+      "all": "সব",
+      "scheduled": "নির্ধারিত",
+      "inProgress": "চলমান",
+      "recurring": "পুনরাবৃত্ত"
+    },
+    "status": {
+      "scheduled": "নির্ধারিত",
+      "inProgress": "চলমান",
+      "paid": "পরিশোধিত",
+      "invoiced": "বিল করা",
+      "awaitingPayment": "পেমেন্ট অপেক্ষায়",
+      "complete": "সম্পূর্ণ"
+    }
+  },
+  "clients": {
+    "title": "ক্লায়েন্ট",
+    "add": "ক্লায়েন্ট যোগ",
+    "import": "ক্লায়েন্ট আমদানি",
+    "export": "ক্লায়েন্ট CSV রপ্তানি",
+    "searchPlaceholder": "নাম, ফোন, ইমেইল খুঁজুন…",
+    "emptyTitle": "এখনো কোনো ক্লায়েন্ট নেই",
+    "emptyFiltered": "কোনো ক্লায়েন্ট পাওয়া যায়নি",
+    "emptyDefault": "জব বুক করতে প্রথম ক্লায়েন্ট যোগ করুন।",
+    "emptySearch": "অন্য সেগমেন্ট বা অনুসন্ধান চেষ্টা করুন।",
+    "followUp": "ফলো আপ",
+    "topClients": "শীর্ষ ক্লায়েন্ট",
+    "allClients": "সব ক্লায়েন্ট",
+    "moreClients_one": "+ আরও {{count}} ক্লায়েন্ট",
+    "moreClients_other": "+ আরও {{count}} ক্লায়েন্ট",
+    "sortBy": "সাজান",
+    "loadFailed": "ক্লায়েন্ট লোড ব্যর্থ",
+    "filters": {
+      "all": "সব",
+      "followup": "ফলো আপ",
+      "top": "শীর্ষ",
+      "new": "নতুন"
+    },
+    "sort": {
+      "revenue": "আয়",
+      "name": "নাম",
+      "recent": "শেষ সেবা"
+    }
+  },
+  "business": {
+    "title": "ব্যবসা",
+    "searchPlaceholder": "সেবা, খরচ, জব খুঁজুন…",
+    "netProfit": "নিট মুনাফা",
+    "netLoss": "নিট ক্ষতি",
+    "revenue": "আয়",
+    "expenses": "খরচ",
+    "avgJobValue": "গড় জব মূল্য",
+    "fromJobs": "জব থেকে",
+    "perJob": "প্রতি জব",
+    "invoices": "চালান",
+    "quotes": "কোট",
+    "revenueByService": "সেবা অনুযায়ী আয়",
+    "expenseBreakdown": "খরচ বিভাজন",
+    "custom": "কাস্টম",
+    "startDate": "শুরু YYYY-MM-DD",
+    "endDate": "শেষ YYYY-MM-DD",
+    "exportCsv": "CSV রপ্তানি",
+    "exportPdf": "PDF রপ্তানি",
+    "expense": {
+      "supplies": "সরবরাহ",
+      "travel": "ভ্রমণ",
+      "equipment": "সরঞ্জাম",
+      "marketing": "মার্কেটিং",
+      "labor": "শ্রম",
+      "overhead": "ওভারহেড",
+      "business": "ব্যবসা",
+      "other": "অন্যান্য"
+    },
+    "ranges": {
+      "this_week": "এই সপ্তাহ",
+      "this_month": "এই মাস",
+      "last_month": "গত মাস",
+      "this_year": "এই বছর",
+      "lifetime": "সর্বকাল"
+    }
+  },
+  "invoices": {
+    "title": "চালান",
+    "openBalance": "খোলা ব্যালেন্স",
+    "searchPlaceholder": "চালান খুঁজুন…",
+    "emptyTitle": "কোনো চালান নেই",
+    "emptyDescription": "পেমেন্ট ট্র্যাক করতে সম্পূর্ণ জব থেকে চালান তৈরি করুন।",
+    "unavailable": "চালান উপলব্ধ নয়",
+    "loadFailed": "চালান লোড ব্যর্থ",
+    "markSent": "পাঠানো চিহ্নিত",
+    "markPaid": "পরিশোধিত চিহ্নিত",
+    "actions": "চালান অ্যাকশন",
+    "due": "বাকি",
+    "sectionTotal": "বিভাগ মোট",
+    "filters": {
+      "all": "সব",
+      "open": "খোলা",
+      "overdue": "মেয়াদোত্তীর্ণ",
+      "paid": "পরিশোধিত",
+      "draft": "খসড়া"
+    },
+    "detail": {
+      "loading": "চালান লোড হচ্ছে…",
+      "title": "চালান",
+      "notFound": "চালান পাওয়া যায়নি",
+      "send": "চালান পাঠান",
+      "resend": "পুনরায় পাঠান / শেয়ার",
+      "logPayment": "পেমেন্ট লগ",
+      "editLines": "লাইন আইটেম সম্পাদনা",
+      "editLinesCount": "লাইন সম্পাদনা ({{count}} অতিরিক্ত)",
+      "quickAdjustments": "দ্রুত সমন্বয়",
+      "previewCustomize": "প্রিভিউ ও কাস্টমাইজ",
+      "viewJob": "জব দেখুন"
+    }
+  },
+  "jobDetail": {
+    "loading": "জব লোড হচ্ছে…",
+    "titleFallback": "জব",
+    "markComplete": "জব সম্পূর্ণ চিহ্নিত",
+    "markingComplete": "সম্পূর্ণ চিহ্নিত হচ্ছে…",
+    "liability": "দায়বদ্ধতা ওয়াকথ্রু",
+    "viewWalkthrough": "ওয়াকথ্রু দেখুন",
+    "startWalkthrough": "ওয়াকথ্রু শুরু",
+    "hoursWorked": "কাজের ঘণ্টা",
+    "hoursValue": "{{hours}} ঘণ্টা",
+    "netProfit": "নিট মুনাফা",
+    "nextService": "পরবর্তী সেবা",
+    "bookNext": "পরবর্তী বুক",
+    "onMyWay": "রাস্তায় আছি",
+    "textClient": "ক্লায়েন্টকে টেক্সট",
+    "createQuote": "কোট তৈরি",
+    "createInvoice": "চালান তৈরি",
+    "creating": "তৈরি হচ্ছে…",
+    "sharePdf": "PDF শেয়ার",
+    "shareBeforeAfter": "আগে/পরে PDF শেয়ার",
+    "editJob": "জব সম্পাদনা",
+    "cancelAppointment": "অ্যাপয়েন্টমেন্ট বাতিল",
+    "cancelling": "বাতিল হচ্ছে…",
+    "jobCompleteTitle": "জব সম্পূর্ণ",
+    "jobCompleteBody": "এই স্ক্রিন থেকে চালান বা শেয়ার করতে পারেন।",
+    "noPhoneTitle": "কোনো ফোন নেই",
+    "noPhoneBody": "প্রথমে ক্লায়েন্ট প্রোফাইলে ফোন নম্বর যোগ করুন।",
+    "sentTitle": "পাঠানো হয়েছে",
+    "onMyWaySent": "“রাস্তায় আছি” টেক্সট পাঠানো হয়েছে।",
+    "cancelConfirm": "অ্যাপয়েন্টমেন্ট বাতিল করবেন?",
+    "cancelBody": "এতে স্লট খালি হবে এবং জব মুছে যাবে।"
+  },
+  "clientDetail": {
+    "newJob": "নতুন জব",
+    "quote": "কোট",
+    "invoice": "চালান",
+    "totalRevenue": "মোট আয়",
+    "totalJobs": "মোট জব",
+    "avgJob": "গড় জব",
+    "leadSource": "লিড উৎস",
+    "notes": "নোট",
+    "quotes": "কোট",
+    "vehicles": "যানবাহন",
+    "addVehicle": "যানবাহন যোগ",
+    "upcoming": "আসন্ন",
+    "jobHistory": "জব ইতিহাস",
+    "contact": "যোগাযোগ",
+    "editClient": "ক্লায়েন্ট সম্পাদনা",
+    "directions": "দিকনির্দেশ",
+    "call": "কল",
+    "text": "টেক্সট",
+    "email": "ইমেইল"
+  }
+}

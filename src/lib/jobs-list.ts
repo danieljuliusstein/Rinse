@@ -37,15 +37,37 @@ export function jobListRightTime(job: JobWithRelations): string {
   return new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export function jobListStatusLabel(job: JobWithRelations): string {
-  if (job.invoice?.status === 'overdue') return 'Awaiting payment'
-  if (job.status === 'in_progress') return 'In progress'
+export type JobListStatusKey =
+  | 'awaitingPayment'
+  | 'inProgress'
+  | 'scheduled'
+  | 'paid'
+  | 'invoiced'
+  | 'complete'
+
+export function jobListStatusKey(job: JobWithRelations): JobListStatusKey {
+  if (job.invoice?.status === 'overdue') return 'awaitingPayment'
+  if (job.status === 'in_progress') return 'inProgress'
   const display = mapJobStatusForDisplay(job)
-  if (display === 'scheduled') return 'Scheduled'
-  if (display === 'paid') return 'Paid'
-  if (display === 'invoiced') return 'Invoiced'
-  if (display === 'overdue') return 'Awaiting payment'
-  return 'Complete'
+  if (display === 'scheduled') return 'scheduled'
+  if (display === 'paid') return 'paid'
+  if (display === 'invoiced') return 'invoiced'
+  if (display === 'overdue') return 'awaitingPayment'
+  return 'complete'
+}
+
+/** @deprecated Prefer jobListStatusKey + t(`jobs.status.${key}`) */
+export function jobListStatusLabel(job: JobWithRelations): string {
+  const key = jobListStatusKey(job)
+  const labels: Record<JobListStatusKey, string> = {
+    awaitingPayment: 'Awaiting payment',
+    inProgress: 'In progress',
+    scheduled: 'Scheduled',
+    paid: 'Paid',
+    invoiced: 'Invoiced',
+    complete: 'Complete',
+  }
+  return labels[key]
 }
 
 export function jobListBadgeTone(job: JobWithRelations): BadgeTone {

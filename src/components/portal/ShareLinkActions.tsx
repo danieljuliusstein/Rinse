@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Image, Linking, Platform, StyleSheet, View } from 'react-native'
-import { createPortalLink } from '@/src/lib/share'
+import { Alert, Image, Linking, Platform, StyleSheet, View } from 'react-native'
+import { formatShareEmailBody, transformationPdfMissingMessage } from '@rinse/core'
+import { createPortalLink, shareTransformationPdf } from '@/src/lib/share'
 import { SHARE_LINK_PRESETS, type ShareLinkContext } from '@/src/lib/share-link-presets'
 import { loadSettings } from '@/src/lib/settings-store'
 import { checkPremiumGate } from '@/src/lib/subscription'
@@ -16,6 +17,9 @@ export interface ShareLinkActionsProps {
   context?: ShareLinkContext
   invoiceNumber?: string
   quoteNumber?: string
+  /** When context requires transformation, parent supplies readiness. */
+  hasBeforeAndAfter?: boolean
+  onRequirePhotos?: () => void
   onPdf?: () => void
   pdfLabel?: string
 }
@@ -28,6 +32,8 @@ export function ShareLinkActions({
   context = 'full',
   invoiceNumber,
   quoteNumber,
+  hasBeforeAndAfter = true,
+  onRequirePhotos,
   onPdf,
   pdfLabel = 'Download PDF',
 }: ShareLinkActionsProps) {
@@ -36,8 +42,23 @@ export function ShareLinkActions({
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
 
+  const transformationBlocked =
+    Boolean(preset.requiresTransformation && (!jobId || !hasBeforeAndAfter))
+
+  const ensureTransformation = useCallback((): boolean => {
+    if (!transformationBlocked) return true
+    Alert.alert('Before & after required', transformationPdfMissingMessage(), [
+      { text: 'Cancel', style: 'cancel' },
+      ...(onRequirePhotos ? [{ text: 'Add photos', onPress: onRequirePhotos }] : []),
+    ])
+    return false
+  }, [onRequirePhotos, transformationBlocked])
+
   const ensureLink = useCallback(async () => {
     if (url) return url
+    if (transformationBlocked) {
+      throw new Error(transformationPdfMissingMessage())
+    }
     const gate = await checkPremiumGate('share_portal')
     if (!gate.allowed) {
       throw new Error('Active subscription required')
@@ -50,13 +71,18 @@ export function ShareLinkActions({
     })
     setUrl(link.url)
     return link.url
-  }, [clientId, jobId, preset.scope, quoteId, url])
+  }, [clientId, jobId, preset.scope, quoteId, transformationBlocked, url])
 
   useEffect(() => {
+    if (transformationBlocked) {
+      setUrl(null)
+      return
+    }
     void ensureLink().catch(() => setUrl(null))
-  }, [ensureLink])
+  }, [ensureLink, transformationBlocked])
 
   const handleCopy = async () => {
+    if (!ensureTransformation()) return
     setBusy(true)
     setMsg('')
     try {
@@ -80,19 +106,29 @@ export function ShareLinkActions({
       setMsg('Add a client email to send from here')
       return
     }
+    if (!ensureTransformation()) return
     setBusy(true)
     setMsg('')
     try {
       const settings = await loadSettings()
       const link = await ensureLink()
+      const locale = settings.document_locale
       const subject = preset.emailSubject({
         businessName: settings.business_name,
         quoteNumber,
         invoiceNumber,
+        locale,
       })
-      const body = `${preset.emailMessage}\n\n${link}`
+      const body = formatShareEmailBody(preset.emailMessage(locale), link)
       const mailto = `mailto:${encodeURIComponent(clientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
       await Linking.openURL(mailto)
+      if (preset.requiresTransformation && jobId) {
+        try {
+          await shareTransformationPdf(jobId)
+        } catch {
+          // Mailto already opened; PDF share is best-effort companion.
+        }
+      }
       setMsg('Email opened')
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Failed')
@@ -109,6 +145,12 @@ export function ShareLinkActions({
     <View style={styles.root}>
       <AppText variant="sectionLabel">{preset.sectionTitle}</AppText>
 
+      {transformationBlocked ? (
+        <AppText variant="caption" style={styles.warn}>
+          Add before & after photos before sharing the portal or invoice link.
+        </AppText>
+      ) : null}
+
       {qrUri ? (
         <View style={styles.qrWrap}>
           <Image source={{ uri: qrUri }} style={styles.qr} accessibilityLabel="QR code for portal link" />
@@ -121,7 +163,7 @@ export function ShareLinkActions({
       <PrimaryButton
         label={preset.primaryActionLabel}
         loading={busy}
-        disabled={!clientEmail}
+        disabled={!clientEmail || transformationBlocked}
         onPress={() => void handleEmail()}
       />
 
@@ -135,6 +177,7 @@ export function ShareLinkActions({
         <SecondaryButton
           label={msg === 'Link copied' ? 'Copied' : 'Copy link'}
           loading={busy}
+          disabled={transformationBlocked}
           onPress={() => void handleCopy()}
           style={styles.secondaryBtn}
         />
@@ -178,6 +221,9 @@ const styles = StyleSheet.create({
   },
   hint: {
     color: colors.textMuted,
+  },
+  warn: {
+    color: colors.danger,
   },
   secondary: {
     flexDirection: 'row',

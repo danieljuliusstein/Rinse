@@ -1,0 +1,417 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "saving": "保存中…",
+    "loading": "加载中…",
+    "signOut": "退出登录",
+    "search": "搜索",
+    "back": "返回",
+    "done": "完成",
+    "error": "出错了",
+    "offline": "您处于离线状态",
+    "retry": "重试",
+    "client": "客户",
+    "detail": "精洗",
+    "close": "关闭",
+    "keep": "保留",
+    "clear": "清除",
+    "edit": "编辑",
+    "delete": "删除",
+    "more": "+{{count}} 更多",
+    "result_one": "{{count}} 个结果",
+    "result_other": "{{count}} 个结果",
+    "changeWaiting_one": "{{count}} 项更改待同步",
+    "changeWaiting_other": "{{count}} 项更改待同步",
+    "export": "导出",
+    "directions": "导航",
+    "call": "电话",
+    "text": "短信",
+    "email": "邮件",
+    "notes": "备注",
+    "photos": "照片",
+    "package": "套餐",
+    "vehicle": "车辆",
+    "location": "地点",
+    "revenue": "收入",
+    "expenses": "支出",
+    "invoice": "发票",
+    "quote": "报价",
+    "all": "全部"
+  },
+  "tabs": {
+    "home": "首页",
+    "jobs": "工作",
+    "clients": "客户",
+    "business": "业务"
+  },
+  "settings": {
+    "title": "设置",
+    "searchPlaceholder": "搜索设置",
+    "signOutBlocked": "退出前请先同步或丢弃待处理更改。",
+    "cannotSignOut": "无法退出",
+    "unsyncedTitle": "未同步的更改",
+    "groups": {
+      "account": "账户",
+      "business": "业务",
+      "preferences": "偏好",
+      "management": "管理",
+      "support": "支持"
+    },
+    "menu": {
+      "account": {
+        "title": "账户",
+        "subtitle": "邮箱、密码和登录"
+      },
+      "business": {
+        "title": "您的业务",
+        "subtitle": "资料与在线预约"
+      },
+      "schedule": {
+        "title": "日程与休假",
+        "subtitle": "营业时间、午休和封锁日"
+      },
+      "invoicing": {
+        "title": "开票",
+        "subtitle": "在线收款与发票外观"
+      },
+      "billing": {
+        "title": "订阅",
+        "subtitle": "套餐、试用与订阅"
+      },
+      "progress": {
+        "title": "您的进度",
+        "subtitle": "业务活动里程碑"
+      },
+      "preferences": {
+        "title": "应用偏好",
+        "subtitle": "提醒与通知"
+      },
+      "language": {
+        "title": "语言",
+        "subtitle": "应用与客户文档"
+      },
+      "quietHours": {
+        "title": "免打扰时段",
+        "subtitle": "夜间暂停自动邮件"
+      },
+      "access": {
+        "title": "访问与数据",
+        "subtitle": "备份、导出与隐私"
+      },
+      "inventory": {
+        "title": "库存",
+        "subtitle": "耗材与存量"
+      },
+      "packages": {
+        "title": "服务套餐",
+        "subtitle": "管理您的服务项目"
+      },
+      "invoices": {
+        "title": "全部发票",
+        "subtitle": "财务记录"
+      },
+      "tools": {
+        "title": "工具",
+        "subtitle": "发票、支出等快捷入口"
+      },
+      "expenses": {
+        "title": "支出",
+        "subtitle": "运营与业务成本"
+      },
+      "support": {
+        "title": "帮助与支持",
+        "subtitle": "联系、常见问题与排查"
+      }
+    }
+  },
+  "language": {
+    "title": "语言",
+    "subtitle": "选择 Rinse 与您及客户沟通的语言",
+    "sectionApp": "应用语言",
+    "sectionDocs": "同时适用于",
+    "docsHint": "报价单、发票和客户门户使用同一语言。",
+    "deviceDefault": "跟随设备（{{lang}}）",
+    "saved": "语言已更新",
+    "saveFailed": "无法保存语言",
+    "searchPlaceholder": "搜索语言",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "开票",
+    "subtitle": "收款与发票外观",
+    "appearance": "外观",
+    "previewCustomize": "预览与自定义",
+    "previewSubtitle": "版式、强调色、标志与条款 — 适用于所有发票"
+  },
+  "auth": {
+    "checkingSession": "正在检查会话…",
+    "starting": "正在启动 Rinse…"
+  },
+  "home": {
+    "goodMorning": "早上好",
+    "goodAfternoon": "下午好",
+    "goodEvening": "晚上好",
+    "greetingNamed": "{{greeting}}，{{name}}",
+    "searchPlaceholder": "搜索工作、客户、套餐…",
+    "noMatch": "没有匹配“{{query}}”的工作。",
+    "jobReadiness": "工作就绪",
+    "collected": "已收款",
+    "calendar": "日历",
+    "todaysJobs": "今日工作",
+    "alsoToday": "今日还有",
+    "upcoming": "即将到来",
+    "serviceMix": "服务构成",
+    "account": "账户",
+    "pipeline": "线索",
+    "messages": "消息",
+    "search": "搜索",
+    "settings": "设置",
+    "sendInvoice": "发送发票",
+    "newJob": "新工作",
+    "newQuote": "新报价",
+    "outstanding": "未收",
+    "invoiced": "已开票",
+    "unpaid": "未付",
+    "openCount": "{{count}} 笔未结",
+    "collectedThisMonth": " 本月已收",
+    "viewInvoices": "查看发票",
+    "noJobsToday": "今天没有安排工作",
+    "scheduleJob": "安排工作",
+    "openJob": "打开工作",
+    "statusConfirmed": "已确认",
+    "statusPending": "待定",
+    "completeProfile": "完善资料",
+    "nextStep": "下一步：{{label}}",
+    "finishSetup": "完成设置",
+    "continueSetup": "继续设置",
+    "checkingWeather": "正在查看天气…"
+  },
+  "quickActions": {
+    "title": "快捷操作",
+    "close": "关闭快捷操作",
+    "drag": "拖动关闭",
+    "newLead": "新线索",
+    "newLeadSub": "记录咨询",
+    "newJob": "新工作",
+    "newJobSub": "安排或记录工作",
+    "createInvoice": "创建发票",
+    "createInvoiceSub": "选择工作并发送",
+    "logExpense": "记录支出",
+    "logExpenseSub": "一次性业务成本",
+    "buySupplies": "采购耗材",
+    "buySuppliesSub": "库存与支出一起",
+    "newQuote": "新报价",
+    "newQuoteSub": "发送价格估算"
+  },
+  "jobs": {
+    "title": "工作",
+    "add": "添加工作",
+    "create": "创建工作",
+    "searchPlaceholder": "搜索品牌、颜色、车牌、客户…",
+    "emptyTitle": "未找到工作",
+    "emptyFiltered": "尝试其他搜索或筛选。",
+    "emptyDefault": "安排第一份工作以开始跟踪收入。",
+    "shown": "显示 {{count}} 个",
+    "totalPeriod": "共 {{count}} · {{period}}",
+    "onDate": "{{date}} 有 {{count}} 个",
+    "showingDate": "显示 {{date}} · 清除",
+    "editJob": "编辑工作",
+    "cancelAppointment": "取消预约",
+    "cancelAppointmentConfirm": "取消预约？",
+    "cancelAppointmentBody": "这将释放时段并删除工作。",
+    "cancelJob": "取消工作",
+    "jobActions": "工作操作",
+    "loadFailed": "加载工作失败",
+    "moreJobs": "+{{count}} 更多",
+    "sections": {
+      "today": "今天 · {{date}}",
+      "week": "本周",
+      "month": "本月早些时候",
+      "older": "更早"
+    },
+    "filters": {
+      "all": "全部",
+      "scheduled": "已安排",
+      "inProgress": "进行中",
+      "recurring": "循环"
+    },
+    "status": {
+      "scheduled": "已安排",
+      "inProgress": "进行中",
+      "paid": "已付",
+      "invoiced": "已开票",
+      "awaitingPayment": "待付款",
+      "complete": "完成"
+    }
+  },
+  "clients": {
+    "title": "客户",
+    "add": "添加客户",
+    "import": "导入客户",
+    "export": "导出客户 CSV",
+    "searchPlaceholder": "搜索姓名、电话、邮箱…",
+    "emptyTitle": "还没有客户",
+    "emptyFiltered": "未找到客户",
+    "emptyDefault": "添加第一位客户以开始预约。",
+    "emptySearch": "尝试其他分段或搜索。",
+    "followUp": "跟进",
+    "topClients": "优质客户",
+    "allClients": "全部客户",
+    "moreClients_one": "+{{count}} 位客户",
+    "moreClients_other": "+{{count}} 位客户",
+    "sortBy": "排序",
+    "loadFailed": "加载客户失败",
+    "filters": {
+      "all": "全部",
+      "followup": "跟进",
+      "top": "优质",
+      "new": "新客户"
+    },
+    "sort": {
+      "revenue": "收入",
+      "name": "姓名",
+      "recent": "最近服务"
+    }
+  },
+  "business": {
+    "title": "业务",
+    "searchPlaceholder": "搜索服务、支出、工作…",
+    "netProfit": "净利润",
+    "netLoss": "净亏损",
+    "revenue": "收入",
+    "expenses": "支出",
+    "avgJobValue": "平均工作价值",
+    "fromJobs": "来自工作",
+    "perJob": "每单",
+    "invoices": "发票",
+    "quotes": "报价",
+    "revenueByService": "按服务收入",
+    "expenseBreakdown": "支出明细",
+    "custom": "自定义",
+    "startDate": "开始 YYYY-MM-DD",
+    "endDate": "结束 YYYY-MM-DD",
+    "exportCsv": "导出 CSV",
+    "exportPdf": "导出 PDF",
+    "expense": {
+      "supplies": "耗材",
+      "travel": "差旅",
+      "equipment": "设备",
+      "marketing": "营销",
+      "labor": "人工",
+      "overhead": "间接费用",
+      "business": "业务",
+      "other": "其他"
+    },
+    "ranges": {
+      "this_week": "本周",
+      "this_month": "本月",
+      "last_month": "上月",
+      "this_year": "今年",
+      "lifetime": "全部"
+    }
+  },
+  "invoices": {
+    "title": "发票",
+    "openBalance": "未结余额",
+    "searchPlaceholder": "搜索发票…",
+    "emptyTitle": "暂无发票",
+    "emptyDescription": "从已完成工作创建发票以跟踪付款。",
+    "unavailable": "发票不可用",
+    "loadFailed": "加载发票失败",
+    "markSent": "标记已发送",
+    "markPaid": "标记已付",
+    "actions": "发票操作",
+    "due": "应付",
+    "sectionTotal": "小节合计",
+    "filters": {
+      "all": "全部",
+      "open": "未结",
+      "overdue": "逾期",
+      "paid": "已付",
+      "draft": "草稿"
+    },
+    "detail": {
+      "loading": "正在加载发票…",
+      "title": "发票",
+      "notFound": "未找到发票",
+      "send": "发送发票",
+      "resend": "重发 / 分享",
+      "logPayment": "记录付款",
+      "editLines": "编辑明细",
+      "editLinesCount": "编辑明细（{{count}} 项额外）",
+      "quickAdjustments": "快速调整",
+      "previewCustomize": "预览与自定义",
+      "viewJob": "查看工作"
+    }
+  },
+  "jobDetail": {
+    "loading": "正在加载工作…",
+    "titleFallback": "工作",
+    "markComplete": "标记完成",
+    "markingComplete": "正在标记…",
+    "liability": "责任巡检",
+    "viewWalkthrough": "查看巡检",
+    "startWalkthrough": "开始巡检",
+    "hoursWorked": "工时",
+    "hoursValue": "{{hours}} 小时",
+    "netProfit": "净利润",
+    "nextService": "下次服务",
+    "bookNext": "预约下次",
+    "onMyWay": "在路上",
+    "textClient": "给客户发短信",
+    "createQuote": "创建报价",
+    "createInvoice": "创建发票",
+    "creating": "创建中…",
+    "sharePdf": "分享 PDF",
+    "shareBeforeAfter": "分享前后对比 PDF",
+    "editJob": "编辑工作",
+    "cancelAppointment": "取消预约",
+    "cancelling": "取消中…",
+    "jobCompleteTitle": "工作完成",
+    "jobCompleteBody": "可从此页开票或分享。",
+    "noPhoneTitle": "无电话",
+    "noPhoneBody": "请先在客户资料中添加电话。",
+    "sentTitle": "已发送",
+    "onMyWaySent": "已发送“在路上”短信。",
+    "cancelConfirm": "取消预约？",
+    "cancelBody": "这将释放时段并删除工作。"
+  },
+  "clientDetail": {
+    "newJob": "新工作",
+    "quote": "报价",
+    "invoice": "发票",
+    "totalRevenue": "总收入",
+    "totalJobs": "总工作数",
+    "avgJob": "平均",
+    "leadSource": "来源",
+    "notes": "备注",
+    "quotes": "报价",
+    "vehicles": "车辆",
+    "addVehicle": "添加车辆",
+    "upcoming": "即将到来",
+    "jobHistory": "工作历史",
+    "contact": "联系方式",
+    "editClient": "编辑客户",
+    "directions": "导航",
+    "call": "电话",
+    "text": "短信",
+    "email": "邮件"
+  }
+}

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { AppText, ListRow, PrimaryButton, SectionGroup } from '@/src/components/ui'
 import { useOrgSubscription } from '@/src/hooks/useOrgSubscription'
@@ -18,6 +19,7 @@ import { useOffline } from '@/src/providers/OfflineProvider'
 import { SignOutBlockedError } from '@/src/lib/auth'
 
 export default function SettingsHubScreen({ tabRoot = false }: { tabRoot?: boolean }) {
+  const { t, i18n } = useTranslation()
   const router = useRouter()
   const { user, signOut } = useAuth()
   const { pendingCount } = useOffline()
@@ -29,11 +31,13 @@ export default function SettingsHubScreen({ tabRoot = false }: { tabRoot?: boole
   const billingSubtitle = billingMenuSubtitle(org, STARTER_TRIAL_DAYS)
 
   const items = useMemo(() => {
-    const searched = searchSettingsMenu(query)
-    return searched.map((item) =>
-      item.id === 'billing' ? { ...item, subtitle: billingSubtitle } : item,
-    )
-  }, [query, billingSubtitle])
+    void i18n.language
+    return searchSettingsMenu(query).map((item) => ({
+      ...item,
+      title: t(item.titleKey),
+      subtitle: item.id === 'billing' ? billingSubtitle : t(item.subtitleKey),
+    }))
+  }, [query, billingSubtitle, i18n.language, t])
 
   const grouped = useMemo(() => {
     const map = new Map<string, typeof items>()
@@ -42,21 +46,25 @@ export default function SettingsHubScreen({ tabRoot = false }: { tabRoot?: boole
       list.push(item)
       map.set(item.group, list)
     }
-    return SETTINGS_MENU_GROUPS.map((g) => ({ ...g, items: map.get(g.id) ?? [] })).filter(
-      (g) => g.items.length > 0
-    )
-  }, [items])
+    return SETTINGS_MENU_GROUPS.map((g) => ({
+      id: g.id,
+      label: t(g.labelKey),
+      items: map.get(g.id) ?? [],
+    })).filter((g) => g.items.length > 0)
+  }, [items, t, i18n.language])
 
   const handleSignOut = async () => {
     if (pendingCount > 0) {
-      Alert.alert('Unsynced changes', 'Sync or discard pending changes before signing out.')
+      Alert.alert(t('settings.unsyncedTitle'), t('settings.signOutBlocked'))
       return
     }
     setSigningOut(true)
     try {
       await signOut()
     } catch (e) {
-      if (e instanceof SignOutBlockedError) Alert.alert('Cannot sign out', e.message)
+      if (e instanceof SignOutBlockedError) {
+        Alert.alert(t('settings.cannotSignOut'), e.message)
+      }
     } finally {
       setSigningOut(false)
     }
@@ -79,7 +87,12 @@ export default function SettingsHubScreen({ tabRoot = false }: { tabRoot?: boole
   }
 
   return (
-    <SettingsScreen title="Settings" subtitle={String(user?.email ?? '')} hub={!tabRoot} tabRoot={tabRoot}>
+    <SettingsScreen
+      title={t('settings.title')}
+      subtitle={String(user?.email ?? '')}
+      hub={!tabRoot}
+      tabRoot={tabRoot}
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.scroll, { paddingBottom: tabRoot ? dockPadding : spacing.xl }]}
@@ -87,7 +100,7 @@ export default function SettingsHubScreen({ tabRoot = false }: { tabRoot?: boole
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Search settings"
+          placeholder={t('settings.searchPlaceholder')}
           placeholderTextColor={colors.textMuted}
           style={styles.search}
           autoCapitalize="none"
@@ -114,7 +127,11 @@ export default function SettingsHubScreen({ tabRoot = false }: { tabRoot?: boole
         ))}
 
         <View style={styles.signOut}>
-          <PrimaryButton label="Sign out" onPress={() => void handleSignOut()} loading={signingOut} />
+          <PrimaryButton
+            label={t('common.signOut')}
+            onPress={() => void handleSignOut()}
+            loading={signingOut}
+          />
         </View>
       </ScrollView>
     </SettingsScreen>

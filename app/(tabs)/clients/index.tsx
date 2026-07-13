@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Alert, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { DownloadSimple, Plus, SortAscending, UploadSimple } from 'phosphor-react-native'
 import type { ClientWithStats } from '@rinse/core'
 import { listClientsWithStats } from '@/src/lib/api'
@@ -38,6 +39,7 @@ import { colors, spacing, webInlinePressableReset } from '@/src/theme/colors'
 const CLIENTS_VISIBLE = 5
 
 export default function ClientsScreen() {
+  const { t } = useTranslation()
   const dockPadding = useTabDockPadding()
   const router = useRouter()
   const { tick } = useDataRefresh()
@@ -60,12 +62,12 @@ export default function ClientsScreen() {
       const rows = await listClientsWithStats()
       setClients(rows)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load clients')
+      setError(e instanceof Error ? e.message : t('clients.loadFailed'))
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [t])
 
   useFocusEffect(
     useCallback(() => {
@@ -100,7 +102,7 @@ export default function ClientsScreen() {
       const csv = formatClientsCsv(clients)
       await shareTextExport(`clients-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv')
     } catch (e) {
-      Alert.alert('Export', e instanceof Error ? e.message : 'Export failed')
+      Alert.alert(t('common.export'), e instanceof Error ? e.message : 'Export failed')
     }
   }
 
@@ -116,20 +118,20 @@ export default function ClientsScreen() {
               children={[
                 <IconHeaderButton
                   key="import"
-                  label="Import clients"
+                  label={t('clients.import')}
                   onPress={() => router.push('/clients/import')}
                 >
                   <UploadSimple size={18} color={colors.textSecondary} weight="bold" />
                 </IconHeaderButton>,
                 <IconHeaderButton
                   key="export"
-                  label="Export clients CSV"
+                  label={t('clients.export')}
                   onPress={() => void handleExport()}
                 >
                   <DownloadSimple size={18} color={colors.textSecondary} weight="bold" />
                 </IconHeaderButton>,
                 <AppText key="title" variant="h1" style={styles.pageTitle}>
-                  Clients
+                  {t('clients.title')}
                 </AppText>,
               ]}
             />,
@@ -138,7 +140,7 @@ export default function ClientsScreen() {
               onSearchPress={toggleSearch}
               searchActive={searchActive}
             >
-              <IconHeaderButton label="Add client" onPress={() => router.push('/clients/new')}>
+              <IconHeaderButton label={t('clients.add')} onPress={() => router.push('/clients/new')}>
                 <Plus size={18} color={colors.textSecondary} weight="bold" />
               </IconHeaderButton>
             </ModuleHeaderActions>,
@@ -151,7 +153,7 @@ export default function ClientsScreen() {
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search name, phone, email…"
+          placeholder={t('clients.searchPlaceholder')}
           autoCapitalize="none"
           autoCorrect={false}
           autoFocus
@@ -165,7 +167,7 @@ export default function ClientsScreen() {
       >
         <PillGroup
           inline
-          options={CLIENT_SEGMENT_CHIPS.map((c) => ({ value: c.key, label: c.label }))}
+          options={CLIENT_SEGMENT_CHIPS.map((c) => ({ value: c.key, label: t(c.labelKey) }))}
           value={segment}
           onChange={setSegment}
         />
@@ -177,7 +179,10 @@ export default function ClientsScreen() {
           <View style={styles.sortChipInner}>
             <SortAscending size={14} color={colors.textSecondary} />
             <AppText variant="caption" style={styles.sortChipLabel}>
-              {CLIENT_SORT_OPTIONS.find((o) => o.key === sort)?.label}
+              {(() => {
+                const opt = CLIENT_SORT_OPTIONS.find((o) => o.key === sort)
+                return opt ? t(opt.labelKey) : ''
+              })()}
             </AppText>
           </View>
         </Pressable>
@@ -187,7 +192,7 @@ export default function ClientsScreen() {
         <Pressable style={styles.sortBackdrop} onPress={() => setSortOpen(false)}>
           <View style={styles.sortSheet}>
             <AppText variant="bodySemiBold" style={styles.sortTitle}>
-              Sort by
+              {t('clients.sortBy')}
             </AppText>
             {CLIENT_SORT_OPTIONS.map((opt) => (
               <Pressable
@@ -200,7 +205,7 @@ export default function ClientsScreen() {
               >
                 <View>
                   <AppText variant="body" style={sort === opt.key ? styles.sortActive : undefined}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                     {sort === opt.key ? ' ✓' : ''}
                   </AppText>
                 </View>
@@ -219,9 +224,9 @@ export default function ClientsScreen() {
       ) : clients.length === 0 || ((searching || segment !== 'all') && filtered.length === 0) ? (
         <EmptyState
           illustration="clients"
-          title={clients.length === 0 ? 'No clients yet' : 'No clients found'}
-          description={clients.length === 0 ? 'Add your first client to start booking jobs.' : 'Try another segment or search term.'}
-          actionLabel="Add client"
+          title={clients.length === 0 ? t('clients.emptyTitle') : t('clients.emptyFiltered')}
+          description={clients.length === 0 ? t('clients.emptyDefault') : t('clients.emptySearch')}
+          actionLabel={t('clients.add')}
           onAction={() => router.push('/clients/new')}
         />
       ) : searching || segment !== 'all' ? (
@@ -244,7 +249,7 @@ export default function ClientsScreen() {
         >
           {overdue.length > 0 ? (
             <View style={styles.block}>
-              <AppText variant="sectionLabel">Follow up</AppText>
+              <AppText variant="sectionLabel">{t('clients.followUp')}</AppText>
               <View style={styles.followUpList}>
                 {overdue.map((client) => (
                   <FollowUpClientCard key={client.id} client={client} />
@@ -255,7 +260,7 @@ export default function ClientsScreen() {
 
           {topClients.length > 0 ? (
             <View style={styles.block}>
-              <AppText variant="sectionLabel">Top clients</AppText>
+              <AppText variant="sectionLabel">{t('clients.topClients')}</AppText>
               {topClients.map((client, index) => (
                 <StaggeredListItem key={client.id} index={index}>
                   <ClientCard client={client} derived={derivedMap.get(client.id)!} />
@@ -266,7 +271,7 @@ export default function ClientsScreen() {
 
           {allRest.length > 0 ? (
             <View style={styles.block}>
-              <AppText variant="sectionLabel">All clients</AppText>
+              <AppText variant="sectionLabel">{t('clients.allClients')}</AppText>
               {visibleRest.map((client, index) => (
                 <StaggeredListItem key={client.id} index={index}>
                   <ClientCard client={client} derived={derivedMap.get(client.id)!} />
@@ -276,7 +281,7 @@ export default function ClientsScreen() {
                 <Pressable style={styles.morePill} onPress={() => setShowAllRest(true)}>
                   <View>
                     <AppText variant="bodySemiBold" style={styles.moreLabel}>
-                      {`+ ${hiddenRest} more client${hiddenRest > 1 ? 's' : ''}`}
+                      {t('clients.moreClients', { count: hiddenRest })}
                     </AppText>
                   </View>
                 </Pressable>

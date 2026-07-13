@@ -157,10 +157,10 @@ export function getPLReportBundle(jobs: Job[], range: DateRangeKey) {
   return { current, prior }
 }
 
-export const REPORT_FILTER_CHIPS: { key: DateRangeKey; label: string }[] = [
-  { key: 'this_week', label: 'This week' },
-  { key: 'this_month', label: 'This month' },
-  { key: 'last_month', label: 'Last month' },
-  { key: 'this_year', label: 'This year' },
-  { key: 'lifetime', label: 'Lifetime' },
+export const REPORT_FILTER_CHIPS: { key: DateRangeKey; labelKey: string }[] = [
+  { key: 'this_week', labelKey: 'business.ranges.this_week' },
+  { key: 'this_month', labelKey: 'business.ranges.this_month' },
+  { key: 'last_month', labelKey: 'business.ranges.last_month' },
+  { key: 'this_year', labelKey: 'business.ranges.this_year' },
+  { key: 'lifetime', labelKey: 'business.ranges.lifetime' },
 ]

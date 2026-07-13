@@ -3,10 +3,11 @@ import { Alert, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Controller, useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { jobEditFormSchema, type JobEditFormValues, type JobWithRelations } from '@rinse/core'
+import { jobEditFormSchema, jobHasPreJobInspection, requiresPreJobInspection, type JobEditFormValues, type JobWithRelations } from '@rinse/core'
 import { FormField } from '@/src/components/FormField'
 import { FormRow } from '@/src/components/forms/FormRow'
 import { formatMoneyInput, parseMoneyInput } from '@/src/lib/money-input'
+import { confirmUnblockDayIfNeeded } from '@/src/lib/confirm-unblock-day'
 import { AffixField } from '@/src/components/ui/AffixField'
 import { PillGroup } from '@/src/components/ui/PillGroup'
 import { SectionGroup } from '@/src/components/ui/SectionGroup'
@@ -50,6 +51,27 @@ export function JobEditForm({ job, onSubmit }: JobEditFormProps) {
 
   const save = handleSubmit(async (values) => {
     try {
+      if (
+        requiresPreJobInspection(job.status, values.status) &&
+        !jobHasPreJobInspection(job)
+      ) {
+        Alert.alert(
+          'Walkthrough required',
+          'Complete the pre-job liability walkthrough before setting status to In progress.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open walkthrough',
+              onPress: () => router.push(`/jobs/${job.id}/inspection` as never),
+            },
+          ],
+        )
+        return
+      }
+
+      const unblocked = await confirmUnblockDayIfNeeded(values.date)
+      if (!unblocked) return
+
       await onSubmit(values)
       setDone(true)
       setTimeout(() => router.back(), 450)

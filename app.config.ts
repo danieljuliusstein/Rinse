@@ -54,6 +54,8 @@ const config: ExpoConfig = {
     'expo-camera',
     'expo-iap',
     'expo-localization',
+    // On-device plate/VIN OCR — Apple Vision on iOS. Requires a rebuilt dev client (not Expo Go).
+    ['expo-mlkit-ocr', { iosEngine: 'vision' }],
     [
       '@sentry/react-native',
       {
@@ -84,6 +86,7 @@ const config: ExpoConfig = {
   extra: {
     pbUrl: process.env.EXPO_PUBLIC_PB_URL,
     appApiUrl: process.env.EXPO_PUBLIC_APP_API_URL,
+    webOrigin: process.env.EXPO_PUBLIC_WEB_ORIGIN,
     eas: {
       projectId: 'a603bec9-0ac7-432a-b24a-9d100f9fd884',
     },

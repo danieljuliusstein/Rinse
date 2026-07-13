@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { AppText, PrimaryButton } from '@/src/components/ui'
 import type { ProfileCompletion } from '@/src/lib/profile-completion'
 import { colors, radii, spacing } from '@/src/theme/colors'
@@ -10,6 +11,7 @@ type ProfileCompleteCardProps = {
 
 export function ProfileCompleteCard({ completion }: ProfileCompleteCardProps) {
   const router = useRouter()
+  const { t } = useTranslation()
 
   if (completion.isComplete) return null
 
@@ -18,17 +20,17 @@ export function ProfileCompleteCard({ completion }: ProfileCompleteCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.top}>
-        <AppText variant="sectionLabel">Complete your profile</AppText>
+        <AppText variant="sectionLabel">{t('home.completeProfile')}</AppText>
         <AppText style={styles.percent}>{completion.percent}%</AppText>
       </View>
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${Math.min(100, Math.max(0, completion.percent))}%` }]} />
       </View>
       <AppText variant="body" style={styles.next}>
-        Next: {completion.nextStep?.label ?? 'Finish setup'}
+        {t('home.nextStep', { label: completion.nextStep?.label ?? t('home.finishSetup') })}
       </AppText>
       <PrimaryButton
-        label="Continue setup"
+        label={t('home.continueSetup')}
         onPress={() => router.push(continueHref as '/settings/business')}
         style={styles.cta}
       />

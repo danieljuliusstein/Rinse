@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Tabs, Redirect } from 'expo-router'
 import { View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/src/providers/AuthProvider'
 import { QuickActionProvider } from '@/src/providers/QuickActionProvider'
 import { OperatorBottomNav } from '@/src/components/OperatorBottomNav'
@@ -13,6 +14,7 @@ import { loadSettings } from '@/src/lib/settings-store'
 const hiddenTab = { href: null, headerShown: false }
 
 export default function TabLayout() {
+  const { t } = useTranslation()
   const { user, loading } = useAuth()
   const [onboardingRequired, setOnboardingRequired] = useState<boolean | null>(null)
 
@@ -22,6 +24,9 @@ export default function TabLayout() {
       return
     }
     let cancelled = false
+    const timer = setTimeout(() => {
+      if (!cancelled) setOnboardingRequired(false)
+    }, 8000)
     void loadSettings()
       .then((settings) => {
         if (!cancelled) setOnboardingRequired(needsOnboarding(settings))
@@ -29,14 +34,18 @@ export default function TabLayout() {
       .catch(() => {
         if (!cancelled) setOnboardingRequired(false)
       })
+      .finally(() => clearTimeout(timer))
     return () => {
       cancelled = true
+      clearTimeout(timer)
     }
   }, [user])
 
   if (loading) return <ScreenLoading variant="spinner" />
   if (!user) return <Redirect href="/(auth)/login" />
-  if (onboardingRequired === null) return <ScreenLoading variant="spinner" label="Loading…" />
+  if (onboardingRequired === null) {
+    return <ScreenLoading variant="spinner" label={t('common.loading')} />
+  }
   if (onboardingRequired) return <Redirect href="/onboarding" />
 
   return (
@@ -44,18 +53,16 @@ export default function TabLayout() {
       <View style={{ flex: 1 }}>
         <Tabs
           tabBar={(props) => <OperatorBottomNav {...props} />}
-          // Remember prior tab so Back on Tools/Invoices/etc. returns to Home/Settings.
           backBehavior="history"
           screenOptions={{
             headerShown: false,
-            // Positioning lives on OperatorBottomNav (custom tabBar ignores tabBarStyle).
             safeAreaInsets: { bottom: 0 },
           }}
         >
-          <Tabs.Screen name="index" options={{ title: 'Home' }} />
-          <Tabs.Screen name="jobs" options={{ title: 'Jobs' }} />
-          <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
-          <Tabs.Screen name="reports" options={{ title: 'Business' }} />
+          <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />
+          <Tabs.Screen name="jobs" options={{ title: t('tabs.jobs') }} />
+          <Tabs.Screen name="clients" options={{ title: t('tabs.clients') }} />
+          <Tabs.Screen name="reports" options={{ title: t('tabs.business') }} />
           <Tabs.Screen name="settings" options={hiddenTab} />
           <Tabs.Screen name="invoices" options={hiddenTab} />
           <Tabs.Screen name="pipeline" options={hiddenTab} />

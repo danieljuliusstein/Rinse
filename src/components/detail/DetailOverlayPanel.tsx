@@ -1,6 +1,6 @@
 import { Modal, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { X } from 'phosphor-react-native'
-import type { DetailOverlayTarget } from '@/src/providers/DetailOverlayProvider'
+import type { DetailOverlayTarget } from '@/src/providers/detail-overlay-context'
 import { ClientDetailBody } from '@/src/components/detail/ClientDetailBody'
 import { JobDetailBody } from '@/src/components/detail/JobDetailBody'
 import { QuoteDetailBody } from '@/src/components/detail/QuoteDetailBody'

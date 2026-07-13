@@ -1,0 +1,417 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "saving": "Сохранение…",
+    "loading": "Загрузка…",
+    "signOut": "Выйти",
+    "search": "Поиск",
+    "back": "Назад",
+    "done": "Готово",
+    "error": "Что-то пошло не так",
+    "offline": "Вы офлайн",
+    "retry": "Повторить",
+    "client": "Клиент",
+    "detail": "Детейлинг",
+    "close": "Закрыть",
+    "keep": "Оставить",
+    "clear": "Очистить",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "more": "+ ещё {{count}}",
+    "result_one": "{{count}} результат",
+    "result_other": "{{count}} результатов",
+    "changeWaiting_one": "{{count}} изменение ожидает синхронизации",
+    "changeWaiting_other": "{{count}} изменений ожидают синхронизации",
+    "export": "Экспорт",
+    "directions": "Маршрут",
+    "call": "Звонок",
+    "text": "Сообщение",
+    "email": "Эл. почта",
+    "notes": "Заметки",
+    "photos": "Фото",
+    "package": "Пакет",
+    "vehicle": "Автомобиль",
+    "location": "Место",
+    "revenue": "Выручка",
+    "expenses": "Расходы",
+    "invoice": "Счёт",
+    "quote": "Смета",
+    "all": "Все"
+  },
+  "tabs": {
+    "home": "Главная",
+    "jobs": "Заказы",
+    "clients": "Клиенты",
+    "business": "Бизнес"
+  },
+  "settings": {
+    "title": "Настройки",
+    "searchPlaceholder": "Поиск настроек",
+    "signOutBlocked": "Синхронизируйте или отмените изменения перед выходом.",
+    "cannotSignOut": "Нельзя выйти",
+    "unsyncedTitle": "Несинхронизированные изменения",
+    "groups": {
+      "account": "Аккаунт",
+      "business": "Бизнес",
+      "preferences": "Предпочтения",
+      "management": "Управление",
+      "support": "Поддержка"
+    },
+    "menu": {
+      "account": {
+        "title": "Аккаунт",
+        "subtitle": "Почта, пароль и вход"
+      },
+      "business": {
+        "title": "Ваш бизнес",
+        "subtitle": "Профиль и онлайн-запись"
+      },
+      "schedule": {
+        "title": "Расписание и выходные",
+        "subtitle": "Часы, обед и блокировки"
+      },
+      "invoicing": {
+        "title": "Счета",
+        "subtitle": "Онлайн-оплата и вид счетов"
+      },
+      "billing": {
+        "title": "Подписка",
+        "subtitle": "План, пробный период и подписка"
+      },
+      "progress": {
+        "title": "Ваш прогресс",
+        "subtitle": "Вехи вашей активности"
+      },
+      "preferences": {
+        "title": "Настройки приложения",
+        "subtitle": "Напоминания и уведомления"
+      },
+      "language": {
+        "title": "Язык",
+        "subtitle": "Приложение и документы для клиентов"
+      },
+      "quietHours": {
+        "title": "Тихие часы",
+        "subtitle": "Пауза автописем ночью"
+      },
+      "access": {
+        "title": "Доступ и данные",
+        "subtitle": "Резервные копии, экспорт и конфиденциальность"
+      },
+      "inventory": {
+        "title": "Склад",
+        "subtitle": "Расходники и запасы"
+      },
+      "packages": {
+        "title": "Пакеты услуг",
+        "subtitle": "Управление предложениями"
+      },
+      "invoices": {
+        "title": "Все счета",
+        "subtitle": "Финансовые записи"
+      },
+      "tools": {
+        "title": "Инструменты",
+        "subtitle": "Ярлыки для счетов, расходов и др."
+      },
+      "expenses": {
+        "title": "Расходы",
+        "subtitle": "Накладные и бизнес-затраты"
+      },
+      "support": {
+        "title": "Помощь и поддержка",
+        "subtitle": "Контакты, FAQ и устранение неполадок"
+      }
+    }
+  },
+  "language": {
+    "title": "Язык",
+    "subtitle": "Выберите, на каком языке Rinse общается с вами и клиентами",
+    "sectionApp": "Язык приложения",
+    "sectionDocs": "Также применяется к",
+    "docsHint": "Сметы, счета и клиентский портал используют тот же язык.",
+    "deviceDefault": "Как на устройстве ({{lang}})",
+    "saved": "Язык обновлён",
+    "saveFailed": "Не удалось сохранить язык",
+    "searchPlaceholder": "Поиск языка",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "Счета",
+    "subtitle": "Оплата и вид счетов",
+    "appearance": "Оформление",
+    "previewCustomize": "Просмотр и настройка",
+    "previewSubtitle": "Макет, акцент, логотип и условия — для всех счетов"
+  },
+  "auth": {
+    "checkingSession": "Проверка сессии…",
+    "starting": "Запуск Rinse…"
+  },
+  "home": {
+    "goodMorning": "Доброе утро",
+    "goodAfternoon": "Добрый день",
+    "goodEvening": "Добрый вечер",
+    "greetingNamed": "{{greeting}}, {{name}}",
+    "searchPlaceholder": "Поиск заказов, клиентов, пакетов…",
+    "noMatch": "Нет заказов по запросу «{{query}}».",
+    "jobReadiness": "Готовность к заказу",
+    "collected": "Получено",
+    "calendar": "Календарь",
+    "todaysJobs": "Заказы на сегодня",
+    "alsoToday": "Также сегодня",
+    "upcoming": "Предстоящие",
+    "serviceMix": "Состав услуг",
+    "account": "Аккаунт",
+    "pipeline": "Воронка",
+    "messages": "Сообщения",
+    "search": "Поиск",
+    "settings": "Настройки",
+    "sendInvoice": "Отправить счёт",
+    "newJob": "Новый заказ",
+    "newQuote": "Новая смета",
+    "outstanding": "К оплате",
+    "invoiced": "Выставлен счёт",
+    "unpaid": "не оплачено",
+    "openCount": "{{count}} открытых",
+    "collectedThisMonth": " получено в этом месяце",
+    "viewInvoices": "Смотреть счета",
+    "noJobsToday": "На сегодня заказов нет",
+    "scheduleJob": "Запланировать заказ",
+    "openJob": "Открыть заказ",
+    "statusConfirmed": "Подтверждён",
+    "statusPending": "Ожидает",
+    "completeProfile": "Заполните профиль",
+    "nextStep": "Далее: {{label}}",
+    "finishSetup": "Завершить настройку",
+    "continueSetup": "Продолжить настройку",
+    "checkingWeather": "Проверка погоды…"
+  },
+  "quickActions": {
+    "title": "Быстрые действия",
+    "close": "Закрыть быстрые действия",
+    "drag": "Потяните, чтобы закрыть",
+    "newLead": "Новый лид",
+    "newLeadSub": "Зафиксировать запрос",
+    "newJob": "Новый заказ",
+    "newJobSub": "Запланировать или записать работу",
+    "createInvoice": "Создать счёт",
+    "createInvoiceSub": "Выбрать заказ и отправить",
+    "logExpense": "Записать расход",
+    "logExpenseSub": "Разовый расход бизнеса",
+    "buySupplies": "Купить расходники",
+    "buySuppliesSub": "Склад и расход вместе",
+    "newQuote": "Новая смета",
+    "newQuoteSub": "Отправить оценку цены"
+  },
+  "jobs": {
+    "title": "Заказы",
+    "add": "Добавить заказ",
+    "create": "Создать заказ",
+    "searchPlaceholder": "Поиск по марке, цвету, номеру, клиенту…",
+    "emptyTitle": "Заказы не найдены",
+    "emptyFiltered": "Попробуйте другой поиск или фильтр.",
+    "emptyDefault": "Запланируйте первый заказ, чтобы отслеживать выручку.",
+    "shown": "Показано {{count}}",
+    "totalPeriod": "{{count}} всего · {{period}}",
+    "onDate": "{{count}} на {{date}}",
+    "showingDate": "Показано {{date}} · Очистить",
+    "editJob": "Изменить заказ",
+    "cancelAppointment": "Отменить запись",
+    "cancelAppointmentConfirm": "Отменить запись?",
+    "cancelAppointmentBody": "Это освободит слот и удалит заказ.",
+    "cancelJob": "Отменить заказ",
+    "jobActions": "Действия с заказом",
+    "loadFailed": "Не удалось загрузить заказы",
+    "moreJobs": "+ ещё {{count}}",
+    "sections": {
+      "today": "Сегодня · {{date}}",
+      "week": "На этой неделе",
+      "month": "Ранее в этом месяце",
+      "older": "Ранее"
+    },
+    "filters": {
+      "all": "Все",
+      "scheduled": "Запланированы",
+      "inProgress": "В работе",
+      "recurring": "Повторяющиеся"
+    },
+    "status": {
+      "scheduled": "Запланирован",
+      "inProgress": "В работе",
+      "paid": "Оплачен",
+      "invoiced": "Выставлен счёт",
+      "awaitingPayment": "Ожидает оплаты",
+      "complete": "Завершён"
+    }
+  },
+  "clients": {
+    "title": "Клиенты",
+    "add": "Добавить клиента",
+    "import": "Импорт клиентов",
+    "export": "Экспорт клиентов CSV",
+    "searchPlaceholder": "Поиск по имени, телефону, почте…",
+    "emptyTitle": "Клиентов пока нет",
+    "emptyFiltered": "Клиенты не найдены",
+    "emptyDefault": "Добавьте первого клиента, чтобы начать бронирование.",
+    "emptySearch": "Попробуйте другой сегмент или запрос.",
+    "followUp": "Связаться",
+    "topClients": "Лучшие клиенты",
+    "allClients": "Все клиенты",
+    "moreClients_one": "+ ещё {{count}} клиент",
+    "moreClients_other": "+ ещё {{count}} клиентов",
+    "sortBy": "Сортировать по",
+    "loadFailed": "Не удалось загрузить клиентов",
+    "filters": {
+      "all": "Все",
+      "followup": "Связаться",
+      "top": "Топ",
+      "new": "Новые"
+    },
+    "sort": {
+      "revenue": "Выручка",
+      "name": "Имя",
+      "recent": "Последняя услуга"
+    }
+  },
+  "business": {
+    "title": "Бизнес",
+    "searchPlaceholder": "Поиск услуг, расходов, заказов…",
+    "netProfit": "Чистая прибыль",
+    "netLoss": "Чистый убыток",
+    "revenue": "Выручка",
+    "expenses": "Расходы",
+    "avgJobValue": "Средняя стоимость заказа",
+    "fromJobs": "от заказов",
+    "perJob": "за заказ",
+    "invoices": "Счета",
+    "quotes": "Сметы",
+    "revenueByService": "Выручка по услугам",
+    "expenseBreakdown": "Разбивка расходов",
+    "custom": "Свой",
+    "startDate": "Начало ГГГГ-ММ-ДД",
+    "endDate": "Конец ГГГГ-ММ-ДД",
+    "exportCsv": "Экспорт CSV",
+    "exportPdf": "Экспорт PDF",
+    "expense": {
+      "supplies": "Расходники",
+      "travel": "Поездки",
+      "equipment": "Оборудование",
+      "marketing": "Маркетинг",
+      "labor": "Труд",
+      "overhead": "Накладные",
+      "business": "Бизнес",
+      "other": "Прочее"
+    },
+    "ranges": {
+      "this_week": "Эта неделя",
+      "this_month": "Этот месяц",
+      "last_month": "Прошлый месяц",
+      "this_year": "Этот год",
+      "lifetime": "За всё время"
+    }
+  },
+  "invoices": {
+    "title": "Счета",
+    "openBalance": "Открытый баланс",
+    "searchPlaceholder": "Поиск счетов…",
+    "emptyTitle": "Нет счетов",
+    "emptyDescription": "Создайте счёт из завершённого заказа для учёта платежей.",
+    "unavailable": "Счета недоступны",
+    "loadFailed": "Не удалось загрузить счета",
+    "markSent": "Отметить отправленным",
+    "markPaid": "Отметить оплаченным",
+    "actions": "Действия со счётом",
+    "due": "к оплате",
+    "sectionTotal": "Итого по разделу",
+    "filters": {
+      "all": "Все",
+      "open": "Открытые",
+      "overdue": "Просроченные",
+      "paid": "Оплаченные",
+      "draft": "Черновик"
+    },
+    "detail": {
+      "loading": "Загрузка счёта…",
+      "title": "Счёт",
+      "notFound": "Счёт не найден",
+      "send": "Отправить счёт",
+      "resend": "Повторно / поделиться",
+      "logPayment": "Записать платёж",
+      "editLines": "Изменить позиции",
+      "editLinesCount": "Изменить строки ({{count}} доп.)",
+      "quickAdjustments": "Быстрые правки",
+      "previewCustomize": "Предпросмотр и настройка",
+      "viewJob": "Смотреть заказ"
+    }
+  },
+  "jobDetail": {
+    "loading": "Загрузка заказа…",
+    "titleFallback": "Заказ",
+    "markComplete": "Отметить заказ выполненным",
+    "markingComplete": "Отметка выполнения…",
+    "liability": "Осмотр ответственности",
+    "viewWalkthrough": "Смотреть осмотр",
+    "startWalkthrough": "Начать осмотр",
+    "hoursWorked": "Часы работы",
+    "hoursValue": "{{hours}} ч",
+    "netProfit": "Чистая прибыль",
+    "nextService": "Следующая услуга",
+    "bookNext": "Записать следующий",
+    "onMyWay": "В пути",
+    "textClient": "Написать клиенту",
+    "createQuote": "Создать смету",
+    "createInvoice": "Создать счёт",
+    "creating": "Создание…",
+    "sharePdf": "Поделиться PDF",
+    "shareBeforeAfter": "Поделиться PDF до/после",
+    "editJob": "Изменить заказ",
+    "cancelAppointment": "Отменить запись",
+    "cancelling": "Отмена…",
+    "jobCompleteTitle": "Заказ выполнен",
+    "jobCompleteBody": "Можно выставить счёт или поделиться с этого экрана.",
+    "noPhoneTitle": "Нет телефона",
+    "noPhoneBody": "Сначала добавьте телефон в профиле клиента.",
+    "sentTitle": "Отправлено",
+    "onMyWaySent": "Сообщение «в пути» отправлено.",
+    "cancelConfirm": "Отменить запись?",
+    "cancelBody": "Это освободит слот и удалит заказ."
+  },
+  "clientDetail": {
+    "newJob": "Новый заказ",
+    "quote": "Смета",
+    "invoice": "Счёт",
+    "totalRevenue": "Общая выручка",
+    "totalJobs": "Всего заказов",
+    "avgJob": "Средний заказ",
+    "leadSource": "Источник лида",
+    "notes": "Заметки",
+    "quotes": "Сметы",
+    "vehicles": "Автомобили",
+    "addVehicle": "Добавить автомобиль",
+    "upcoming": "Предстоящие",
+    "jobHistory": "История заказов",
+    "contact": "Контакты",
+    "editClient": "Изменить клиента",
+    "directions": "Маршрут",
+    "call": "Звонок",
+    "text": "Сообщение",
+    "email": "Эл. почта"
+  }
+}

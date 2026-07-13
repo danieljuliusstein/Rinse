@@ -28,10 +28,13 @@ export function computeBlockedDates(
   schedule: BookingSchedule,
   allDayBlocks: string[]
 ): Set<string> {
+  const open = new Set(schedule.open_dates ?? [])
   const blocked = new Set<string>()
   for (const date of dates) {
-    if (!schedule.work_days.includes(weekdayFromIsoDate(date))) blocked.add(date)
+    const closedWeekday = !schedule.work_days.includes(weekdayFromIsoDate(date))
+    if (closedWeekday && !open.has(date)) blocked.add(date)
   }
+  // All-day time off always blocks until the operator removes it.
   for (const date of allDayBlocks) blocked.add(date)
   return blocked
 }

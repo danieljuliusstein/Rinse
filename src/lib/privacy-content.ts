@@ -1,4 +1,4 @@
-export const PRIVACY_POLICY_UPDATED = 'June 25, 2026'
+export const PRIVACY_POLICY_UPDATED = 'July 12, 2026'
 
 export type PrivacySection = {
   title: string
@@ -44,7 +44,7 @@ export const PRIVACY_POLICY_SECTIONS: PrivacySection[] = [
   {
     title: 'Retention & deletion',
     paragraphs: [
-      'Business data is kept while your account is active. Operators can export data from Settings → Access and data. To delete your account and associated organization data, go to Settings → Access and data → Delete account. Customers should contact their detailer to update or remove booking information.',
+      'While your subscription is active, business data is kept so you can run the shop. If you cancel, you keep signed-in read-only vault access to jobs, clients, invoices, and photos — we do not delete your history because billing stopped, and you are not charged after cancel. Operators can export JSON/CSV anytime from Settings → Access and data (including in vault). To permanently delete your account and organization data, go to Settings → Access and data → Delete account. Customers should contact their detailer to update or remove booking information.',
     ],
   },
   {

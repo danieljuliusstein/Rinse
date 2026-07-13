@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { Receipt } from 'phosphor-react-native'
-import { fmt } from '@rinse/core'
+import { fmt, jobHasBeforeAndAfter, transformationPdfMissingMessage } from '@rinse/core'
 import type { Client, Invoice } from '@rinse/core'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import {
@@ -18,7 +19,7 @@ import {
 } from '@/src/components/ui'
 import { listClients } from '@/src/lib/api'
 import { AGING_LABELS, summarizeAging, type AgingBucket } from '@/src/lib/invoice-aging'
-import { listInvoices, markInvoicePaid, markInvoiceSent } from '@/src/lib/invoices-api'
+import { listInvoices, getJobPhotos, markInvoicePaid, markInvoiceSent } from '@/src/lib/invoices-api'
 import {
   AGING_FILTER_BUCKETS,
   filterInvoices,
@@ -37,6 +38,7 @@ import { trackProductEvent } from '@/src/lib/telemetry'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 
 export default function InvoicesScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const goBack = useSafeBack()
   const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -61,14 +63,14 @@ export default function InvoicesScreen() {
       setInvoices(invoiceRows)
       setClients(clientRows)
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Failed to load invoices'
+      const message = e instanceof Error ? e.message : t('invoices.loadFailed')
       setError(message)
-      if (!isRefresh) Alert.alert('Invoices unavailable', message)
+      if (!isRefresh) Alert.alert(t('invoices.unavailable'), message)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [t])
 
   useFocusEffect(
     useCallback(() => {
@@ -94,18 +96,39 @@ export default function InvoicesScreen() {
     const actions: { text: string; onPress?: () => void; style?: 'destructive' | 'cancel' }[] = []
     if (inv.status === 'draft') {
       actions.push({
-        text: 'Mark sent',
+        text: t('invoices.markSent'),
         onPress: () => {
-          void markInvoiceSent(inv.id).then(() => {
-            trackProductEvent('invoice_sent', { invoice_id: inv.id, total: inv.total })
-            void load(true)
-          })
+          void (async () => {
+            try {
+              if (inv.job_id) {
+                const photos = await getJobPhotos(inv.job_id)
+                if (!jobHasBeforeAndAfter(photos)) {
+                  Alert.alert('Before & after required', transformationPdfMissingMessage(), [
+                    { text: t('common.cancel'), style: 'cancel' },
+                    {
+                      text: 'Add photos',
+                      onPress: () => router.push(`/(tabs)/jobs/${inv.job_id}/photos` as never),
+                    },
+                  ])
+                  return
+                }
+              }
+              await markInvoiceSent(inv.id)
+              trackProductEvent('invoice_sent', { invoice_id: inv.id, total: inv.total })
+              void load(true)
+            } catch (e) {
+              Alert.alert(
+                t('invoices.markSent'),
+                e instanceof Error ? e.message : 'Could not mark sent',
+              )
+            }
+          })()
         },
       })
     }
     if (inv.status !== 'paid' && inv.balance_due > 0) {
       actions.push({
-        text: 'Mark paid',
+        text: t('invoices.markPaid'),
         onPress: () => {
           void markInvoicePaid(inv.id, 'cash').then(() => {
             trackProductEvent('invoice_marked_paid', {
@@ -118,8 +141,8 @@ export default function InvoicesScreen() {
         },
       })
     }
-    actions.push({ text: 'Cancel', style: 'cancel' })
-    Alert.alert(inv.invoice_number, 'Invoice actions', actions)
+    actions.push({ text: t('common.cancel'), style: 'cancel' })
+    Alert.alert(inv.invoice_number, t('invoices.actions'), actions)
   }
 
   const renderRow = (row: InvoiceListRow, index: number) => {
@@ -137,7 +160,7 @@ export default function InvoicesScreen() {
       return (
         <View key={row.key} style={styles.sectionTotal}>
           <AppText variant="caption" style={styles.sectionTotalLabel}>
-            Month total
+            {t('invoices.sectionTotal')}
           </AppText>
           <AppText variant="bodySemiBold">{formatSectionTotal(row.total, row.balanceDue)}</AppText>
         </View>
@@ -151,7 +174,7 @@ export default function InvoicesScreen() {
         <ListRow
           icon={<Receipt size={18} color={iconTonePalette.green.fg} weight="duotone" />}
           iconTone="green"
-          title={clientName ?? 'Client'}
+          title={clientName ?? t('common.client')}
           subtitle={invoiceListSubtitle(inv, undefined)}
           badgeLabel={chip.label}
           badgeTone={chip.tone}
@@ -161,7 +184,7 @@ export default function InvoicesScreen() {
               {inv.balance_due > 0 && inv.status !== 'draft' ? (
                 <View style={styles.dueRow}>
                   <AppText variant="caption" style={styles.due}>
-                    Due{' '}
+                    {t('invoices.due')}{' '}
                   </AppText>
                   <CurrencyAmount value={inv.balance_due} variant="balance" precision="detailed" style={styles.due} />
                 </View>
@@ -178,19 +201,19 @@ export default function InvoicesScreen() {
   const listHeader = (
     <>
       <View style={styles.summary}>
-        <AppText variant="sectionLabel">Open balance</AppText>
+        <AppText variant="sectionLabel">{t('invoices.openBalance')}</AppText>
         <CurrencyAmount value={openTotal} variant="balance" size="stat" />
       </View>
       <SearchField
         value={search}
         onChangeText={setSearch}
-        placeholder="Search invoices…"
+        placeholder={t('invoices.searchPlaceholder')}
         autoCapitalize="none"
         autoCorrect={false}
       />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
         <PillGroup
-          options={INVOICE_FILTERS.map((f) => ({ value: f.key, label: f.label }))}
+          options={INVOICE_FILTERS.map((f) => ({ value: f.key, label: t(f.labelKey) }))}
           value={filter}
           onChange={setFilter}
         />
@@ -202,7 +225,7 @@ export default function InvoicesScreen() {
             onPress={() => setAgingFilter(null)}
           >
             <AppText variant="caption" style={agingFilter === null ? styles.agingChipLabelOn : styles.agingChipLabel}>
-              All ages
+              {t('common.all')}
             </AppText>
           </Pressable>
           {AGING_FILTER_BUCKETS.map((bucket) => {
@@ -228,8 +251,8 @@ export default function InvoicesScreen() {
 
   return (
     <OperatorScreen
-      title="Invoices"
-      subtitle={`${filtered.length} shown`}
+      title={t('invoices.title')}
+      subtitle={t('jobs.shown', { count: filtered.length })}
       onBack={goBack}
     >
       {loading ? (
@@ -243,8 +266,8 @@ export default function InvoicesScreen() {
           {listHeader}
           <EmptyState
             illustration="jobs"
-            title="No invoices"
-            description="Create an invoice from a completed job to track payments."
+            title={t('invoices.emptyTitle')}
+            description={t('invoices.emptyDescription')}
           />
         </>
       ) : (

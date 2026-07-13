@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { PAYMENT_METHODS } from '@rinse/core'
 import { AppSheet } from '@/src/components/ui/AppSheet'
 import { AffixField } from '@/src/components/ui/AffixField'
 import { AppText, PillGroup, PrimaryButton, SecondaryButton } from '@/src/components/ui'
+import { DraftResumeBanner } from '@/src/components/ui/DraftResumeBanner'
 import { FormField } from '@/src/components/FormField'
+import { useAutoSaveDraft } from '@/src/hooks/useAutoSaveDraft'
 import { colors, spacing } from '@/src/theme/colors'
 
 export function InvoiceSendSheet({
@@ -13,7 +15,9 @@ export function InvoiceSendSheet({
   onEmail,
   onCopyLink,
   onPdf,
+  onTransformationPdf,
   canEmail,
+  canTransformationPdf,
   busy,
   linkCopied,
 }: {
@@ -22,7 +26,9 @@ export function InvoiceSendSheet({
   onEmail: () => void
   onCopyLink: () => void
   onPdf: () => void
+  onTransformationPdf?: () => void
   canEmail: boolean
+  canTransformationPdf?: boolean
   busy?: boolean
   linkCopied?: boolean
 }) {
@@ -46,7 +52,18 @@ export function InvoiceSendSheet({
         loading={busy}
         onPress={onCopyLink}
       />
-      <SecondaryButton label="Download PDF" loading={busy} onPress={onPdf} />
+      <SecondaryButton label="Download invoice PDF" loading={busy} onPress={onPdf} />
+      {onTransformationPdf ? (
+        <SecondaryButton
+          label={
+            canTransformationPdf === false
+              ? 'Before/after PDF (need photos)'
+              : 'Download before/after PDF'
+          }
+          loading={busy}
+          onPress={onTransformationPdf}
+        />
+      ) : null}
     </AppSheet>
   )
 }
@@ -102,6 +119,7 @@ export function InvoicePaymentSheet({
 export function InvoiceAdjustmentsSheet({
   visible,
   onClose,
+  invoiceId,
   discount,
   taxRate,
   poNumber,
@@ -110,6 +128,7 @@ export function InvoiceAdjustmentsSheet({
 }: {
   visible: boolean
   onClose: () => void
+  invoiceId: string
   discount: number
   taxRate: number
   poNumber: string
@@ -123,13 +142,91 @@ export function InvoiceAdjustmentsSheet({
   const [discountText, setDiscountText] = useState(String(discount))
   const [taxText, setTaxText] = useState(String(taxRate))
   const [po, setPo] = useState(poNumber)
+  const [showResumeBanner, setShowResumeBanner] = useState(false)
+  const seededRef = useRef(false)
+  const baselineKeyRef = useRef('')
+
+  type AdjustDraft = {
+    discount_amount: number
+    tax_rate: number
+    po_number: string
+  }
+
+  const draftValue = useMemo<AdjustDraft>(
+    () => ({
+      discount_amount: Number.parseFloat(discountText) || 0,
+      tax_rate: Number.parseFloat(taxText) || 0,
+      po_number: po,
+    }),
+    [discountText, taxText, po]
+  )
+
+  const { restored, restoredAt, hydrated, clearDraft } = useAutoSaveDraft<AdjustDraft>({
+    entity: 'invoice',
+    entityId: `${invoiceId}:adjust`,
+    value: draftValue,
+    enabled: visible,
+    isEmpty: (v) =>
+      JSON.stringify(v) === baselineKeyRef.current,
+  })
 
   useEffect(() => {
-    if (!visible) return
-    setDiscountText(String(discount))
-    setTaxText(String(taxRate))
-    setPo(poNumber)
-  }, [visible, discount, taxRate, poNumber])
+    if (!visible) {
+      seededRef.current = false
+      setShowResumeBanner(false)
+    }
+  }, [visible])
+
+  useEffect(() => {
+    if (!visible || !hydrated || seededRef.current) return
+    seededRef.current = true
+
+    const server: AdjustDraft = {
+      discount_amount: discount,
+      tax_rate: taxRate,
+      po_number: poNumber,
+    }
+    baselineKeyRef.current = JSON.stringify(server)
+
+    if (restored) {
+      setDiscountText(String(restored.discount_amount))
+      setTaxText(String(restored.tax_rate))
+      setPo(restored.po_number)
+      setShowResumeBanner(true)
+    } else {
+      setDiscountText(String(discount))
+      setTaxText(String(taxRate))
+      setPo(poNumber)
+      setShowResumeBanner(false)
+    }
+  }, [visible, hydrated, restored, discount, taxRate, poNumber])
+
+  const discardDraft = () => {
+    void clearDraft().then(() => {
+      setDiscountText(String(discount))
+      setTaxText(String(taxRate))
+      setPo(poNumber)
+      baselineKeyRef.current = JSON.stringify({
+        discount_amount: discount,
+        tax_rate: taxRate,
+        po_number: poNumber,
+      })
+      setShowResumeBanner(false)
+    })
+  }
+
+  const handleSave = () => {
+    const patch = {
+      discount_amount: Number.parseFloat(discountText) || 0,
+      tax_rate: Number.parseFloat(taxText) || 0,
+      po_number: po.trim(),
+    }
+    void clearDraft().then(() => {
+      baselineKeyRef.current = JSON.stringify(patch)
+      setShowResumeBanner(false)
+      onSave(patch)
+    })
+  }
 
   return (
     <AppSheet
@@ -139,23 +236,16 @@ export function InvoiceAdjustmentsSheet({
       subtitle="Discount, tax, PO"
       onClose={onClose}
     >
+      {showResumeBanner ? (
+        <DraftResumeBanner restoredAt={restoredAt} onDiscard={discardDraft} />
+      ) : null}
       <AppText variant="caption" style={styles.hint}>
         Terms footer is edited in Settings → Invoicing and applies to all invoices.
       </AppText>
       <AffixField label="Discount" value={discountText} onChangeText={setDiscountText} keyboardType="decimal-pad" />
       <FormField label="Tax rate (%)" value={taxText} onChangeText={setTaxText} keyboardType="decimal-pad" />
       <FormField label="PO number" value={po} onChangeText={setPo} />
-      <PrimaryButton
-        label="Save adjustments"
-        loading={busy}
-        onPress={() =>
-          onSave({
-            discount_amount: Number.parseFloat(discountText) || 0,
-            tax_rate: Number.parseFloat(taxText) || 0,
-            po_number: po.trim(),
-          })
-        }
-      />
+      <PrimaryButton label="Save adjustments" loading={busy} onPress={handleSave} />
       <SecondaryButton label="Cancel" onPress={onClose} />
     </AppSheet>
   )

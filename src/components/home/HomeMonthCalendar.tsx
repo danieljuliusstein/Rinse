@@ -13,6 +13,8 @@ interface HomeMonthCalendarProps {
   jobs: JobWithRelations[]
   selectedDate?: string | null
   onSelectDate?: (iso: string | null) => void
+  /** Fired when the operator taps a blocked (greyed) day. */
+  onBlockedDatePress?: (iso: string) => void
   weatherReadiness?: WeatherReadinessResult | null
   blockedDates?: Set<string>
   onViewMonthChange?: (year: number, month: number) => void
@@ -37,6 +39,7 @@ export function HomeMonthCalendar({
   jobs,
   selectedDate,
   onSelectDate,
+  onBlockedDatePress,
   weatherReadiness,
   blockedDates,
   onViewMonthChange,
@@ -106,11 +109,15 @@ export function HomeMonthCalendar({
         key={iso}
         style={styles.cell}
         onPress={() => {
-          if (blocked) return
+          if (blocked) {
+            onBlockedDatePress?.(iso)
+            return
+          }
           onSelectDate?.(selected ? null : iso)
         }}
         accessibilityRole="button"
-        accessibilityState={{ disabled: blocked }}
+        accessibilityState={{ disabled: false }}
+        accessibilityHint={blocked ? 'Day is blocked. Double tap to manage time off.' : undefined}
       >
         <View
           style={[

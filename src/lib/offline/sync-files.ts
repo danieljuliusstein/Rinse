@@ -1,3 +1,4 @@
+import { Platform } from 'react-native'
 import * as FileSystem from 'expo-file-system/legacy'
 
 /** Write a data URL to cache so React Native FormData can upload it. */
@@ -19,6 +20,23 @@ export async function dataUrlToTempFile(
 }
 
 export async function fileUriToDataUrl(uri: string, mimeType: string): Promise<string> {
+  if (uri.startsWith('data:')) return uri
+
+  if (Platform.OS === 'web' || uri.startsWith('blob:')) {
+    const res = await fetch(uri)
+    if (!res.ok) throw new Error('Could not read the selected photo')
+    const blob = await res.blob()
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') resolve(reader.result)
+        else reject(new Error('Could not encode photo'))
+      }
+      reader.onerror = () => reject(new Error('Could not read photo'))
+      reader.readAsDataURL(blob)
+    })
+  }
+
   const base64 = await FileSystem.readAsStringAsync(uri, {
     encoding: FileSystem.EncodingType.Base64,
   })

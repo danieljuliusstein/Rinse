@@ -2,18 +2,29 @@ import { ClientResponseError } from 'pocketbase'
 import { dispatchPremiumRequired } from './premium-events'
 
 const SUBSCRIPTION_MSG = 'Active subscription required'
+const VAULT_MSG = 'Read-only vault — resubscribe to make changes'
 
 export function isSubscriptionGuardError(err: unknown): boolean {
   if (!(err instanceof ClientResponseError)) return false
   if (err.status !== 403) return false
   const msg = `${err.message} ${String((err.response as { message?: string } | undefined)?.message ?? '')}`.toLowerCase()
-  return msg.includes('active subscription required') || msg.includes('organization required')
+  return (
+    msg.includes('active subscription required') ||
+    msg.includes('read-only vault') ||
+    msg.includes('organization required')
+  )
 }
 
 export function formatPocketBaseError(err: unknown, fallback = 'Request failed'): string {
   if (isSubscriptionGuardError(err)) {
-    dispatchPremiumRequired({ mode: 'lapsed' })
-    return SUBSCRIPTION_MSG
+    const raw = `${err instanceof ClientResponseError ? err.message : ''} ${String(
+      (err instanceof ClientResponseError
+        ? (err.response as { message?: string } | undefined)?.message
+        : '') ?? '',
+    )}`.toLowerCase()
+    const vault = raw.includes('read-only vault')
+    dispatchPremiumRequired({ mode: vault ? 'vault' : 'lapsed' })
+    return vault ? VAULT_MSG : SUBSCRIPTION_MSG
   }
 
   if (err instanceof ClientResponseError) {
@@ -36,10 +47,43 @@ export function formatPocketBaseError(err: unknown, fallback = 'Request failed')
       return 'Could not save — check you are signed in with an operator account linked to your business.'
     }
 
+    // SDK uses this when fetch itself throws (common with RN FormData file uploads).
+    if (!err.status || /something went wrong\.?$/i.test(err.message)) {
+      const cause =
+        err.originalError instanceof Error
+          ? err.originalError.message
+          : typeof err.originalError === 'string'
+            ? err.originalError
+            : ''
+      if (cause && !/something went wrong/i.test(cause)) return cause
+      return 'Could not upload — check your connection and try again.'
+    }
+
     return err.message || fallback
   }
 
-  if (err instanceof Error && err.message) return err.message
+  // Plain objects shaped like ClientResponseError (from FileSystem.uploadAsync).
+  if (err && typeof err === 'object' && 'response' in err) {
+    const response = (err as { response?: { message?: string; data?: Record<string, { message?: string }> } })
+      .response
+    const fields = response?.data
+    if (fields && typeof fields === 'object') {
+      const fieldErrors = Object.entries(fields)
+        .map(([k, v]) => (v?.message ? `${k}: ${v.message}` : null))
+        .filter(Boolean)
+      if (fieldErrors.length > 0) return fieldErrors.join('\n')
+    }
+    if (response?.message && !/something went wrong/i.test(response.message)) {
+      return response.message
+    }
+  }
+
+  if (err instanceof Error && err.message) {
+    if (/something went wrong\.?$/i.test(err.message)) {
+      return 'Could not upload — check your connection and try again.'
+    }
+    return err.message
+  }
   return fallback
 }
 

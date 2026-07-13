@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Image, Pressable, StyleSheet, View } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
 import { Plus, Trash } from 'phosphor-react-native'
 import type { ExpenseLine } from '@rinse/core'
 import { FormField } from '@/src/components/FormField'
 import { AppText, SecondaryButton } from '@/src/components/ui'
 import { usePremiumGate } from '@/src/hooks/usePremiumGate'
+import { launchCameraSafe } from '@/src/lib/pick-image'
 import { parseReceiptImage } from '@/src/lib/receipt-parse'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
@@ -67,17 +67,11 @@ export function ReceiptLineItemsEditor({
   const pickReceipt = () => {
     runGated(() => {
       void (async () => {
-        const permission = await ImagePicker.requestCameraPermissionsAsync()
-        if (!permission.granted) {
-          setScanError('Camera permission is required to scan receipts.')
-          return
-        }
-
-        const result = await ImagePicker.launchCameraAsync({
+        const result = await launchCameraSafe({
           mediaTypes: ['images'],
           quality: 0.85,
         })
-        if (result.canceled || !result.assets[0]?.uri) return
+        if (!result || result.canceled || !result.assets[0]?.uri) return
 
         const asset = result.assets[0]
         setPreviewUri(asset.uri)

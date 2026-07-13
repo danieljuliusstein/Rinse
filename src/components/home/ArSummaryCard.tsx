@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { Receipt } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui'
 import { formatMoney } from '@/src/lib/inventory-utils'
@@ -13,13 +14,14 @@ type ArSummaryCardProps = {
 
 export function ArSummaryCard({ summary }: ArSummaryCardProps) {
   const router = useRouter()
+  const { t } = useTranslation()
 
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       onPress={() => router.push('/(tabs)/invoices')}
       accessibilityRole="button"
-      accessibilityLabel="View invoices"
+      accessibilityLabel={t('home.viewInvoices')}
     >
       <View style={styles.cardInner}>
         <View style={styles.iconWrap}>
@@ -29,10 +31,10 @@ export function ArSummaryCard({ summary }: ArSummaryCardProps) {
         <View style={styles.body}>
           <View style={styles.labelRow}>
             <AppText variant="sectionLabel" style={styles.colLabel}>
-              Outstanding
+              {t('home.outstanding')}
             </AppText>
             <AppText variant="sectionLabel" style={[styles.colLabel, styles.colLabelRight]}>
-              Invoiced
+              {t('home.invoiced')}
             </AppText>
           </View>
 
@@ -40,20 +42,20 @@ export function ArSummaryCard({ summary }: ArSummaryCardProps) {
             <View style={styles.amountRow}>
               <AppText style={styles.amount}>{formatMoney(summary.unpaid)}</AppText>
               <AppText variant="caption" style={styles.unpaid}>
-                unpaid
+                {t('home.unpaid')}
               </AppText>
             </View>
             <AppText style={styles.invoicedAmount}>{formatMoney(summary.totalInvoiced)}</AppText>
           </View>
 
           <AppText variant="caption" style={styles.meta}>
-            {summary.openCount} open
+            {t('home.openCount', { count: summary.openCount })}
           </AppText>
 
           {summary.collectedThisMonth > 0 ? (
             <View style={styles.collectedRow}>
               <AppText style={styles.collectedAmount}>{formatMoney(summary.collectedThisMonth)}</AppText>
-              <AppText variant="caption"> collected this month</AppText>
+              <AppText variant="caption">{t('home.collectedThisMonth')}</AppText>
             </View>
           ) : null}
         </View>

@@ -1,0 +1,421 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "loading": "Loading…",
+    "signOut": "Sign out",
+    "search": "Search",
+    "back": "Back",
+    "done": "Done",
+    "error": "Something went wrong",
+    "offline": "You're offline",
+    "retry": "Try again",
+    "client": "Client",
+    "detail": "Detail",
+    "close": "Close",
+    "keep": "Keep",
+    "clear": "Clear",
+    "edit": "Edit",
+    "delete": "Delete",
+    "more": "+ {{count}} more",
+    "result_one": "{{count}} result",
+    "result_other": "{{count}} results",
+    "changeWaiting_one": "{{count}} change waiting to sync",
+    "changeWaiting_other": "{{count}} changes waiting to sync",
+    "export": "Export",
+    "directions": "Directions",
+    "call": "Call",
+    "text": "Text",
+    "email": "Email",
+    "notes": "Notes",
+    "photos": "Photos",
+    "package": "Package",
+    "vehicle": "Vehicle",
+    "location": "Location",
+    "revenue": "Revenue",
+    "expenses": "Expenses",
+    "invoice": "Invoice",
+    "quote": "Quote",
+    "all": "All"
+  },
+  "tabs": {
+    "home": "Home",
+    "jobs": "Jobs",
+    "clients": "Clients",
+    "business": "Business"
+  },
+  "settings": {
+    "title": "Settings",
+    "searchPlaceholder": "Search settings",
+    "signOutBlocked": "Sync or discard pending changes before signing out.",
+    "cannotSignOut": "Cannot sign out",
+    "unsyncedTitle": "Unsynced changes",
+    "groups": {
+      "account": "Account",
+      "business": "Business",
+      "preferences": "Preferences",
+      "management": "Management",
+      "support": "Support"
+    },
+    "menu": {
+      "account": {
+        "title": "Account",
+        "subtitle": "Email, password, and sign-in"
+      },
+      "business": {
+        "title": "Your business",
+        "subtitle": "Profile and online booking"
+      },
+      "schedule": {
+        "title": "Schedule & time off",
+        "subtitle": "Hours, lunch, and blocked days"
+      },
+      "invoicing": {
+        "title": "Invoicing",
+        "subtitle": "Online payments & invoice look"
+      },
+      "emailDomain": {
+        "title": "Send from your domain",
+        "subtitle": "SPF, DKIM, DMARC checklist"
+      },
+      "billing": {
+        "title": "Billing",
+        "subtitle": "Plan, trial, and subscription"
+      },
+      "progress": {
+        "title": "Your progress",
+        "subtitle": "Milestones from your business activity"
+      },
+      "preferences": {
+        "title": "App preferences",
+        "subtitle": "Reminders and notifications"
+      },
+      "language": {
+        "title": "Language",
+        "subtitle": "App and customer documents"
+      },
+      "quietHours": {
+        "title": "Quiet hours",
+        "subtitle": "Pause auto emails overnight"
+      },
+      "access": {
+        "title": "Access and data",
+        "subtitle": "Backups, exports, and privacy"
+      },
+      "inventory": {
+        "title": "Inventory",
+        "subtitle": "Supplies and stock"
+      },
+      "packages": {
+        "title": "Service packages",
+        "subtitle": "Manage your offerings"
+      },
+      "invoices": {
+        "title": "All invoices",
+        "subtitle": "Financial records"
+      },
+      "tools": {
+        "title": "Tools",
+        "subtitle": "Shortcuts for invoices, expenses, and more"
+      },
+      "expenses": {
+        "title": "Expenses",
+        "subtitle": "Overhead and business costs"
+      },
+      "support": {
+        "title": "Help & support",
+        "subtitle": "Contact, FAQ, and troubleshooting"
+      }
+    }
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "Choose how Rinse speaks to you and your customers",
+    "sectionApp": "App language",
+    "sectionDocs": "Also applies to",
+    "docsHint": "Quotes, invoices, and the client portal use the same language.",
+    "deviceDefault": "Match device ({{lang}})",
+    "saved": "Language updated",
+    "saveFailed": "Could not save language",
+    "english": "English",
+    "spanish": "Español",
+    "searchPlaceholder": "Search languages",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "Invoicing",
+    "subtitle": "Payments and invoice look",
+    "appearance": "Appearance",
+    "previewCustomize": "Preview & customize",
+    "previewSubtitle": "Layout, accent, logo, and terms — applies to all invoices"
+  },
+  "auth": {
+    "checkingSession": "Checking session…",
+    "starting": "Starting Rinse…"
+  },
+  "home": {
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "greetingNamed": "{{greeting}}, {{name}}",
+    "searchPlaceholder": "Search jobs, clients, packages…",
+    "noMatch": "No jobs match “{{query}}”.",
+    "jobReadiness": "Job readiness",
+    "collected": "Collected",
+    "calendar": "Calendar",
+    "todaysJobs": "Today's jobs",
+    "alsoToday": "Also today",
+    "upcoming": "Upcoming",
+    "serviceMix": "Service mix",
+    "account": "Account",
+    "pipeline": "Pipeline",
+    "messages": "Messages",
+    "search": "Search",
+    "settings": "Settings",
+    "sendInvoice": "Send invoice",
+    "newJob": "New job",
+    "newQuote": "New quote",
+    "outstanding": "Outstanding",
+    "invoiced": "Invoiced",
+    "unpaid": "unpaid",
+    "openCount": "{{count}} open",
+    "collectedThisMonth": " collected this month",
+    "viewInvoices": "View invoices",
+    "noJobsToday": "No jobs scheduled for today",
+    "scheduleJob": "Schedule a job",
+    "openJob": "Open job",
+    "statusConfirmed": "Confirmed",
+    "statusPending": "Pending",
+    "completeProfile": "Complete your profile",
+    "nextStep": "Next: {{label}}",
+    "finishSetup": "Finish setup",
+    "continueSetup": "Continue setup",
+    "checkingWeather": "Checking weather…"
+  },
+  "quickActions": {
+    "title": "Quick actions",
+    "close": "Close quick actions",
+    "drag": "Drag to dismiss",
+    "newLead": "New lead",
+    "newLeadSub": "Capture an inquiry",
+    "newJob": "New job",
+    "newJobSub": "Schedule or log work",
+    "createInvoice": "Create invoice",
+    "createInvoiceSub": "Pick a job and send",
+    "logExpense": "Log expense",
+    "logExpenseSub": "One-time business cost",
+    "buySupplies": "Buy supplies",
+    "buySuppliesSub": "Stock + expense together",
+    "newQuote": "New quote",
+    "newQuoteSub": "Send a price estimate"
+  },
+  "jobs": {
+    "title": "Jobs",
+    "add": "Add job",
+    "create": "Create job",
+    "searchPlaceholder": "Search make, color, plate, client…",
+    "emptyTitle": "No jobs found",
+    "emptyFiltered": "Try a different search or filter.",
+    "emptyDefault": "Schedule your first job to start tracking revenue.",
+    "shown": "{{count}} shown",
+    "totalPeriod": "{{count}} total · {{period}}",
+    "onDate": "{{count}} on {{date}}",
+    "showingDate": "Showing {{date}} · Clear",
+    "editJob": "Edit job",
+    "cancelAppointment": "Cancel appointment",
+    "cancelAppointmentConfirm": "Cancel appointment?",
+    "cancelAppointmentBody": "This frees the slot and removes the job.",
+    "cancelJob": "Cancel job",
+    "jobActions": "Job actions",
+    "loadFailed": "Failed to load jobs",
+    "moreJobs": "+ {{count}} more",
+    "sections": {
+      "today": "Today · {{date}}",
+      "week": "This week",
+      "month": "Earlier this month",
+      "older": "Earlier"
+    },
+    "filters": {
+      "all": "All",
+      "scheduled": "Scheduled",
+      "inProgress": "In progress",
+      "recurring": "Recurring"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "inProgress": "In progress",
+      "paid": "Paid",
+      "invoiced": "Invoiced",
+      "awaitingPayment": "Awaiting payment",
+      "complete": "Complete"
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "add": "Add client",
+    "import": "Import clients",
+    "export": "Export clients CSV",
+    "searchPlaceholder": "Search name, phone, email…",
+    "emptyTitle": "No clients yet",
+    "emptyFiltered": "No clients found",
+    "emptyDefault": "Add your first client to start booking jobs.",
+    "emptySearch": "Try another segment or search term.",
+    "followUp": "Follow up",
+    "topClients": "Top clients",
+    "allClients": "All clients",
+    "moreClients_one": "+ {{count}} more client",
+    "moreClients_other": "+ {{count}} more clients",
+    "sortBy": "Sort by",
+    "loadFailed": "Failed to load clients",
+    "filters": {
+      "all": "All",
+      "followup": "Follow up",
+      "top": "Top",
+      "new": "New"
+    },
+    "sort": {
+      "revenue": "Revenue",
+      "name": "Name",
+      "recent": "Last service"
+    }
+  },
+  "business": {
+    "title": "Business",
+    "searchPlaceholder": "Search services, expenses, jobs…",
+    "netProfit": "Net profit",
+    "netLoss": "Net loss",
+    "revenue": "Revenue",
+    "expenses": "Expenses",
+    "avgJobValue": "Avg job value",
+    "fromJobs": "from jobs",
+    "perJob": "per job",
+    "invoices": "Invoices",
+    "quotes": "Quotes",
+    "revenueByService": "Revenue by service",
+    "expenseBreakdown": "Expense breakdown",
+    "custom": "Custom",
+    "startDate": "Start YYYY-MM-DD",
+    "endDate": "End YYYY-MM-DD",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
+    "expense": {
+      "supplies": "Supplies",
+      "travel": "Travel",
+      "equipment": "Equipment",
+      "marketing": "Marketing",
+      "labor": "Labor",
+      "overhead": "Overhead",
+      "business": "Business",
+      "other": "Other"
+    },
+    "ranges": {
+      "this_week": "This week",
+      "this_month": "This month",
+      "last_month": "Last month",
+      "this_year": "This year",
+      "lifetime": "Lifetime"
+    }
+  },
+  "invoices": {
+    "title": "Invoices",
+    "openBalance": "Open balance",
+    "searchPlaceholder": "Search invoices…",
+    "emptyTitle": "No invoices",
+    "emptyDescription": "Create an invoice from a completed job to track payments.",
+    "unavailable": "Invoices unavailable",
+    "loadFailed": "Failed to load invoices",
+    "markSent": "Mark sent",
+    "markPaid": "Mark paid",
+    "actions": "Invoice actions",
+    "due": "due",
+    "sectionTotal": "Section total",
+    "filters": {
+      "all": "All",
+      "open": "Open",
+      "overdue": "Overdue",
+      "paid": "Paid",
+      "draft": "Draft"
+    },
+    "detail": {
+      "loading": "Loading invoice…",
+      "title": "Invoice",
+      "notFound": "Invoice not found",
+      "send": "Send invoice",
+      "resend": "Resend / share",
+      "logPayment": "Log payment",
+      "editLines": "Edit line items",
+      "editLinesCount": "Edit lines ({{count}} extras)",
+      "quickAdjustments": "Quick adjustments",
+      "previewCustomize": "Preview & customize",
+      "viewJob": "View job"
+    }
+  },
+  "jobDetail": {
+    "loading": "Loading job…",
+    "titleFallback": "Job",
+    "markComplete": "Mark job complete",
+    "markingComplete": "Marking complete…",
+    "liability": "Liability walkthrough",
+    "viewWalkthrough": "View walkthrough",
+    "startWalkthrough": "Start walkthrough",
+    "hoursWorked": "Hours worked",
+    "hoursValue": "{{hours}} hrs",
+    "netProfit": "Net profit",
+    "nextService": "Next service",
+    "bookNext": "Book next",
+    "onMyWay": "On my way",
+    "textClient": "Text client",
+    "createQuote": "Create quote",
+    "createInvoice": "Create invoice",
+    "creating": "Creating…",
+    "sharePdf": "Share PDF",
+    "shareBeforeAfter": "Share before/after PDF",
+    "editJob": "Edit job",
+    "cancelAppointment": "Cancel appointment",
+    "cancelling": "Cancelling…",
+    "jobCompleteTitle": "Job complete",
+    "jobCompleteBody": "You can invoice or share from this screen.",
+    "noPhoneTitle": "No phone",
+    "noPhoneBody": "Add a phone number on the client profile first.",
+    "sentTitle": "Sent",
+    "onMyWaySent": "On my way text sent.",
+    "cancelConfirm": "Cancel appointment?",
+    "cancelBody": "This frees the slot and removes the job."
+  },
+  "clientDetail": {
+    "newJob": "New job",
+    "quote": "Quote",
+    "invoice": "Invoice",
+    "totalRevenue": "Total revenue",
+    "totalJobs": "Total jobs",
+    "avgJob": "Avg job",
+    "leadSource": "Lead source",
+    "notes": "Notes",
+    "quotes": "Quotes",
+    "vehicles": "Vehicles",
+    "addVehicle": "Add a vehicle",
+    "upcoming": "Upcoming",
+    "jobHistory": "Job history",
+    "contact": "Contact",
+    "editClient": "Edit client",
+    "directions": "Directions",
+    "call": "Call",
+    "text": "Text",
+    "email": "Email"
+  }
+}

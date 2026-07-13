@@ -1,16 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Images, Trash } from 'phosphor-react-native'
 import type { JobPhoto, PhotoType } from '@rinse/core'
-import { jobPhotoLimitMessage } from '@rinse/core'
+import {
+  countJobPhotosByType,
+  jobHasBeforeAndAfter,
+  jobPhotoCompletenessMessage,
+  jobPhotoLimitMessage,
+} from '@rinse/core'
 import { deleteJobPhoto, getJobPhotos, uploadJobPhoto } from '@/src/lib/invoices-api'
-import { persistPhotoToSandbox } from '@/src/lib/photo-sandbox'
+import { photoMimeType, photoUploadFilename } from '@/src/lib/form-data-file'
+import { launchCameraSafe, launchLibrarySafe, prepareLocalPhotoUri } from '@/src/lib/pick-image'
+import { shareTransformationPdf } from '@/src/lib/share'
 import { DetailHeaderActions } from '@/src/components/DetailHeaderActions'
 import { LoadingState } from '@/src/components/ui/ScreenLoading'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
-import { AppText, PillGroup, PrimaryButton } from '@/src/components/ui'
+import { AppText, PillGroup, PrimaryButton, SecondaryButton } from '@/src/components/ui'
 import { colors, spacing } from '@/src/theme/colors'
 
 const PHOTO_TYPES: { value: PhotoType; label: string }[] = [
@@ -50,40 +56,47 @@ export default function JobPhotosScreen() {
   }, [load])
 
   const filtered = useMemo(() => photos.filter((p) => p.type === photoType), [photos, photoType])
+  const counts = useMemo(() => countJobPhotosByType(photos), [photos])
+  const complete = jobHasBeforeAndAfter(photos)
+
+  const exportTransformation = async () => {
+    if (!id) return
+    if (!complete) {
+      Alert.alert('Need before & after', jobPhotoCompletenessMessage(counts))
+      return
+    }
+    setUploading(true)
+    try {
+      await shareTransformationPdf(id)
+    } catch (e) {
+      Alert.alert('PDF', e instanceof Error ? e.message : 'Export failed')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const pickAndUpload = async (source: 'camera' | 'library') => {
-    if (!id) return
-
-    if (source === 'camera') {
-      const perm = await ImagePicker.requestCameraPermissionsAsync()
-      if (!perm.granted) {
-        Alert.alert('Camera access needed', 'Enable camera permission in Settings.')
-        return
-      }
-    } else {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
-      if (!perm.granted) {
-        Alert.alert('Photos access needed', 'Enable photo library permission in Settings.')
-        return
-      }
-    }
+    const jobId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : undefined
+    if (!jobId) return
 
     const result =
       source === 'camera'
-        ? await ImagePicker.launchCameraAsync({ quality: 0.85 })
-        : await ImagePicker.launchImageLibraryAsync({ quality: 0.85 })
+        ? await launchCameraSafe({ quality: 0.85 })
+        : await launchLibrarySafe({ quality: 0.85 })
 
-    if (result.canceled || !result.assets[0]) return
+    if (!result || result.canceled || !result.assets[0]) return
 
     const asset = result.assets[0]
-    const ext = asset.uri.split('.').pop() ?? 'jpg'
-    const filename = `${photoType}-${Date.now()}.${ext}`
-    const mimeType = asset.mimeType ?? 'image/jpeg'
+    const filename = photoUploadFilename(
+      asset.uri,
+      asset.fileName ?? `${photoType}-${Date.now()}.jpg`,
+    )
+    const mimeType = photoMimeType(filename, asset.mimeType)
 
     setUploading(true)
     try {
-      const sandboxUri = await persistPhotoToSandbox(asset.uri, `job-photos/${id}`, filename)
-      const uploaded = await uploadJobPhoto(id, sandboxUri, filename, mimeType, photoType)
+      const localUri = await prepareLocalPhotoUri(asset.uri, `job-photos/${jobId}`, filename)
+      const uploaded = await uploadJobPhoto(jobId, localUri, filename, mimeType, photoType)
       setPhotos((prev) => [...prev.filter((p) => p.filename !== uploaded.filename), uploaded])
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Upload failed'
@@ -119,7 +132,7 @@ export default function JobPhotosScreen() {
   return (
     <OperatorScreen
       title="Job photos"
-      subtitle={photoType === 'before' ? 'Before photos' : 'After photos'}
+      subtitle={jobPhotoCompletenessMessage(counts)}
       headerRight={<DetailHeaderActions onBack={() => router.back()} />}
     >
       {error ? (
@@ -127,6 +140,14 @@ export default function JobPhotosScreen() {
           {error}
         </AppText>
       ) : null}
+
+      <View style={[styles.banner, complete ? styles.bannerOk : null]}>
+        <AppText variant="caption" style={styles.bannerText}>
+          {complete
+            ? 'Ready for the transformation PDF — required before sending an invoice.'
+            : 'Capture at least one before and one after photo for invoice send.'}
+        </AppText>
+      </View>
 
       <PillGroup options={PHOTO_TYPES} value={photoType} onChange={setPhotoType} />
 
@@ -136,6 +157,11 @@ export default function JobPhotosScreen() {
           label="Choose from library"
           loading={uploading}
           onPress={() => void pickAndUpload('library')}
+        />
+        <SecondaryButton
+          label={complete ? 'Export before/after PDF' : 'Export PDF (need both)'}
+          loading={uploading}
+          onPress={() => void exportTransformation()}
         />
       </View>
 
@@ -166,6 +192,20 @@ const styles = StyleSheet.create({
   actions: {
     gap: spacing.sm,
     marginBottom: spacing.md,
+  },
+  banner: {
+    backgroundColor: colors.surfaceActive,
+    borderRadius: 10,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  bannerOk: {
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  bannerText: {
+    color: colors.textSecondary,
   },
   grid: {
     flexDirection: 'row',
