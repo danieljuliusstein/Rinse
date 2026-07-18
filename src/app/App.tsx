@@ -1769,272 +1769,212 @@ function StatsBar() {
 }
 
 // ─── Testimonials ─────────────────────────────────────────────────────────────
-interface TestimonialItem {
-  id: string;
-  name: string;
-  role: string;
-  company: string;
-  city: string;
-  quote: string;
-  stars: number;
-  avatar: string;
-  featured?: boolean;
-  hasVideo?: boolean;
-}
 
-interface StatItem {
-  value: number;
-  suffix: string;
-  label: string;
-  decimals?: number;
-}
-
-const TESTIMONIALS: TestimonialItem[] = [
-  {
-    id: "marcus",
-    name: "Marcus Rivera",
-    role: "Owner",
-    company: "Apex Mobile Detailing",
-    city: "Los Angeles, CA",
-    quote:
-      "We were drowning in spreadsheets — separate sheets for invoicing, scheduling, follow-ups. The moment we moved to Rinse, everything collapsed into one place. Six bookings a week became twenty-two in under ninety days. I stopped doing admin at midnight.",
-    stars: 5,
-    avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=88&h=88&fit=crop&auto=format",
-    featured: true,
-  },
-  {
-    id: "dominique",
-    name: "Dominique Osei",
-    role: "CEO",
-    company: "Prestige Auto Spa",
-    city: "Atlanta, GA",
-    quote:
-      "Route optimization alone saves us two hours every single day. That's ten hours a week we put back into client work, not logistics. Our techs actually show up on time now — customers noticed before we even told them.",
-    stars: 5,
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=88&h=88&fit=crop&auto=format",
-    hasVideo: true,
-  },
-  {
-    id: "priya",
-    name: "Priya Nair",
-    role: "Founder",
-    company: "Shine Theory Detailing",
-    city: "Austin, TX",
-    quote:
-      "Running solo used to mean flying blind. Now my dashboards give me a real picture of revenue, retention, and where I'm losing jobs. It feels like I have a full operations team backing me up.",
-    stars: 5,
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=88&h=88&fit=crop&auto=format",
-  },
-];
-
-const FOUNDING_STATS = [
-  { value: "Early access", label: "Now open" },
-  { value: "Founding cohort", label: "Limited spots" },
-  { value: "No contracts", label: "Cancel any time" },
-];
-
-function FoundingStat({ value, label }: { value: string; label: string }) {
+function TestimonialStars({ count = 5 }: { count?: number }) {
   return (
-    <div className="flex flex-col gap-0.5 px-8 first:pl-0 last:pr-0">
-      <span className="font-mono text-lg font-bold tracking-tight text-neutral-900">
-        {value}
-      </span>
-      <span className="text-xs font-medium uppercase tracking-widest text-black/35">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function TestimonialStars({ count }: { count: number }) {
-  return (
-    <div className="flex gap-0.5">
+    <div className="flex items-center gap-0.5">
       {Array.from({ length: count }).map((_, i) => (
-        <svg key={i} width="14" height="14" viewBox="0 0 14 14" fill="#4bac50">
-          <path d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.44L7 8.885l-3.09 1.625L4.5 7.07 2 4.635l3.455-.505z" />
-        </svg>
+        <Star key={i} size={12} fill="#4bac50" color="#4bac50" />
       ))}
     </div>
   );
 }
 
-// Video URL for Dominique's story — swap for the real embed URL when ready
-const DOMINIQUE_VIDEO_URL = "https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1&rel=0";
-
-function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
-
+function TestimonialAvatar({ initials, size = "md" }: { initials: string; size?: "sm" | "md" }) {
+  const dim = size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.22 }}
-          onClick={onClose}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-
-          {/* Panel */}
-          <motion.div
-            className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl"
-            initial={{ scale: 0.92, y: 24 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.92, y: 24 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
-              aria-label="Close video"
-            >
-              <X size={14} className="text-white" />
-            </button>
-
-            {/* 16:9 iframe */}
-            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-              <iframe
-                src={DOMINIQUE_VIDEO_URL}
-                className="absolute inset-0 w-full h-full"
-                allow="autoplay; fullscreen"
-                allowFullScreen
-                title="Dominique Osei – Prestige Auto Spa story"
-              />
-            </div>
-
-            {/* Caption */}
-            <div className="bg-neutral-900 px-5 py-3 flex items-center gap-3">
-              <img
-                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=44&h=44&fit=crop&auto=format"
-                alt="Dominique Osei"
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-[#4bac50]/40"
-              />
-              <div>
-                <p className="text-xs font-semibold text-white">Dominique Osei</p>
-                <p className="text-[10px] text-white/40">CEO, Prestige Auto Spa · Atlanta, GA</p>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-function TestimonialCard({ t, index, onWatch }: { t: TestimonialItem; index: number; onWatch?: () => void }) {
-  const featured = t.featured;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.52, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className={[
-        "rounded-2xl p-6 shadow-sm break-inside-avoid",
-        featured
-          ? "border-l-4 border-[#4bac50] bg-[#4bac50]/[0.04] border border-black/[0.06]"
-          : "bg-white border border-black/[0.06]",
-      ].join(" ")}
+    <div
+      className={`${dim} rounded-full flex items-center justify-center font-bold flex-shrink-0`}
+      style={{ background: "rgba(75,172,80,0.10)", color: "#4bac50" }}
     >
-      <TestimonialStars count={t.stars} />
-      <p className={["mt-3 leading-relaxed text-neutral-700", featured ? "text-lg font-medium" : "text-sm"].join(" ")}>
-        &ldquo;{t.quote}&rdquo;
-      </p>
-      {t.hasVideo && (
-        <button
-          onClick={onWatch}
-          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#4bac50] px-3 py-1.5 text-xs font-semibold text-[#4bac50] hover:bg-[#4bac50]/[0.06] transition-colors"
-        >
-          <Play size={11} strokeWidth={2.5} className="fill-[#4bac50]" />
-          Watch story →
-        </button>
-      )}
-      <div className="mt-5 flex items-center gap-3">
-        <img
-          src={t.avatar}
-          alt={t.name}
-          width={44}
-          height={44}
-          className={["size-11 rounded-full object-cover bg-neutral-100", featured ? "ring-2 ring-[#4bac50]/40 ring-offset-1" : ""].join(" ")}
-        />
-        <div>
-          <p className="text-sm font-semibold text-neutral-900">{t.name}</p>
-          <p className="text-xs text-black/40">{t.role}, {t.company} · {t.city}</p>
-        </div>
-      </div>
-    </motion.div>
+      {initials}
+    </div>
   );
 }
+
+const TESTIMONIALS = [
+  {
+    id: "marcus",
+    quote:
+      "We were drowning in spreadsheets — separate sheets for invoicing, scheduling, follow-ups. The moment we moved to Rinse, everything collapsed into one place. Six bookings a week became twenty-two in under ninety days. I stopped doing admin at midnight.",
+    name: "Marcus Rivera",
+    title: "Owner",
+    company: "Apex Mobile Detailing",
+    location: "Los Angeles, CA",
+    initials: "MR",
+    featured: true,
+    watchStory: false,
+  },
+  {
+    id: "dominique",
+    quote:
+      "Route optimization alone saves us two hours every single day. That's ten hours a week we put back into client work, not logistics. Our techs actually show up on time now — customers noticed before we even told them.",
+    name: "Dominique Osei",
+    title: "CEO",
+    company: "Prestige Auto Spa",
+    location: "Atlanta, GA",
+    initials: "DO",
+    watchStory: true,
+    featured: false,
+  },
+  {
+    id: "priya",
+    quote:
+      "Running solo used to mean flying blind. Now my dashboards give me a real picture of revenue, retention, and where I'm losing jobs. It feels like I have a full operations team backing me up.",
+    name: "Priya Nair",
+    title: "Founder",
+    company: "Shine Theory Detailing",
+    location: "Austin, TX",
+    initials: "PN",
+    featured: false,
+    watchStory: false,
+  },
+];
+
+const TESTIMONIAL_STATS = [
+  { label: "Early access",    sub: "Now open" },
+  { label: "Founding cohort", sub: "Limited spots" },
+  { label: "No contracts",    sub: "Cancel any time" },
+];
 
 function TestimonialsSection() {
-  const [videoOpen, setVideoOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
 
-  const columns = [[TESTIMONIALS[0]], [TESTIMONIALS[1]], [TESTIMONIALS[2]]];
+  const featured = TESTIMONIALS.find((t) => t.featured)!;
+  const secondary = TESTIMONIALS.filter((t) => !t.featured);
 
   return (
-    <section id={SECTIONS.testimonials} className="py-32 px-6 lg:px-12 bg-white">
-      <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} />
-
-      <div className="mx-auto max-w-6xl">
+    <section
+      id={SECTIONS.testimonials}
+      className="w-full flex flex-col items-center px-6 py-24 gap-16"
+      style={{ background: "#f7f8f6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+    >
+      {/* ── Header: headline + stats strip ── */}
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, y: 20 }}
+        animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-5xl flex flex-col sm:flex-row sm:items-end justify-between gap-8"
+      >
         {/* Headline */}
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.06 }}
-          className="mb-14"
-        >
-          <h2 className="text-4xl font-bold tracking-tight text-neutral-900 leading-tight sm:text-5xl">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.07] text-neutral-900">
             Built by operators,
           </h2>
-          <h2 className="text-4xl font-bold tracking-tight text-neutral-900/25 leading-tight sm:text-5xl">
+          <h2
+            className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.07]"
+            style={{ color: "rgba(0,0,0,0.22)" }}
+          >
             for operators.
           </h2>
-        </motion.div>
-
-        {/* Founding bar */}
-        <div className="mb-16 flex flex-wrap items-center justify-start gap-y-6 divide-x divide-black/10">
-          {FOUNDING_STATS.map((s) => (
-            <FoundingStat key={s.label} value={s.value} label={s.label} />
-          ))}
         </div>
 
-        {/* 3-column grid — desktop */}
-        <div className="hidden md:grid md:grid-cols-3 md:gap-4 md:items-start">
-          {columns.map((col, ci) => (
-            <div key={ci} className="flex flex-col gap-4">
-              {col.map((t, ti) => (
-                <TestimonialCard
-                  key={t.id}
-                  t={t}
-                  index={ci + ti}
-                  onWatch={t.hasVideo ? () => setVideoOpen(true) : undefined}
+        {/* Stats strip */}
+        <div className="flex items-center flex-shrink-0">
+          {TESTIMONIAL_STATS.map((s, i) => (
+            <div key={s.label} className="flex items-center">
+              <div className="flex flex-col gap-0.5 px-5 first:pl-0">
+                <span className="text-sm font-bold text-neutral-900 whitespace-nowrap">
+                  {s.label}
+                </span>
+                <span
+                  className="text-xs font-semibold uppercase tracking-widest"
+                  style={{ color: "#4bac50", letterSpacing: "0.08em" }}
+                >
+                  {s.sub}
+                </span>
+              </div>
+              {i < TESTIMONIAL_STATS.length - 1 && (
+                <div
+                  className="w-px h-8 flex-shrink-0"
+                  style={{ background: "rgba(0,0,0,0.10)" }}
                 />
-              ))}
+              )}
             </div>
           ))}
         </div>
+      </motion.div>
 
-        {/* Single column — mobile */}
-        <div className="flex flex-col gap-4 md:hidden">
-          {TESTIMONIALS.map((t, i) => (
-            <TestimonialCard
+      {/* ── Testimonials grid ── */}
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 gap-5 items-stretch">
+
+        {/* Featured — spans 3 cols */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+          transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-3 bg-white rounded-2xl border p-8 flex flex-col justify-between gap-10"
+          style={{ borderColor: "rgba(0,0,0,0.08)" }}
+        >
+          <div className="flex flex-col gap-6">
+            <TestimonialStars />
+            <p className="text-xl font-semibold leading-relaxed text-neutral-900">
+              "{featured.quote}"
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <TestimonialAvatar initials={featured.initials} size="md" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-bold text-neutral-900">{featured.name}</span>
+              <span className="text-xs font-medium" style={{ color: "rgba(0,0,0,0.42)" }}>
+                {featured.title}, {featured.company} · {featured.location}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Secondary cards — spans 2 cols, stacked */}
+        <div className="lg:col-span-2 flex flex-col gap-5">
+          {secondary.map((t, i) => (
+            <motion.div
               key={t.id}
-              t={t}
-              index={i}
-              onWatch={t.hasVideo ? () => setVideoOpen(true) : undefined}
-            />
+              initial={{ opacity: 0, y: 28 }}
+              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+              transition={{ duration: 0.52, delay: 0.16 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-2xl border p-6 flex flex-col justify-between gap-6 flex-1"
+              style={{ borderColor: "rgba(0,0,0,0.08)" }}
+            >
+              <div className="flex flex-col gap-4">
+                <TestimonialStars />
+                <p
+                  className="text-sm font-medium leading-relaxed"
+                  style={{ color: "rgba(0,0,0,0.72)" }}
+                >
+                  "{t.quote}"
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {t.watchStory && (
+                  <button
+                    className="inline-flex items-center gap-2 self-start px-4 py-2 rounded-full text-xs font-bold border transition-colors hover:bg-neutral-50 focus:outline-none"
+                    style={{ borderColor: "rgba(0,0,0,0.12)", color: "#0f1210" }}
+                  >
+                    <span
+                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: "#4bac50" }}
+                    >
+                      <Play size={9} fill="white" color="white" />
+                    </span>
+                    Watch story
+                  </button>
+                )}
+                <div className="flex items-center gap-2.5">
+                  <TestimonialAvatar initials={t.initials} size="sm" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-neutral-900">{t.name}</span>
+                    <span
+                      className="text-xs font-medium"
+                      style={{ color: "rgba(0,0,0,0.38)" }}
+                    >
+                      {t.title}, {t.company} · {t.location}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
