@@ -37,6 +37,7 @@ import {
   MessageSquare,
   Wallet,
   Mail,
+  BookOpen,
 } from "lucide-react";
 
 const SECTIONS = {
@@ -2463,73 +2464,157 @@ function ShowcaseSection() {
 
 // ─── Integration Ecosystem Showcase ────────────────────────────────────────────
 const ECOSYSTEM_INTEGRATIONS = [
-  { icon: CreditCard, label: "Stripe" },
-  { icon: Calendar, label: "Google Calendar" },
-  { icon: DollarSign, label: "QuickBooks" },
-  { icon: MessageSquare, label: "Twilio SMS" },
-  { icon: Zap, label: "Zapier" },
-  { icon: MapPin, label: "Google Maps" },
-  { icon: Wallet, label: "Apple Pay" },
-  { icon: Mail, label: "Mailchimp" },
+  { id: 0, name: "Stripe",          color: "#635BFF", icon: CreditCard    },
+  { id: 1, name: "Google Calendar", color: "#4285F4", icon: Calendar      },
+  { id: 2, name: "QuickBooks",      color: "#2CA01C", icon: BookOpen      },
+  { id: 4, name: "Zapier",          color: "#FF4A00", icon: Zap           },
+  { id: 5, name: "Google Maps",     color: "#34A853", icon: MapPin        },
+  { id: 6, name: "Apple Pay",       color: "#A0A0A0", icon: Smartphone    },
+  { id: 7, name: "Mailchimp",       color: "#FFE01B", icon: Mail          },
+] as const;
+
+const ECOSYSTEM_TOP_ROW    = [...ECOSYSTEM_INTEGRATIONS, ...ECOSYSTEM_INTEGRATIONS];
+const ECOSYSTEM_BOTTOM_ROW = [
+  ...ECOSYSTEM_INTEGRATIONS.slice(4),
+  ...ECOSYSTEM_INTEGRATIONS.slice(0, 4),
+  ...ECOSYSTEM_INTEGRATIONS.slice(4),
+  ...ECOSYSTEM_INTEGRATIONS.slice(0, 4),
 ];
 
-function EcosystemSection() {
-  const loop = [...ECOSYSTEM_INTEGRATIONS, ...ECOSYSTEM_INTEGRATIONS];
-  const [paused, setPaused] = useState(false);
+interface EcosystemCardProps {
+  id: number;
+  name: string;
+  color: string;
+  icon: React.ElementType;
+}
+
+function EcosystemCard({ name, color, icon: Icon }: EcosystemCardProps) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <section className="py-32 px-6 lg:px-12 bg-[#0a0a0a] overflow-hidden">
-      <div className="max-w-4xl mx-auto text-center mb-16">
-        <FadeUpWhenVisible className="mb-4 flex justify-center">
-          <span className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] border border-[#4bac50]/25 rounded-full px-3 py-1">
+    <motion.div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      animate={{
+        scale: hovered ? 1.03 : 1,
+        borderColor: hovered ? `${color}55` : "rgba(255,255,255,0.07)",
+        boxShadow: hovered
+          ? `0 0 0 1px ${color}22, 0 8px 32px rgba(0,0,0,0.5)`
+          : "0 0 0 0px transparent, 0 2px 8px rgba(0,0,0,0.3)",
+      }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      className="flex items-center gap-3.5 px-5 shrink-0 cursor-default select-none"
+      style={{
+        width: 200,
+        height: 80,
+        borderRadius: 9999,
+        border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(255,255,255,0.025)",
+        backdropFilter: "blur(12px)",
+      }}
+    >
+      <div
+        className="flex items-center justify-center shrink-0 rounded-full"
+        style={{
+          width: 36,
+          height: 36,
+          background: `${color}1A`,
+          boxShadow: `0 0 14px ${color}33`,
+          border: `1px solid ${color}30`,
+        }}
+      >
+        <Icon size={15} color={color} strokeWidth={2.2} />
+      </div>
+      <span
+        className="text-sm font-medium whitespace-nowrap tracking-tight"
+        style={{ color: "rgba(255,255,255,0.58)" }}
+      >
+        {name}
+      </span>
+    </motion.div>
+  );
+}
+
+function EcosystemSection() {
+  return (
+    <section className="relative w-full py-32 bg-[#0a0a0a] overflow-hidden">
+      <style>{`
+        @keyframes marquee-left {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        @keyframes marquee-right {
+          from { transform: translateX(-50%); }
+          to   { transform: translateX(0); }
+        }
+        .eco-scroll-left  { animation: marquee-left  32s linear infinite; }
+        .eco-scroll-right { animation: marquee-right 32s linear infinite; }
+        .eco-marquee-zone:hover .eco-scroll-left,
+        .eco-marquee-zone:hover .eco-scroll-right {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      {/* Header */}
+      <div className="relative z-10 text-center px-6 mb-16">
+        <FadeUpWhenVisible className="mb-5">
+          <p className="text-xs tracking-[0.28em] uppercase font-medium text-[#4bac50] font-mono">
             Ecosystem
-          </span>
+          </p>
         </FadeUpWhenVisible>
-        <FadeUpWhenVisible delay={0.06} className="mb-5">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white tracking-tight leading-snug">
+        <FadeUpWhenVisible delay={0.06} className="mb-8">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-white">
             Plays well with the tools
             <br />
             you already run.
           </h2>
         </FadeUpWhenVisible>
-        <FadeUpWhenVisible delay={0.1} className="mb-8">
-          <p className="text-sm text-white/40 leading-relaxed max-w-xl mx-auto">
-            Rinse connects payments, scheduling, accounting, and outreach into one loop — so nothing needs to be re-typed twice.
-          </p>
-        </FadeUpWhenVisible>
-        <FadeUpWhenVisible delay={0.14}>
-          <button
+        <FadeUpWhenVisible delay={0.12}>
+          <motion.button
             onClick={() => scrollToSection(SECTIONS.cta)}
-            className="inline-flex items-center gap-2 text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-full px-5 py-2.5 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            whileHover={{ borderColor: "rgba(75,172,80,0.55)", background: "rgba(75,172,80,0.1)" }}
+            whileTap={{ scale: 0.97 }}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-colors"
+            style={{
+              border: "1px solid rgba(75,172,80,0.28)",
+              color: "#4bac50",
+              background: "rgba(75,172,80,0.05)",
+            }}
           >
             See all integrations
-            <ArrowRight size={14} />
-          </button>
+            <ArrowRight size={13} strokeWidth={2.5} />
+          </motion.button>
         </FadeUpWhenVisible>
       </div>
 
-      <div
-        className="relative w-full"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        style={{ maskImage: "linear-gradient(90deg, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(90deg, transparent, black 10%, black 90%, transparent)" }}
-      >
-        <motion.div
-          className="flex gap-5 w-max"
-          animate={paused ? undefined : { x: ["0%", "-50%"] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-        >
-          {loop.map((item, i) => (
-            <div
-              key={i}
-              className="flex-shrink-0 w-[160px] h-[110px] rounded-2xl border border-white/8 bg-white/[0.03] flex flex-col items-center justify-center gap-3 hover:bg-white/[0.06] hover:border-white/15 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
-            >
-              <div className="w-11 h-11 rounded-xl bg-white/8 flex items-center justify-center">
-                <item.icon size={20} className="text-[#4bac50]" />
-              </div>
-              <span className="text-[11px] font-medium text-white/50">{item.label}</span>
-            </div>
-          ))}
-        </motion.div>
+      {/* Marquee rows */}
+      <div className="relative eco-marquee-zone">
+        {/* Edge fades */}
+        <div
+          className="absolute inset-y-0 left-0 z-10 pointer-events-none"
+          style={{ width: 120, background: "linear-gradient(to right, #0a0a0a 0%, transparent 100%)" }}
+        />
+        <div
+          className="absolute inset-y-0 right-0 z-10 pointer-events-none"
+          style={{ width: 120, background: "linear-gradient(to left, #0a0a0a 0%, transparent 100%)" }}
+        />
+
+        {/* Row 1 — scrolls left */}
+        <div className="overflow-hidden mb-4">
+          <div className="eco-scroll-left flex gap-4 py-3" style={{ width: "max-content" }}>
+            {ECOSYSTEM_TOP_ROW.map((item, i) => (
+              <EcosystemCard key={`t-${i}`} {...item} />
+            ))}
+          </div>
+        </div>
+
+        {/* Row 2 — scrolls right */}
+        <div className="overflow-hidden">
+          <div className="eco-scroll-right flex gap-4 py-3" style={{ width: "max-content" }}>
+            {ECOSYSTEM_BOTTOM_ROW.map((item, i) => (
+              <EcosystemCard key={`b-${i}`} {...item} />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
