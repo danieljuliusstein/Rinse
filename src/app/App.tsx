@@ -1871,7 +1871,81 @@ function TestimonialStars({ count }: { count: number }) {
   );
 }
 
-function TestimonialCard({ t, index }: { t: TestimonialItem; index: number }) {
+// Video URL for Dominique's story — swap for the real embed URL when ready
+const DOMINIQUE_VIDEO_URL = "https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1&rel=0";
+
+function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          onClick={onClose}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+          {/* Panel */}
+          <motion.div
+            className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl"
+            initial={{ scale: 0.92, y: 24 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.92, y: 24 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
+              aria-label="Close video"
+            >
+              <X size={14} className="text-white" />
+            </button>
+
+            {/* 16:9 iframe */}
+            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                src={DOMINIQUE_VIDEO_URL}
+                className="absolute inset-0 w-full h-full"
+                allow="autoplay; fullscreen"
+                allowFullScreen
+                title="Dominique Osei – Prestige Auto Spa story"
+              />
+            </div>
+
+            {/* Caption */}
+            <div className="bg-neutral-900 px-5 py-3 flex items-center gap-3">
+              <img
+                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=44&h=44&fit=crop&auto=format"
+                alt="Dominique Osei"
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-[#4bac50]/40"
+              />
+              <div>
+                <p className="text-xs font-semibold text-white">Dominique Osei</p>
+                <p className="text-[10px] text-white/40">CEO, Prestige Auto Spa · Atlanta, GA</p>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function TestimonialCard({ t, index, onWatch }: { t: TestimonialItem; index: number; onWatch?: () => void }) {
   const featured = t.featured;
   return (
     <motion.div
@@ -1891,7 +1965,10 @@ function TestimonialCard({ t, index }: { t: TestimonialItem; index: number }) {
         &ldquo;{t.quote}&rdquo;
       </p>
       {t.hasVideo && (
-        <button className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#4bac50] px-3 py-1.5 text-xs font-semibold text-[#4bac50] hover:bg-[#4bac50]/[0.06] transition-colors">
+        <button
+          onClick={onWatch}
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#4bac50] px-3 py-1.5 text-xs font-semibold text-[#4bac50] hover:bg-[#4bac50]/[0.06] transition-colors"
+        >
           <Play size={11} strokeWidth={2.5} className="fill-[#4bac50]" />
           Watch story →
         </button>
@@ -1916,6 +1993,7 @@ function TestimonialCard({ t, index }: { t: TestimonialItem; index: number }) {
 function TestimonialsSection() {
   const statRef = useRef<HTMLDivElement>(null);
   const [statsActive, setStatsActive] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   useEffect(() => {
     if (!statRef.current) return;
@@ -1931,21 +2009,9 @@ function TestimonialsSection() {
 
   return (
     <section id={SECTIONS.testimonials} className="py-32 px-6 lg:px-12 bg-white">
-      <div className="mx-auto max-w-6xl">
-        {/* Eyebrow */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45 }}
-          className="mb-5 flex items-center gap-2"
-        >
-          <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[#4bac50]">
-            Social proof
-          </span>
-          <span className="h-px w-8 bg-[#4bac50]/40" />
-        </motion.div>
+      <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} />
 
+      <div className="mx-auto max-w-6xl">
         {/* Headline */}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
@@ -1977,7 +2043,12 @@ function TestimonialsSection() {
           {columns.map((col, ci) => (
             <div key={ci} className="flex flex-col gap-4">
               {col.map((t, ti) => (
-                <TestimonialCard key={t.id} t={t} index={ci + ti} />
+                <TestimonialCard
+                  key={t.id}
+                  t={t}
+                  index={ci + ti}
+                  onWatch={t.hasVideo ? () => setVideoOpen(true) : undefined}
+                />
               ))}
             </div>
           ))}
@@ -1986,7 +2057,12 @@ function TestimonialsSection() {
         {/* Single column — mobile */}
         <div className="flex flex-col gap-4 md:hidden">
           {TESTIMONIALS.map((t, i) => (
-            <TestimonialCard key={t.id} t={t} index={i} />
+            <TestimonialCard
+              key={t.id}
+              t={t}
+              index={i}
+              onWatch={t.hasVideo ? () => setVideoOpen(true) : undefined}
+            />
           ))}
         </div>
       </div>
@@ -2641,10 +2717,10 @@ function EcosystemCard({ name, color, icon: Icon }: EcosystemCardProps) {
       onMouseLeave={() => setHovered(false)}
       animate={{
         scale: hovered ? 1.03 : 1,
-        borderColor: hovered ? `${color}55` : "rgba(255,255,255,0.07)",
+        borderColor: hovered ? `${color}60` : "rgba(0,0,0,0.09)",
         boxShadow: hovered
-          ? `0 0 0 1px ${color}22, 0 8px 32px rgba(0,0,0,0.5)`
-          : "0 0 0 0px transparent, 0 2px 8px rgba(0,0,0,0.3)",
+          ? `0 0 0 1px ${color}18, 0 8px 24px rgba(0,0,0,0.08)`
+          : "0 1px 4px rgba(0,0,0,0.06)",
       }}
       transition={{ duration: 0.18, ease: "easeOut" }}
       className="flex items-center gap-3.5 px-5 shrink-0 cursor-default select-none"
@@ -2652,9 +2728,8 @@ function EcosystemCard({ name, color, icon: Icon }: EcosystemCardProps) {
         width: 200,
         height: 80,
         borderRadius: 9999,
-        border: "1px solid rgba(255,255,255,0.07)",
-        background: "rgba(255,255,255,0.025)",
-        backdropFilter: "blur(12px)",
+        border: "1px solid rgba(0,0,0,0.09)",
+        background: "#ffffff",
       }}
     >
       <div
@@ -2662,16 +2737,15 @@ function EcosystemCard({ name, color, icon: Icon }: EcosystemCardProps) {
         style={{
           width: 36,
           height: 36,
-          background: `${color}1A`,
-          boxShadow: `0 0 14px ${color}33`,
-          border: `1px solid ${color}30`,
+          background: `${color}15`,
+          border: `1px solid ${color}28`,
         }}
       >
         <Icon size={15} color={color} strokeWidth={2.2} />
       </div>
       <span
         className="text-sm font-medium whitespace-nowrap tracking-tight"
-        style={{ color: "rgba(255,255,255,0.58)" }}
+        style={{ color: "rgba(0,0,0,0.55)" }}
       >
         {name}
       </span>
