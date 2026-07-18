@@ -38,6 +38,7 @@ import {
   Wallet,
   Mail,
   BookOpen,
+  Play,
 } from "lucide-react";
 
 const SECTIONS = {
@@ -1759,89 +1760,233 @@ function StatsBar() {
 }
 
 // ─── Testimonials ─────────────────────────────────────────────────────────────
-const TESTIMONIALS = [
+interface TestimonialItem {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  city: string;
+  quote: string;
+  stars: number;
+  avatar: string;
+  featured?: boolean;
+  hasVideo?: boolean;
+}
+
+interface StatItem {
+  value: number;
+  suffix: string;
+  label: string;
+  decimals?: number;
+}
+
+const TESTIMONIALS: TestimonialItem[] = [
   {
-    quote: "Rinse replaced our spreadsheets, our invoicing tool, and our scheduling app in one shot. We went from 6 bookings a week to 22 within 90 days.",
+    id: "marcus",
     name: "Marcus Rivera",
-    role: "Owner, Apex Mobile Detailing",
+    role: "Owner",
+    company: "Apex Mobile Detailing",
     city: "Los Angeles, CA",
-    avatar: "MR",
+    quote:
+      "We were drowning in spreadsheets — separate sheets for invoicing, scheduling, follow-ups. The moment we moved to Rinse, everything collapsed into one place. Six bookings a week became twenty-two in under ninety days. I stopped doing admin at midnight.",
     stars: 5,
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format",
+    avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=88&h=88&fit=crop&auto=format",
+    featured: true,
   },
   {
-    quote: "The route optimization alone saves us 2 hours every single day. That's 10 hours a week my techs spend detailing instead of driving.",
+    id: "dominique",
     name: "Dominique Osei",
-    role: "CEO, Prestige Auto Spa",
+    role: "CEO",
+    company: "Prestige Auto Spa",
     city: "Atlanta, GA",
-    avatar: "DO",
+    quote:
+      "Route optimization alone saves us two hours every single day. That's ten hours a week we put back into client work, not logistics. Our techs actually show up on time now — customers noticed before we even told them.",
     stars: 5,
-    img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&auto=format",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=88&h=88&fit=crop&auto=format",
+    hasVideo: true,
   },
   {
-    quote: "I finally feel like I'm running a real business. The dashboards make it look like I have a full operations team, even though it's just me and two techs.",
+    id: "priya",
     name: "Priya Nair",
-    role: "Founder, Shine Theory Detailing",
+    role: "Founder",
+    company: "Shine Theory Detailing",
     city: "Austin, TX",
-    avatar: "PN",
+    quote:
+      "Running solo used to mean flying blind. Now my dashboards give me a real picture of revenue, retention, and where I'm losing jobs. It feels like I have a full operations team backing me up.",
     stars: 5,
-    img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&auto=format",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=88&h=88&fit=crop&auto=format",
   },
 ];
 
+const TESTIMONIAL_STATS: StatItem[] = [
+  { value: 4200, suffix: "+", label: "detailers on Rinse" },
+  { value: 2.1, suffix: "M", label: "jobs completed", decimals: 1 },
+  { value: 4.9, suffix: " ★", label: "avg rating", decimals: 1 },
+];
+
+function useTestimonialCountUp(target: number, decimals = 0, active: boolean) {
+  const [count, setCount] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    const duration = 1600;
+    const start = performance.now();
+    function step(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(parseFloat((eased * target).toFixed(decimals)));
+      if (progress < 1) rafRef.current = requestAnimationFrame(step);
+    }
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [active, target, decimals]);
+  return count;
+}
+
+function StatCounter({ stat, active }: { stat: StatItem; active: boolean }) {
+  const count = useTestimonialCountUp(stat.value, stat.decimals ?? 0, active);
+  const display = stat.decimals ? count.toFixed(stat.decimals) : Math.floor(count).toLocaleString();
+  return (
+    <div className="flex flex-col items-center gap-1 px-8 first:pl-0 last:pr-0">
+      <span className="font-mono text-4xl font-bold tracking-tight text-neutral-900">
+        {display}{stat.suffix}
+      </span>
+      <span className="text-xs font-medium uppercase tracking-widest text-black/35">
+        {stat.label}
+      </span>
+    </div>
+  );
+}
+
+function TestimonialStars({ count }: { count: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {Array.from({ length: count }).map((_, i) => (
+        <svg key={i} width="14" height="14" viewBox="0 0 14 14" fill="#4bac50">
+          <path d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.44L7 8.885l-3.09 1.625L4.5 7.07 2 4.635l3.455-.505z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function TestimonialCard({ t, index }: { t: TestimonialItem; index: number }) {
+  const featured = t.featured;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.52, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+      className={[
+        "rounded-2xl p-6 shadow-sm break-inside-avoid",
+        featured
+          ? "border-l-4 border-[#4bac50] bg-[#4bac50]/[0.04] border border-black/[0.06]"
+          : "bg-white border border-black/[0.06]",
+      ].join(" ")}
+    >
+      <TestimonialStars count={t.stars} />
+      <p className={["mt-3 leading-relaxed text-neutral-700", featured ? "text-lg font-medium" : "text-sm"].join(" ")}>
+        &ldquo;{t.quote}&rdquo;
+      </p>
+      {t.hasVideo && (
+        <button className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#4bac50] px-3 py-1.5 text-xs font-semibold text-[#4bac50] hover:bg-[#4bac50]/[0.06] transition-colors">
+          <Play size={11} strokeWidth={2.5} className="fill-[#4bac50]" />
+          Watch story →
+        </button>
+      )}
+      <div className="mt-5 flex items-center gap-3">
+        <img
+          src={t.avatar}
+          alt={t.name}
+          width={44}
+          height={44}
+          className={["size-11 rounded-full object-cover bg-neutral-100", featured ? "ring-2 ring-[#4bac50]/40 ring-offset-1" : ""].join(" ")}
+        />
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">{t.name}</p>
+          <p className="text-xs text-black/40">{t.role}, {t.company} · {t.city}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function TestimonialsSection() {
+  const statRef = useRef<HTMLDivElement>(null);
+  const [statsActive, setStatsActive] = useState(false);
+
+  useEffect(() => {
+    if (!statRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setStatsActive(true); observer.disconnect(); } },
+      { threshold: 0.4 }
+    );
+    observer.observe(statRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const columns = [[TESTIMONIALS[0]], [TESTIMONIALS[1]], [TESTIMONIALS[2]]];
+
   return (
     <section id={SECTIONS.testimonials} className="py-32 px-6 lg:px-12 bg-white">
-      <div className="max-w-7xl mx-auto">
-        <FadeUpWhenVisible className="mb-4">
-          <span className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em]">
+      <div className="mx-auto max-w-6xl">
+        {/* Eyebrow */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.45 }}
+          className="mb-5 flex items-center gap-2"
+        >
+          <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[#4bac50]">
             Social proof
           </span>
-        </FadeUpWhenVisible>
-        <FadeUpWhenVisible delay={0.05} className="mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-neutral-900 tracking-tight">
-            Built by operators,
-            <br />
-            <span className="text-black/30">for operators.</span>
-          </h2>
-        </FadeUpWhenVisible>
+          <span className="h-px w-8 bg-[#4bac50]/40" />
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.06 }}
+          className="mb-14"
+        >
+          <h2 className="text-4xl font-bold tracking-tight text-neutral-900 leading-tight sm:text-5xl">
+            Built by operators,
+          </h2>
+          <h2 className="text-4xl font-bold tracking-tight text-neutral-900/25 leading-tight sm:text-5xl">
+            for operators.
+          </h2>
+        </motion.div>
+
+        {/* Stat bar */}
+        <div
+          ref={statRef}
+          className="mb-16 flex flex-wrap items-center justify-start gap-y-6 divide-x divide-black/10"
+        >
+          {TESTIMONIAL_STATS.map((stat) => (
+            <StatCounter key={stat.label} stat={stat} active={statsActive} />
+          ))}
+        </div>
+
+        {/* 3-column grid — desktop */}
+        <div className="hidden md:grid md:grid-cols-3 md:gap-4 md:items-start">
+          {columns.map((col, ci) => (
+            <div key={ci} className="flex flex-col gap-4">
+              {col.map((t, ti) => (
+                <TestimonialCard key={t.id} t={t} index={ci + ti} />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Single column — mobile */}
+        <div className="flex flex-col gap-4 md:hidden">
           {TESTIMONIALS.map((t, i) => (
-            <FadeUpWhenVisible key={t.name} delay={i * 0.08}>
-              <div className="h-full rounded-2xl border border-black/6 bg-black/2 p-6 hover:border-black/10 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)]">
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: t.stars }).map((_, j) => (
-                    <Star
-                      key={j}
-                      size={12}
-                      className="text-[#4bac50] fill-[#4bac50]"
-                    />
-                  ))}
-                </div>
-                <p className="text-sm text-black/65 leading-relaxed mb-6">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <img
-                    src={t.img}
-                    alt={t.name}
-                    className="w-9 h-9 rounded-full object-cover bg-black/10"
-                  />
-                  <div>
-                    <div className="text-xs font-semibold text-neutral-900">
-                      {t.name}
-                    </div>
-                    <div className="text-[10px] text-black/30 font-mono">
-                      {t.role}
-                    </div>
-                    <div className="text-[10px] text-black/20 font-mono">
-                      {t.city}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </FadeUpWhenVisible>
+            <TestimonialCard key={t.id} t={t} index={i} />
           ))}
         </div>
       </div>
@@ -2536,7 +2681,7 @@ function EcosystemCard({ name, color, icon: Icon }: EcosystemCardProps) {
 
 function EcosystemSection() {
   return (
-    <section className="relative w-full py-32 bg-[#0a0a0a] overflow-hidden">
+    <section className="relative w-full py-32 bg-white overflow-hidden">
       <style>{`
         @keyframes marquee-left {
           from { transform: translateX(0); }
@@ -2591,11 +2736,11 @@ function EcosystemSection() {
         {/* Edge fades */}
         <div
           className="absolute inset-y-0 left-0 z-10 pointer-events-none"
-          style={{ width: 120, background: "linear-gradient(to right, #0a0a0a 0%, transparent 100%)" }}
+          style={{ width: 120, background: "linear-gradient(to right, #ffffff 0%, transparent 100%)" }}
         />
         <div
           className="absolute inset-y-0 right-0 z-10 pointer-events-none"
-          style={{ width: 120, background: "linear-gradient(to left, #0a0a0a 0%, transparent 100%)" }}
+          style={{ width: 120, background: "linear-gradient(to left, #ffffff 0%, transparent 100%)" }}
         />
 
         {/* Row 1 — scrolls left */}
