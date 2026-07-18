@@ -1408,10 +1408,19 @@ function NodeCanvasSection() {
             </div>
           </div>
 
-          {/* Right: the node canvas — swaps + redraws on demand, in place. */}
+          {/* Right: the step mockup — swaps + animates on active step change. */}
           <div className="sticky top-32 self-start flex items-center justify-center" style={{ minHeight: "min(70vh, 520px)" }}>
             <AnimatePresence mode="wait">
-              <NodeGraph key={activeStep} graph={NODE_GRAPHS[activeStep]} replayKey={activeStep} />
+              <motion.div
+                key={activeStep}
+                initial={{ opacity: 0, scale: 0.97, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: -12 }}
+                transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center justify-center w-full"
+              >
+                {WORKFLOW_STEPS[activeStep].mockup}
+              </motion.div>
             </AnimatePresence>
           </div>
         </div>
@@ -2040,7 +2049,7 @@ type BillingCycle = "monthly" | "annual";
 const COMPARISON_FEATURES: {
   label: string;
   starter: boolean;
-  group: 1 | 2;
+  group: 1 | 2 | 3;
 }[] = [
   { label: "Up to 3 clients",         starter: true,  group: 1 },
   { label: "Up to 10 jobs",           starter: true,  group: 1 },
@@ -2052,6 +2061,11 @@ const COMPARISON_FEATURES: {
   { label: "Team collaboration",      starter: false, group: 2 },
   { label: "Automations & workflows", starter: false, group: 2 },
   { label: "Priority support",        starter: false, group: 2 },
+  { label: "Unlimited technicians",   starter: false, group: 3 },
+  { label: "Multi-location support",  starter: false, group: 3 },
+  { label: "Custom branding",         starter: false, group: 3 },
+  { label: "API access",              starter: false, group: 3 },
+  { label: "Dedicated onboarding",    starter: false, group: 3 },
 ];
 
 // ─── Billing toggle ───────────────────────────────────────────────────────────
@@ -2252,6 +2266,7 @@ function PricingCard({
   priceNote,
   cta,
   isPro,
+  isScale,
   features,
   index,
   onCta,
@@ -2264,6 +2279,7 @@ function PricingCard({
   priceNote: string | { monthly: string; annual: string };
   cta: string;
   isPro: boolean;
+  isScale?: boolean;
   features: typeof COMPARISON_FEATURES;
   index: number;
   onCta: () => void;
@@ -2278,9 +2294,13 @@ function PricingCard({
 
   const group1 = features.filter((f) => f.group === 1);
   const group2 = features.filter((f) => f.group === 2);
+  const group3 = features.filter((f) => f.group === 3);
 
-  const featureAvailable = (f: typeof COMPARISON_FEATURES[number]) =>
-    isPro ? true : f.starter;
+  const featureAvailable = (f: typeof COMPARISON_FEATURES[number]) => {
+    if (isScale) return true;
+    if (isPro) return f.group !== 3;
+    return f.starter;
+  };
 
   return (
     <motion.div
@@ -2298,7 +2318,7 @@ function PricingCard({
           <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
             <span
               className="inline-block px-3.5 py-1 rounded-full text-xs font-bold text-white"
-              style={{ background: "#4bac50" }}
+              style={{ background: isPro ? "#4bac50" : "#0f1210" }}
             >
               {badge}
             </span>
@@ -2320,12 +2340,12 @@ function PricingCard({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, ease: [0.32, 0, 0.67, 0] }}
-                  className={`font-extrabold tracking-tight text-neutral-900 ${isFree ? "text-4xl" : "text-5xl"}`}
+                  className={`font-extrabold tracking-tight text-neutral-900 ${isFree || priceVal === "Custom" ? "text-4xl" : "text-5xl"}`}
                 >
                   {priceVal}
                 </motion.span>
               </AnimatePresence>
-              {!isFree && (
+              {!isFree && priceVal !== "Custom" && (
                 <span className="text-sm font-medium mb-2" style={{ color: "rgba(0,0,0,0.35)" }}>
                   /mo
                 </span>
@@ -2346,6 +2366,17 @@ function PricingCard({
             >
               {cta}
             </motion.button>
+          ) : isScale ? (
+            <motion.button
+              onClick={onCta}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="w-full py-3 rounded-full text-sm font-bold text-white focus:outline-none"
+              style={{ background: "#0f1210" }}
+            >
+              {cta}
+            </motion.button>
           ) : (
             <motion.button
               onClick={onCta}
@@ -2361,15 +2392,25 @@ function PricingCard({
           <div className="h-px w-full" style={{ background: "rgba(0,0,0,0.06)" }} />
           <ul className="flex flex-col gap-3">
             {group1.map((f) => (
-              <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={isPro} />
+              <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={isPro || !!isScale} />
             ))}
           </ul>
           <div className="h-px w-full" style={{ background: "rgba(0,0,0,0.05)" }} />
           <ul className="flex flex-col gap-3">
             {group2.map((f) => (
-              <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={isPro} />
+              <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={isPro || !!isScale} />
             ))}
           </ul>
+          {group3.length > 0 && (
+            <>
+              <div className="h-px w-full" style={{ background: "rgba(0,0,0,0.05)" }} />
+              <ul className="flex flex-col gap-3">
+                {group3.map((f) => (
+                  <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={!!isScale} />
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       </div>
     </motion.div>
@@ -2409,11 +2450,11 @@ function PricingSection({ onStartTrial }: { onStartTrial: () => void }) {
       {/* Founder banner */}
       <FounderBanner onStartTrial={onStartTrial} />
 
-      {/* Starter vs Pro */}
-      <div className="w-full max-w-3xl flex flex-col items-center gap-6">
+      {/* Starter / Pro / Scale */}
+      <div className="w-full max-w-5xl flex flex-col items-center gap-6">
         <BillingToggle cycle={cycle} onChange={setCycle} />
 
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 items-stretch">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-5 items-stretch">
           <PricingCard
             name="Starter"
             tagline="For solo operators getting organized."
@@ -2437,6 +2478,20 @@ function PricingSection({ onStartTrial }: { onStartTrial: () => void }) {
             features={COMPARISON_FEATURES}
             index={1}
             onCta={onStartTrial}
+            cycle={cycle}
+          />
+          <PricingCard
+            name="Scale"
+            tagline="For multi-van, high-volume operations."
+            badge="Enterprise"
+            price={{ monthly: "Custom", annual: "Custom" }}
+            priceNote="Contact us for volume pricing"
+            cta="Talk to sales"
+            isPro={false}
+            isScale={true}
+            features={COMPARISON_FEATURES}
+            index={2}
+            onCta={() => window.open("mailto:hello@rinse.app?subject=Scale%20plan%20inquiry", "_blank")}
             cycle={cycle}
           />
         </div>
