@@ -1818,42 +1818,20 @@ const TESTIMONIALS: TestimonialItem[] = [
   },
 ];
 
-const TESTIMONIAL_STATS: StatItem[] = [
-  { value: 4200, suffix: "+", label: "detailers on Rinse" },
-  { value: 2.1, suffix: "M", label: "jobs completed", decimals: 1 },
-  { value: 4.9, suffix: " ★", label: "avg rating", decimals: 1 },
+const FOUNDING_STATS = [
+  { value: "Early access", label: "Now open" },
+  { value: "Founding cohort", label: "Limited spots" },
+  { value: "No contracts", label: "Cancel any time" },
 ];
 
-function useTestimonialCountUp(target: number, decimals = 0, active: boolean) {
-  const [count, setCount] = useState(0);
-  const rafRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!active) return;
-    const duration = 1600;
-    const start = performance.now();
-    function step(now: number) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(parseFloat((eased * target).toFixed(decimals)));
-      if (progress < 1) rafRef.current = requestAnimationFrame(step);
-    }
-    rafRef.current = requestAnimationFrame(step);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [active, target, decimals]);
-  return count;
-}
-
-function StatCounter({ stat, active }: { stat: StatItem; active: boolean }) {
-  const count = useTestimonialCountUp(stat.value, stat.decimals ?? 0, active);
-  const display = stat.decimals ? count.toFixed(stat.decimals) : Math.floor(count).toLocaleString();
+function FoundingStat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-1 px-8 first:pl-0 last:pr-0">
-      <span className="font-mono text-4xl font-bold tracking-tight text-neutral-900">
-        {display}{stat.suffix}
+    <div className="flex flex-col gap-0.5 px-8 first:pl-0 last:pr-0">
+      <span className="font-mono text-lg font-bold tracking-tight text-neutral-900">
+        {value}
       </span>
       <span className="text-xs font-medium uppercase tracking-widest text-black/35">
-        {stat.label}
+        {label}
       </span>
     </div>
   );
@@ -1991,19 +1969,7 @@ function TestimonialCard({ t, index, onWatch }: { t: TestimonialItem; index: num
 }
 
 function TestimonialsSection() {
-  const statRef = useRef<HTMLDivElement>(null);
-  const [statsActive, setStatsActive] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
-
-  useEffect(() => {
-    if (!statRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setStatsActive(true); observer.disconnect(); } },
-      { threshold: 0.4 }
-    );
-    observer.observe(statRef.current);
-    return () => observer.disconnect();
-  }, []);
 
   const columns = [[TESTIMONIALS[0]], [TESTIMONIALS[1]], [TESTIMONIALS[2]]];
 
@@ -2028,13 +1994,10 @@ function TestimonialsSection() {
           </h2>
         </motion.div>
 
-        {/* Stat bar */}
-        <div
-          ref={statRef}
-          className="mb-16 flex flex-wrap items-center justify-start gap-y-6 divide-x divide-black/10"
-        >
-          {TESTIMONIAL_STATS.map((stat) => (
-            <StatCounter key={stat.label} stat={stat} active={statsActive} />
+        {/* Founding bar */}
+        <div className="mb-16 flex flex-wrap items-center justify-start gap-y-6 divide-x divide-black/10">
+          {FOUNDING_STATS.map((s) => (
+            <FoundingStat key={s.label} value={s.value} label={s.label} />
           ))}
         </div>
 
@@ -2781,7 +2744,7 @@ function EcosystemSection() {
           </p>
         </FadeUpWhenVisible>
         <FadeUpWhenVisible delay={0.06} className="mb-8">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-white">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-neutral-900">
             Plays well with the tools
             <br />
             you already run.
