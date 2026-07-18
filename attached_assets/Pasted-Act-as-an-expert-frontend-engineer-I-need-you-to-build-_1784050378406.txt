@@ -1,0 +1,37 @@
+Act as an expert frontend engineer. I need you to build a brand new, highly premium section for my site from scratch. It is an "Integration Ecosystem Showcase" inspired by the Attio CRM marketing layout. Since you cannot see images, I will describe the exact visual layout, styling, content, and animation requirements for you to code.
+
+### 1. Typography & Header Layout (Centered Stack)
+At the top of the section, create a vertically centered content block with a clean dark-mode aesthetic:
+- A small, pill-shaped badge at the very top that says "Connectivity" in a small, muted blue font with a subtle border.
+- A main H2 heading below it that reads: "Your whole stack, connected." Make it a large, crisp white font (`text-4xl` or `text-5xl`), bold, with tight tracking.
+- A descriptive subheadline below the heading in a muted, medium-gray font (`text-gray-400` or `text-zinc-400`) that reads: "Claude, Slack, Clay, Linear, Notion, and anything your team and agents run on."
+- A call-to-action button below the text that says "Explore the ecosystem →". It should have a dark, subtle background border that lights up elegantly on hover.
+- Set a deep, solid charcoal/near-black background for the entire section container (`bg-[#0a0a0a]` or similar) with vertical pinstripe alignment hints if possible.
+
+### 2. The Horizontal Logo Row (Layout Structure)
+Beneath the text stack, create a full-width container to hold the app integration icons:
+- The icons must be housed in uniform, dark, rounded-square card containers ("squircles") with a soft background gray and dark border. 
+- Inside these cards, place clean, perfectly centered white SVG icons for popular tech platforms. Use standard accessible icon libraries (like Lucide) or hardcoded inline SVGs to represent:
+  1. Notion
+  2. Slack
+  3. OpenAI (ChatGPT)
+  4. Stripe
+  5. Linear
+  6. Claude (Anthropic)
+  7. Google Drive
+  8. Figma
+- The cards should line up side-by-side in a single, perfectly horizontal row spanning beyond the left and right edges of the screen.
+
+### 3. Edge Masking Effect (The Secret to the Premium Look)
+- To prevent the scrolling logo row from abruptly crashing into the edges of the screen, apply a CSS or Tailwind webkit-mask utility to the row's outer container.
+- Use a linear gradient mask (`mask-image: linear-gradient(to right, transparent, white 15%, white 85%, transparent)`) so that the far-left and far-right edges of the scrolling row smoothly fade out to 100% transparency into the dark background.
+
+### 4. Infinite Marquee Animation Mechanics (Framer Motion)
+- Duplicate the array of logo cards programmatically inside the row so the track is double the width of the unique elements. This prevents any empty space or hitching when looping.
+- Wrap the inner row in a Framer Motion `<motion.div>` wrapper.
+- Configure the animation to glide horizontally from right to left (`x: [0, "-50%"]`) continuously.
+- The animation must use a strict `linear` easing curve and a smooth, unhurried pace (duration around `30s` to `40s`).
+- Set `repeat: Infinity` and `repeatType: "loop"` so that the very millisecond it transitions halfway through the track, it seamlessly jumps back to 0 without the user noticing a single frame of layout shifting.
+- Add a `whileHover` state modifier so that if a user hovers their mouse over any part of the scrolling track, the marquee animation cleanly pauses or slows down so they can comfortably see the integration cards.
+
+Please generate the component structure, plug in clean placeholder icons, and implement this precise layout and motion framework into my workspace.
