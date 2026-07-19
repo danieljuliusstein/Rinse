@@ -1838,40 +1838,69 @@ function InventoryGraphic() {
 }
 
 // ── 6. Auto Messages & Reviews ──
-const FM_MESSAGES = [
-  { text: "On my way — arriving in 12 min.",              time: "10:02 AM", type: "sms"    },
-  { text: "Reminder: your appointment is tomorrow 10 AM.", time: "9:00 AM",  type: "sms"    },
-  { text: "New 5-star review on Google",                  time: "just now", type: "review" },
+const ALL_AUTO_MESSAGES = [
+  { trigger: "Booking confirmed", text: "You're booked for Sat 2 PM. See you then! – Rinse",          accent: "#3b82f6", icon: "✓" },
+  { trigger: "On my way",         text: "Heading your way — ETA 12 min 🚗",                            accent: "#8b5cf6", icon: "→" },
+  { trigger: "Reminder",          text: "Your detail is tomorrow at 10 AM. Reply CONFIRM.",            accent: "#f59e0b", icon: "!" },
+  { trigger: "Job complete",      text: "All done! Invoice sent. Thanks for choosing Rinse 🎉",         accent: "#22c55e", icon: "✓" },
+  { trigger: "Review request",    text: "How'd we do? A quick Google review means the world ⭐",        accent: "#f59e0b", icon: "★" },
+  { trigger: "On my way",         text: "On my way! Should be there in about 8 minutes 🚗",            accent: "#8b5cf6", icon: "→" },
+  { trigger: "Reminder",          text: "Just a heads-up — appointment in 24 hours. See you soon!",   accent: "#f59e0b", icon: "!" },
+  { trigger: "Booking confirmed",  text: "Booking confirmed for Sun 11 AM. We'll remind you the day before!", accent: "#3b82f6", icon: "✓" },
+  { trigger: "Job complete",       text: "Your vehicle is looking sharp! Receipt in your inbox.",       accent: "#22c55e", icon: "✓" },
+  { trigger: "Review request",     text: "Glad you loved it! Mind leaving a 5-star review? [link]",   accent: "#f59e0b", icon: "★" },
 ];
 
+let _autoMsgCounter = 0;
+
 function AutoMessagesGraphic() {
-  const { ref, inView, tick } = useLoopTick(4500);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: false, margin: "0px 0px -60px 0px" });
+  const [msgs, setMsgs] = useState<{ id: number; trigger: string; text: string; accent: string; icon: string }[]>([]);
+  const idxRef = useRef(0);
+
+  useEffect(() => {
+    if (!inView) {
+      setMsgs([]);
+      idxRef.current = 0;
+      return;
+    }
+    const add = () => {
+      const m = ALL_AUTO_MESSAGES[idxRef.current % ALL_AUTO_MESSAGES.length];
+      idxRef.current++;
+      const id = ++_autoMsgCounter;
+      setMsgs(prev => [...prev, { ...m, id }].slice(-4));
+    };
+    add(); // first message immediately
+    const timer = setInterval(add, 1700);
+    return () => clearInterval(timer);
+  }, [inView]);
+
   return (
-    <div ref={ref} style={{ width: "100%" }}>
-      <div key={tick} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      {FM_MESSAGES.map((m, i) => (
-        <motion.div key={i} initial={{ y: 10, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: i * 0.22, duration: 0.4, ease: FM_EASE }} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <div style={{ width: 24, height: 24, borderRadius: 8, background: m.type === "review" ? "#f0fdf4" : "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-            {m.type === "review" ? (
-              <svg width="12" height="12" viewBox="0 0 12 12"><polygon points="6,1 7.4,4.3 11,4.6 8.4,7 9.2,10.5 6,8.6 2.8,10.5 3.6,7 1,4.6 4.6,4.3" fill={FM_G} /></svg>
-            ) : (
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1.5h9v6.5H7.5L5.5 9.5 3.5 8H1V1.5Z" stroke="#fff" strokeWidth="1" strokeLinejoin="round" /></svg>
-            )}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10.5, color: "#0f172a", lineHeight: 1.4, fontWeight: m.type === "review" ? 600 : 400 }}>{m.text}</div>
-            {m.type === "review" && (
-              <div style={{ display: "flex", gap: 1.5, marginTop: 3 }}>
-                {Array.from({ length: 5 }).map((_, j) => (
-                  <svg key={j} width="9" height="9" viewBox="0 0 9 9"><polygon points="4.5,0.5 5.4,3 8,3.2 6,4.8 6.6,7.5 4.5,6.2 2.4,7.5 3,4.8 1,3.2 3.6,3" fill="#f59e0b" /></svg>
-                ))}
+    <div ref={ref} style={{ width: "100%", minHeight: 130, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 0 }}>
+      <AnimatePresence initial={false}>
+        {msgs.map((m) => (
+          <motion.div
+            key={m.id}
+            initial={{ y: 18, opacity: 0, height: 0 }}
+            animate={{ y: 0, opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", paddingTop: 7 }}>
+              {/* colored pill icon */}
+              <div style={{ width: 22, height: 22, borderRadius: 7, background: m.accent + "22", border: `1.5px solid ${m.accent}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 9, color: m.accent, fontWeight: 700 }}>
+                {m.icon}
               </div>
-            )}
-            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 2 }}>{m.time}</div>
-          </div>
-        </motion.div>
-      ))}
-      </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 8.5, fontWeight: 700, color: m.accent, marginBottom: 1, letterSpacing: "0.02em", textTransform: "uppercase" }}>{m.trigger}</div>
+                <div style={{ fontSize: 10.5, color: "#0f172a", lineHeight: 1.4 }}>{m.text}</div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
