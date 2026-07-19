@@ -1644,26 +1644,134 @@ const FM_STAGES = [
   { label: "Scheduled", color: FM_G,      bg: "#f0fdf4", leads: [{ name: "Jordan P.", car: "Porsche" }, { name: "Sam R.", car: "Mercedes" }] },
 ];
 
+// Mouse cursor SVG path (OS-style arrow pointer)
+const CursorSVG = () => (
+  <svg width="14" height="18" viewBox="0 0 14 18" fill="none" style={{ display: "block" }}>
+    <path d="M2 1.5 L2 13.5 L5 10.5 L7.5 16 L9.5 15 L7 9.5 L11.5 9.5 Z" fill="white" stroke="#0f172a" strokeWidth="1.3" strokeLinejoin="round" />
+  </svg>
+);
+
 function LeadPipelineGraphic() {
-  const { ref, inView, tick } = useLoopTick(3800);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: false, margin: "0px 0px -60px 0px" });
+  const [phase, setPhase] = useState<"idle" | "hover" | "drag" | "drop">("idle");
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const clear = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
+    if (!inView) { clear(); setPhase("idle"); return; }
+    const run = () => {
+      clear();
+      setPhase("idle");
+      timersRef.current = [
+        setTimeout(() => setPhase("hover"), 600),
+        setTimeout(() => setPhase("drag"),  1200),
+        setTimeout(() => setPhase("drop"),  2600),
+        setTimeout(run,                     4400),
+      ];
+    };
+    run();
+    return clear;
+  }, [inView]);
+
+  const isGrabbing = phase === "drag";
+  const isDropped  = phase === "drop";
+
+  // Cursor animate targets (x/y relative to container top-left)
+  const cursorAnim =
+    phase === "idle"  ? { x: 190, y: 54, opacity: 0 } :
+    phase === "hover" ? { x: 18,  y: 54, opacity: 1 } :
+    phase === "drag"  ? { x: 86,  y: 50, opacity: 1 } :
+                        { x: 86,  y: 50, opacity: 0 };
+
+  const cursorTransition =
+    phase === "hover" ? { duration: 0.7, ease: [0.22, 1, 0.36, 1] } :
+    phase === "drag"  ? { duration: 1.2, ease: [0.22, 1, 0.36, 1] } :
+                        { duration: 0.25 };
+
   return (
-    <div ref={ref} style={{ width: "100%" }}>
-      <div key={tick} style={{ display: "flex", gap: 6 }}>
+    <div ref={ref} style={{ width: "100%", position: "relative" }}>
+      {/* Board columns */}
+      <div style={{ display: "flex", gap: 6 }}>
         {FM_STAGES.map((stage, si) => (
-          <motion.div key={stage.label} initial={{ y: 10, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: si * 0.12, duration: 0.4, ease: FM_EASE }} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+          <div key={stage.label} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: stage.color }} />
               <span style={{ fontSize: 9, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>{stage.label}</span>
             </div>
-            {stage.leads.map((lead, li) => (
-              <motion.div key={lead.name} initial={{ y: 8, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: si * 0.12 + li * 0.1 + 0.2, duration: 0.35, ease: FM_EASE }} style={{ background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px" }}>
-                <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>{lead.name}</div>
-                <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>{lead.car}</div>
-              </motion.div>
-            ))}
-          </motion.div>
+            {stage.leads.map((lead) => {
+              // Ryan T. in Inquiry: ghost during drag, hidden after drop
+              if (si === 0 && lead.name === "Ryan T.") {
+                return (
+                  <div key={lead.name} style={{
+                    background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px",
+                    opacity: isGrabbing ? 0.18 : 1,
+                    visibility: isDropped ? "hidden" : "visible",
+                    transition: "opacity 0.2s",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>{lead.name}</div>
+                    <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>{lead.car}</div>
+                  </div>
+                );
+              }
+              return (
+                <div key={lead.name} style={{ background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px" }}>
+                  <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>{lead.name}</div>
+                  <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>{lead.car}</div>
+                </div>
+              );
+            })}
+            {/* Ryan T. drops into Quoted column */}
+            {si === 1 && (
+              <AnimatePresence>
+                {isDropped && (
+                  <motion.div
+                    key="ryan-dropped"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px" }}
+                  >
+                    <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>Ryan T.</div>
+                    <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>Audi RS7</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
+          </div>
         ))}
       </div>
+
+      {/* Dragged card flying across columns */}
+      <AnimatePresence>
+        {isGrabbing && (
+          <motion.div
+            key="dragged-card"
+            initial={{ x: 2, y: 58, scale: 1.0, opacity: 0.95, rotate: 0 }}
+            animate={{ x: 70, y: 52, scale: 1.06, opacity: 1, rotate: 1.5 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: "absolute", top: 0, left: 0, width: "30%",
+              background: "#fffbeb", borderRadius: 7, border: "1px solid #f59e0b55",
+              padding: "6px 8px", boxShadow: "0 6px 18px rgba(0,0,0,0.18)", zIndex: 10, pointerEvents: "none",
+            }}
+          >
+            <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>Ryan T.</div>
+            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>Audi RS7</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mouse cursor */}
+      <motion.div
+        animate={cursorAnim}
+        transition={cursorTransition}
+        style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none", zIndex: 20 }}
+      >
+        <CursorSVG />
+      </motion.div>
     </div>
   );
 }
@@ -1708,50 +1816,135 @@ function QuoteBuilderGraphic() {
 }
 
 // ── 3. Client Portal ──
+const PORTAL_PAGES = [
+  {
+    id: "scope",
+    label: "Service Scope",
+    step: "1 of 3",
+    content: (
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}>Full Detail + Ceramic</div>
+            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>2023 BMW M3 · James Morton</div>
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 800, color: "#0f172a" }}>$299</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingTop: 4, borderTop: "1px solid #f1f5f9" }}>
+          {["Exterior hand wash & clay bar", "Interior vacuum & wipe-down", "Ceramic coating application"].map((item) => (
+            <div key={item} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: FM_G, flexShrink: 0 }} />
+              <span style={{ fontSize: 9.5, color: "#475569" }}>{item}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 2 }}>Sat, Jun 14 · 10:00 AM · 123 Maple St</div>
+      </div>
+    ),
+  },
+  {
+    id: "sign",
+    label: "Sign Agreement",
+    step: "2 of 3",
+    content: (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.5 }}>
+          By signing you agree to the service scope above. Payment is collected after completion.
+        </div>
+        <div>
+          <div style={{ fontSize: 8.5, color: "#94a3b8", marginBottom: 4 }}>Client signature</div>
+          <div style={{ position: "relative", height: 28 }}>
+            <div style={{ borderBottom: "1px dashed #cbd5e1", width: "70%", position: "absolute", bottom: 0 }} />
+            <motion.div
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              style={{ fontSize: 17, fontStyle: "italic", color: "#0f172a", fontFamily: "Georgia, serif", lineHeight: 1, position: "absolute", bottom: 2 }}
+            >
+              James Morton
+            </motion.div>
+          </div>
+        </div>
+        <div style={{ background: "#0f172a", borderRadius: 8, padding: "7px 0", textAlign: "center", fontSize: 10.5, fontWeight: 700, color: "#fff" }}>
+          Sign & Pay $299
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "paid",
+    label: "All Done!",
+    step: "3 of 3",
+    content: (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, paddingTop: 4 }}>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 350, damping: 18, delay: 0.2 }}
+          style={{ width: 36, height: 36, borderRadius: "50%", background: FM_GD, display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9.5 L7.5 13 L14 6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </motion.div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", textAlign: "center" }}>Signed & Paid ✓</div>
+        <div style={{ fontSize: 9, color: "#64748b", textAlign: "center" }}>Receipt sent to james@email.com</div>
+        <div style={{ fontSize: 8.5, color: "#94a3b8", textAlign: "center" }}>See you Saturday at 10 AM, James!</div>
+      </div>
+    ),
+  },
+];
+
 function ClientPortalGraphic() {
-  const { ref, inView, tick } = useLoopTick(5500);
-  const [signed, setSigned] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: false, margin: "0px 0px -60px 0px" });
+  const [pageIdx, setPageIdx] = useState(0);
+  const [dir, setDir] = useState(1); // 1 = forward, -1 = back
+
   useEffect(() => {
-    setSigned(false);
-    if (!inView) return;
-    const t = setTimeout(() => setSigned(true), 1600);
-    return () => clearTimeout(t);
-  }, [inView, tick]);
+    if (!inView) { setPageIdx(0); setDir(1); return; }
+    const advance = () => {
+      setDir(1);
+      setPageIdx((p) => (p + 1) % PORTAL_PAGES.length);
+    };
+    const timer = setInterval(advance, 2800);
+    return () => clearInterval(timer);
+  }, [inView]);
+
+  const page = PORTAL_PAGES[pageIdx];
 
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <FMiniCard key={tick}>
-        <div style={{ padding: "10px 12px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#0f172a" }}>Service Agreement</div>
-              <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>James Morton · Full Detail + Ceramic</div>
+      <FMiniCard style={{ overflow: "hidden" }}>
+        <div style={{ padding: "10px 12px 8px" }}>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: FM_G }} />
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#0f172a" }}>Rinse Client Portal</span>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a" }}>$299</span>
+            <span style={{ fontSize: 8.5, color: "#94a3b8" }}>{page.step}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
-            {["85%", "70%", "55%"].map((w, i) => (
-              <motion.div key={i} initial={{ width: 0, opacity: 0 }} animate={inView ? { width: w, opacity: 1 } : {}} transition={{ delay: i * 0.1, duration: 0.4, ease: FM_EASE }} style={{ height: 4, borderRadius: 99, background: "#e8edf4" }} />
+          {/* Sliding page content */}
+          <div style={{ position: "relative", overflow: "hidden", minHeight: 110 }}>
+            <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+              <motion.div
+                key={page.id}
+                custom={dir}
+                initial={{ x: 40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -40, opacity: 0 }}
+                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div style={{ fontSize: 8.5, fontWeight: 700, color: "#64748b", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>{page.label}</div>
+                {page.content}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          {/* Dot indicators */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 8 }}>
+            {PORTAL_PAGES.map((p, i) => (
+              <div key={p.id} style={{ width: i === pageIdx ? 14 : 5, height: 5, borderRadius: 99, background: i === pageIdx ? FM_G : "#e2e8f0", transition: "all 0.3s ease" }} />
             ))}
           </div>
-          <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.5, duration: 0.3 }} style={{ borderTop: "1px solid #e2e8f0", paddingTop: 6, marginBottom: 8 }}>
-            <div style={{ fontSize: 8.5, color: "#94a3b8", marginBottom: 4 }}>Client signature</div>
-            {signed ? (
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} style={{ fontSize: 15, fontStyle: "italic", color: "#0f172a", fontFamily: "Georgia, serif", lineHeight: 1 }}>
-                James Morton
-              </motion.div>
-            ) : (
-              <div style={{ height: 18, borderBottom: "1px dashed #cbd5e1", width: "60%" }} />
-            )}
-          </motion.div>
-          <motion.div
-            animate={signed ? { background: FM_GD, color: "#fff" } : { background: "#0f172a", color: "#fff" }}
-            transition={{ duration: 0.4 }}
-            initial={{ opacity: 0, y: 4 }}
-            style={{ borderRadius: 8, padding: "8px 0", textAlign: "center", fontSize: 10.5, fontWeight: 700, cursor: "pointer", opacity: inView ? 1 : 0 }}
-          >
-            {signed ? "Signed & Paid ✓" : "Sign & Pay $299"}
-          </motion.div>
         </div>
       </FMiniCard>
     </div>
@@ -2106,32 +2299,94 @@ function AIVehicleGraphic() {
 }
 
 // ── 12. AI Ops Copilot ──
-const FM_COPILOT = ["Alex Chen — BMW M3 (94 days)", "Maria K. — Audi RS6 (102 days)", "Tom H. — Tesla S (88 days)"];
+const COPILOT_QA = [
+  { q: "Who's overdue for a detail?",          a: "3 clients: Alex C. (94d), Maria K. (102d), Tom H. (88d)" },
+  { q: "Best day to book next week?",           a: "Tuesday — only 2 jobs so far. Plenty of room to fill." },
+  { q: "Draft a follow-up for Alex Chen",       a: "Hey Alex! It's been 94 days — time for a refresh? Book here: rinse.app/alex" },
+  { q: "How much did I make this month?",       a: "$4,820 across 19 jobs. Up 12% from last month 📈" },
+  { q: "Which service is most profitable?",     a: "Full Detail + Ceramic — avg $380, 68% margin." },
+  { q: "Any no-shows this week?",               a: "1 no-show (Thu, 2 PM). Auto follow-up sent at 2:05 PM." },
+];
+
+let _copilotCounter = 0;
 
 function AICopilotGraphic() {
-  const { ref, inView, tick } = useLoopTick(5000);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: false, margin: "0px 0px -60px 0px" });
+  const [msgs, setMsgs] = useState<{ id: number; kind: "q" | "a"; text: string }[]>([]);
+  const seqRef = useRef<{ qaIdx: number; step: "q" | "a" }>({ qaIdx: 0, step: "q" });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!timerRef.current) return;
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, []);
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!inView) {
+      setMsgs([]);
+      seqRef.current = { qaIdx: 0, step: "q" };
+      return;
+    }
+
+    const schedule = (delay: number) => {
+      timerRef.current = setTimeout(tick, delay);
+    };
+
+    const tick = () => {
+      const { qaIdx, step } = seqRef.current;
+      const pair = COPILOT_QA[qaIdx % COPILOT_QA.length];
+      if (step === "q") {
+        const id = ++_copilotCounter;
+        setMsgs((prev) => [...prev, { id, kind: "q", text: pair.q }].slice(-5));
+        seqRef.current = { qaIdx, step: "a" };
+        schedule(1300);
+      } else {
+        const id = ++_copilotCounter;
+        setMsgs((prev) => [...prev, { id, kind: "a", text: pair.a }].slice(-5));
+        seqRef.current = { qaIdx: qaIdx + 1, step: "q" };
+        schedule(2400);
+      }
+    };
+
+    schedule(200);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [inView]);
+
   return (
-    <div ref={ref} style={{ width: "100%" }}>
-      <div key={tick} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.35, ease: FM_EASE }} style={{ alignSelf: "flex-end", background: "#0f172a", borderRadius: "10px 10px 2px 10px", padding: "7px 11px", maxWidth: "75%" }}>
-          <span style={{ fontSize: 10.5, color: "#fff" }}>Who's overdue for a detail?</span>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.4, duration: 0.35, ease: FM_EASE }} style={{ background: `${FM_P}0d`, border: `1px solid ${FM_P}25`, borderRadius: "10px 10px 10px 2px", padding: "9px 11px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
-            <div style={{ width: 14, height: 14, borderRadius: 4, background: FM_P, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 5.5C1 3 3.5 1.5 4 1C4.5 1.5 7 3 7 5.5C7 7 5.7 7.5 4 7.5C2.3 7.5 1 7 1 5.5Z" fill="#fff" /></svg>
-            </div>
-            <span style={{ fontSize: 9, fontWeight: 700, color: FM_P }}>Rinse AI</span>
-          </div>
-          <div style={{ fontSize: 10, color: "#475569", marginBottom: 5 }}>3 clients are 88+ days overdue:</div>
-          {FM_COPILOT.map((line, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: -4 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: 0.6 + i * 0.18, duration: 0.3, ease: FM_EASE }} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-              <div style={{ width: 4, height: 4, borderRadius: "50%", background: FM_P, flexShrink: 0 }} />
-              <span style={{ fontSize: 10, color: "#0f172a" }}>{line}</span>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
+    <div ref={ref} style={{ width: "100%", minHeight: 120, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <AnimatePresence initial={false}>
+        {msgs.map((m) => (
+          <motion.div
+            key={m.id}
+            initial={{ y: 14, opacity: 0, height: 0 }}
+            animate={{ y: 0, opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            {m.kind === "q" ? (
+              /* User question — right-aligned dark bubble */
+              <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 6 }}>
+                <div style={{ background: "#0f172a", borderRadius: "10px 10px 2px 10px", padding: "6px 10px", maxWidth: "76%" }}>
+                  <span style={{ fontSize: 10, color: "#fff" }}>{m.text}</span>
+                </div>
+              </div>
+            ) : (
+              /* AI answer — left-aligned purple bubble */
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 5, paddingTop: 5 }}>
+                <div style={{ width: 16, height: 16, borderRadius: 5, background: FM_P, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 5.5C1 3 3.5 1.5 4 1C4.5 1.5 7 3 7 5.5C7 7 5.7 7.5 4 7.5C2.3 7.5 1 7 1 5.5Z" fill="#fff" /></svg>
+                </div>
+                <div style={{ background: `${FM_P}12`, border: `1px solid ${FM_P}22`, borderRadius: "10px 10px 10px 2px", padding: "6px 10px", maxWidth: "82%" }}>
+                  <span style={{ fontSize: 10, color: "#0f172a", lineHeight: 1.4 }}>{m.text}</span>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
