@@ -1587,29 +1587,38 @@ const FM_G  = "#22c55e";
 const FM_GD = "#16a34a";
 const FM_P  = "#8b5cf6";
 
-function useCountUpActive(target: number, active: boolean, delay = 0, dur = 1000) {
+function useCountUpActive(target: number, active: boolean, delay = 0, dur = 1000, resetKey = 0) {
   const [val, setVal] = useState(0);
   useEffect(() => {
+    setVal(0);
     if (!active) return;
     const t = setTimeout(() => {
       const start = Date.now();
-      const tick = () => {
+      const raf = () => {
         const p = Math.min((Date.now() - start) / dur, 1);
         const e = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
         setVal(Math.round(e * target));
-        if (p < 1) requestAnimationFrame(tick);
+        if (p < 1) requestAnimationFrame(raf);
       };
-      requestAnimationFrame(tick);
+      requestAnimationFrame(raf);
     }, delay);
     return () => clearTimeout(t);
-  }, [active, target, delay, dur]);
+  }, [active, target, delay, dur, resetKey]);
   return val;
 }
 
-function useInViewOnce() {
+// Fires once on scroll-entry, then loops on a timer while in view.
+// key={tick} on an inner wrapper remounts Framer Motion children → replays initial→animate.
+function useLoopTick(ms: number) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  return { ref, inView };
+  const inView = useInView(ref, { once: false, margin: "-40px" });
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    const id = setInterval(() => setTick(t => t + 1), ms);
+    return () => clearInterval(id);
+  }, [inView, ms]);
+  return { ref, inView, tick };
 }
 
 function FMiniCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -1636,23 +1645,25 @@ const FM_STAGES = [
 ];
 
 function LeadPipelineGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(3800);
   return (
-    <div ref={ref} style={{ width: "100%", display: "flex", gap: 6 }}>
-      {FM_STAGES.map((stage, si) => (
-        <motion.div key={stage.label} initial={{ y: 10, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: si * 0.12, duration: 0.4, ease: FM_EASE }} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: stage.color }} />
-            <span style={{ fontSize: 9, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>{stage.label}</span>
-          </div>
-          {stage.leads.map((lead, li) => (
-            <motion.div key={lead.name} initial={{ y: 8, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: si * 0.12 + li * 0.1 + 0.2, duration: 0.35, ease: FM_EASE }} style={{ background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px" }}>
-              <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>{lead.name}</div>
-              <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>{lead.car}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-      ))}
+    <div ref={ref} style={{ width: "100%" }}>
+      <div key={tick} style={{ display: "flex", gap: 6 }}>
+        {FM_STAGES.map((stage, si) => (
+          <motion.div key={stage.label} initial={{ y: 10, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: si * 0.12, duration: 0.4, ease: FM_EASE }} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: stage.color }} />
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>{stage.label}</span>
+            </div>
+            {stage.leads.map((lead, li) => (
+              <motion.div key={lead.name} initial={{ y: 8, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: si * 0.12 + li * 0.1 + 0.2, duration: 0.35, ease: FM_EASE }} style={{ background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px" }}>
+                <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>{lead.name}</div>
+                <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>{lead.car}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1665,7 +1676,7 @@ const FM_QUOTE_LINES = [
 ];
 
 function QuoteBuilderGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(4000);
   return (
     <div ref={ref} style={{ width: "100%" }}>
       <FMiniCard>
@@ -1676,7 +1687,7 @@ function QuoteBuilderGraphic() {
           </div>
           <FPill color="#f59e0b">In progress</FPill>
         </div>
-        <div style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
+        <div key={tick} style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
           {FM_QUOTE_LINES.map((line, i) => (
             <motion.div key={line.label} initial={{ opacity: 0, x: -6 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: i * 0.14, duration: 0.35, ease: FM_EASE }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 10.5, color: "#475569" }}>{line.label}</span>
@@ -1688,7 +1699,7 @@ function QuoteBuilderGraphic() {
             <span style={{ fontSize: 13, fontWeight: 750, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>$324.00</span>
           </motion.div>
         </div>
-        <motion.div initial={{ opacity: 0, y: 4 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.7, duration: 0.35, ease: FM_EASE }} style={{ margin: "0 10px 10px", background: "#0f172a", borderRadius: 8, padding: "8px 0", textAlign: "center", fontSize: 10.5, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+        <motion.div key={`btn-${tick}`} initial={{ opacity: 0, y: 4 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.7, duration: 0.35, ease: FM_EASE }} style={{ margin: "0 10px 10px", background: "#0f172a", borderRadius: 8, padding: "8px 0", textAlign: "center", fontSize: 10.5, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
           Send Quote →
         </motion.div>
       </FMiniCard>
@@ -1698,17 +1709,18 @@ function QuoteBuilderGraphic() {
 
 // ── 3. Client Portal ──
 function ClientPortalGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(5500);
   const [signed, setSigned] = useState(false);
   useEffect(() => {
+    setSigned(false);
     if (!inView) return;
     const t = setTimeout(() => setSigned(true), 1600);
     return () => clearTimeout(t);
-  }, [inView]);
+  }, [inView, tick]);
 
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <FMiniCard>
+      <FMiniCard key={tick}>
         <div style={{ padding: "10px 12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
             <div>
@@ -1754,10 +1766,10 @@ const FM_DAMAGE_PTS = [
 ];
 
 function DamageDocsGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(4000);
   return (
-    <div ref={ref} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
-      <FMiniCard style={{ padding: "10px 8px 6px" }}>
+    <div ref={ref} style={{ width: "100%" }}>
+      <FMiniCard key={tick} style={{ padding: "10px 8px 6px" }}>
         <svg viewBox="0 0 160 80" width="100%" style={{ display: "block" }}>
           <rect x="22" y="18" width="116" height="44" rx="11" fill="#f1f5f9" stroke="#dde4ef" strokeWidth="1.2" />
           <rect x="10" y="26" width="14" height="28" rx="6" fill="#e2e8f0" />
@@ -1798,9 +1810,10 @@ const FM_SUPPLIES = [
 ];
 
 function InventoryGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(4000);
   return (
-    <div ref={ref} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div ref={ref} style={{ width: "100%" }}>
+      <div key={tick} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {FM_SUPPLIES.map((s, i) => (
         <motion.div key={s.name} initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.1, duration: 0.35, ease: FM_EASE }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
@@ -1819,6 +1832,7 @@ function InventoryGraphic() {
           </div>
         </motion.div>
       ))}
+      </div>
     </div>
   );
 }
@@ -1831,9 +1845,10 @@ const FM_MESSAGES = [
 ];
 
 function AutoMessagesGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(4500);
   return (
-    <div ref={ref} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
+    <div ref={ref} style={{ width: "100%" }}>
+      <div key={tick} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {FM_MESSAGES.map((m, i) => (
         <motion.div key={i} initial={{ y: 10, opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ delay: i * 0.22, duration: 0.4, ease: FM_EASE }} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
           <div style={{ width: 24, height: 24, borderRadius: 8, background: m.type === "review" ? "#f0fdf4" : "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
@@ -1856,6 +1871,7 @@ function AutoMessagesGraphic() {
           </div>
         </motion.div>
       ))}
+      </div>
     </div>
   );
 }
@@ -1869,10 +1885,10 @@ const FM_TECHS = [
 const FM_GPS_ROUTES = ["M 28 62 C 44 50 68 42 88 34", "M 88 34 C 108 28 122 50 132 70"];
 
 function GPSTrackingGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(5000);
   return (
     <div ref={ref} style={{ width: "100%", position: "relative" }}>
-      <FMiniCard style={{ overflow: "hidden" }}>
+      <FMiniCard key={tick} style={{ overflow: "hidden" }}>
         <svg viewBox="0 0 160 100" width="100%" style={{ display: "block" }}>
           <rect width="160" height="100" fill="#eef2eb" />
           {([
@@ -1910,15 +1926,17 @@ const FM_INTEGRATIONS = [
 ];
 
 function IntegrationsGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(3500);
   return (
-    <div ref={ref} style={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-      {FM_INTEGRATIONS.map((int, i) => (
-        <motion.div key={int.name} initial={{ scale: 0.85, opacity: 0 }} animate={inView ? { scale: 1, opacity: 1 } : {}} transition={{ delay: i * 0.08, duration: 0.35, ease: FM_EASE }} style={{ background: "#fff", borderRadius: 9, border: "1px solid #e8edf4", padding: "10px 6px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-          {int.icon}
-          <span style={{ fontSize: 8.5, fontWeight: 600, color: "#64748b", textAlign: "center", lineHeight: 1.2 }}>{int.name}</span>
-        </motion.div>
-      ))}
+    <div ref={ref} style={{ width: "100%" }}>
+      <div key={tick} style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+        {FM_INTEGRATIONS.map((int, i) => (
+          <motion.div key={int.name} initial={{ scale: 0.85, opacity: 0 }} animate={inView ? { scale: 1, opacity: 1 } : {}} transition={{ delay: i * 0.08, duration: 0.35, ease: FM_EASE }} style={{ background: "#fff", borderRadius: 9, border: "1px solid #e8edf4", padding: "10px 6px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+            {int.icon}
+            <span style={{ fontSize: 8.5, fontWeight: 600, color: "#64748b", textAlign: "center", lineHeight: 1.2 }}>{int.name}</span>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1931,14 +1949,14 @@ const FM_LOCATIONS = [
 ];
 
 function MultiLocationGraphic() {
-  const { ref, inView } = useInViewOnce();
-  const v0 = useCountUpActive(8240, inView, 100);
-  const v1 = useCountUpActive(4180, inView, 200);
-  const v2 = useCountUpActive(6000, inView, 300);
+  const { ref, inView, tick } = useLoopTick(5000);
+  const v0 = useCountUpActive(8240, inView, 100, 1000, tick);
+  const v1 = useCountUpActive(4180, inView, 200, 1000, tick);
+  const v2 = useCountUpActive(6000, inView, 300, 1000, tick);
   const vals = [v0, v1, v2];
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <FMiniCard>
+      <FMiniCard key={tick}>
         <div style={{ padding: "10px 12px 4px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}>All Locations</span>
           <span style={{ fontSize: 9, color: "#94a3b8" }}>Jul 2025</span>
@@ -1973,16 +1991,18 @@ const FM_RECEIPT_LINES = [
 ];
 
 function AIReceiptGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(4500);
   const [scanDone, setScanDone] = useState(false);
   useEffect(() => {
+    setScanDone(false);
     if (!inView) return;
     const t = setTimeout(() => setScanDone(true), 1000);
     return () => clearTimeout(t);
-  }, [inView]);
+  }, [inView, tick]);
 
   return (
-    <div ref={ref} style={{ width: "100%", display: "flex", gap: 8 }}>
+    <div ref={ref} style={{ width: "100%" }}>
+      <div key={tick} style={{ display: "flex", gap: 8 }}>
       <div style={{ flex: 1, background: "#fffdf7", borderRadius: 8, border: "1px solid #e8edf4", padding: "10px 10px", position: "relative", overflow: "hidden" }}>
         <div style={{ fontSize: 9, color: "#94a3b8", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Receipt · Jun 14</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -2010,44 +2030,47 @@ function AIReceiptGraphic() {
           ))}
         </div>
       </div>
+      </div>
     </div>
   );
 }
 
 // ── 11. AI Vehicle Capture ──
 function AIVehicleGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(4500);
   return (
-    <div ref={ref} style={{ width: "100%", display: "flex", gap: 10, alignItems: "center" }}>
-      <div style={{ flex: 1, position: "relative" }}>
-        <svg viewBox="0 0 100 70" width="100%" style={{ display: "block" }}>
-          <rect width="100" height="70" fill="#f8fafc" rx="8" />
-          <rect x="8" y="28" width="84" height="28" rx="8" fill="#e2e8f0" />
-          <path d="M 24 28 C 28 16 72 16 76 28" fill="#cbd5e1" />
-          <path d="M 28 28 C 30 20 50 19 55 28" fill="#dbeafe" opacity="0.8" />
-          <path d="M 58 28 C 62 20 72 20 74 28" fill="#dbeafe" opacity="0.8" />
-          <circle cx="26" cy="56" r="9" fill="#94a3b8" /><circle cx="26" cy="56" r="5" fill="#f1f5f9" />
-          <circle cx="74" cy="56" r="9" fill="#94a3b8" /><circle cx="74" cy="56" r="5" fill="#f1f5f9" />
-          <rect x="8"  y="36" width="6" height="8" rx="2" fill="#fef08a" />
-          <rect x="86" y="36" width="6" height="8" rx="2" fill="#fde68a" />
-          <rect x="36" y="48" width="28" height="10" rx="2" fill="#fff" stroke="#cbd5e1" strokeWidth="1" />
-          <text x="50" y="56.5" textAnchor="middle" fontSize="5.5" fontWeight="700" fill="#334155">ABC·1234</text>
-          <motion.rect x="34" y="46" width="32" height="14" rx="3" fill="none" stroke={FM_P} strokeWidth="1.5" initial={{ opacity: 0, scale: 0.8 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 0.4, duration: 0.4, type: "spring", stiffness: 300, damping: 16 }} style={{ transformOrigin: "50px 53px" }} />
-          {([[34,46],[66,46],[34,60],[66,60]] as [number,number][]).map(([x,y],i) => (
-            <motion.circle key={i} cx={x} cy={y} r={1.5} fill={FM_P} initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.5 + i * 0.05, duration: 0.2 }} />
+    <div ref={ref} style={{ width: "100%" }}>
+      <div key={tick} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ flex: 1, position: "relative" }}>
+          <svg viewBox="0 0 100 70" width="100%" style={{ display: "block" }}>
+            <rect width="100" height="70" fill="#f8fafc" rx="8" />
+            <rect x="8" y="28" width="84" height="28" rx="8" fill="#e2e8f0" />
+            <path d="M 24 28 C 28 16 72 16 76 28" fill="#cbd5e1" />
+            <path d="M 28 28 C 30 20 50 19 55 28" fill="#dbeafe" opacity="0.8" />
+            <path d="M 58 28 C 62 20 72 20 74 28" fill="#dbeafe" opacity="0.8" />
+            <circle cx="26" cy="56" r="9" fill="#94a3b8" /><circle cx="26" cy="56" r="5" fill="#f1f5f9" />
+            <circle cx="74" cy="56" r="9" fill="#94a3b8" /><circle cx="74" cy="56" r="5" fill="#f1f5f9" />
+            <rect x="8"  y="36" width="6" height="8" rx="2" fill="#fef08a" />
+            <rect x="86" y="36" width="6" height="8" rx="2" fill="#fde68a" />
+            <rect x="36" y="48" width="28" height="10" rx="2" fill="#fff" stroke="#cbd5e1" strokeWidth="1" />
+            <text x="50" y="56.5" textAnchor="middle" fontSize="5.5" fontWeight="700" fill="#334155">ABC·1234</text>
+            <motion.rect x="34" y="46" width="32" height="14" rx="3" fill="none" stroke={FM_P} strokeWidth="1.5" initial={{ opacity: 0, scale: 0.8 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 0.4, duration: 0.4, type: "spring", stiffness: 300, damping: 16 }} style={{ transformOrigin: "50px 53px" }} />
+            {([[34,46],[66,46],[34,60],[66,60]] as [number,number][]).map(([x,y],i) => (
+              <motion.circle key={i} cx={x} cy={y} r={1.5} fill={FM_P} initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.5 + i * 0.05, duration: 0.2 }} />
+            ))}
+          </svg>
+        </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+          {[{ label: "Make", value: "BMW" },{ label: "Model", value: "M3 Sedan" },{ label: "Year", value: "2022" },{ label: "Plate", value: "ABC·1234" }].map((row, i) => (
+            <motion.div key={row.label} initial={{ opacity: 0, x: 6 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: 0.6 + i * 0.12, duration: 0.3, ease: FM_EASE }}>
+              <div style={{ fontSize: 8.5, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>{row.label}</div>
+              <div style={{ fontSize: 11, fontWeight: 650, color: "#0f172a" }}>{row.value}</div>
+            </motion.div>
           ))}
-        </svg>
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
-        {[{ label: "Make", value: "BMW" },{ label: "Model", value: "M3 Sedan" },{ label: "Year", value: "2022" },{ label: "Plate", value: "ABC·1234" }].map((row, i) => (
-          <motion.div key={row.label} initial={{ opacity: 0, x: 6 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: 0.6 + i * 0.12, duration: 0.3, ease: FM_EASE }}>
-            <div style={{ fontSize: 8.5, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>{row.label}</div>
-            <div style={{ fontSize: 11, fontWeight: 650, color: "#0f172a" }}>{row.value}</div>
+          <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 1.2, duration: 0.3 }}>
+            <FPill color={FM_P}>Matched in CRM</FPill>
           </motion.div>
-        ))}
-        <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 1.2, duration: 0.3 }}>
-          <FPill color={FM_P}>Matched in CRM</FPill>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -2057,38 +2080,40 @@ function AIVehicleGraphic() {
 const FM_COPILOT = ["Alex Chen — BMW M3 (94 days)", "Maria K. — Audi RS6 (102 days)", "Tom H. — Tesla S (88 days)"];
 
 function AICopilotGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(5000);
   return (
-    <div ref={ref} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.35, ease: FM_EASE }} style={{ alignSelf: "flex-end", background: "#0f172a", borderRadius: "10px 10px 2px 10px", padding: "7px 11px", maxWidth: "75%" }}>
-        <span style={{ fontSize: 10.5, color: "#fff" }}>Who's overdue for a detail?</span>
-      </motion.div>
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.4, duration: 0.35, ease: FM_EASE }} style={{ background: `${FM_P}0d`, border: `1px solid ${FM_P}25`, borderRadius: "10px 10px 10px 2px", padding: "9px 11px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
-          <div style={{ width: 14, height: 14, borderRadius: 4, background: FM_P, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 5.5C1 3 3.5 1.5 4 1C4.5 1.5 7 3 7 5.5C7 7 5.7 7.5 4 7.5C2.3 7.5 1 7 1 5.5Z" fill="#fff" /></svg>
+    <div ref={ref} style={{ width: "100%" }}>
+      <div key={tick} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.35, ease: FM_EASE }} style={{ alignSelf: "flex-end", background: "#0f172a", borderRadius: "10px 10px 2px 10px", padding: "7px 11px", maxWidth: "75%" }}>
+          <span style={{ fontSize: 10.5, color: "#fff" }}>Who's overdue for a detail?</span>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.4, duration: 0.35, ease: FM_EASE }} style={{ background: `${FM_P}0d`, border: `1px solid ${FM_P}25`, borderRadius: "10px 10px 10px 2px", padding: "9px 11px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
+            <div style={{ width: 14, height: 14, borderRadius: 4, background: FM_P, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 5.5C1 3 3.5 1.5 4 1C4.5 1.5 7 3 7 5.5C7 7 5.7 7.5 4 7.5C2.3 7.5 1 7 1 5.5Z" fill="#fff" /></svg>
+            </div>
+            <span style={{ fontSize: 9, fontWeight: 700, color: FM_P }}>Rinse AI</span>
           </div>
-          <span style={{ fontSize: 9, fontWeight: 700, color: FM_P }}>Rinse AI</span>
-        </div>
-        <div style={{ fontSize: 10, color: "#475569", marginBottom: 5 }}>3 clients are 88+ days overdue:</div>
-        {FM_COPILOT.map((line, i) => (
-          <motion.div key={i} initial={{ opacity: 0, x: -4 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: 0.6 + i * 0.18, duration: 0.3, ease: FM_EASE }} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-            <div style={{ width: 4, height: 4, borderRadius: "50%", background: FM_P, flexShrink: 0 }} />
-            <span style={{ fontSize: 10, color: "#0f172a" }}>{line}</span>
-          </motion.div>
-        ))}
-      </motion.div>
+          <div style={{ fontSize: 10, color: "#475569", marginBottom: 5 }}>3 clients are 88+ days overdue:</div>
+          {FM_COPILOT.map((line, i) => (
+            <motion.div key={i} initial={{ opacity: 0, x: -4 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: 0.6 + i * 0.18, duration: 0.3, ease: FM_EASE }} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+              <div style={{ width: 4, height: 4, borderRadius: "50%", background: FM_P, flexShrink: 0 }} />
+              <span style={{ fontSize: 10, color: "#0f172a" }}>{line}</span>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
     </div>
   );
 }
 
 // ── 13. AI Pricing Assistant ──
 function AIPricingGraphic() {
-  const { ref, inView } = useInViewOnce();
-  const price = useCountUpActive(390, inView, 600);
+  const { ref, inView, tick } = useLoopTick(4500);
+  const price = useCountUpActive(390, inView, 600, 1000, tick);
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <FMiniCard>
+      <FMiniCard key={tick}>
         <div style={{ padding: "10px 12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <div>
@@ -2134,10 +2159,10 @@ const FM_API_LINES = [
 ];
 
 function APIGraphic() {
-  const { ref, inView } = useInViewOnce();
+  const { ref, inView, tick } = useLoopTick(4000);
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <div style={{ background: "#0f172a", borderRadius: 10, overflow: "hidden" }}>
+      <div key={tick} style={{ background: "#0f172a", borderRadius: 10, overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
           {["#ef4444","#f59e0b","#22c55e"].map(c => <div key={c} style={{ width: 6, height: 6, borderRadius: "50%", background: c, opacity: 0.7 }} />)}
           <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginLeft: 4, fontFamily: "monospace" }}>rinse-api</span>
