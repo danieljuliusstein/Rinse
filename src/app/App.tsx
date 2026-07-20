@@ -1853,32 +1853,49 @@ function EcosystemInlinePanel() {
   return (
     <section className="border-t border-black/6 px-6 lg:px-12 py-16">
       <style>{`
-        @keyframes eco-modal-marquee {
+        @keyframes eco-inline-left {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
         }
-        .eco-modal-scroll { animation: eco-modal-marquee 22s linear infinite; }
-        .eco-modal-zone:hover .eco-modal-scroll { animation-play-state: paused; }
+        @keyframes eco-inline-right {
+          from { transform: translateX(-50%); }
+          to   { transform: translateX(0); }
+        }
+        .eco-inline-scroll-l { animation: eco-inline-left 28s linear infinite; }
+        .eco-inline-scroll-r { animation: eco-inline-right 28s linear infinite; }
+        .eco-inline-zone:hover .eco-inline-scroll-l,
+        .eco-inline-zone:hover .eco-inline-scroll-r { animation-play-state: paused; }
       `}</style>
-      <div className="max-w-xl mx-auto bg-white rounded-2xl border border-black/8 shadow-[0_8px_32px_rgba(0,0,0,0.08)] overflow-hidden">
+      <div className="max-w-7xl mx-auto rounded-3xl border border-black/8 overflow-hidden bg-white shadow-[0_8px_40px_rgba(0,0,0,0.07)]">
         {/* Header */}
-        <div className="px-6 pt-6 pb-5 border-b border-black/6">
-          <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-1.5">
+        <div className="px-10 lg:px-16 pt-12 pb-10 border-b border-black/6">
+          <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-3">
             Ecosystem
           </p>
-          <h2 className="text-xl font-bold text-neutral-900 leading-snug">
-            Plays well with the tools<br />you already run.
+          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-900 leading-tight">
+            Connects with every tool<br />your business already uses.
           </h2>
         </div>
 
-        {/* Marquee */}
-        <div className="py-7 relative overflow-hidden bg-white">
-          <div className="absolute inset-y-0 left-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to right,#fff,transparent)" }} />
-          <div className="absolute inset-y-0 right-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to left,#fff,transparent)" }} />
-          <div className="overflow-hidden eco-modal-zone">
-            <div className="eco-modal-scroll flex gap-3 py-1" style={{ width: "max-content" }}>
+        {/* Marquee rows */}
+        <div className="py-10 relative eco-inline-zone">
+          <div className="absolute inset-y-0 left-0 z-10 pointer-events-none" style={{ width: 100, background: "linear-gradient(to right,#fff,transparent)" }} />
+          <div className="absolute inset-y-0 right-0 z-10 pointer-events-none" style={{ width: 100, background: "linear-gradient(to left,#fff,transparent)" }} />
+
+          {/* Row 1 — scrolls left */}
+          <div className="overflow-hidden mb-4">
+            <div className="eco-inline-scroll-l flex gap-4" style={{ width: "max-content" }}>
               {ECOSYSTEM_TOP_ROW.map((item, i) => (
-                <EcosystemCard key={`ep-${i}`} {...item} />
+                <EcosystemCard key={`ep-t-${i}`} {...item} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 — scrolls right */}
+          <div className="overflow-hidden">
+            <div className="eco-inline-scroll-r flex gap-4" style={{ width: "max-content" }}>
+              {ECOSYSTEM_BOTTOM_ROW.map((item, i) => (
+                <EcosystemCard key={`ep-b-${i}`} {...item} />
               ))}
             </div>
           </div>
