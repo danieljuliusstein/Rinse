@@ -2000,12 +2000,12 @@ function EcosystemInlinePanel() {
                 }}
               >
                 <img
-                  src={`https://cdn.simpleicons.org/${item.slug}/ffffff`}
+                  src={`https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${item.slug}.svg`}
                   alt={item.name}
                   width={38}
                   height={38}
                   draggable={false}
-                  style={{ userSelect: "none", pointerEvents: "none" }}
+                  style={{ userSelect: "none", pointerEvents: "none", filter: "brightness(0) invert(1)" }}
                 />
               </div>
             ))}
