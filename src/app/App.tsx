@@ -1101,14 +1101,12 @@ function HeroWindowCluster() {
 
   const { scrollY } = useScroll();
   useMotionValueEvent(scrollY, "change", (v) => {
-    if (v > 50) setShowSide(true);
+    if (v > 50)  { setShowSide(true); }
+    if (v <= 50) { setShowSide(false); setSideEntered(false); }
   });
 
   // ── helpers ──────────────────────────────────────────────────────────────────
-  const dimmed   = (id: string) => focused !== null && focused !== id;
-  const wOpacity = (id: string) => (dimmed(id) ? 0.65 : 1);
-  const wScale   = (id: string) => (dimmed(id) ? 0.984 : 1);
-  const zFor     = (id: "main" | "chat" | "log" | "video", base: number) =>
+  const zFor = (id: "main" | "chat" | "log" | "video", base: number) =>
     focused === id ? 50 : base;
 
   // Fast transition for focus changes; slower for entrance
@@ -1141,7 +1139,7 @@ function HeroWindowCluster() {
         className="absolute cursor-grab active:cursor-grabbing select-none"
         style={{ top: 8, left: "calc(50% - 310px)", zIndex: zFor("main", 30) }}
         initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: wOpacity("main"), y: 0, scale: wScale("main") }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={
           sideEntered
             ? FOCUS_T
@@ -1165,7 +1163,7 @@ function HeroWindowCluster() {
             className="absolute cursor-grab active:cursor-grabbing select-none"
             style={{ top: 20, left: 0, zIndex: zFor("chat", 20) }}
             initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: wOpacity("chat"), x: 0, scale: wScale("chat") }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
             transition={trans("chat", 0)}
             onPointerDown={() => setFocused("chat")}
             onAnimationComplete={() => { if (!sideEntered) setSideEntered(true); }}
@@ -1179,7 +1177,7 @@ function HeroWindowCluster() {
             className="absolute cursor-grab active:cursor-grabbing select-none"
             style={{ bottom: 0, left: 40, zIndex: zFor("log", 20) }}
             initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: wOpacity("log"), x: 0, scale: wScale("log") }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
             transition={trans("log", 0.14)}
             onPointerDown={() => setFocused("log")}
           >
@@ -1192,7 +1190,7 @@ function HeroWindowCluster() {
             className="absolute cursor-grab active:cursor-grabbing select-none"
             style={{ top: 44, right: 0, zIndex: zFor("video", 20) }}
             initial={{ opacity: 0, x: 18 }}
-            animate={{ opacity: wOpacity("video"), x: 0, scale: wScale("video") }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
             transition={trans("video", 0.26)}
             onPointerDown={() => setFocused("video")}
           >
