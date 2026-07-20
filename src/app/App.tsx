@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Routes, Route as ReactRoute, useNavigate } from "react-router";
 import rinseLogo from "../assets/rinse-logo.svg";
 import {
   motion,
@@ -1684,14 +1685,18 @@ function NodeCanvasSection() {
 }
 
 // ─── Nav ───────────────────────────────────────────────────────────────────────
-const NAV_LINKS = [
-  { label: "Features", id: SECTIONS.features },
+// Scroll-only links — in page order
+const SCROLL_NAV_LINKS = [
   { label: "Workflow", id: SECTIONS.workflow },
-  { label: "Pricing", id: SECTIONS.pricing },
-  { label: "Reviews", id: SECTIONS.testimonials },
+  { label: "Reviews",  id: SECTIONS.testimonials },
+  { label: "Pricing",  id: SECTIONS.pricing },
 ] as const;
 
+const NAV_LINK_CLS =
+  "text-sm text-black/45 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] duration-200";
+
 function Nav({ onStartTrial }: { onStartTrial: () => void }) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -1701,10 +1706,15 @@ function Nav({ onStartTrial }: { onStartTrial: () => void }) {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const handleNav = useCallback((id: string) => {
+  const handleScroll = useCallback((id: string) => {
     scrollToSection(id);
     setOpen(false);
   }, []);
+
+  const handleFeatures = useCallback(() => {
+    navigate("/features");
+    setOpen(false);
+  }, [navigate]);
 
   return (
     <nav
@@ -1724,13 +1734,16 @@ function Nav({ onStartTrial }: { onStartTrial: () => void }) {
           <img src={rinseLogo} alt="Rinse" className="h-6 w-auto" />
         </button>
 
-        {/* Desktop links */}
+        {/* Desktop links — Features first (own page), then scroll links in page order */}
         <div className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((item) => (
+          <button onClick={handleFeatures} className={NAV_LINK_CLS}>
+            Features
+          </button>
+          {SCROLL_NAV_LINKS.map((item) => (
             <button
               key={item.label}
-              onClick={() => handleNav(item.id)}
-              className="text-sm text-black/45 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] duration-200"
+              onClick={() => handleScroll(item.id)}
+              className={NAV_LINK_CLS}
             >
               {item.label}
             </button>
@@ -1755,7 +1768,7 @@ function Nav({ onStartTrial }: { onStartTrial: () => void }) {
           </button>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile hamburger */}
         <button
           className="md:hidden w-8 h-8 flex items-center justify-center text-black/50"
           onClick={() => setOpen(!open)}
@@ -1768,10 +1781,16 @@ function Nav({ onStartTrial }: { onStartTrial: () => void }) {
 
       {open && (
         <div className="md:hidden border-t border-black/6 bg-white/95 backdrop-blur-xl px-6 py-4 space-y-3">
-          {NAV_LINKS.map((item) => (
+          <button
+            onClick={handleFeatures}
+            className="block w-full text-left text-sm text-black/50 hover:text-neutral-900 py-1.5"
+          >
+            Features
+          </button>
+          {SCROLL_NAV_LINKS.map((item) => (
             <button
               key={item.label}
-              onClick={() => handleNav(item.id)}
+              onClick={() => handleScroll(item.id)}
               className="block w-full text-left text-sm text-black/50 hover:text-neutral-900 py-1.5"
             >
               {item.label}
@@ -1787,10 +1806,7 @@ function Nav({ onStartTrial }: { onStartTrial: () => void }) {
             Sign in
           </a>
           <button
-            onClick={() => {
-              onStartTrial();
-              setOpen(false);
-            }}
+            onClick={() => { onStartTrial(); setOpen(false); }}
             className="block w-full text-sm font-semibold text-white bg-neutral-900 px-4 py-2.5 rounded-xl text-center mt-2"
           >
             Start free trial
@@ -1798,6 +1814,154 @@ function Nav({ onStartTrial }: { onStartTrial: () => void }) {
         </div>
       )}
     </nav>
+  );
+}
+
+// ─── Features Page ────────────────────────────────────────────────────────────
+function FeaturesPage() {
+  const navigate = useNavigate();
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+  return (
+    <div
+      className="min-h-screen bg-background text-foreground"
+      style={{ fontFamily: "'Inter', sans-serif" }}
+    >
+      {/* Minimal back nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-black/6 bg-white/90 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center gap-3">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-1.5 text-sm text-black/40 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)]"
+          >
+            <ChevronRight size={14} className="rotate-180" />
+            Home
+          </button>
+          <div className="w-px h-4 bg-black/10" />
+          <span className="text-sm font-semibold text-neutral-900">Features</span>
+        </div>
+      </nav>
+      <div className="pt-16">
+        <FeaturesSection />
+      </div>
+    </div>
+  );
+}
+
+// ─── Ecosystem Modal ──────────────────────────────────────────────────────────
+function EcosystemModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="eco-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 backdrop-blur-sm px-6"
+        >
+          <motion.div
+            key="eco-modal-panel"
+            initial={{ opacity: 0, scale: 0.96, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 18 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl bg-white rounded-2xl border border-black/8 shadow-[0_32px_80px_rgba(0,0,0,0.22)] overflow-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between px-6 pt-6 pb-5 border-b border-black/6">
+              <div>
+                <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-1.5">
+                  Ecosystem
+                </p>
+                <h2 className="text-xl font-bold text-neutral-900 leading-snug">
+                  Plays well with the tools<br />you already run.
+                </h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-black/35 hover:text-neutral-900 transition-colors mt-0.5"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Marquee */}
+            <div className="py-7 relative overflow-hidden bg-white">
+              <style>{`
+                @keyframes eco-modal-marquee {
+                  from { transform: translateX(0); }
+                  to   { transform: translateX(-50%); }
+                }
+                .eco-modal-scroll { animation: eco-modal-marquee 22s linear infinite; }
+                .eco-modal-zone:hover .eco-modal-scroll { animation-play-state: paused; }
+              `}</style>
+              <div className="absolute inset-y-0 left-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to right,#fff,transparent)" }} />
+              <div className="absolute inset-y-0 right-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to left,#fff,transparent)" }} />
+              <div className="overflow-hidden eco-modal-zone">
+                <div className="eco-modal-scroll flex gap-3 py-1" style={{ width: "max-content" }}>
+                  {ECOSYSTEM_TOP_ROW.map((item, i) => (
+                    <EcosystemCard key={`em-${i}`} {...item} />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-6 flex justify-end">
+              <button
+                onClick={onClose}
+                className="px-5 py-2 text-sm text-black/40 hover:text-neutral-900 transition-colors border border-black/8 rounded-xl hover:border-black/16"
+              >
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─── Ecosystem Trigger (replaces the full EcosystemSection) ───────────────────
+function EcosystemTrigger({ onOpen }: { onOpen: () => void }) {
+  return (
+    <section className="border-t border-black/6 px-6 lg:px-12 py-16">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+          <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-2">
+            Ecosystem
+          </p>
+          <h2 className="text-2xl font-bold text-neutral-900 leading-snug">
+            Plays well with the tools you already run.
+          </h2>
+        </div>
+        <motion.button
+          onClick={onOpen}
+          whileHover={{ borderColor: "rgba(75,172,80,0.55)", background: "rgba(75,172,80,0.1)" }}
+          whileTap={{ scale: 0.97 }}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium flex-shrink-0 transition-colors"
+          style={{
+            border: "1px solid rgba(75,172,80,0.28)",
+            color: "#4bac50",
+            background: "rgba(75,172,80,0.05)",
+          }}
+        >
+          See all integrations
+          <ArrowRight size={13} strokeWidth={2.5} />
+        </motion.button>
+      </div>
+    </section>
   );
 }
 
@@ -5866,31 +6030,23 @@ function EcosystemSection() {
 }
 
 // ─── App ─────────────────────────────────────────────────────────────────────
-export default function App() {
-  const [demoOpen, setDemoOpen] = useState(false);
-
-  const handleStartTrial = useCallback(() => {
-    scrollToSection(SECTIONS.cta);
-  }, []);
-
-  const handleBookDemo = useCallback(() => {
-    window.open("mailto:hello@rinse.app?subject=Book%20a%20demo", "_blank");
-  }, []);
-
-  const handleOpenDemo = useCallback(() => {
-    setDemoOpen(true);
-  }, []);
-
+function HomePage({
+  onStartTrial,
+  onOpenDemo,
+  onBookDemo,
+}: {
+  onStartTrial: () => void;
+  onOpenDemo: () => void;
+  onBookDemo: () => void;
+}) {
+  const [ecoOpen, setEcoOpen] = useState(false);
   return (
     <div
       className="min-h-screen bg-background text-foreground"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
-      <Nav onStartTrial={handleStartTrial} />
-      <HeroSection
-        onStartTrial={handleStartTrial}
-        onOpenDemo={handleOpenDemo}
-      />
+      <Nav onStartTrial={onStartTrial} />
+      <HeroSection onStartTrial={onStartTrial} onOpenDemo={onOpenDemo} />
       <LogoBar />
 
       {/* Workflow section header */}
@@ -5913,14 +6069,49 @@ export default function App() {
       </div>
 
       <NodeCanvasSection />
-      <FeaturesSection />
       <ShowcaseSection />
-      <EcosystemSection />
+      <EcosystemTrigger onOpen={() => setEcoOpen(true)} />
       <TestimonialsSection />
-      <PricingSection onStartTrial={handleStartTrial} />
-      <CTASection onStartTrial={handleStartTrial} onBookDemo={handleBookDemo} />
+      <PricingSection onStartTrial={onStartTrial} />
+      <CTASection onStartTrial={onStartTrial} onBookDemo={onBookDemo} />
       <Footer />
-      <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
+
+      <EcosystemModal open={ecoOpen} onClose={() => setEcoOpen(false)} />
     </div>
+  );
+}
+
+export default function App() {
+  const [demoOpen, setDemoOpen] = useState(false);
+
+  const handleStartTrial = useCallback(() => {
+    scrollToSection(SECTIONS.cta);
+  }, []);
+
+  const handleBookDemo = useCallback(() => {
+    window.open("mailto:hello@rinse.app?subject=Book%20a%20demo", "_blank");
+  }, []);
+
+  const handleOpenDemo = useCallback(() => {
+    setDemoOpen(true);
+  }, []);
+
+  return (
+    <Routes>
+      <ReactRoute
+        path="/"
+        element={
+          <>
+            <HomePage
+              onStartTrial={handleStartTrial}
+              onOpenDemo={handleOpenDemo}
+              onBookDemo={handleBookDemo}
+            />
+            <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
+          </>
+        }
+      />
+      <ReactRoute path="/features" element={<FeaturesPage />} />
+    </Routes>
   );
 }
