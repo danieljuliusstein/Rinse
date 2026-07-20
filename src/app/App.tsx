@@ -1848,56 +1848,167 @@ function FeaturesPage() {
 }
 
 // ─── Ecosystem Modal ──────────────────────────────────────────────────────────
-// ─── Ecosystem Inline Panel (contained card on the page, no popup) ────────────
+// ─── Ecosystem Inline Panel ───────────────────────────────────────────────────
+const ECO_INTEGRATIONS = [
+  { name: "Notion",          slug: "notion" },
+  { name: "Slack",           slug: "slack" },
+  { name: "ChatGPT",         slug: "openai" },
+  { name: "Claude",          slug: "anthropic" },
+  { name: "Stripe",          slug: "stripe" },
+  { name: "Zapier",          slug: "zapier" },
+  { name: "Mailchimp",       slug: "mailchimp" },
+  { name: "Google Calendar", slug: "googlecalendar" },
+  { name: "Google Maps",     slug: "googlemaps" },
+  { name: "Linear",          slug: "linear" },
+  { name: "Apple",           slug: "apple" },
+  { name: "Twilio",          slug: "twilio" },
+  { name: "QuickBooks",      slug: "quickbooks" },
+  { name: "HubSpot",         slug: "hubspot" },
+  { name: "Xero",            slug: "xero" },
+  { name: "GitHub",          slug: "github" },
+];
+
+// Triple the list so the loop never shows a gap during drag
+const ECO_ROW = [...ECO_INTEGRATIONS, ...ECO_INTEGRATIONS, ...ECO_INTEGRATIONS];
+
 function EcosystemInlinePanel() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const rafRef   = useRef<number>(0);
+  const state    = useRef({ offset: 0, dragging: false, startX: 0, startOffset: 0 });
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const TILE   = 92 + 12; // width + gap
+    const LOOP_W = ECO_INTEGRATIONS.length * TILE;
+    const SPEED  = 0.3; // px per frame — slow
+
+    const tick = () => {
+      if (!state.current.dragging) {
+        state.current.offset = (state.current.offset + SPEED) % LOOP_W;
+      }
+      track.style.transform = `translateX(${-state.current.offset}px)`;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    const onDown = (clientX: number) => {
+      state.current.dragging    = true;
+      state.current.startX      = clientX;
+      state.current.startOffset = state.current.offset;
+    };
+    const onMove = (clientX: number) => {
+      if (!state.current.dragging) return;
+      const delta = state.current.startX - clientX;
+      state.current.offset = ((state.current.startOffset + delta) % LOOP_W + LOOP_W) % LOOP_W;
+    };
+    const onUp = () => { state.current.dragging = false; };
+
+    const md = (e: MouseEvent) => { onDown(e.clientX); e.preventDefault(); };
+    const mm = (e: MouseEvent) => onMove(e.clientX);
+    const ts = (e: TouchEvent) => onDown(e.touches[0].clientX);
+    const tm = (e: TouchEvent) => onMove(e.touches[0].clientX);
+
+    track.addEventListener("mousedown",  md);
+    window.addEventListener("mousemove", mm);
+    window.addEventListener("mouseup",   onUp);
+    track.addEventListener("touchstart", ts, { passive: true });
+    track.addEventListener("touchmove",  tm, { passive: true });
+    track.addEventListener("touchend",   onUp);
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      track.removeEventListener("mousedown",  md);
+      window.removeEventListener("mousemove", mm);
+      window.removeEventListener("mouseup",   onUp);
+      track.removeEventListener("touchstart", ts);
+      track.removeEventListener("touchmove",  tm);
+      track.removeEventListener("touchend",   onUp);
+    };
+  }, []);
+
   return (
     <section className="border-t border-black/6 px-6 lg:px-12 py-16">
-      <style>{`
-        @keyframes eco-inline-left {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        @keyframes eco-inline-right {
-          from { transform: translateX(-50%); }
-          to   { transform: translateX(0); }
-        }
-        .eco-inline-scroll-l { animation: eco-inline-left 28s linear infinite; }
-        .eco-inline-scroll-r { animation: eco-inline-right 28s linear infinite; }
-        .eco-inline-zone:hover .eco-inline-scroll-l,
-        .eco-inline-zone:hover .eco-inline-scroll-r { animation-play-state: paused; }
-      `}</style>
-      <div className="max-w-7xl mx-auto rounded-3xl border border-black/8 overflow-hidden bg-white shadow-[0_8px_40px_rgba(0,0,0,0.07)]">
-        {/* Header */}
-        <div className="px-10 lg:px-16 pt-12 pb-10 border-b border-black/6">
-          <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-3">
+      <div
+        className="max-w-7xl mx-auto rounded-3xl overflow-hidden relative"
+        style={{ background: "#0D0D0D", border: "1px solid rgba(255,255,255,0.08)" }}
+      >
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+          }}
+        />
+
+        {/* Centered text block */}
+        <div className="relative text-center px-8 pt-16 pb-14">
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-7 text-[11px] font-medium tracking-wide"
+            style={{
+              background: "rgba(75,172,80,0.15)",
+              color: "#4bac50",
+              border: "1px solid rgba(75,172,80,0.25)",
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4bac50] inline-block" />
             Ecosystem
-          </p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-900 leading-tight">
-            Connects with every tool<br />your business already uses.
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight mb-5">
+            Every tool your business<br />runs on, connected.
           </h2>
+          <p className="text-base text-white/40 max-w-md mx-auto leading-relaxed">
+            Stripe, Slack, QuickBooks, Claude, and 50+ more — your whole stack
+            in one place, no switching tabs.
+          </p>
         </div>
 
-        {/* Marquee rows */}
-        <div className="py-10 relative eco-inline-zone">
-          <div className="absolute inset-y-0 left-0 z-10 pointer-events-none" style={{ width: 100, background: "linear-gradient(to right,#fff,transparent)" }} />
-          <div className="absolute inset-y-0 right-0 z-10 pointer-events-none" style={{ width: 100, background: "linear-gradient(to left,#fff,transparent)" }} />
+        {/* Draggable marquee */}
+        <div
+          className="relative pb-16 overflow-hidden select-none"
+          style={{ cursor: "grab" }}
+          onMouseDown={(e) => e.currentTarget.style.cursor = "grabbing"}
+          onMouseUp={(e) => e.currentTarget.style.cursor = "grab"}
+        >
+          {/* Edge fades */}
+          <div
+            className="absolute inset-y-0 left-0 z-10 pointer-events-none"
+            style={{ width: 120, background: "linear-gradient(to right, #0D0D0D, transparent)" }}
+          />
+          <div
+            className="absolute inset-y-0 right-0 z-10 pointer-events-none"
+            style={{ width: 120, background: "linear-gradient(to left, #0D0D0D, transparent)" }}
+          />
 
-          {/* Row 1 — scrolls left */}
-          <div className="overflow-hidden mb-4">
-            <div className="eco-inline-scroll-l flex gap-4" style={{ width: "max-content" }}>
-              {ECOSYSTEM_TOP_ROW.map((item, i) => (
-                <EcosystemCard key={`ep-t-${i}`} {...item} />
-              ))}
-            </div>
-          </div>
-
-          {/* Row 2 — scrolls right */}
-          <div className="overflow-hidden">
-            <div className="eco-inline-scroll-r flex gap-4" style={{ width: "max-content" }}>
-              {ECOSYSTEM_BOTTOM_ROW.map((item, i) => (
-                <EcosystemCard key={`ep-b-${i}`} {...item} />
-              ))}
-            </div>
+          <div
+            ref={trackRef}
+            className="flex gap-3"
+            style={{ width: "max-content", willChange: "transform" }}
+          >
+            {ECO_ROW.map((item, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-center shrink-0 rounded-2xl"
+                style={{
+                  width: 92,
+                  height: 92,
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                <img
+                  src={`https://cdn.simpleicons.org/${item.slug}/ffffff`}
+                  alt={item.name}
+                  width={38}
+                  height={38}
+                  draggable={false}
+                  style={{ userSelect: "none", pointerEvents: "none" }}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>
