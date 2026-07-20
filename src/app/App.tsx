@@ -1555,42 +1555,35 @@ function NodeGraph({
 
 function NodeCanvasSection() {
   const [activeStep, setActiveStep] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Map scroll progress through the section into equal brackets, one per
-  // step. This only reads scroll position — the page always scrolls
-  // completely natively, nothing pins or locks.
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    const clamped = Math.min(1, Math.max(0, latest));
-    const bracket = Math.min(
-      WORKFLOW_STEPS.length - 1,
-      Math.floor(clamped * WORKFLOW_STEPS.length),
-    );
-    setActiveStep((prev) => (prev === bracket ? prev : bracket));
-  });
+  // IntersectionObserver — step becomes active when it crosses into the top
+  // 40 % of the viewport. Real native scroll, no pinning.
+  useEffect(() => {
+    const observers = stepRefs.current.map((el, i) => {
+      if (!el) return null;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveStep(i); },
+        { rootMargin: "0px 0px -55% 0px", threshold: 0 },
+      );
+      obs.observe(el);
+      return obs;
+    });
+    return () => observers.forEach((o) => o?.disconnect());
+  }, []);
 
-  const goToStep = useCallback((i: number) => {
-    const el = containerRef.current;
+  const scrollToStep = useCallback((i: number) => {
+    const el = stepRefs.current[i];
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const containerTop = rect.top + window.scrollY;
-    const containerHeight = el.offsetHeight;
-    const viewportH = window.innerHeight;
-    const targetProgress = (i + 0.5) / WORKFLOW_STEPS.length;
-    const targetY =
-      targetProgress * (containerHeight + viewportH) + containerTop - viewportH;
-    window.scrollTo({ top: targetY, behavior: "smooth" });
+    const top = el.getBoundingClientRect().top + window.scrollY - 100;
+    window.scrollTo({ top, behavior: "smooth" });
   }, []);
 
   return (
-    <section id={SECTIONS.workflow} className="py-32 px-6 lg:px-12">
+    <section id={SECTIONS.workflow} className="px-6 lg:px-12">
       <div className="max-w-7xl mx-auto">
         {/* Section label */}
-        <div className="mb-8 lg:mb-10">
+        <div className="pt-0 pb-16">
           <FadeUpWhenVisible>
             <span className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em]">
               How it works
@@ -1598,106 +1591,71 @@ function NodeCanvasSection() {
           </FadeUpWhenVisible>
         </div>
 
-        {/* Desktop: natural page scroll drives the active tab and re-triggers
-            the node canvas draw animation — no sticky pinning, no scroll-jacking. */}
-        <div
-          ref={containerRef}
-          className="hidden lg:grid grid-cols-2 gap-20"
-          style={{ minHeight: "230vh" }}
-        >
-          <div className="sticky top-32 self-start space-y-2">
-            {WORKFLOW_STEPS.map((step, i) => (
-              <motion.button
-                key={i}
-                type="button"
-                onClick={() => goToStep(i)}
-                className={`w-full flex gap-4 p-4 rounded-2xl border cursor-pointer text-left transition-all ease-[cubic-bezier(0.16,1,0.3,1)] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                  i === activeStep
-                    ? "border-black/10 bg-black/4"
-                    : "border-transparent"
-                }`}
-                animate={{
-                  opacity:
-                    i === activeStep
-                      ? 1
-                      : i === activeStep - 1 || i === activeStep + 1
-                        ? 0.45
-                        : 0.2,
-                }}
-                transition={TRANSITION_MACRO}
-              >
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ease-[cubic-bezier(0.16,1,0.3,1)] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                    i === activeStep
-                      ? "bg-[#4bac50]/25 text-[#4bac50]"
-                      : "bg-black/5 text-black/25"
-                  }`}
-                >
-                  <step.icon size={15} />
-                </div>
-                <div className="min-w-0">
-                  <div
-                    className={`text-sm font-semibold transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                      i === activeStep ? "text-neutral-900" : "text-black/50"
-                    }`}
-                  >
-                    {step.label}
-                  </div>
-                  {i === activeStep && (
-                    <motion.div
-                      className="text-xs text-black/40 mt-1.5 leading-relaxed"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      transition={TRANSITION_MICRO}
-                    >
-                      {step.desc}
-                    </motion.div>
-                  )}
-                </div>
-              </motion.button>
-            ))}
+        {/* ── Desktop: sticky label-only left nav + naturally scrolling right ── */}
+        <div className="hidden lg:flex gap-20">
 
-            {/* Progress bar */}
-            <div className="mt-6 px-4">
-              <div className="flex gap-1.5">
-                {WORKFLOW_STEPS.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-0.5 flex-1 rounded-full transition-all ease-[cubic-bezier(0.16,1,0.3,1)] duration-400 ${
-                      i <= activeStep ? "bg-[#4bac50]" : "bg-black/10"
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="text-[10px] font-mono text-black/25 mt-2">
-                {activeStep + 1} / {WORKFLOW_STEPS.length}
-              </div>
-            </div>
+          {/* LEFT — sticky, just step names, green border-l on active */}
+          <div className="sticky top-32 self-start w-48 flex-shrink-0 pt-1">
+            {WORKFLOW_STEPS.map((step, i) => (
+              <button
+                key={i}
+                onClick={() => scrollToStep(i)}
+                className={`block w-full text-left py-2.5 pl-4 border-l-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  i === activeStep
+                    ? "border-[#4bac50] text-neutral-900"
+                    : "border-black/8 text-black/25 hover:text-black/50 hover:border-black/20"
+                }`}
+              >
+                <span className={`text-sm leading-snug transition-all duration-300 ${
+                  i === activeStep ? "font-semibold" : "font-normal"
+                }`}>
+                  {step.label}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* Right: the step mockup — swaps + animates on active step change. */}
-          <div
-            className="sticky top-32 self-start flex items-center justify-center"
-            style={{ minHeight: "min(70vh, 520px)" }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeStep}
-                initial={{ opacity: 0, scale: 0.97, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.97, y: -12 }}
-                transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center justify-center w-full"
+          {/* RIGHT — real content; each step ~80 vh so scroll feels substantial */}
+          <div className="flex-1 min-w-0">
+            {WORKFLOW_STEPS.map((step, i) => (
+              <div
+                key={i}
+                ref={(el) => { stepRefs.current[i] = el; }}
+                className={i < WORKFLOW_STEPS.length - 1 ? "border-b border-black/6" : ""}
+                style={{ minHeight: "80vh", paddingTop: "8vh", paddingBottom: "8vh" }}
               >
-                {WORKFLOW_STEPS[activeStep].mockup}
-              </motion.div>
-            </AnimatePresence>
+                {/* Text block */}
+                <div className="mb-8 max-w-lg">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-[#4bac50]/15 text-[#4bac50] flex items-center justify-center flex-shrink-0">
+                      <step.icon size={12} />
+                    </div>
+                    <span className="text-[10px] font-mono text-black/25 tracking-widest uppercase">
+                      {String(i + 1).padStart(2, "0")} / {String(WORKFLOW_STEPS.length).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl lg:text-[28px] font-bold text-neutral-900 mb-3 leading-tight">
+                    {step.label}
+                  </h3>
+                  <p className="text-sm text-black/40 leading-relaxed">
+                    {step.desc}
+                  </p>
+                </div>
+
+                {/* Faint divider between description and mockup */}
+                <div className="border-t border-black/6 mb-10" />
+
+                {/* Mockup */}
+                <div className="flex items-center justify-start">
+                  {step.mockup}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Mobile/tablet: plain stacked layout — no scroll-jacking, so nothing
-            can be clipped or misbehave on shorter/smaller screens. */}
-        <div className="lg:hidden max-w-xl mx-auto">
+        {/* ── Mobile: plain stacked ── */}
+        <div className="lg:hidden max-w-xl mx-auto pb-16">
           <div className="space-y-16">
             {WORKFLOW_STEPS.map((step, i) => (
               <FadeUpWhenVisible key={i} delay={Math.min(i * 0.05, 0.2)}>
@@ -1710,18 +1668,16 @@ function NodeCanvasSection() {
                       {i + 1} / {WORKFLOW_STEPS.length}
                     </span>
                   </div>
-                  <div className="text-base font-semibold text-neutral-900 mb-2">
-                    {step.label}
-                  </div>
-                  <p className="text-sm text-black/40 leading-relaxed mb-6">
-                    {step.desc}
-                  </p>
+                  <div className="text-base font-semibold text-neutral-900 mb-2">{step.label}</div>
+                  <p className="text-sm text-black/40 leading-relaxed mb-6">{step.desc}</p>
+                  <div className="border-t border-black/6 mb-6" />
                   <div className="flex justify-center">{step.mockup}</div>
                 </div>
               </FadeUpWhenVisible>
             ))}
           </div>
         </div>
+
       </div>
     </section>
   );
@@ -5936,7 +5892,6 @@ export default function App() {
         onOpenDemo={handleOpenDemo}
       />
       <LogoBar />
-      <StatsBar />
 
       {/* Workflow section header */}
       <div className="pt-32 px-6 lg:px-12 border-t border-black/6">
