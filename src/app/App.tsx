@@ -50,7 +50,9 @@ const SECTIONS = {
 } as const;
 
 function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document
+    .getElementById(id)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // ─── Demo Modal ────────────────────────────────────────────────────────────────
@@ -85,8 +87,12 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div className="relative w-full max-w-3xl rounded-2xl border border-black/10 bg-white shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-black/6">
           <div>
-            <div className="text-sm font-semibold text-neutral-900">Rinse product tour</div>
-            <div className="text-[11px] text-black/35 font-mono mt-0.5">2-minute overview</div>
+            <div className="text-sm font-semibold text-neutral-900">
+              Rinse product tour
+            </div>
+            <div className="text-[11px] text-black/35 font-mono mt-0.5">
+              2-minute overview
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -110,7 +116,8 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
               <div className="w-0 h-0 border-t-[9px] border-t-transparent border-b-[9px] border-b-transparent border-l-[14px] border-l-[#4bac50] ml-1" />
             </div>
             <p className="text-sm text-black/50 mb-4">
-              See how Rinse handles bookings, scheduling, and payments in one workflow.
+              See how Rinse handles bookings, scheduling, and payments in one
+              workflow.
             </p>
             <button
               onClick={() => {
@@ -217,7 +224,9 @@ function BookingMockup() {
         <div className="w-7 h-7 rounded-full bg-[#4bac50]/20 flex items-center justify-center">
           <Car size={13} className="text-[#4bac50]" />
         </div>
-        <span className="text-sm font-semibold text-neutral-900">New Booking</span>
+        <span className="text-sm font-semibold text-neutral-900">
+          New Booking
+        </span>
         <span className="ml-auto text-[10px] font-mono text-[#4bac50] bg-[#4bac50]/10 px-2 py-0.5 rounded-full">
           Live
         </span>
@@ -275,7 +284,9 @@ function CalendarMockup() {
   return (
     <div className="w-full max-w-[440px] rounded-2xl overflow-hidden border border-black/8 bg-white shadow-[0_30px_80px_-10px_rgba(0,0,0,0.7)]">
       <div className="px-5 py-3.5 border-b border-black/6 flex items-center justify-between">
-        <span className="text-sm font-semibold text-neutral-900">June 9–14, 2025</span>
+        <span className="text-sm font-semibold text-neutral-900">
+          June 9–14, 2025
+        </span>
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono text-black/30">Week</span>
           <div className="w-6 h-6 rounded-lg bg-black/6 flex items-center justify-center cursor-pointer hover:bg-black/10 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)]">
@@ -328,7 +339,9 @@ function CalendarMockup() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ delay: 0.45, type: "spring", bounce: 0.35 }}
                 >
-                  <div className="text-[9px] font-bold text-[#4bac50]">Tesla S</div>
+                  <div className="text-[9px] font-bold text-[#4bac50]">
+                    Tesla S
+                  </div>
                   <div className="text-[9px] text-[#4bac50]/70">10 AM ✦</div>
                 </motion.div>
               )}
@@ -367,7 +380,9 @@ function AssignMockup() {
   return (
     <div className="w-full max-w-[340px] rounded-2xl overflow-hidden border border-black/8 bg-white shadow-[0_30px_80px_-10px_rgba(0,0,0,0.7)]">
       <div className="px-5 py-4 border-b border-black/6">
-        <div className="text-sm font-semibold text-neutral-900">Assign Technician</div>
+        <div className="text-sm font-semibold text-neutral-900">
+          Assign Technician
+        </div>
         <div className="text-[11px] text-black/35 mt-0.5 font-mono">
           Tesla Model S · Full Detail · Jun 12
         </div>
@@ -387,13 +402,17 @@ function AssignMockup() {
           >
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${
-                t.active ? "bg-[#4bac50] text-white" : "bg-black/8 text-black/50"
+                t.active
+                  ? "bg-[#4bac50] text-white"
+                  : "bg-black/8 text-black/50"
               }`}
             >
               {t.name[0]}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-neutral-900">{t.name}</div>
+              <div className="text-sm font-semibold text-neutral-900">
+                {t.name}
+              </div>
               <div className="text-[10px] text-black/35 font-mono">
                 ★ {t.rating} · {t.jobs} jobs
               </div>
@@ -624,11 +643,36 @@ function WindowChrome({
 // Dispatch team chat — new messages cycle in continuously to feel alive.
 function HeroChatPanel() {
   const allMsgs = [
-    { user: "Priya (Dispatch)", av: "PD", color: "bg-[#4bac50]", text: "Marcus just clocked in for the M3 job on 5th St" },
-    { user: "Marcus T.", av: "MT", color: "bg-sky-500", text: "On site now, starting paint correction" },
-    { user: "Priya (Dispatch)", av: "PD", color: "bg-[#4bac50]", text: "Got it — customer added a ceramic add-on, invoice will update" },
-    { user: "Jordan K.", av: "JK", color: "bg-violet-500", text: "Heads up, running 10 min behind on the GT3 detail" },
-    { user: "Priya (Dispatch)", av: "PD", color: "bg-[#4bac50]", text: "No worries, I've nudged the 2pm slot automatically" },
+    {
+      user: "Priya (Dispatch)",
+      av: "PD",
+      color: "bg-[#4bac50]",
+      text: "Marcus just clocked in for the M3 job on 5th St",
+    },
+    {
+      user: "Marcus T.",
+      av: "MT",
+      color: "bg-sky-500",
+      text: "On site now, starting paint correction",
+    },
+    {
+      user: "Priya (Dispatch)",
+      av: "PD",
+      color: "bg-[#4bac50]",
+      text: "Got it — customer added a ceramic add-on, invoice will update",
+    },
+    {
+      user: "Jordan K.",
+      av: "JK",
+      color: "bg-violet-500",
+      text: "Heads up, running 10 min behind on the GT3 detail",
+    },
+    {
+      user: "Priya (Dispatch)",
+      av: "PD",
+      color: "bg-[#4bac50]",
+      text: "No worries, I've nudged the 2pm slot automatically",
+    },
   ];
   const [count, setCount] = useState(3);
   useEffect(() => {
@@ -642,7 +686,11 @@ function HeroChatPanel() {
   return (
     <div
       className="rounded-xl overflow-hidden flex flex-col bg-white"
-      style={{ width: 236, border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 20px 50px rgba(0,0,0,0.14), 0 4px 14px rgba(0,0,0,0.08)" }}
+      style={{
+        width: 236,
+        border: "1px solid rgba(0,0,0,0.08)",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.14), 0 4px 14px rgba(0,0,0,0.08)",
+      }}
     >
       <WindowChrome
         title="#dispatch"
@@ -662,12 +710,18 @@ function HeroChatPanel() {
             animate={{ opacity: 1, y: 0 }}
             transition={TRANSITION_MACRO}
           >
-            <div className={`w-5 h-5 rounded-full ${m.color} flex-shrink-0 flex items-center justify-center text-[7px] font-bold text-white mt-0.5`}>
+            <div
+              className={`w-5 h-5 rounded-full ${m.color} flex-shrink-0 flex items-center justify-center text-[7px] font-bold text-white mt-0.5`}
+            >
               {m.av}
             </div>
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-[9px] font-semibold text-neutral-900">{m.user}</span>
-              <span className="text-[10px] leading-[1.4] text-black/45">{m.text}</span>
+              <span className="text-[9px] font-semibold text-neutral-900">
+                {m.user}
+              </span>
+              <span className="text-[10px] leading-[1.4] text-black/45">
+                {m.text}
+              </span>
             </div>
           </motion.div>
         ))}
@@ -711,17 +765,27 @@ function HeroLogPanel() {
   return (
     <div
       className="rounded-xl overflow-hidden flex flex-col"
-      style={{ width: 268, background: "#111219", border: "1px solid rgba(0,0,0,0.2)", boxShadow: "0 20px 50px rgba(0,0,0,0.2), 0 4px 14px rgba(0,0,0,0.1)" }}
+      style={{
+        width: 268,
+        background: "#111219",
+        border: "1px solid rgba(0,0,0,0.2)",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.2), 0 4px 14px rgba(0,0,0,0.1)",
+      }}
     >
       <WindowChrome title="zsh — rinse-cli" dark />
       <div className="px-3 py-2.5 flex flex-col gap-1 h-[132px] font-mono overflow-hidden">
         {history.map((l, i) => (
-          <div key={i} className="text-[10px] leading-[1.6] text-white/25 truncate">
+          <div
+            key={i}
+            className="text-[10px] leading-[1.6] text-white/25 truncate"
+          >
             {l}
           </div>
         ))}
         <div className="text-[10px] leading-[1.6] text-white/80 flex items-start gap-1.5">
-          {!text.startsWith("→") && <span className="text-[#4bac50] flex-shrink-0">➜</span>}
+          {!text.startsWith("→") && (
+            <span className="text-[#4bac50] flex-shrink-0">➜</span>
+          )}
           <span className={text.startsWith("→") ? "text-[#4bac50]" : ""}>
             {text}
             <span
@@ -748,25 +812,43 @@ function HeroVideoPanel() {
   ];
   const [active, setActive] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setActive((a) => (a + 1) % transcript.length), 2200);
+    const id = setInterval(
+      () => setActive((a) => (a + 1) % transcript.length),
+      2200,
+    );
     return () => clearInterval(id);
   }, [transcript.length]);
 
   return (
     <div
       className="rounded-xl overflow-hidden flex flex-col"
-      style={{ width: 272, background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 20px 50px rgba(0,0,0,0.14), 0 4px 14px rgba(0,0,0,0.08)" }}
+      style={{
+        width: 272,
+        background: "#ffffff",
+        border: "1px solid rgba(0,0,0,0.08)",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.14), 0 4px 14px rgba(0,0,0,0.08)",
+      }}
     >
       <WindowChrome title="Product Overview" />
       <div
         className="relative flex items-center justify-center overflow-hidden"
-        style={{ height: 108, background: "linear-gradient(135deg, #0d1a12 0%, #163420 100%)" }}
+        style={{
+          height: 108,
+          background: "linear-gradient(135deg, #0d1a12 0%, #163420 100%)",
+        }}
       >
-        <div className="absolute inset-0 opacity-25" style={{ background: "radial-gradient(ellipse at 30% 60%, #4bac50 0%, transparent 60%)" }} />
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            background:
+              "radial-gradient(ellipse at 30% 60%, #4bac50 0%, transparent 60%)",
+          }}
+        />
         <motion.div
           className="absolute inset-0 opacity-[0.08]"
           style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
             backgroundSize: "20px 20px",
           }}
           animate={{ backgroundPosition: ["0px 0px", "20px 20px"] }}
@@ -775,7 +857,10 @@ function HeroVideoPanel() {
         <button
           onClick={() => setPlaying((p) => !p)}
           className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-          style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)" }}
+          style={{
+            background: "rgba(255,255,255,0.15)",
+            border: "1px solid rgba(255,255,255,0.2)",
+          }}
         >
           {playing ? (
             <div className="flex gap-[3px]">
@@ -790,7 +875,9 @@ function HeroVideoPanel() {
           <div className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/15">
             <motion.div
               className="h-full rounded-full bg-[#4bac50]"
-              animate={{ width: `${((active + 1) / transcript.length) * 100}%` }}
+              animate={{
+                width: `${((active + 1) / transcript.length) * 100}%`,
+              }}
               transition={{ duration: 0.4 }}
             />
           </div>
@@ -801,12 +888,19 @@ function HeroVideoPanel() {
           <motion.div
             key={i}
             className="flex gap-2 py-1 pl-1.5"
-            style={{ borderLeft: i === active ? "2px solid #4bac50" : "2px solid transparent" }}
+            style={{
+              borderLeft:
+                i === active ? "2px solid #4bac50" : "2px solid transparent",
+            }}
             animate={{ opacity: i === active ? 1 : 0.35 }}
             transition={TRANSITION_MACRO}
           >
-            <span className="text-[9px] flex-shrink-0 mt-0.5 font-mono text-[#4bac50] w-7">{line.t}</span>
-            <span className="text-[9px] leading-[1.5] text-black/55">{line.text}</span>
+            <span className="text-[9px] flex-shrink-0 mt-0.5 font-mono text-[#4bac50] w-7">
+              {line.t}
+            </span>
+            <span className="text-[9px] leading-[1.5] text-black/55">
+              {line.text}
+            </span>
           </motion.div>
         ))}
       </div>
@@ -817,10 +911,42 @@ function HeroVideoPanel() {
 // Main window — cycles a "live booking coming in" state to feel alive.
 function HeroMainWindow() {
   const jobs = [
-    { time: "9:00 AM", client: "James W.", vehicle: "BMW M3 Competition", service: "Paint Correction", tech: "Marcus T.", status: "in-progress", amount: "$480" },
-    { time: "11:30 AM", client: "Sarah K.", vehicle: "Porsche 911 GT3", service: "Full Detail", tech: "Jordan K.", status: "upcoming", amount: "$299" },
-    { time: "2:00 PM", client: "Alex C.", vehicle: "Tesla Model S", service: "Ceramic Coating", tech: "Unassigned", status: "new", amount: "$899" },
-    { time: "4:30 PM", client: "Derek M.", vehicle: "Range Rover SVR", service: "Interior Detail", tech: "Ryan S.", status: "upcoming", amount: "$195" },
+    {
+      time: "9:00 AM",
+      client: "James W.",
+      vehicle: "BMW M3 Competition",
+      service: "Paint Correction",
+      tech: "Marcus T.",
+      status: "in-progress",
+      amount: "$480",
+    },
+    {
+      time: "11:30 AM",
+      client: "Sarah K.",
+      vehicle: "Porsche 911 GT3",
+      service: "Full Detail",
+      tech: "Jordan K.",
+      status: "upcoming",
+      amount: "$299",
+    },
+    {
+      time: "2:00 PM",
+      client: "Alex C.",
+      vehicle: "Tesla Model S",
+      service: "Ceramic Coating",
+      tech: "Unassigned",
+      status: "new",
+      amount: "$899",
+    },
+    {
+      time: "4:30 PM",
+      client: "Derek M.",
+      vehicle: "Range Rover SVR",
+      service: "Interior Detail",
+      tech: "Ryan S.",
+      status: "upcoming",
+      amount: "$195",
+    },
   ];
   const statusStyle: Record<string, string> = {
     "in-progress": "bg-[#4bac50]/20 text-[#4bac50]",
@@ -831,14 +957,23 @@ function HeroMainWindow() {
   const cycle = ["New booking arriving…", "Processing…", "Confirmed · $899.00"];
   const [cycleIdx, setCycleIdx] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setCycleIdx((i) => (i + 1) % cycle.length), 1800);
+    const id = setInterval(
+      () => setCycleIdx((i) => (i + 1) % cycle.length),
+      1800,
+    );
     return () => clearInterval(id);
   }, [cycle.length]);
 
   return (
     <div
       className="rounded-2xl overflow-hidden flex select-none"
-      style={{ width: 620, height: 400, background: "#FAFAFA", border: "1px solid rgba(0,0,0,0.09)", boxShadow: "0 40px 90px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1)" }}
+      style={{
+        width: 620,
+        height: 400,
+        background: "#FAFAFA",
+        border: "1px solid rgba(0,0,0,0.09)",
+        boxShadow: "0 40px 90px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1)",
+      }}
     >
       {/* Sidebar */}
       <div className="w-[150px] flex-shrink-0 border-r border-black/5 p-3.5 flex flex-col gap-1 hidden lg:flex">
@@ -868,8 +1003,12 @@ function HeroMainWindow() {
       <div className="flex-1 min-w-0 p-4 flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-sm font-bold text-neutral-900">Good morning, Jason ☀</div>
-            <div className="text-[10px] text-black/30 font-mono mt-0.5">Monday, June 9, 2025</div>
+            <div className="text-sm font-bold text-neutral-900">
+              Good morning, Jason ☀
+            </div>
+            <div className="text-[10px] text-black/30 font-mono mt-0.5">
+              Monday, June 9, 2025
+            </div>
           </div>
           <AnimatePresence mode="wait">
             <motion.div
@@ -893,27 +1032,53 @@ function HeroMainWindow() {
             { label: "New Bookings", value: "3" },
             { label: "Avg Rating", value: "4.9★" },
           ].map((s) => (
-            <div key={s.label} className="bg-black/3 border border-black/5 rounded-lg p-2.5">
-              <div className="text-[8px] font-mono text-black/30 uppercase tracking-wider">{s.label}</div>
-              <div className="text-sm font-bold text-neutral-900 mt-1 font-mono">{s.value}</div>
+            <div
+              key={s.label}
+              className="bg-black/3 border border-black/5 rounded-lg p-2.5"
+            >
+              <div className="text-[8px] font-mono text-black/30 uppercase tracking-wider">
+                {s.label}
+              </div>
+              <div className="text-sm font-bold text-neutral-900 mt-1 font-mono">
+                {s.value}
+              </div>
             </div>
           ))}
         </div>
 
         <div className="rounded-lg border border-black/5 overflow-hidden flex-1">
           <div className="flex items-center justify-between px-3 py-2 border-b border-black/5">
-            <span className="text-[11px] font-semibold text-neutral-900">Today's Schedule</span>
-            <span className="text-[9px] text-black/25 font-mono">8 jobs · $1,873</span>
+            <span className="text-[11px] font-semibold text-neutral-900">
+              Today's Schedule
+            </span>
+            <span className="text-[9px] text-black/25 font-mono">
+              8 jobs · $1,873
+            </span>
           </div>
           {jobs.map((job, i) => (
-            <div key={i} className={`flex items-center gap-2.5 px-3 py-2 ${i < jobs.length - 1 ? "border-b border-black/4" : ""}`}>
-              <span className="text-[9px] font-mono text-black/30 w-12 flex-shrink-0">{job.time}</span>
+            <div
+              key={i}
+              className={`flex items-center gap-2.5 px-3 py-2 ${i < jobs.length - 1 ? "border-b border-black/4" : ""}`}
+            >
+              <span className="text-[9px] font-mono text-black/30 w-12 flex-shrink-0">
+                {job.time}
+              </span>
               <div className="flex-1 min-w-0">
-                <div className="text-[11px] font-semibold text-neutral-900 truncate">{job.client} · {job.vehicle}</div>
-                <div className="text-[9px] text-black/30 font-mono truncate">{job.service} · {job.tech}</div>
+                <div className="text-[11px] font-semibold text-neutral-900 truncate">
+                  {job.client} · {job.vehicle}
+                </div>
+                <div className="text-[9px] text-black/30 font-mono truncate">
+                  {job.service} · {job.tech}
+                </div>
               </div>
-              <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusStyle[job.status]}`}>{job.status}</span>
-              <span className="text-[11px] font-bold font-mono text-black/60 flex-shrink-0">{job.amount}</span>
+              <span
+                className={`text-[8px] font-mono px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusStyle[job.status]}`}
+              >
+                {job.status}
+              </span>
+              <span className="text-[11px] font-bold font-mono text-black/60 flex-shrink-0">
+                {job.amount}
+              </span>
             </div>
           ))}
         </div>
@@ -956,7 +1121,11 @@ function HeroWindowCluster() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={containerRef} className="relative mx-auto hidden lg:block" style={{ width: 1040, height: 460 }}>
+    <div
+      ref={containerRef}
+      className="relative mx-auto hidden lg:block"
+      style={{ width: 1040, height: 460 }}
+    >
       {/* Main window — front and center */}
       <motion.div
         className="absolute z-30"
@@ -968,15 +1137,27 @@ function HeroWindowCluster() {
         <HeroMainWindow />
       </motion.div>
 
-      <DraggableWindow containerRef={containerRef} style={{ top: 20, left: 0, zIndex: 20 }} reveal={{ x: -20, delay: 0.15 }}>
+      <DraggableWindow
+        containerRef={containerRef}
+        style={{ top: 20, left: 0, zIndex: 20 }}
+        reveal={{ x: -20, delay: 0.15 }}
+      >
         <HeroChatPanel />
       </DraggableWindow>
 
-      <DraggableWindow containerRef={containerRef} style={{ bottom: 0, left: 40, zIndex: 20 }} reveal={{ x: -20, delay: 0.15 }}>
+      <DraggableWindow
+        containerRef={containerRef}
+        style={{ bottom: 0, left: 40, zIndex: 20 }}
+        reveal={{ x: -20, delay: 0.15 }}
+      >
         <HeroLogPanel />
       </DraggableWindow>
 
-      <DraggableWindow containerRef={containerRef} style={{ top: 44, right: 0, zIndex: 20 }} reveal={{ x: 20, delay: 0.25 }}>
+      <DraggableWindow
+        containerRef={containerRef}
+        style={{ top: 44, right: 0, zIndex: 20 }}
+        reveal={{ x: 20, delay: 0.25 }}
+      >
         <HeroVideoPanel />
       </DraggableWindow>
     </div>
@@ -1088,10 +1269,25 @@ function HeroDashboard() {
           {/* Stats row */}
           <div className="grid grid-cols-4 gap-3 mb-5">
             {[
-              { label: "Today's Revenue", value: "$1,873", delta: "+18%", up: true },
+              {
+                label: "Today's Revenue",
+                value: "$1,873",
+                delta: "+18%",
+                up: true,
+              },
               { label: "Jobs Today", value: "8", delta: "6 active", up: true },
-              { label: "New Bookings", value: "3", delta: "This week", up: false },
-              { label: "Avg Rating", value: "4.9★", delta: "↑ from 4.7", up: true },
+              {
+                label: "New Bookings",
+                value: "3",
+                delta: "This week",
+                up: false,
+              },
+              {
+                label: "Avg Rating",
+                value: "4.9★",
+                delta: "↑ from 4.7",
+                up: true,
+              },
             ].map((s) => (
               <div
                 key={s.label}
@@ -1157,13 +1353,19 @@ function HeroDashboard() {
         className="absolute -bottom-5 -right-5 rounded-xl border border-black/10 bg-white/95 backdrop-blur-xl p-3 flex items-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)] max-w-[240px]"
         initial={{ opacity: 0, y: 20, x: 10 }}
         animate={{ opacity: 1, y: 0, x: 0 }}
-        transition={{ delay: 1.6, duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
+        transition={{
+          delay: 1.6,
+          duration: 0.6,
+          ease: [0.21, 0.47, 0.32, 0.98],
+        }}
       >
         <div className="w-8 h-8 rounded-xl bg-[#4bac50]/20 flex items-center justify-center flex-shrink-0">
           <Bell size={14} className="text-[#4bac50]" />
         </div>
         <div>
-          <div className="text-xs font-semibold text-neutral-900">New booking</div>
+          <div className="text-xs font-semibold text-neutral-900">
+            New booking
+          </div>
           <div className="text-[10px] text-black/40 font-mono">
             Ferrari 488 · Sat Jun 14
           </div>
@@ -1176,15 +1378,23 @@ function HeroDashboard() {
         className="absolute -top-4 -left-4 rounded-xl border border-black/10 bg-white/95 backdrop-blur-xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
         initial={{ opacity: 0, y: -15, x: -10 }}
         animate={{ opacity: 1, y: 0, x: 0 }}
-        transition={{ delay: 1.8, duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
+        transition={{
+          delay: 1.8,
+          duration: 0.6,
+          ease: [0.21, 0.47, 0.32, 0.98],
+        }}
       >
         <div className="text-[9px] font-mono text-black/30 uppercase tracking-wider mb-1">
           This Month
         </div>
-        <div className="text-xl font-bold text-neutral-900 font-mono">$18,420</div>
+        <div className="text-xl font-bold text-neutral-900 font-mono">
+          $18,420
+        </div>
         <div className="flex items-center gap-1 mt-0.5">
           <TrendingUp size={10} className="text-emerald-400" />
-          <span className="text-[9px] font-mono text-emerald-400">+23% vs last month</span>
+          <span className="text-[9px] font-mono text-emerald-400">
+            +23% vs last month
+          </span>
         </div>
       </motion.div>
     </div>
@@ -1227,11 +1437,46 @@ const WORKFLOW_STEPS = [
 
 // Node/edge graph data per step — powers the animated "Interactive Node Canvas".
 const NODE_GRAPHS = [
-  { nodes: [{ icon: Users, label: "Customer" }, { icon: Smartphone, label: "Booking Portal" }, { icon: Calendar, label: "Calendar" }], pill: { icon: CheckCircle, label: "Booked" } },
-  { nodes: [{ icon: Calendar, label: "New Booking" }, { icon: Zap, label: "Calendar Engine" }, { icon: Users, label: "Team Schedule" }], pill: { icon: CheckCircle, label: "Synced" } },
-  { nodes: [{ icon: Car, label: "Job Queue" }, { icon: Route, label: "Route Engine" }, { icon: Users, label: "Technician" }], pill: { icon: CheckCircle, label: "Assigned" } },
-  { nodes: [{ icon: FileText, label: "Job Complete" }, { icon: DollarSign, label: "Invoice Engine" }, { icon: CreditCard, label: "Stripe" }], pill: { icon: CheckCircle, label: "Paid" } },
-  { nodes: [{ icon: BarChart2, label: "Live Data" }, { icon: Zap, label: "Analytics Engine" }, { icon: TrendingUp, label: "Dashboard" }], pill: { icon: CheckCircle, label: "Live" } },
+  {
+    nodes: [
+      { icon: Users, label: "Customer" },
+      { icon: Smartphone, label: "Booking Portal" },
+      { icon: Calendar, label: "Calendar" },
+    ],
+    pill: { icon: CheckCircle, label: "Booked" },
+  },
+  {
+    nodes: [
+      { icon: Calendar, label: "New Booking" },
+      { icon: Zap, label: "Calendar Engine" },
+      { icon: Users, label: "Team Schedule" },
+    ],
+    pill: { icon: CheckCircle, label: "Synced" },
+  },
+  {
+    nodes: [
+      { icon: Car, label: "Job Queue" },
+      { icon: Route, label: "Route Engine" },
+      { icon: Users, label: "Technician" },
+    ],
+    pill: { icon: CheckCircle, label: "Assigned" },
+  },
+  {
+    nodes: [
+      { icon: FileText, label: "Job Complete" },
+      { icon: DollarSign, label: "Invoice Engine" },
+      { icon: CreditCard, label: "Stripe" },
+    ],
+    pill: { icon: CheckCircle, label: "Paid" },
+  },
+  {
+    nodes: [
+      { icon: BarChart2, label: "Live Data" },
+      { icon: Zap, label: "Analytics Engine" },
+      { icon: TrendingUp, label: "Dashboard" },
+    ],
+    pill: { icon: CheckCircle, label: "Live" },
+  },
 ];
 
 const NODE_POS = [
@@ -1240,7 +1485,13 @@ const NODE_POS = [
   { x: 480, y: 210 },
 ];
 
-function NodeGraph({ graph, replayKey }: { graph: (typeof NODE_GRAPHS)[number]; replayKey: number }) {
+function NodeGraph({
+  graph,
+  replayKey,
+}: {
+  graph: (typeof NODE_GRAPHS)[number];
+  replayKey: number;
+}) {
   return (
     <div
       key={replayKey}
@@ -1282,7 +1533,9 @@ function NodeGraph({ graph, replayKey }: { graph: (typeof NODE_GRAPHS)[number]; 
           <div className="w-[68px] h-[68px] rounded-2xl bg-white border border-black/8 shadow-[0_8px_24px_rgba(0,0,0,0.08)] flex items-center justify-center">
             <node.icon size={22} className="text-[#4bac50]" />
           </div>
-          <span className="text-[10px] font-mono text-black/40 whitespace-nowrap">{node.label}</span>
+          <span className="text-[10px] font-mono text-black/40 whitespace-nowrap">
+            {node.label}
+          </span>
         </motion.div>
       ))}
 
@@ -1315,7 +1568,7 @@ function NodeCanvasSection() {
     const clamped = Math.min(1, Math.max(0, latest));
     const bracket = Math.min(
       WORKFLOW_STEPS.length - 1,
-      Math.floor(clamped * WORKFLOW_STEPS.length)
+      Math.floor(clamped * WORKFLOW_STEPS.length),
     );
     setActiveStep((prev) => (prev === bracket ? prev : bracket));
   });
@@ -1328,7 +1581,8 @@ function NodeCanvasSection() {
     const containerHeight = el.offsetHeight;
     const viewportH = window.innerHeight;
     const targetProgress = (i + 0.5) / WORKFLOW_STEPS.length;
-    const targetY = targetProgress * (containerHeight + viewportH) + containerTop - viewportH;
+    const targetY =
+      targetProgress * (containerHeight + viewportH) + containerTop - viewportH;
     window.scrollTo({ top: targetY, behavior: "smooth" });
   }, []);
 
@@ -1346,7 +1600,11 @@ function NodeCanvasSection() {
 
         {/* Desktop: natural page scroll drives the active tab and re-triggers
             the node canvas draw animation — no sticky pinning, no scroll-jacking. */}
-        <div ref={containerRef} className="hidden lg:grid grid-cols-2 gap-20" style={{ minHeight: "230vh" }}>
+        <div
+          ref={containerRef}
+          className="hidden lg:grid grid-cols-2 gap-20"
+          style={{ minHeight: "230vh" }}
+        >
           <div className="sticky top-32 self-start space-y-2">
             {WORKFLOW_STEPS.map((step, i) => (
               <motion.button
@@ -1354,16 +1612,25 @@ function NodeCanvasSection() {
                 type="button"
                 onClick={() => goToStep(i)}
                 className={`w-full flex gap-4 p-4 rounded-2xl border cursor-pointer text-left transition-all ease-[cubic-bezier(0.16,1,0.3,1)] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                  i === activeStep ? "border-black/10 bg-black/4" : "border-transparent"
+                  i === activeStep
+                    ? "border-black/10 bg-black/4"
+                    : "border-transparent"
                 }`}
                 animate={{
-                  opacity: i === activeStep ? 1 : i === activeStep - 1 || i === activeStep + 1 ? 0.45 : 0.2,
+                  opacity:
+                    i === activeStep
+                      ? 1
+                      : i === activeStep - 1 || i === activeStep + 1
+                        ? 0.45
+                        : 0.2,
                 }}
                 transition={TRANSITION_MACRO}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ease-[cubic-bezier(0.16,1,0.3,1)] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                    i === activeStep ? "bg-[#4bac50]/25 text-[#4bac50]" : "bg-black/5 text-black/25"
+                    i === activeStep
+                      ? "bg-[#4bac50]/25 text-[#4bac50]"
+                      : "bg-black/5 text-black/25"
                   }`}
                 >
                   <step.icon size={15} />
@@ -1409,7 +1676,10 @@ function NodeCanvasSection() {
           </div>
 
           {/* Right: the step mockup — swaps + animates on active step change. */}
-          <div className="sticky top-32 self-start flex items-center justify-center" style={{ minHeight: "min(70vh, 520px)" }}>
+          <div
+            className="sticky top-32 self-start flex items-center justify-center"
+            style={{ minHeight: "min(70vh, 520px)" }}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeStep}
@@ -1465,11 +1735,7 @@ const NAV_LINKS = [
   { label: "Reviews", id: SECTIONS.testimonials },
 ] as const;
 
-function Nav({
-  onStartTrial,
-}: {
-  onStartTrial: () => void;
-}) {
+function Nav({ onStartTrial }: { onStartTrial: () => void }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -1583,11 +1849,17 @@ function Nav({
 // ─── Features animated graphics ───────────────────────────────────────────────
 
 const FM_EASE = [0.25, 0.46, 0.45, 0.94] as const;
-const FM_G  = "#22c55e";
+const FM_G = "#22c55e";
 const FM_GD = "#16a34a";
-const FM_P  = "#8b5cf6";
+const FM_P = "#8b5cf6";
 
-function useCountUpActive(target: number, active: boolean, delay = 0, dur = 1000, resetKey = 0) {
+function useCountUpActive(
+  target: number,
+  active: boolean,
+  delay = 0,
+  dur = 1000,
+  resetKey = 0,
+) {
   const [val, setVal] = useState(0);
   useEffect(() => {
     setVal(0);
@@ -1615,23 +1887,55 @@ function useLoopTick(ms: number) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!inView) return;
-    const id = setInterval(() => setTick(t => t + 1), ms);
+    const id = setInterval(() => setTick((t) => t + 1), ms);
     return () => clearInterval(id);
   }, [inView, ms]);
   return { ref, inView, tick };
 }
 
-function FMiniCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function FMiniCard({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}) {
   return (
-    <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8edf4", boxShadow: "0 1px 6px rgba(0,0,0,0.06)", ...style }}>
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 10,
+        border: "1px solid #e8edf4",
+        boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+        ...style,
+      }}
+    >
       {children}
     </div>
   );
 }
 
-function FPill({ children, color = FM_G, bg }: { children: React.ReactNode; color?: string; bg?: string }) {
+function FPill({
+  children,
+  color = FM_G,
+  bg,
+}: {
+  children: React.ReactNode;
+  color?: string;
+  bg?: string;
+}) {
   return (
-    <span style={{ fontSize: 9, fontWeight: 700, color, background: bg ?? `${color}18`, borderRadius: 99, padding: "2px 7px", letterSpacing: 0.3 }}>
+    <span
+      style={{
+        fontSize: 9,
+        fontWeight: 700,
+        color,
+        background: bg ?? `${color}18`,
+        borderRadius: 99,
+        padding: "2px 7px",
+        letterSpacing: 0.3,
+      }}
+    >
       {children}
     </span>
   );
@@ -1639,35 +1943,77 @@ function FPill({ children, color = FM_G, bg }: { children: React.ReactNode; colo
 
 // ── 1. Lead Pipeline ──
 const FM_STAGES = [
-  { label: "Inquiry",   color: "#94a3b8", bg: "#f8fafc", leads: [{ name: "Alex C.", car: "BMW M3" }, { name: "Ryan T.", car: "Audi RS7" }] },
-  { label: "Quoted",    color: "#f59e0b", bg: "#fffbeb", leads: [{ name: "Maria K.", car: "Tesla S" }] },
-  { label: "Scheduled", color: FM_G,      bg: "#f0fdf4", leads: [{ name: "Jordan P.", car: "Porsche" }, { name: "Sam R.", car: "Mercedes" }] },
+  {
+    label: "Inquiry",
+    color: "#94a3b8",
+    bg: "#f8fafc",
+    leads: [
+      { name: "Alex C.", car: "BMW M3" },
+      { name: "Ryan T.", car: "Audi RS7" },
+    ],
+  },
+  {
+    label: "Quoted",
+    color: "#f59e0b",
+    bg: "#fffbeb",
+    leads: [{ name: "Maria K.", car: "Tesla S" }],
+  },
+  {
+    label: "Scheduled",
+    color: FM_G,
+    bg: "#f0fdf4",
+    leads: [
+      { name: "Jordan P.", car: "Porsche" },
+      { name: "Sam R.", car: "Mercedes" },
+    ],
+  },
 ];
 
 // Mouse cursor SVG path (OS-style arrow pointer)
 const CursorSVG = () => (
-  <svg width="14" height="18" viewBox="0 0 14 18" fill="none" style={{ display: "block" }}>
-    <path d="M2 1.5 L2 13.5 L5 10.5 L7.5 16 L9.5 15 L7 9.5 L11.5 9.5 Z" fill="white" stroke="#0f172a" strokeWidth="1.3" strokeLinejoin="round" />
+  <svg
+    width="14"
+    height="18"
+    viewBox="0 0 14 18"
+    fill="none"
+    style={{ display: "block" }}
+  >
+    <path
+      d="M2 1.5 L2 13.5 L5 10.5 L7.5 16 L9.5 15 L7 9.5 L11.5 9.5 Z"
+      fill="white"
+      stroke="#0f172a"
+      strokeWidth="1.3"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 function LeadPipelineGraphic() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, margin: "0px 0px -60px 0px" });
-  const [phase, setPhase] = useState<"idle" | "hover" | "drag" | "drop">("idle");
+  const [phase, setPhase] = useState<"idle" | "hover" | "drag" | "drop">(
+    "idle",
+  );
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    const clear = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
-    if (!inView) { clear(); setPhase("idle"); return; }
+    const clear = () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
+    };
+    if (!inView) {
+      clear();
+      setPhase("idle");
+      return;
+    }
     const run = () => {
       clear();
       setPhase("idle");
       timersRef.current = [
         setTimeout(() => setPhase("hover"), 600),
-        setTimeout(() => setPhase("drag"),  1200),
-        setTimeout(() => setPhase("drop"),  2600),
-        setTimeout(run,                     4400),
+        setTimeout(() => setPhase("drag"), 1200),
+        setTimeout(() => setPhase("drop"), 2600),
+        setTimeout(run, 4400),
       ];
     };
     run();
@@ -1675,49 +2021,120 @@ function LeadPipelineGraphic() {
   }, [inView]);
 
   const isGrabbing = phase === "drag";
-  const isDropped  = phase === "drop";
+  const isDropped = phase === "drop";
 
   // Cursor animate targets (x/y relative to container top-left)
   const cursorAnim =
-    phase === "idle"  ? { x: 190, y: 54, opacity: 0 } :
-    phase === "hover" ? { x: 18,  y: 54, opacity: 1 } :
-    phase === "drag"  ? { x: 86,  y: 50, opacity: 1 } :
-                        { x: 86,  y: 50, opacity: 0 };
+    phase === "idle"
+      ? { x: 190, y: 54, opacity: 0 }
+      : phase === "hover"
+        ? { x: 18, y: 54, opacity: 1 }
+        : phase === "drag"
+          ? { x: 86, y: 50, opacity: 1 }
+          : { x: 86, y: 50, opacity: 0 };
 
   const cursorTransition =
-    phase === "hover" ? { duration: 0.7, ease: [0.22, 1, 0.36, 1] } :
-    phase === "drag"  ? { duration: 1.2, ease: [0.22, 1, 0.36, 1] } :
-                        { duration: 0.25 };
+    phase === "hover"
+      ? { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
+      : phase === "drag"
+        ? { duration: 1.2, ease: [0.22, 1, 0.36, 1] }
+        : { duration: 0.25 };
 
   return (
     <div ref={ref} style={{ width: "100%", position: "relative" }}>
       {/* Board columns */}
       <div style={{ display: "flex", gap: 6 }}>
         {FM_STAGES.map((stage, si) => (
-          <div key={stage.label} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: stage.color }} />
-              <span style={{ fontSize: 9, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>{stage.label}</span>
+          <div
+            key={stage.label}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                marginBottom: 2,
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: stage.color,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {stage.label}
+              </span>
             </div>
             {stage.leads.map((lead) => {
               // Ryan T. in Inquiry: ghost during drag, hidden after drop
               if (si === 0 && lead.name === "Ryan T.") {
                 return (
-                  <div key={lead.name} style={{
-                    background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px",
-                    opacity: isGrabbing ? 0.18 : 1,
-                    visibility: isDropped ? "hidden" : "visible",
-                    transition: "opacity 0.2s",
-                  }}>
-                    <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>{lead.name}</div>
-                    <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>{lead.car}</div>
+                  <div
+                    key={lead.name}
+                    style={{
+                      background: stage.bg,
+                      borderRadius: 7,
+                      border: `1px solid ${stage.color}22`,
+                      padding: "6px 8px",
+                      opacity: isGrabbing ? 0.18 : 1,
+                      visibility: isDropped ? "hidden" : "visible",
+                      transition: "opacity 0.2s",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 650,
+                        color: "#0f172a",
+                      }}
+                    >
+                      {lead.name}
+                    </div>
+                    <div
+                      style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}
+                    >
+                      {lead.car}
+                    </div>
                   </div>
                 );
               }
               return (
-                <div key={lead.name} style={{ background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px" }}>
-                  <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>{lead.name}</div>
-                  <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>{lead.car}</div>
+                <div
+                  key={lead.name}
+                  style={{
+                    background: stage.bg,
+                    borderRadius: 7,
+                    border: `1px solid ${stage.color}22`,
+                    padding: "6px 8px",
+                  }}
+                >
+                  <div
+                    style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}
+                  >
+                    {lead.name}
+                  </div>
+                  <div
+                    style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}
+                  >
+                    {lead.car}
+                  </div>
                 </div>
               );
             })}
@@ -1731,10 +2148,27 @@ function LeadPipelineGraphic() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    style={{ background: stage.bg, borderRadius: 7, border: `1px solid ${stage.color}22`, padding: "6px 8px" }}
+                    style={{
+                      background: stage.bg,
+                      borderRadius: 7,
+                      border: `1px solid ${stage.color}22`,
+                      padding: "6px 8px",
+                    }}
                   >
-                    <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>Ryan T.</div>
-                    <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>Audi RS7</div>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 650,
+                        color: "#0f172a",
+                      }}
+                    >
+                      Ryan T.
+                    </div>
+                    <div
+                      style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}
+                    >
+                      Audi RS7
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1753,13 +2187,25 @@ function LeadPipelineGraphic() {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              position: "absolute", top: 0, left: 0, width: "30%",
-              background: "#fffbeb", borderRadius: 7, border: "1px solid #f59e0b55",
-              padding: "6px 8px", boxShadow: "0 6px 18px rgba(0,0,0,0.18)", zIndex: 10, pointerEvents: "none",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "30%",
+              background: "#fffbeb",
+              borderRadius: 7,
+              border: "1px solid #f59e0b55",
+              padding: "6px 8px",
+              boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
+              zIndex: 10,
+              pointerEvents: "none",
             }}
           >
-            <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>Ryan T.</div>
-            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>Audi RS7</div>
+            <div style={{ fontSize: 10, fontWeight: 650, color: "#0f172a" }}>
+              Ryan T.
+            </div>
+            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>
+              Audi RS7
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1768,7 +2214,13 @@ function LeadPipelineGraphic() {
       <motion.div
         animate={cursorAnim}
         transition={cursorTransition}
-        style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none", zIndex: 20 }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          pointerEvents: "none",
+          zIndex: 20,
+        }}
       >
         <CursorSVG />
       </motion.div>
@@ -1778,9 +2230,9 @@ function LeadPipelineGraphic() {
 
 // ── 2. Quote Builder ──
 const FM_QUOTE_LINES = [
-  { label: "Full Detail",      amount: "$249.00" },
-  { label: "Ceramic Boost",    amount: "$50.00"  },
-  { label: "Odor Treatment",   amount: "$25.00"  },
+  { label: "Full Detail", amount: "$249.00" },
+  { label: "Ceramic Boost", amount: "$50.00" },
+  { label: "Odor Treatment", amount: "$25.00" },
 ];
 
 function QuoteBuilderGraphic() {
@@ -1788,26 +2240,104 @@ function QuoteBuilderGraphic() {
   return (
     <div ref={ref} style={{ width: "100%" }}>
       <FMiniCard>
-        <div style={{ padding: "10px 12px 8px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            padding: "10px 12px 8px",
+            borderBottom: "1px solid #f1f5f9",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#0f172a" }}>Quote #127</div>
-            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>2023 Porsche Cayenne</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#0f172a" }}>
+              Quote #127
+            </div>
+            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>
+              2023 Porsche Cayenne
+            </div>
           </div>
           <FPill color="#f59e0b">In progress</FPill>
         </div>
-        <div key={tick} style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
+        <div
+          key={tick}
+          style={{
+            padding: "8px 12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 5,
+          }}
+        >
           {FM_QUOTE_LINES.map((line, i) => (
-            <motion.div key={line.label} initial={{ opacity: 0, x: -6 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: i * 0.14, duration: 0.35, ease: FM_EASE }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 10.5, color: "#475569" }}>{line.label}</span>
-              <span style={{ fontSize: 10.5, fontWeight: 600, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>{line.amount}</span>
+            <motion.div
+              key={line.label}
+              initial={{ opacity: 0, x: -6 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: i * 0.14, duration: 0.35, ease: FM_EASE }}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: 10.5, color: "#475569" }}>
+                {line.label}
+              </span>
+              <span
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  color: "#0f172a",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {line.amount}
+              </span>
             </motion.div>
           ))}
-          <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.5, duration: 0.3 }} style={{ borderTop: "1px solid #f1f5f9", paddingTop: 6, display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.5, duration: 0.3 }}
+            style={{
+              borderTop: "1px solid #f1f5f9",
+              paddingTop: 6,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 2,
+            }}
+          >
             <span style={{ fontSize: 10, color: "#94a3b8" }}>Total</span>
-            <span style={{ fontSize: 13, fontWeight: 750, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>$324.00</span>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 750,
+                color: "#0f172a",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              $324.00
+            </span>
           </motion.div>
         </div>
-        <motion.div key={`btn-${tick}`} initial={{ opacity: 0, y: 4 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.7, duration: 0.35, ease: FM_EASE }} style={{ margin: "0 10px 10px", background: "#0f172a", borderRadius: 8, padding: "8px 0", textAlign: "center", fontSize: 10.5, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+        <motion.div
+          key={`btn-${tick}`}
+          initial={{ opacity: 0, y: 4 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.7, duration: 0.35, ease: FM_EASE }}
+          style={{
+            margin: "0 10px 10px",
+            background: "#0f172a",
+            borderRadius: 8,
+            padding: "8px 0",
+            textAlign: "center",
+            fontSize: 10.5,
+            fontWeight: 700,
+            color: "#fff",
+            cursor: "pointer",
+          }}
+        >
           Send Quote →
         </motion.div>
       </FMiniCard>
@@ -1823,22 +2353,59 @@ const PORTAL_PAGES = [
     step: "1 of 3",
     content: (
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
           <div>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}>Full Detail + Ceramic</div>
-            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>2023 BMW M3 · James Morton</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}>
+              Full Detail + Ceramic
+            </div>
+            <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 1 }}>
+              2023 BMW M3 · James Morton
+            </div>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: "#0f172a" }}>$299</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: "#0f172a" }}>
+            $299
+          </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingTop: 4, borderTop: "1px solid #f1f5f9" }}>
-          {["Exterior hand wash & clay bar", "Interior vacuum & wipe-down", "Ceramic coating application"].map((item) => (
-            <div key={item} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 5, height: 5, borderRadius: "50%", background: FM_G, flexShrink: 0 }} />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            paddingTop: 4,
+            borderTop: "1px solid #f1f5f9",
+          }}
+        >
+          {[
+            "Exterior hand wash & clay bar",
+            "Interior vacuum & wipe-down",
+            "Ceramic coating application",
+          ].map((item) => (
+            <div
+              key={item}
+              style={{ display: "flex", alignItems: "center", gap: 5 }}
+            >
+              <div
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: "50%",
+                  background: FM_G,
+                  flexShrink: 0,
+                }}
+              />
               <span style={{ fontSize: 9.5, color: "#475569" }}>{item}</span>
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 2 }}>Sat, Jun 14 · 10:00 AM · 123 Maple St</div>
+        <div style={{ fontSize: 8.5, color: "#94a3b8", marginTop: 2 }}>
+          Sat, Jun 14 · 10:00 AM · 123 Maple St
+        </div>
       </div>
     ),
   },
@@ -1849,23 +2416,55 @@ const PORTAL_PAGES = [
     content: (
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.5 }}>
-          By signing you agree to the service scope above. Payment is collected after completion.
+          By signing you agree to the service scope above. Payment is collected
+          after completion.
         </div>
         <div>
-          <div style={{ fontSize: 8.5, color: "#94a3b8", marginBottom: 4 }}>Client signature</div>
+          <div style={{ fontSize: 8.5, color: "#94a3b8", marginBottom: 4 }}>
+            Client signature
+          </div>
           <div style={{ position: "relative", height: 28 }}>
-            <div style={{ borderBottom: "1px dashed #cbd5e1", width: "70%", position: "absolute", bottom: 0 }} />
+            <div
+              style={{
+                borderBottom: "1px dashed #cbd5e1",
+                width: "70%",
+                position: "absolute",
+                bottom: 0,
+              }}
+            />
             <motion.div
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              style={{ fontSize: 17, fontStyle: "italic", color: "#0f172a", fontFamily: "Georgia, serif", lineHeight: 1, position: "absolute", bottom: 2 }}
+              transition={{
+                delay: 0.6,
+                duration: 0.5,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              style={{
+                fontSize: 17,
+                fontStyle: "italic",
+                color: "#0f172a",
+                fontFamily: "Georgia, serif",
+                lineHeight: 1,
+                position: "absolute",
+                bottom: 2,
+              }}
             >
               James Morton
             </motion.div>
           </div>
         </div>
-        <div style={{ background: "#0f172a", borderRadius: 8, padding: "7px 0", textAlign: "center", fontSize: 10.5, fontWeight: 700, color: "#fff" }}>
+        <div
+          style={{
+            background: "#0f172a",
+            borderRadius: 8,
+            padding: "7px 0",
+            textAlign: "center",
+            fontSize: 10.5,
+            fontWeight: 700,
+            color: "#fff",
+          }}
+        >
           Sign & Pay $299
         </div>
       </div>
@@ -1876,18 +2475,60 @@ const PORTAL_PAGES = [
     label: "All Done!",
     step: "3 of 3",
     content: (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, paddingTop: 4 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 6,
+          paddingTop: 4,
+        }}
+      >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 350, damping: 18, delay: 0.2 }}
-          style={{ width: 36, height: 36, borderRadius: "50%", background: FM_GD, display: "flex", alignItems: "center", justifyContent: "center" }}
+          transition={{
+            type: "spring",
+            stiffness: 350,
+            damping: 18,
+            delay: 0.2,
+          }}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: FM_GD,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9.5 L7.5 13 L14 6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path
+              d="M4 9.5 L7.5 13 L14 6"
+              stroke="white"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </motion.div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", textAlign: "center" }}>Signed & Paid ✓</div>
-        <div style={{ fontSize: 9, color: "#64748b", textAlign: "center" }}>Receipt sent to james@email.com</div>
-        <div style={{ fontSize: 8.5, color: "#94a3b8", textAlign: "center" }}>See you Saturday at 10 AM, James!</div>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#0f172a",
+            textAlign: "center",
+          }}
+        >
+          Signed & Paid ✓
+        </div>
+        <div style={{ fontSize: 9, color: "#64748b", textAlign: "center" }}>
+          Receipt sent to james@email.com
+        </div>
+        <div style={{ fontSize: 8.5, color: "#94a3b8", textAlign: "center" }}>
+          See you Saturday at 10 AM, James!
+        </div>
       </div>
     ),
   },
@@ -1900,7 +2541,11 @@ function ClientPortalGraphic() {
   const [dir, setDir] = useState(1); // 1 = forward, -1 = back
 
   useEffect(() => {
-    if (!inView) { setPageIdx(0); setDir(1); return; }
+    if (!inView) {
+      setPageIdx(0);
+      setDir(1);
+      return;
+    }
     const advance = () => {
       setDir(1);
       setPageIdx((p) => (p + 1) % PORTAL_PAGES.length);
@@ -1916,15 +2561,33 @@ function ClientPortalGraphic() {
       <FMiniCard style={{ overflow: "hidden" }}>
         <div style={{ padding: "10px 12px 8px" }}>
           {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 8,
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: FM_G }} />
-              <span style={{ fontSize: 9, fontWeight: 700, color: "#0f172a" }}>Rinse Client Portal</span>
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: FM_G,
+                }}
+              />
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#0f172a" }}>
+                Rinse Client Portal
+              </span>
             </div>
             <span style={{ fontSize: 8.5, color: "#94a3b8" }}>{page.step}</span>
           </div>
           {/* Sliding page content */}
-          <div style={{ position: "relative", overflow: "hidden", minHeight: 110 }}>
+          <div
+            style={{ position: "relative", overflow: "hidden", minHeight: 110 }}
+          >
             <AnimatePresence mode="popLayout" initial={false} custom={dir}>
               <motion.div
                 key={page.id}
@@ -1934,15 +2597,42 @@ function ClientPortalGraphic() {
                 exit={{ x: -40, opacity: 0 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div style={{ fontSize: 8.5, fontWeight: 700, color: "#64748b", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>{page.label}</div>
+                <div
+                  style={{
+                    fontSize: 8.5,
+                    fontWeight: 700,
+                    color: "#64748b",
+                    marginBottom: 6,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {page.label}
+                </div>
                 {page.content}
               </motion.div>
             </AnimatePresence>
           </div>
           {/* Dot indicators */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: 5,
+              marginTop: 8,
+            }}
+          >
             {PORTAL_PAGES.map((p, i) => (
-              <div key={p.id} style={{ width: i === pageIdx ? 14 : 5, height: 5, borderRadius: 99, background: i === pageIdx ? FM_G : "#e2e8f0", transition: "all 0.3s ease" }} />
+              <div
+                key={p.id}
+                style={{
+                  width: i === pageIdx ? 14 : 5,
+                  height: 5,
+                  borderRadius: 99,
+                  background: i === pageIdx ? FM_G : "#e2e8f0",
+                  transition: "all 0.3s ease",
+                }}
+              />
             ))}
           </div>
         </div>
@@ -1953,9 +2643,9 @@ function ClientPortalGraphic() {
 
 // ── 4. Damage Documentation ──
 const FM_DAMAGE_PTS = [
-  { cx: 34,  cy: 22, label: "1", note: "Hood scratch" },
-  { cx: 126, cy: 58, label: "2", note: "Rear dent"   },
-  { cx: 62,  cy: 62, label: "3", note: "Door scuff"  },
+  { cx: 34, cy: 22, label: "1", note: "Hood scratch" },
+  { cx: 126, cy: 58, label: "2", note: "Rear dent" },
+  { cx: 62, cy: 62, label: "3", note: "Door scuff" },
 ];
 
 function DamageDocsGraphic() {
@@ -1964,27 +2654,114 @@ function DamageDocsGraphic() {
     <div ref={ref} style={{ width: "100%" }}>
       <FMiniCard key={tick} style={{ padding: "10px 8px 6px" }}>
         <svg viewBox="0 0 160 80" width="100%" style={{ display: "block" }}>
-          <rect x="22" y="18" width="116" height="44" rx="11" fill="#f1f5f9" stroke="#dde4ef" strokeWidth="1.2" />
+          <rect
+            x="22"
+            y="18"
+            width="116"
+            height="44"
+            rx="11"
+            fill="#f1f5f9"
+            stroke="#dde4ef"
+            strokeWidth="1.2"
+          />
           <rect x="10" y="26" width="14" height="28" rx="6" fill="#e2e8f0" />
           <rect x="136" y="26" width="14" height="28" rx="6" fill="#e2e8f0" />
-          <rect x="44" y="22" width="26" height="36" rx="3" fill="#d8e8f5" opacity="0.75" />
-          <rect x="90" y="22" width="26" height="36" rx="3" fill="#d8e8f5" opacity="0.75" />
-          <rect x="72" y="22" width="16" height="36" fill="#e4ecf4" opacity="0.5" />
-          {([[34,6],[112,6],[34,60],[112,60]] as [number,number][]).map(([x,y],i) => (
-            <rect key={i} x={x} y={y} width="20" height="14" rx="5" fill="#cbd5e1" />
+          <rect
+            x="44"
+            y="22"
+            width="26"
+            height="36"
+            rx="3"
+            fill="#d8e8f5"
+            opacity="0.75"
+          />
+          <rect
+            x="90"
+            y="22"
+            width="26"
+            height="36"
+            rx="3"
+            fill="#d8e8f5"
+            opacity="0.75"
+          />
+          <rect
+            x="72"
+            y="22"
+            width="16"
+            height="36"
+            fill="#e4ecf4"
+            opacity="0.5"
+          />
+          {(
+            [
+              [34, 6],
+              [112, 6],
+              [34, 60],
+              [112, 60],
+            ] as [number, number][]
+          ).map(([x, y], i) => (
+            <rect
+              key={i}
+              x={x}
+              y={y}
+              width="20"
+              height="14"
+              rx="5"
+              fill="#cbd5e1"
+            />
           ))}
           {FM_DAMAGE_PTS.map((d, i) => (
-            <motion.g key={d.label} initial={{ scale: 0, opacity: 0 }} animate={inView ? { scale: 1, opacity: 1 } : {}} transition={{ delay: 0.3 + i * 0.25, type: "spring", stiffness: 400, damping: 14 }} style={{ transformOrigin: `${d.cx}px ${d.cy}px` }}>
-              <circle cx={d.cx} cy={d.cy} r={7.5} fill="#ef4444" opacity={0.15} />
-              <circle cx={d.cx} cy={d.cy} r={5}   fill="#ef4444" />
-              <text x={d.cx} y={d.cy + 3.5} textAnchor="middle" fontSize="6" fontWeight="700" fill="#fff">{d.label}</text>
+            <motion.g
+              key={d.label}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={inView ? { scale: 1, opacity: 1 } : {}}
+              transition={{
+                delay: 0.3 + i * 0.25,
+                type: "spring",
+                stiffness: 400,
+                damping: 14,
+              }}
+              style={{ transformOrigin: `${d.cx}px ${d.cy}px` }}
+            >
+              <circle
+                cx={d.cx}
+                cy={d.cy}
+                r={7.5}
+                fill="#ef4444"
+                opacity={0.15}
+              />
+              <circle cx={d.cx} cy={d.cy} r={5} fill="#ef4444" />
+              <text
+                x={d.cx}
+                y={d.cy + 3.5}
+                textAnchor="middle"
+                fontSize="6"
+                fontWeight="700"
+                fill="#fff"
+              >
+                {d.label}
+              </text>
             </motion.g>
           ))}
         </svg>
         <div style={{ display: "flex", gap: 6, paddingTop: 2 }}>
           {FM_DAMAGE_PTS.map((d, i) => (
-            <motion.div key={d.label} initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.5 + i * 0.25, duration: 0.3 }} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", flexShrink: 0 }} />
+            <motion.div
+              key={d.label}
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.5 + i * 0.25, duration: 0.3 }}
+              style={{ display: "flex", alignItems: "center", gap: 3 }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "#ef4444",
+                  flexShrink: 0,
+                }}
+              />
               <span style={{ fontSize: 8.5, color: "#64748b" }}>{d.note}</span>
             </motion.div>
           ))}
@@ -1996,9 +2773,9 @@ function DamageDocsGraphic() {
 
 // ── 5. Inventory & Supplies ──
 const FM_SUPPLIES = [
-  { name: "Ceramic Pro",      units: 24, max: 50, low: false },
-  { name: "Detail Spray",     units: 48, max: 60, low: false },
-  { name: "Foam Pads",        units: 3,  max: 40, low: true  },
+  { name: "Ceramic Pro", units: 24, max: 50, low: false },
+  { name: "Detail Spray", units: 48, max: 60, low: false },
+  { name: "Foam Pads", units: 3, max: 40, low: true },
   { name: "Microfiber Cloth", units: 22, max: 50, low: false },
 ];
 
@@ -2006,25 +2783,92 @@ function InventoryGraphic() {
   const { ref, inView, tick } = useLoopTick(4000);
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <div key={tick} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {FM_SUPPLIES.map((s, i) => (
-        <motion.div key={s.name} initial={{ opacity: 0, y: 6 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.1, duration: 0.35, ease: FM_EASE }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-            <span style={{ fontSize: 10.5, fontWeight: 500, color: s.low ? "#ef4444" : "#0f172a" }}>{s.name}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              {s.low && (
-                <motion.span animate={inView ? { opacity: [1, 0.4, 1] } : {}} transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }} style={{ fontSize: 8, fontWeight: 700, color: "#ef4444", background: "#fee2e2", borderRadius: 99, padding: "1px 6px" }}>
-                  Low stock
-                </motion.span>
-              )}
-              <span style={{ fontSize: 9.5, color: s.low ? "#ef4444" : "#94a3b8", fontVariantNumeric: "tabular-nums" }}>{s.units} left</span>
+      <div
+        key={tick}
+        style={{ display: "flex", flexDirection: "column", gap: 8 }}
+      >
+        {FM_SUPPLIES.map((s, i) => (
+          <motion.div
+            key={s.name}
+            initial={{ opacity: 0, y: 6 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.1, duration: 0.35, ease: FM_EASE }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 3,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: s.low ? "#ef4444" : "#0f172a",
+                }}
+              >
+                {s.name}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                {s.low && (
+                  <motion.span
+                    animate={inView ? { opacity: [1, 0.4, 1] } : {}}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1.6,
+                      ease: "easeInOut",
+                    }}
+                    style={{
+                      fontSize: 8,
+                      fontWeight: 700,
+                      color: "#ef4444",
+                      background: "#fee2e2",
+                      borderRadius: 99,
+                      padding: "1px 6px",
+                    }}
+                  >
+                    Low stock
+                  </motion.span>
+                )}
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    color: s.low ? "#ef4444" : "#94a3b8",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {s.units} left
+                </span>
+              </div>
             </div>
-          </div>
-          <div style={{ height: 4, borderRadius: 99, background: "#f1f5f9", overflow: "hidden" }}>
-            <motion.div initial={{ width: 0 }} animate={inView ? { width: `${(s.units / s.max) * 100}%` } : {}} transition={{ delay: i * 0.1 + 0.15, duration: 0.6, ease: FM_EASE }} style={{ height: "100%", borderRadius: 99, background: s.low ? "#ef4444" : FM_G, opacity: s.low ? 0.85 : 0.7 }} />
-          </div>
-        </motion.div>
-      ))}
+            <div
+              style={{
+                height: 4,
+                borderRadius: 99,
+                background: "#f1f5f9",
+                overflow: "hidden",
+              }}
+            >
+              <motion.div
+                initial={{ width: 0 }}
+                animate={inView ? { width: `${(s.units / s.max) * 100}%` } : {}}
+                transition={{
+                  delay: i * 0.1 + 0.15,
+                  duration: 0.6,
+                  ease: FM_EASE,
+                }}
+                style={{
+                  height: "100%",
+                  borderRadius: 99,
+                  background: s.low ? "#ef4444" : FM_G,
+                  opacity: s.low ? 0.85 : 0.7,
+                }}
+              />
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
@@ -2032,16 +2876,66 @@ function InventoryGraphic() {
 
 // ── 6. Auto Messages & Reviews ──
 const ALL_AUTO_MESSAGES = [
-  { trigger: "Booking confirmed", text: "You're booked for Sat 2 PM. See you then! – Rinse",          accent: "#3b82f6", icon: "✓" },
-  { trigger: "On my way",         text: "Heading your way — ETA 12 min 🚗",                            accent: "#8b5cf6", icon: "→" },
-  { trigger: "Reminder",          text: "Your detail is tomorrow at 10 AM. Reply CONFIRM.",            accent: "#f59e0b", icon: "!" },
-  { trigger: "Job complete",      text: "All done! Invoice sent. Thanks for choosing Rinse 🎉",         accent: "#22c55e", icon: "✓" },
-  { trigger: "Review request",    text: "How'd we do? A quick Google review means the world ⭐",        accent: "#f59e0b", icon: "★" },
-  { trigger: "On my way",         text: "On my way! Should be there in about 8 minutes 🚗",            accent: "#8b5cf6", icon: "→" },
-  { trigger: "Reminder",          text: "Just a heads-up — appointment in 24 hours. See you soon!",   accent: "#f59e0b", icon: "!" },
-  { trigger: "Booking confirmed",  text: "Booking confirmed for Sun 11 AM. We'll remind you the day before!", accent: "#3b82f6", icon: "✓" },
-  { trigger: "Job complete",       text: "Your vehicle is looking sharp! Receipt in your inbox.",       accent: "#22c55e", icon: "✓" },
-  { trigger: "Review request",     text: "Glad you loved it! Mind leaving a 5-star review? [link]",   accent: "#f59e0b", icon: "★" },
+  {
+    trigger: "Booking confirmed",
+    text: "You're booked for Sat 2 PM. See you then! – Rinse",
+    accent: "#3b82f6",
+    icon: "✓",
+  },
+  {
+    trigger: "On my way",
+    text: "Heading your way — ETA 12 min 🚗",
+    accent: "#8b5cf6",
+    icon: "→",
+  },
+  {
+    trigger: "Reminder",
+    text: "Your detail is tomorrow at 10 AM. Reply CONFIRM.",
+    accent: "#f59e0b",
+    icon: "!",
+  },
+  {
+    trigger: "Job complete",
+    text: "All done! Invoice sent. Thanks for choosing Rinse 🎉",
+    accent: "#22c55e",
+    icon: "✓",
+  },
+  {
+    trigger: "Review request",
+    text: "How'd we do? A quick Google review means the world ⭐",
+    accent: "#f59e0b",
+    icon: "★",
+  },
+  {
+    trigger: "On my way",
+    text: "On my way! Should be there in about 8 minutes 🚗",
+    accent: "#8b5cf6",
+    icon: "→",
+  },
+  {
+    trigger: "Reminder",
+    text: "Just a heads-up — appointment in 24 hours. See you soon!",
+    accent: "#f59e0b",
+    icon: "!",
+  },
+  {
+    trigger: "Booking confirmed",
+    text: "Booking confirmed for Sun 11 AM. We'll remind you the day before!",
+    accent: "#3b82f6",
+    icon: "✓",
+  },
+  {
+    trigger: "Job complete",
+    text: "Your vehicle is looking sharp! Receipt in your inbox.",
+    accent: "#22c55e",
+    icon: "✓",
+  },
+  {
+    trigger: "Review request",
+    text: "Glad you loved it! Mind leaving a 5-star review? [link]",
+    accent: "#f59e0b",
+    icon: "★",
+  },
 ];
 
 let _autoMsgCounter = 0;
@@ -2049,7 +2943,15 @@ let _autoMsgCounter = 0;
 function AutoMessagesGraphic() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, margin: "0px 0px -60px 0px" });
-  const [msgs, setMsgs] = useState<{ id: number; trigger: string; text: string; accent: string; icon: string }[]>([]);
+  const [msgs, setMsgs] = useState<
+    {
+      id: number;
+      trigger: string;
+      text: string;
+      accent: string;
+      icon: string;
+    }[]
+  >([]);
   const idxRef = useRef(0);
 
   useEffect(() => {
@@ -2062,7 +2964,7 @@ function AutoMessagesGraphic() {
       const m = ALL_AUTO_MESSAGES[idxRef.current % ALL_AUTO_MESSAGES.length];
       idxRef.current++;
       const id = ++_autoMsgCounter;
-      setMsgs(prev => [...prev, { ...m, id }].slice(-4));
+      setMsgs((prev) => [...prev, { ...m, id }].slice(-4));
     };
     add(); // first message immediately
     const timer = setInterval(add, 1700);
@@ -2070,7 +2972,17 @@ function AutoMessagesGraphic() {
   }, [inView]);
 
   return (
-    <div ref={ref} style={{ width: "100%", minHeight: 130, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 0 }}>
+    <div
+      ref={ref}
+      style={{
+        width: "100%",
+        minHeight: 130,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        gap: 0,
+      }}
+    >
       <AnimatePresence initial={false}>
         {msgs.map((m) => (
           <motion.div
@@ -2081,14 +2993,52 @@ function AutoMessagesGraphic() {
             transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
             style={{ overflow: "hidden" }}
           >
-            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", paddingTop: 7 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "flex-start",
+                paddingTop: 7,
+              }}
+            >
               {/* colored pill icon */}
-              <div style={{ width: 22, height: 22, borderRadius: 7, background: m.accent + "22", border: `1.5px solid ${m.accent}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 9, color: m.accent, fontWeight: 700 }}>
+              <div
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 7,
+                  background: m.accent + "22",
+                  border: `1.5px solid ${m.accent}44`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: 1,
+                  fontSize: 9,
+                  color: m.accent,
+                  fontWeight: 700,
+                }}
+              >
                 {m.icon}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 8.5, fontWeight: 700, color: m.accent, marginBottom: 1, letterSpacing: "0.02em", textTransform: "uppercase" }}>{m.trigger}</div>
-                <div style={{ fontSize: 10.5, color: "#0f172a", lineHeight: 1.4 }}>{m.text}</div>
+                <div
+                  style={{
+                    fontSize: 8.5,
+                    fontWeight: 700,
+                    color: m.accent,
+                    marginBottom: 1,
+                    letterSpacing: "0.02em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {m.trigger}
+                </div>
+                <div
+                  style={{ fontSize: 10.5, color: "#0f172a", lineHeight: 1.4 }}
+                >
+                  {m.text}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -2100,11 +3050,14 @@ function AutoMessagesGraphic() {
 
 // ── 7. GPS Fleet Tracking (Coming Soon) ──
 const FM_TECHS = [
-  { x: 28,  y: 62, color: "#3b82f6", name: "M" },
-  { x: 88,  y: 34, color: "#8b5cf6", name: "J" },
+  { x: 28, y: 62, color: "#3b82f6", name: "M" },
+  { x: 88, y: 34, color: "#8b5cf6", name: "J" },
   { x: 132, y: 70, color: "#f59e0b", name: "R" },
 ];
-const FM_GPS_ROUTES = ["M 28 62 C 44 50 68 42 88 34", "M 88 34 C 108 28 122 50 132 70"];
+const FM_GPS_ROUTES = [
+  "M 28 62 C 44 50 68 42 88 34",
+  "M 88 34 C 108 28 122 50 132 70",
+];
 
 function GPSTrackingGraphic() {
   const { ref, inView, tick } = useLoopTick(5000);
@@ -2113,22 +3066,122 @@ function GPSTrackingGraphic() {
       <FMiniCard key={tick} style={{ overflow: "hidden" }}>
         <svg viewBox="0 0 160 100" width="100%" style={{ display: "block" }}>
           <rect width="160" height="100" fill="#eef2eb" />
-          {([
-            [0,0,24,18],[24,0,32,18],[56,0,34,18],[90,0,34,18],[124,0,28,18],[152,0,8,18],
-            [0,18,24,24],[24,18,32,24],[56,18,34,24],[90,18,34,24],[124,18,28,24],[152,18,8,24],
-            [0,42,24,24],[24,42,32,24],[56,42,34,24],[90,42,34,24],[124,42,28,24],[152,42,8,24],
-            [0,66,24,34],[24,66,32,34],[56,66,34,34],[90,66,34,34],[124,66,28,34],[152,66,8,34],
-          ] as [number,number,number,number][]).map(([x,y,w,h],i) => <rect key={i} x={x+1} y={y+1} width={w-2} height={h-2} rx={1} fill="#e4eade" />)}
-          {[18,42,66,90].map(y => <line key={y} x1="0" y1={y} x2="160" y2={y} stroke="#fff" strokeWidth="3" />)}
-          {[24,56,90,124,152].map(x => <line key={x} x1={x} y1="0" x2={x} y2="100" stroke="#fff" strokeWidth="3" />)}
+          {(
+            [
+              [0, 0, 24, 18],
+              [24, 0, 32, 18],
+              [56, 0, 34, 18],
+              [90, 0, 34, 18],
+              [124, 0, 28, 18],
+              [152, 0, 8, 18],
+              [0, 18, 24, 24],
+              [24, 18, 32, 24],
+              [56, 18, 34, 24],
+              [90, 18, 34, 24],
+              [124, 18, 28, 24],
+              [152, 18, 8, 24],
+              [0, 42, 24, 24],
+              [24, 42, 32, 24],
+              [56, 42, 34, 24],
+              [90, 42, 34, 24],
+              [124, 42, 28, 24],
+              [152, 42, 8, 24],
+              [0, 66, 24, 34],
+              [24, 66, 32, 34],
+              [56, 66, 34, 34],
+              [90, 66, 34, 34],
+              [124, 66, 28, 34],
+              [152, 66, 8, 34],
+            ] as [number, number, number, number][]
+          ).map(([x, y, w, h], i) => (
+            <rect
+              key={i}
+              x={x + 1}
+              y={y + 1}
+              width={w - 2}
+              height={h - 2}
+              rx={1}
+              fill="#e4eade"
+            />
+          ))}
+          {[18, 42, 66, 90].map((y) => (
+            <line
+              key={y}
+              x1="0"
+              y1={y}
+              x2="160"
+              y2={y}
+              stroke="#fff"
+              strokeWidth="3"
+            />
+          ))}
+          {[24, 56, 90, 124, 152].map((x) => (
+            <line
+              key={x}
+              x1={x}
+              y1="0"
+              x2={x}
+              y2="100"
+              stroke="#fff"
+              strokeWidth="3"
+            />
+          ))}
           {FM_GPS_ROUTES.map((d, i) => (
-            <motion.path key={i} d={d} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeDasharray="200" initial={{ strokeDashoffset: 200 }} animate={inView ? { strokeDashoffset: 0 } : {}} transition={{ delay: 0.3 + i * 0.4, duration: 0.9, ease: "easeInOut" }} />
+            <motion.path
+              key={i}
+              d={d}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="200"
+              initial={{ strokeDashoffset: 200 }}
+              animate={inView ? { strokeDashoffset: 0 } : {}}
+              transition={{
+                delay: 0.3 + i * 0.4,
+                duration: 0.9,
+                ease: "easeInOut",
+              }}
+            />
           ))}
           {FM_TECHS.map((t, i) => (
-            <motion.g key={t.name} initial={{ scale: 0, opacity: 0 }} animate={inView ? { scale: 1, opacity: 1 } : {}} transition={{ delay: 0.5 + i * 0.3, type: "spring", stiffness: 350, damping: 16 }} style={{ transformOrigin: `${t.x}px ${t.y}px` }}>
-              <motion.circle cx={t.x} cy={t.y} r={10} fill={t.color} opacity={0.15} animate={inView ? { r: [10, 14, 10] } : {}} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut", delay: i * 0.4 }} />
+            <motion.g
+              key={t.name}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={inView ? { scale: 1, opacity: 1 } : {}}
+              transition={{
+                delay: 0.5 + i * 0.3,
+                type: "spring",
+                stiffness: 350,
+                damping: 16,
+              }}
+              style={{ transformOrigin: `${t.x}px ${t.y}px` }}
+            >
+              <motion.circle
+                cx={t.x}
+                cy={t.y}
+                r={10}
+                fill={t.color}
+                opacity={0.15}
+                animate={inView ? { r: [10, 14, 10] } : {}}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2,
+                  ease: "easeInOut",
+                  delay: i * 0.4,
+                }}
+              />
               <circle cx={t.x} cy={t.y} r={8} fill={t.color} />
-              <text x={t.x} y={t.y + 3.5} textAnchor="middle" fontSize="7" fontWeight="700" fill="#fff">{t.name}</text>
+              <text
+                x={t.x}
+                y={t.y + 3.5}
+                textAnchor="middle"
+                fontSize="7"
+                fontWeight="700"
+                fill="#fff"
+              >
+                {t.name}
+              </text>
             </motion.g>
           ))}
         </svg>
@@ -2139,23 +3192,171 @@ function GPSTrackingGraphic() {
 
 // ── 8. Integrations Hub (Coming Soon) ──
 const FM_INTEGRATIONS = [
-  { name: "QuickBooks", color: "#16a34a", icon: <svg width="16" height="16" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#dcfce7"/><text x="8" y="11.5" textAnchor="middle" fontSize="9" fontWeight="800" fill="#16a34a">QB</text></svg> },
-  { name: "Google Cal", color: "#3b82f6", icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="13" rx="2" stroke="#3b82f6" strokeWidth="1.1"/><line x1="1" y1="6" x2="15" y2="6" stroke="#3b82f6" strokeWidth="1.1"/><rect x="4" y="2" width="2" height="2" rx="1" fill="#3b82f6"/><rect x="10" y="2" width="2" height="2" rx="1" fill="#3b82f6"/><text x="8" y="13" textAnchor="middle" fontSize="6" fontWeight="700" fill="#3b82f6">8</text></svg> },
-  { name: "Zapier",     color: "#f97316", icon: <svg width="16" height="16" viewBox="0 0 16 16"><polygon points="8,1.5 9.2,5.2 13,5.2 10,7.6 11,11.5 8,9 5,11.5 6,7.6 3,5.2 6.8,5.2" fill="#f97316" /></svg> },
-  { name: "Stripe",     color: "#6366f1", icon: <svg width="16" height="16" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#ede9fe"/><text x="8" y="11.5" textAnchor="middle" fontSize="10" fontWeight="800" fill="#6366f1">S</text></svg> },
-  { name: "Gmail",      color: "#ef4444", icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="#ef4444" strokeWidth="1"/><path d="M2 4.5 L8 9 L14 4.5" stroke="#ef4444" strokeWidth="1" strokeLinecap="round"/></svg> },
-  { name: "Xero",       color: "#0ea5e9", icon: <svg width="16" height="16" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#e0f2fe"/><text x="8" y="11.5" textAnchor="middle" fontSize="9" fontWeight="800" fill="#0ea5e9">Xe</text></svg> },
+  {
+    name: "QuickBooks",
+    color: "#16a34a",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <rect width="16" height="16" rx="4" fill="#dcfce7" />
+        <text
+          x="8"
+          y="11.5"
+          textAnchor="middle"
+          fontSize="9"
+          fontWeight="800"
+          fill="#16a34a"
+        >
+          QB
+        </text>
+      </svg>
+    ),
+  },
+  {
+    name: "Google Cal",
+    color: "#3b82f6",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect
+          x="1"
+          y="2"
+          width="14"
+          height="13"
+          rx="2"
+          stroke="#3b82f6"
+          strokeWidth="1.1"
+        />
+        <line x1="1" y1="6" x2="15" y2="6" stroke="#3b82f6" strokeWidth="1.1" />
+        <rect x="4" y="2" width="2" height="2" rx="1" fill="#3b82f6" />
+        <rect x="10" y="2" width="2" height="2" rx="1" fill="#3b82f6" />
+        <text
+          x="8"
+          y="13"
+          textAnchor="middle"
+          fontSize="6"
+          fontWeight="700"
+          fill="#3b82f6"
+        >
+          8
+        </text>
+      </svg>
+    ),
+  },
+  {
+    name: "Zapier",
+    color: "#f97316",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <polygon
+          points="8,1.5 9.2,5.2 13,5.2 10,7.6 11,11.5 8,9 5,11.5 6,7.6 3,5.2 6.8,5.2"
+          fill="#f97316"
+        />
+      </svg>
+    ),
+  },
+  {
+    name: "Stripe",
+    color: "#6366f1",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <rect width="16" height="16" rx="4" fill="#ede9fe" />
+        <text
+          x="8"
+          y="11.5"
+          textAnchor="middle"
+          fontSize="10"
+          fontWeight="800"
+          fill="#6366f1"
+        >
+          S
+        </text>
+      </svg>
+    ),
+  },
+  {
+    name: "Gmail",
+    color: "#ef4444",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect
+          x="1"
+          y="3"
+          width="14"
+          height="10"
+          rx="2"
+          stroke="#ef4444"
+          strokeWidth="1"
+        />
+        <path
+          d="M2 4.5 L8 9 L14 4.5"
+          stroke="#ef4444"
+          strokeWidth="1"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    name: "Xero",
+    color: "#0ea5e9",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <rect width="16" height="16" rx="4" fill="#e0f2fe" />
+        <text
+          x="8"
+          y="11.5"
+          textAnchor="middle"
+          fontSize="9"
+          fontWeight="800"
+          fill="#0ea5e9"
+        >
+          Xe
+        </text>
+      </svg>
+    ),
+  },
 ];
 
 function IntegrationsGraphic() {
   const { ref, inView, tick } = useLoopTick(3500);
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <div key={tick} style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+      <div
+        key={tick}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 6,
+        }}
+      >
         {FM_INTEGRATIONS.map((int, i) => (
-          <motion.div key={int.name} initial={{ scale: 0.85, opacity: 0 }} animate={inView ? { scale: 1, opacity: 1 } : {}} transition={{ delay: i * 0.08, duration: 0.35, ease: FM_EASE }} style={{ background: "#fff", borderRadius: 9, border: "1px solid #e8edf4", padding: "10px 6px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+          <motion.div
+            key={int.name}
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={inView ? { scale: 1, opacity: 1 } : {}}
+            transition={{ delay: i * 0.08, duration: 0.35, ease: FM_EASE }}
+            style={{
+              background: "#fff",
+              borderRadius: 9,
+              border: "1px solid #e8edf4",
+              padding: "10px 6px 8px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
             {int.icon}
-            <span style={{ fontSize: 8.5, fontWeight: 600, color: "#64748b", textAlign: "center", lineHeight: 1.2 }}>{int.name}</span>
+            <span
+              style={{
+                fontSize: 8.5,
+                fontWeight: 600,
+                color: "#64748b",
+                textAlign: "center",
+                lineHeight: 1.2,
+              }}
+            >
+              {int.name}
+            </span>
           </motion.div>
         ))}
       </div>
@@ -2166,8 +3367,8 @@ function IntegrationsGraphic() {
 // ── 9. Multi-Location (Coming Soon) ──
 const FM_LOCATIONS = [
   { name: "Dallas HQ", rev: 8240, max: 10000, techs: 6 },
-  { name: "Austin",    rev: 4180, max: 10000, techs: 3 },
-  { name: "Houston",   rev: 6000, max: 10000, techs: 4 },
+  { name: "Austin", rev: 4180, max: 10000, techs: 3 },
+  { name: "Houston", rev: 6000, max: 10000, techs: 4 },
 ];
 
 function MultiLocationGraphic() {
@@ -2179,23 +3380,94 @@ function MultiLocationGraphic() {
   return (
     <div ref={ref} style={{ width: "100%" }}>
       <FMiniCard key={tick}>
-        <div style={{ padding: "10px 12px 4px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}>All Locations</span>
+        <div
+          style={{
+            padding: "10px 12px 4px",
+            borderBottom: "1px solid #f1f5f9",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}>
+            All Locations
+          </span>
           <span style={{ fontSize: 9, color: "#94a3b8" }}>Jul 2025</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {FM_LOCATIONS.map((loc, i) => (
-            <motion.div key={loc.name} initial={{ opacity: 0, x: -8 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: i * 0.15, duration: 0.4, ease: FM_EASE }} style={{ padding: "8px 12px", borderBottom: i < FM_LOCATIONS.length - 1 ? "1px solid #f8fafc" : "none" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <motion.div
+              key={loc.name}
+              initial={{ opacity: 0, x: -8 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: i * 0.15, duration: 0.4, ease: FM_EASE }}
+              style={{
+                padding: "8px 12px",
+                borderBottom:
+                  i < FM_LOCATIONS.length - 1 ? "1px solid #f8fafc" : "none",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 4,
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: FM_G }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{loc.name}</span>
-                  <span style={{ fontSize: 9, color: "#94a3b8" }}>{loc.techs} techs</span>
+                  <div
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: FM_G,
+                    }}
+                  />
+                  <span
+                    style={{ fontSize: 11, fontWeight: 600, color: "#0f172a" }}
+                  >
+                    {loc.name}
+                  </span>
+                  <span style={{ fontSize: 9, color: "#94a3b8" }}>
+                    {loc.techs} techs
+                  </span>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>${vals[i].toLocaleString()}</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#0f172a",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  ${vals[i].toLocaleString()}
+                </span>
               </div>
-              <div style={{ height: 3, borderRadius: 99, background: "#f1f5f9", overflow: "hidden" }}>
-                <motion.div initial={{ width: 0 }} animate={inView ? { width: `${(loc.rev / loc.max) * 100}%` } : {}} transition={{ delay: i * 0.15 + 0.2, duration: 0.7, ease: FM_EASE }} style={{ height: "100%", borderRadius: 99, background: FM_G, opacity: 0.7 }} />
+              <div
+                style={{
+                  height: 3,
+                  borderRadius: 99,
+                  background: "#f1f5f9",
+                  overflow: "hidden",
+                }}
+              >
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={
+                    inView ? { width: `${(loc.rev / loc.max) * 100}%` } : {}
+                  }
+                  transition={{
+                    delay: i * 0.15 + 0.2,
+                    duration: 0.7,
+                    ease: FM_EASE,
+                  }}
+                  style={{
+                    height: "100%",
+                    borderRadius: 99,
+                    background: FM_G,
+                    opacity: 0.7,
+                  }}
+                />
               </div>
             </motion.div>
           ))}
@@ -2207,9 +3479,9 @@ function MultiLocationGraphic() {
 
 // ── 10. AI Receipt Scan ──
 const FM_RECEIPT_LINES = [
-  { label: "Foam applicator pads",  price: "$18.40" },
-  { label: "Iron remover spray",    price: "$34.90" },
-  { label: "Ceramic coating 50ml",  price: "$89.00" },
+  { label: "Foam applicator pads", price: "$18.40" },
+  { label: "Iron remover spray", price: "$34.90" },
+  { label: "Ceramic coating 50ml", price: "$89.00" },
 ];
 
 function AIReceiptGraphic() {
@@ -2225,33 +3497,122 @@ function AIReceiptGraphic() {
   return (
     <div ref={ref} style={{ width: "100%" }}>
       <div key={tick} style={{ display: "flex", gap: 8 }}>
-      <div style={{ flex: 1, background: "#fffdf7", borderRadius: 8, border: "1px solid #e8edf4", padding: "10px 10px", position: "relative", overflow: "hidden" }}>
-        <div style={{ fontSize: 9, color: "#94a3b8", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Receipt · Jun 14</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          {[["80%"],["65%"],["50%"],["75%"],["45%"]].map(([w], i) => (
-            <div key={i} style={{ height: 4, borderRadius: 99, background: "#e2e8f0", width: w }} />
-          ))}
-        </div>
-        {!scanDone && (
-          <motion.div initial={{ top: "10%" }} animate={inView ? { top: "90%" } : {}} transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }} style={{ position: "absolute", left: 0, right: 0, height: 2, background: `${FM_P}88`, boxShadow: `0 0 8px ${FM_P}` }} />
-        )}
-        {scanDone && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: "absolute", top: 8, right: 8 }}>
-            <FPill color={FM_P} bg={`${FM_P}18`}>Scanned</FPill>
-          </motion.div>
-        )}
-      </div>
-      <div style={{ flex: 1.2 }}>
-        <div style={{ fontSize: 9, color: "#94a3b8", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Extracted items</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          {FM_RECEIPT_LINES.map((line, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: 8 }} animate={scanDone ? { opacity: 1, x: 0 } : {}} transition={{ delay: i * 0.15, duration: 0.35, ease: FM_EASE }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 8px", background: "#fff", borderRadius: 6, border: "1px solid #f1f5f9" }}>
-              <span style={{ fontSize: 9.5, color: "#475569", flex: 1, marginRight: 4, lineHeight: 1.3 }}>{line.label}</span>
-              <span style={{ fontSize: 9.5, fontWeight: 650, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>{line.price}</span>
+        <div
+          style={{
+            flex: 1,
+            background: "#fffdf7",
+            borderRadius: 8,
+            border: "1px solid #e8edf4",
+            padding: "10px 10px",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 9,
+              color: "#94a3b8",
+              marginBottom: 6,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+            }}
+          >
+            Receipt · Jun 14
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {[["80%"], ["65%"], ["50%"], ["75%"], ["45%"]].map(([w], i) => (
+              <div
+                key={i}
+                style={{
+                  height: 4,
+                  borderRadius: 99,
+                  background: "#e2e8f0",
+                  width: w,
+                }}
+              />
+            ))}
+          </div>
+          {!scanDone && (
+            <motion.div
+              initial={{ top: "10%" }}
+              animate={inView ? { top: "90%" } : {}}
+              transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: 2,
+                background: `${FM_P}88`,
+                boxShadow: `0 0 8px ${FM_P}`,
+              }}
+            />
+          )}
+          {scanDone && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ position: "absolute", top: 8, right: 8 }}
+            >
+              <FPill color={FM_P} bg={`${FM_P}18`}>
+                Scanned
+              </FPill>
             </motion.div>
-          ))}
+          )}
         </div>
-      </div>
+        <div style={{ flex: 1.2 }}>
+          <div
+            style={{
+              fontSize: 9,
+              color: "#94a3b8",
+              marginBottom: 5,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+            }}
+          >
+            Extracted items
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {FM_RECEIPT_LINES.map((line, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 8 }}
+                animate={scanDone ? { opacity: 1, x: 0 } : {}}
+                transition={{ delay: i * 0.15, duration: 0.35, ease: FM_EASE }}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "5px 8px",
+                  background: "#fff",
+                  borderRadius: 6,
+                  border: "1px solid #f1f5f9",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    color: "#475569",
+                    flex: 1,
+                    marginRight: 4,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {line.label}
+                </span>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 650,
+                    color: "#0f172a",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {line.price}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -2262,34 +3623,131 @@ function AIVehicleGraphic() {
   const { ref, inView, tick } = useLoopTick(4500);
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <div key={tick} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      <div
+        key={tick}
+        style={{ display: "flex", gap: 10, alignItems: "center" }}
+      >
         <div style={{ flex: 1, position: "relative" }}>
           <svg viewBox="0 0 100 70" width="100%" style={{ display: "block" }}>
             <rect width="100" height="70" fill="#f8fafc" rx="8" />
             <rect x="8" y="28" width="84" height="28" rx="8" fill="#e2e8f0" />
             <path d="M 24 28 C 28 16 72 16 76 28" fill="#cbd5e1" />
-            <path d="M 28 28 C 30 20 50 19 55 28" fill="#dbeafe" opacity="0.8" />
-            <path d="M 58 28 C 62 20 72 20 74 28" fill="#dbeafe" opacity="0.8" />
-            <circle cx="26" cy="56" r="9" fill="#94a3b8" /><circle cx="26" cy="56" r="5" fill="#f1f5f9" />
-            <circle cx="74" cy="56" r="9" fill="#94a3b8" /><circle cx="74" cy="56" r="5" fill="#f1f5f9" />
-            <rect x="8"  y="36" width="6" height="8" rx="2" fill="#fef08a" />
+            <path
+              d="M 28 28 C 30 20 50 19 55 28"
+              fill="#dbeafe"
+              opacity="0.8"
+            />
+            <path
+              d="M 58 28 C 62 20 72 20 74 28"
+              fill="#dbeafe"
+              opacity="0.8"
+            />
+            <circle cx="26" cy="56" r="9" fill="#94a3b8" />
+            <circle cx="26" cy="56" r="5" fill="#f1f5f9" />
+            <circle cx="74" cy="56" r="9" fill="#94a3b8" />
+            <circle cx="74" cy="56" r="5" fill="#f1f5f9" />
+            <rect x="8" y="36" width="6" height="8" rx="2" fill="#fef08a" />
             <rect x="86" y="36" width="6" height="8" rx="2" fill="#fde68a" />
-            <rect x="36" y="48" width="28" height="10" rx="2" fill="#fff" stroke="#cbd5e1" strokeWidth="1" />
-            <text x="50" y="56.5" textAnchor="middle" fontSize="5.5" fontWeight="700" fill="#334155">ABC·1234</text>
-            <motion.rect x="34" y="46" width="32" height="14" rx="3" fill="none" stroke={FM_P} strokeWidth="1.5" initial={{ opacity: 0, scale: 0.8 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 0.4, duration: 0.4, type: "spring", stiffness: 300, damping: 16 }} style={{ transformOrigin: "50px 53px" }} />
-            {([[34,46],[66,46],[34,60],[66,60]] as [number,number][]).map(([x,y],i) => (
-              <motion.circle key={i} cx={x} cy={y} r={1.5} fill={FM_P} initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.5 + i * 0.05, duration: 0.2 }} />
+            <rect
+              x="36"
+              y="48"
+              width="28"
+              height="10"
+              rx="2"
+              fill="#fff"
+              stroke="#cbd5e1"
+              strokeWidth="1"
+            />
+            <text
+              x="50"
+              y="56.5"
+              textAnchor="middle"
+              fontSize="5.5"
+              fontWeight="700"
+              fill="#334155"
+            >
+              ABC·1234
+            </text>
+            <motion.rect
+              x="34"
+              y="46"
+              width="32"
+              height="14"
+              rx="3"
+              fill="none"
+              stroke={FM_P}
+              strokeWidth="1.5"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={inView ? { opacity: 1, scale: 1 } : {}}
+              transition={{
+                delay: 0.4,
+                duration: 0.4,
+                type: "spring",
+                stiffness: 300,
+                damping: 16,
+              }}
+              style={{ transformOrigin: "50px 53px" }}
+            />
+            {(
+              [
+                [34, 46],
+                [66, 46],
+                [34, 60],
+                [66, 60],
+              ] as [number, number][]
+            ).map(([x, y], i) => (
+              <motion.circle
+                key={i}
+                cx={x}
+                cy={y}
+                r={1.5}
+                fill={FM_P}
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : {}}
+                transition={{ delay: 0.5 + i * 0.05, duration: 0.2 }}
+              />
             ))}
           </svg>
         </div>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
-          {[{ label: "Make", value: "BMW" },{ label: "Model", value: "M3 Sedan" },{ label: "Year", value: "2022" },{ label: "Plate", value: "ABC·1234" }].map((row, i) => (
-            <motion.div key={row.label} initial={{ opacity: 0, x: 6 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: 0.6 + i * 0.12, duration: 0.3, ease: FM_EASE }}>
-              <div style={{ fontSize: 8.5, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>{row.label}</div>
-              <div style={{ fontSize: 11, fontWeight: 650, color: "#0f172a" }}>{row.value}</div>
+        <div
+          style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}
+        >
+          {[
+            { label: "Make", value: "BMW" },
+            { label: "Model", value: "M3 Sedan" },
+            { label: "Year", value: "2022" },
+            { label: "Plate", value: "ABC·1234" },
+          ].map((row, i) => (
+            <motion.div
+              key={row.label}
+              initial={{ opacity: 0, x: 6 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{
+                delay: 0.6 + i * 0.12,
+                duration: 0.3,
+                ease: FM_EASE,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 8.5,
+                  color: "#94a3b8",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {row.label}
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 650, color: "#0f172a" }}>
+                {row.value}
+              </div>
             </motion.div>
           ))}
-          <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 1.2, duration: 0.3 }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ delay: 1.2, duration: 0.3 }}
+          >
             <FPill color={FM_P}>Matched in CRM</FPill>
           </motion.div>
         </div>
@@ -2300,12 +3758,30 @@ function AIVehicleGraphic() {
 
 // ── 12. AI Ops Copilot ──
 const COPILOT_QA = [
-  { q: "Who's overdue for a detail?",          a: "3 clients: Alex C. (94d), Maria K. (102d), Tom H. (88d)" },
-  { q: "Best day to book next week?",           a: "Tuesday — only 2 jobs so far. Plenty of room to fill." },
-  { q: "Draft a follow-up for Alex Chen",       a: "Hey Alex! It's been 94 days — time for a refresh? Book here: rinse.app/alex" },
-  { q: "How much did I make this month?",       a: "$4,820 across 19 jobs. Up 12% from last month 📈" },
-  { q: "Which service is most profitable?",     a: "Full Detail + Ceramic — avg $380, 68% margin." },
-  { q: "Any no-shows this week?",               a: "1 no-show (Thu, 2 PM). Auto follow-up sent at 2:05 PM." },
+  {
+    q: "Who's overdue for a detail?",
+    a: "3 clients: Alex C. (94d), Maria K. (102d), Tom H. (88d)",
+  },
+  {
+    q: "Best day to book next week?",
+    a: "Tuesday — only 2 jobs so far. Plenty of room to fill.",
+  },
+  {
+    q: "Draft a follow-up for Alex Chen",
+    a: "Hey Alex! It's been 94 days — time for a refresh? Book here: rinse.app/alex",
+  },
+  {
+    q: "How much did I make this month?",
+    a: "$4,820 across 19 jobs. Up 12% from last month 📈",
+  },
+  {
+    q: "Which service is most profitable?",
+    a: "Full Detail + Ceramic — avg $380, 68% margin.",
+  },
+  {
+    q: "Any no-shows this week?",
+    a: "1 no-show (Thu, 2 PM). Auto follow-up sent at 2:05 PM.",
+  },
 ];
 
 let _copilotCounter = 0;
@@ -2313,13 +3789,20 @@ let _copilotCounter = 0;
 function AICopilotGraphic() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, margin: "0px 0px -60px 0px" });
-  const [msgs, setMsgs] = useState<{ id: number; kind: "q" | "a"; text: string }[]>([]);
-  const seqRef = useRef<{ qaIdx: number; step: "q" | "a" }>({ qaIdx: 0, step: "q" });
+  const [msgs, setMsgs] = useState<
+    { id: number; kind: "q" | "a"; text: string }[]
+  >([]);
+  const seqRef = useRef<{ qaIdx: number; step: "q" | "a" }>({
+    qaIdx: 0,
+    step: "q",
+  });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!timerRef.current) return;
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -2351,11 +3834,22 @@ function AICopilotGraphic() {
     };
 
     schedule(200);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [inView]);
 
   return (
-    <div ref={ref} style={{ width: "100%", minHeight: 120, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+    <div
+      ref={ref}
+      style={{
+        width: "100%",
+        minHeight: 120,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+      }}
+    >
       <AnimatePresence initial={false}>
         {msgs.map((m) => (
           <motion.div
@@ -2368,19 +3862,68 @@ function AICopilotGraphic() {
           >
             {m.kind === "q" ? (
               /* User question — right-aligned dark bubble */
-              <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 6 }}>
-                <div style={{ background: "#0f172a", borderRadius: "10px 10px 2px 10px", padding: "6px 10px", maxWidth: "76%" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  paddingTop: 6,
+                }}
+              >
+                <div
+                  style={{
+                    background: "#0f172a",
+                    borderRadius: "10px 10px 2px 10px",
+                    padding: "6px 10px",
+                    maxWidth: "76%",
+                  }}
+                >
                   <span style={{ fontSize: 10, color: "#fff" }}>{m.text}</span>
                 </div>
               </div>
             ) : (
               /* AI answer — left-aligned purple bubble */
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 5, paddingTop: 5 }}>
-                <div style={{ width: 16, height: 16, borderRadius: 5, background: FM_P, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 5.5C1 3 3.5 1.5 4 1C4.5 1.5 7 3 7 5.5C7 7 5.7 7.5 4 7.5C2.3 7.5 1 7 1 5.5Z" fill="#fff" /></svg>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 5,
+                  paddingTop: 5,
+                }}
+              >
+                <div
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 5,
+                    background: FM_P,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: 1,
+                  }}
+                >
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path
+                      d="M1 5.5C1 3 3.5 1.5 4 1C4.5 1.5 7 3 7 5.5C7 7 5.7 7.5 4 7.5C2.3 7.5 1 7 1 5.5Z"
+                      fill="#fff"
+                    />
+                  </svg>
                 </div>
-                <div style={{ background: `${FM_P}12`, border: `1px solid ${FM_P}22`, borderRadius: "10px 10px 10px 2px", padding: "6px 10px", maxWidth: "82%" }}>
-                  <span style={{ fontSize: 10, color: "#0f172a", lineHeight: 1.4 }}>{m.text}</span>
+                <div
+                  style={{
+                    background: `${FM_P}12`,
+                    border: `1px solid ${FM_P}22`,
+                    borderRadius: "10px 10px 10px 2px",
+                    padding: "6px 10px",
+                    maxWidth: "82%",
+                  }}
+                >
+                  <span
+                    style={{ fontSize: 10, color: "#0f172a", lineHeight: 1.4 }}
+                  >
+                    {m.text}
+                  </span>
                 </div>
               </div>
             )}
@@ -2399,30 +3942,95 @@ function AIPricingGraphic() {
     <div ref={ref} style={{ width: "100%" }}>
       <FMiniCard key={tick}>
         <div style={{ padding: "10px 12px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 8,
+            }}
+          >
             <div>
-              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}>2023 Porsche Cayenne</div>
-              <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 1 }}>Full Detail + Ceramic</div>
+              <div
+                style={{ fontSize: 10.5, fontWeight: 700, color: "#0f172a" }}
+              >
+                2023 Porsche Cayenne
+              </div>
+              <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 1 }}>
+                Full Detail + Ceramic
+              </div>
             </div>
             <FPill color={FM_P}>AI suggest</FPill>
           </div>
-          <div style={{ background: `${FM_P}0d`, border: `1px solid ${FM_P}20`, borderRadius: 8, padding: "10px 12px", marginBottom: 8 }}>
-            <div style={{ fontSize: 9, color: FM_P, fontWeight: 600, marginBottom: 4 }}>Suggested range</div>
+          <div
+            style={{
+              background: `${FM_P}0d`,
+              border: `1px solid ${FM_P}20`,
+              borderRadius: 8,
+              padding: "10px 12px",
+              marginBottom: 8,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 9,
+                color: FM_P,
+                fontWeight: 600,
+                marginBottom: 4,
+              }}
+            >
+              Suggested range
+            </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", fontVariantNumeric: "tabular-nums" }}>${price}</span>
+              <span
+                style={{
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: "#0f172a",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                ${price}
+              </span>
               <span style={{ fontSize: 11, color: "#94a3b8" }}>– $420</span>
             </div>
           </div>
           <div style={{ marginBottom: 6 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 3,
+              }}
+            >
               <span style={{ fontSize: 9, color: "#94a3b8" }}>Confidence</span>
-              <span style={{ fontSize: 9, fontWeight: 600, color: FM_P }}>84%</span>
+              <span style={{ fontSize: 9, fontWeight: 600, color: FM_P }}>
+                84%
+              </span>
             </div>
-            <div style={{ height: 4, borderRadius: 99, background: "#f1f5f9", overflow: "hidden" }}>
-              <motion.div initial={{ width: 0 }} animate={inView ? { width: "84%" } : {}} transition={{ delay: 0.5, duration: 0.8, ease: FM_EASE }} style={{ height: "100%", borderRadius: 99, background: FM_P, opacity: 0.7 }} />
+            <div
+              style={{
+                height: 4,
+                borderRadius: 99,
+                background: "#f1f5f9",
+                overflow: "hidden",
+              }}
+            >
+              <motion.div
+                initial={{ width: 0 }}
+                animate={inView ? { width: "84%" } : {}}
+                transition={{ delay: 0.5, duration: 0.8, ease: FM_EASE }}
+                style={{
+                  height: "100%",
+                  borderRadius: 99,
+                  background: FM_P,
+                  opacity: 0.7,
+                }}
+              />
             </div>
           </div>
-          <div style={{ fontSize: 9, color: "#94a3b8" }}>Based on 47 similar jobs in your area</div>
+          <div style={{ fontSize: 9, color: "#94a3b8" }}>
+            Based on 47 similar jobs in your area
+          </div>
         </div>
       </FMiniCard>
     </div>
@@ -2432,28 +4040,78 @@ function AIPricingGraphic() {
 // ── 14. Public / Partner API ──
 const FM_API_LINES = [
   { text: "GET /v1/jobs?status=scheduled", color: "#0f172a", bold: true },
-  { text: "→ 200 OK",                      color: FM_G              },
-  { text: "{",                             color: "#64748b"         },
-  { text: '  "total": 14,',               color: "#475569"         },
-  { text: '  "jobs": [',                  color: "#475569"         },
+  { text: "→ 200 OK", color: FM_G },
+  { text: "{", color: "#64748b" },
+  { text: '  "total": 14,', color: "#475569" },
+  { text: '  "jobs": [', color: "#475569" },
   { text: '    { "id": "j_412", "client": "Alex Chen" },', color: "#94a3b8" },
-  { text: '    { "id": "j_413", "status": "en_route" }',   color: "#94a3b8" },
-  { text: "  ]",                           color: "#475569"         },
-  { text: "}",                             color: "#64748b"         },
+  { text: '    { "id": "j_413", "status": "en_route" }', color: "#94a3b8" },
+  { text: "  ]", color: "#475569" },
+  { text: "}", color: "#64748b" },
 ];
 
 function APIGraphic() {
   const { ref, inView, tick } = useLoopTick(4000);
   return (
     <div ref={ref} style={{ width: "100%" }}>
-      <div key={tick} style={{ background: "#0f172a", borderRadius: 10, overflow: "hidden" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          {["#ef4444","#f59e0b","#22c55e"].map(c => <div key={c} style={{ width: 6, height: 6, borderRadius: "50%", background: c, opacity: 0.7 }} />)}
-          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginLeft: 4, fontFamily: "monospace" }}>rinse-api</span>
+      <div
+        key={tick}
+        style={{ background: "#0f172a", borderRadius: 10, overflow: "hidden" }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            padding: "8px 12px",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          {["#ef4444", "#f59e0b", "#22c55e"].map((c) => (
+            <div
+              key={c}
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: c,
+                opacity: 0.7,
+              }}
+            />
+          ))}
+          <span
+            style={{
+              fontSize: 9,
+              color: "rgba(255,255,255,0.3)",
+              marginLeft: 4,
+              fontFamily: "monospace",
+            }}
+          >
+            rinse-api
+          </span>
         </div>
-        <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <div
+          style={{
+            padding: "10px 14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
           {FM_API_LINES.map((line, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: -4 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ delay: i * 0.09, duration: 0.3, ease: FM_EASE }} style={{ fontSize: 9.5, color: line.color, fontFamily: "monospace", fontWeight: line.bold ? 700 : 400, whiteSpace: "nowrap" }}>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -4 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: i * 0.09, duration: 0.3, ease: FM_EASE }}
+              style={{
+                fontSize: 9.5,
+                color: line.color,
+                fontFamily: "monospace",
+                fontWeight: line.bold ? 700 : 400,
+                whiteSpace: "nowrap",
+              }}
+            >
               {line.text}
             </motion.div>
           ))}
@@ -2466,49 +4124,154 @@ function APIGraphic() {
 // ── Feature card shell ──
 type FMTier = "shipped" | "soon" | "ai";
 
-function FMFeatureCard({ label, heading, body, graphic, tier = "shipped" }: {
-  label: string; heading: string; body: string; graphic: React.ReactNode; tier?: FMTier;
+function FMFeatureCard({
+  label,
+  heading,
+  body,
+  graphic,
+  tier = "shipped",
+}: {
+  label: string;
+  heading: string;
+  body: string;
+  graphic: React.ReactNode;
+  tier?: FMTier;
 }) {
-  const accentColor = tier === "ai" ? FM_P : tier === "soon" ? "#64748b" : FM_GD;
-  const graphicBg   = tier === "ai" ? "#faf9ff" : "#f8fafc";
+  const accentColor =
+    tier === "ai" ? FM_P : tier === "soon" ? "#64748b" : FM_GD;
+  const graphicBg = tier === "ai" ? "#faf9ff" : "#f8fafc";
   return (
-    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #eaeff6", padding: 20, display: "flex", flexDirection: "column", gap: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.04)", height: "100%" }}>
-      <div style={{ background: graphicBg, borderRadius: 10, padding: "16px 14px", minHeight: 158, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #f1f5f9", overflow: "hidden", position: "relative" }}>
-        <div style={{ opacity: tier === "soon" ? 0.55 : 1, width: "100%" }}>{graphic}</div>
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 16,
+        border: "1px solid #eaeff6",
+        padding: 20,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+        height: "100%",
+      }}
+    >
+      <div
+        style={{
+          background: graphicBg,
+          borderRadius: 10,
+          padding: "16px 14px",
+          minHeight: 158,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "1px solid #f1f5f9",
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        <div style={{ opacity: tier === "soon" ? 0.55 : 1, width: "100%" }}>
+          {graphic}
+        </div>
         {tier === "soon" && (
           <div style={{ position: "absolute", top: 8, right: 8 }}>
-            <FPill color="#64748b" bg="#f1f5f9">Coming soon</FPill>
+            <FPill color="#64748b" bg="#f1f5f9">
+              Coming soon
+            </FPill>
           </div>
         )}
       </div>
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 14.5, fontWeight: 700, color: "#0f172a", marginBottom: 4, letterSpacing: -0.2 }}>{heading}</div>
-        <div style={{ fontSize: 12.5, color: "#64748b", lineHeight: 1.65 }}>{body}</div>
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: accentColor,
+            textTransform: "uppercase",
+            letterSpacing: 1.2,
+            marginBottom: 4,
+          }}
+        >
+          {label}
+        </div>
+        <div
+          style={{
+            fontSize: 14.5,
+            fontWeight: 700,
+            color: "#0f172a",
+            marginBottom: 4,
+            letterSpacing: -0.2,
+          }}
+        >
+          {heading}
+        </div>
+        <div style={{ fontSize: 12.5, color: "#64748b", lineHeight: 1.65 }}>
+          {body}
+        </div>
       </div>
     </div>
   );
 }
 
-function FMTierHeader({ label, description, color = FM_GD }: { label: string; description: string; color?: string }) {
+function FMTierHeader({
+  label,
+  description,
+  color = FM_GD,
+}: {
+  label: string;
+  description: string;
+  color?: string;
+}) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 4,
+        }}
+      >
         <div style={{ height: 1, flex: 1, background: "#f1f5f9" }} />
-        <span style={{ fontSize: 10.5, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: 1.5, whiteSpace: "nowrap" }}>{label}</span>
+        <span
+          style={{
+            fontSize: 10.5,
+            fontWeight: 700,
+            color,
+            textTransform: "uppercase",
+            letterSpacing: 1.5,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {label}
+        </span>
         <div style={{ height: 1, flex: 1, background: "#f1f5f9" }} />
       </div>
-      <p style={{ fontSize: 12.5, color: "#94a3b8", textAlign: "center", margin: 0 }}>{description}</p>
+      <p
+        style={{
+          fontSize: 12.5,
+          color: "#94a3b8",
+          textAlign: "center",
+          margin: 0,
+        }}
+      >
+        {description}
+      </p>
     </div>
   );
 }
 
 function FeaturesSection() {
   return (
-    <section id={SECTIONS.features} className="py-32 px-6 lg:px-12" style={{ background: "#f9fafb" }}>
+    <section
+      id={SECTIONS.features}
+      className="py-32 px-6 lg:px-12 border-t border-black/6"
+      style={{ background: "#f9fafb" }}
+    >
       <div className="max-w-5xl mx-auto">
         <FadeUpWhenVisible className="mb-4 text-center">
-          <span className="text-[10px] font-mono uppercase tracking-[0.2em]" style={{ color: FM_GD }}>
+          <span
+            className="text-[10px] font-mono uppercase tracking-[0.2em]"
+            style={{ color: FM_GD }}
+          >
             Features
           </span>
         </FadeUpWhenVisible>
@@ -2518,38 +4281,155 @@ function FeaturesSection() {
           </h2>
         </FadeUpWhenVisible>
         <FadeUpWhenVisible delay={0.1} className="mb-16 text-center">
-          <p className="text-base max-w-md mx-auto leading-relaxed" style={{ color: "#64748b" }}>
-            One platform built for detail shops, mobile operators, and everyone scaling between them.
+          <p
+            className="text-base max-w-md mx-auto leading-relaxed"
+            style={{ color: "#64748b" }}
+          >
+            One platform built for detail shops, mobile operators, and everyone
+            scaling between them.
           </p>
         </FadeUpWhenVisible>
 
         {/* ── Tier 1: Shipped Now ── */}
-        <FMTierHeader label="Shipped now" description="Live and ready for your shop today." color={FM_GD} />
-        <div className="grid gap-4 mb-14" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-          <FMFeatureCard label="Lead Pipeline" heading="Inquiry → Quoted → Scheduled" body="Move leads through your pipeline with a visual board. Every inquiry becomes a booked job — nothing slips through." graphic={<LeadPipelineGraphic />} tier="shipped" />
-          <FMFeatureCard label="Quote & Estimate Builder" heading="Vehicle + service → sendable quote" body="Build itemized quotes in seconds. Send a branded link your client can approve and pay directly." graphic={<QuoteBuilderGraphic />} tier="shipped" />
-          <FMFeatureCard label="Client Portal" heading="Sign & pay before the job" body="Clients get a branded portal to review the scope, sign the agreement, and pay upfront — all from their phone." graphic={<ClientPortalGraphic />} tier="shipped" />
-          <FMFeatureCard label="Damage Documentation" heading="Pre-job walkthrough + damage map" body="Mark existing damage on a vehicle diagram before every job. Protect your shop and keep clients informed." graphic={<DamageDocsGraphic />} tier="shipped" />
-          <FMFeatureCard label="Inventory & Supplies" heading="Low-stock alerts before you run out" body="Track ceramic, foam pads, detailing spray, and everything else. Get alerted the moment stock drops below threshold." graphic={<InventoryGraphic />} tier="shipped" />
-          <FMFeatureCard label="Auto Messages & Reviews" heading="On-my-way, reminders, review asks" body="Automated texts at every stage — arrival, reminders, and a perfectly-timed review request once the job is done." graphic={<AutoMessagesGraphic />} tier="shipped" />
+        <FMTierHeader
+          label="Shipped now"
+          description="Live and ready for your shop today."
+          color={FM_GD}
+        />
+        <div
+          className="grid gap-4 mb-14"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          }}
+        >
+          <FMFeatureCard
+            label="Lead Pipeline"
+            heading="Inquiry → Quoted → Scheduled"
+            body="Move leads through your pipeline with a visual board. Every inquiry becomes a booked job — nothing slips through."
+            graphic={<LeadPipelineGraphic />}
+            tier="shipped"
+          />
+          <FMFeatureCard
+            label="Quote & Estimate Builder"
+            heading="Vehicle + service → sendable quote"
+            body="Build itemized quotes in seconds. Send a branded link your client can approve and pay directly."
+            graphic={<QuoteBuilderGraphic />}
+            tier="shipped"
+          />
+          <FMFeatureCard
+            label="Client Portal"
+            heading="Sign & pay before the job"
+            body="Clients get a branded portal to review the scope, sign the agreement, and pay upfront — all from their phone."
+            graphic={<ClientPortalGraphic />}
+            tier="shipped"
+          />
+          <FMFeatureCard
+            label="Damage Documentation"
+            heading="Pre-job walkthrough + damage map"
+            body="Mark existing damage on a vehicle diagram before every job. Protect your shop and keep clients informed."
+            graphic={<DamageDocsGraphic />}
+            tier="shipped"
+          />
+          <FMFeatureCard
+            label="Inventory & Supplies"
+            heading="Low-stock alerts before you run out"
+            body="Track ceramic, foam pads, detailing spray, and everything else. Get alerted the moment stock drops below threshold."
+            graphic={<InventoryGraphic />}
+            tier="shipped"
+          />
+          <FMFeatureCard
+            label="Auto Messages & Reviews"
+            heading="On-my-way, reminders, review asks"
+            body="Automated texts at every stage — arrival, reminders, and a perfectly-timed review request once the job is done."
+            graphic={<AutoMessagesGraphic />}
+            tier="shipped"
+          />
         </div>
 
         {/* ── Tier 2: Coming Soon ── */}
-        <FMTierHeader label="Coming soon" description="In development — launching later this year." color="#64748b" />
-        <div className="grid gap-4 mb-14" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-          <FMFeatureCard label="GPS Fleet Tracking" heading="Live tech routes & ETAs for clients" body="Customers see their technician on a live map. You see your whole fleet from one dashboard." graphic={<GPSTrackingGraphic />} tier="soon" />
-          <FMFeatureCard label="Integrations Hub" heading="QuickBooks, Google Cal, Zapier, Stripe" body="Connect Rinse to the tools you already use. Two-way sync keeps your calendar, books, and payments in lockstep." graphic={<IntegrationsGraphic />} tier="soon" />
-          <FMFeatureCard label="Multi-Location / Franchise" heading="Several shops, one dashboard" body="Run multiple locations from a single login. Roll-up reporting, per-location techs, and centralized client records." graphic={<MultiLocationGraphic />} tier="soon" />
+        <FMTierHeader
+          label="Coming soon"
+          description="In development — launching later this year."
+          color="#64748b"
+        />
+        <div
+          className="grid gap-4 mb-14"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          }}
+        >
+          <FMFeatureCard
+            label="GPS Fleet Tracking"
+            heading="Live tech routes & ETAs for clients"
+            body="Customers see their technician on a live map. You see your whole fleet from one dashboard."
+            graphic={<GPSTrackingGraphic />}
+            tier="soon"
+          />
+          <FMFeatureCard
+            label="Integrations Hub"
+            heading="QuickBooks, Google Cal, Zapier, Stripe"
+            body="Connect Rinse to the tools you already use. Two-way sync keeps your calendar, books, and payments in lockstep."
+            graphic={<IntegrationsGraphic />}
+            tier="soon"
+          />
+          <FMFeatureCard
+            label="Multi-Location / Franchise"
+            heading="Several shops, one dashboard"
+            body="Run multiple locations from a single login. Roll-up reporting, per-location techs, and centralized client records."
+            graphic={<MultiLocationGraphic />}
+            tier="soon"
+          />
         </div>
 
         {/* ── Tier 3: Scale — AI ── */}
-        <FMTierHeader label="Scale plan — AI" description="Intelligence features for shops ready to grow." color={FM_P} />
-        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-          <FMFeatureCard label="AI Receipt Scan" heading="Photo → expense line items" body="Photograph a supplier receipt and watch it turn into structured expense records. No manual entry." graphic={<AIReceiptGraphic />} tier="ai" />
-          <FMFeatureCard label="AI Vehicle Capture" heading="Photo → make, model, VIN" body="Point the camera at a plate or VIN sticker. Rinse reads it and matches the vehicle to your CRM automatically." graphic={<AIVehicleGraphic />} tier="ai" />
-          <FMFeatureCard label="AI Ops Copilot" heading="Ask your business anything" body={"\"Who's overdue?\" \"Best day to book?\" Draft follow-ups. Your copilot answers in plain English and takes action."} graphic={<AICopilotGraphic />} tier="ai" />
-          <FMFeatureCard label="AI Pricing Assistant" heading="Smart quotes from history + market" body="Tell Rinse the vehicle and package. Get a suggested price range based on your past jobs and local market data." graphic={<AIPricingGraphic />} tier="ai" />
-          <FMFeatureCard label="Public / Partner API" heading="Read/write jobs, clients, quotes" body="Full REST API for agencies, franchisees, and developers building custom workflows on top of Rinse." graphic={<APIGraphic />} tier="ai" />
+        <FMTierHeader
+          label="Scale plan — AI"
+          description="Intelligence features for shops ready to grow."
+          color={FM_P}
+        />
+        <div
+          className="grid gap-4"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          }}
+        >
+          <FMFeatureCard
+            label="AI Receipt Scan"
+            heading="Photo → expense line items"
+            body="Photograph a supplier receipt and watch it turn into structured expense records. No manual entry."
+            graphic={<AIReceiptGraphic />}
+            tier="ai"
+          />
+          <FMFeatureCard
+            label="AI Vehicle Capture"
+            heading="Photo → make, model, VIN"
+            body="Point the camera at a plate or VIN sticker. Rinse reads it and matches the vehicle to your CRM automatically."
+            graphic={<AIVehicleGraphic />}
+            tier="ai"
+          />
+          <FMFeatureCard
+            label="AI Ops Copilot"
+            heading="Ask your business anything"
+            body={
+              '"Who\'s overdue?" "Best day to book?" Draft follow-ups. Your copilot answers in plain English and takes action.'
+            }
+            graphic={<AICopilotGraphic />}
+            tier="ai"
+          />
+          <FMFeatureCard
+            label="AI Pricing Assistant"
+            heading="Smart quotes from history + market"
+            body="Tell Rinse the vehicle and package. Get a suggested price range based on your past jobs and local market data."
+            graphic={<AIPricingGraphic />}
+            tier="ai"
+          />
+          <FMFeatureCard
+            label="Public / Partner API"
+            heading="Read/write jobs, clients, quotes"
+            body="Full REST API for agencies, franchisees, and developers building custom workflows on top of Rinse."
+            graphic={<APIGraphic />}
+            tier="ai"
+          />
         </div>
       </div>
     </section>
@@ -2566,10 +4446,7 @@ function StatsBar() {
   const rating = useCountUp(49, 1800, inView);
 
   return (
-    <div
-      ref={ref}
-      className="border-y border-black/6 py-14 px-6 lg:px-12"
-    >
+    <div ref={ref} className="border-y border-black/6 py-14 px-6 lg:px-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-0 divide-y md:divide-y-0 md:divide-x divide-white/6">
         {[
           {
@@ -2618,7 +4495,13 @@ function TestimonialStars({ count = 5 }: { count?: number }) {
   );
 }
 
-function TestimonialAvatar({ initials, size = "md" }: { initials: string; size?: "sm" | "md" }) {
+function TestimonialAvatar({
+  initials,
+  size = "md",
+}: {
+  initials: string;
+  size?: "sm" | "md";
+}) {
   const dim = size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
   return (
     <div
@@ -2670,9 +4553,9 @@ const TESTIMONIALS = [
 ];
 
 const TESTIMONIAL_STATS = [
-  { label: "Early access",    sub: "Now open" },
+  { label: "Early access", sub: "Now open" },
   { label: "Founding cohort", sub: "Limited spots" },
-  { label: "No contracts",    sub: "Cancel any time" },
+  { label: "No contracts", sub: "Cancel any time" },
 ];
 
 function TestimonialsSection() {
@@ -2685,8 +4568,11 @@ function TestimonialsSection() {
   return (
     <section
       id={SECTIONS.testimonials}
-      className="w-full flex flex-col items-center px-6 py-24 gap-16"
-      style={{ background: "#f7f8f6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      className="w-full flex flex-col items-center px-6 py-24 gap-16 border-t border-black/6"
+      style={{
+        background: "#f7f8f6",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
     >
       {/* ── Header: headline + stats strip ── */}
       <motion.div
@@ -2737,7 +4623,6 @@ function TestimonialsSection() {
 
       {/* ── Testimonials grid ── */}
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 gap-5 items-stretch">
-
         {/* Featured — spans 3 cols */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
@@ -2755,8 +4640,13 @@ function TestimonialsSection() {
           <div className="flex items-center gap-3">
             <TestimonialAvatar initials={featured.initials} size="md" />
             <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-bold text-neutral-900">{featured.name}</span>
-              <span className="text-xs font-medium" style={{ color: "rgba(0,0,0,0.42)" }}>
+              <span className="text-sm font-bold text-neutral-900">
+                {featured.name}
+              </span>
+              <span
+                className="text-xs font-medium"
+                style={{ color: "rgba(0,0,0,0.42)" }}
+              >
                 {featured.title}, {featured.company} · {featured.location}
               </span>
             </div>
@@ -2770,7 +4660,11 @@ function TestimonialsSection() {
               key={t.id}
               initial={{ opacity: 0, y: 28 }}
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-              transition={{ duration: 0.52, delay: 0.16 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                duration: 0.52,
+                delay: 0.16 + i * 0.08,
+                ease: [0.16, 1, 0.3, 1],
+              }}
               className="bg-white rounded-2xl border p-6 flex flex-col justify-between gap-6 flex-1"
               style={{ borderColor: "rgba(0,0,0,0.08)" }}
             >
@@ -2788,7 +4682,10 @@ function TestimonialsSection() {
                 {t.watchStory && (
                   <button
                     className="inline-flex items-center gap-2 self-start px-4 py-2 rounded-full text-xs font-bold border transition-colors hover:bg-neutral-50 focus:outline-none"
-                    style={{ borderColor: "rgba(0,0,0,0.12)", color: "#0f1210" }}
+                    style={{
+                      borderColor: "rgba(0,0,0,0.12)",
+                      color: "#0f1210",
+                    }}
                   >
                     <span
                       className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
@@ -2802,7 +4699,9 @@ function TestimonialsSection() {
                 <div className="flex items-center gap-2.5">
                   <TestimonialAvatar initials={t.initials} size="sm" />
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-neutral-900">{t.name}</span>
+                    <span className="text-xs font-bold text-neutral-900">
+                      {t.name}
+                    </span>
                     <span
                       className="text-xs font-medium"
                       style={{ color: "rgba(0,0,0,0.38)" }}
@@ -2829,21 +4728,21 @@ const COMPARISON_FEATURES: {
   starter: boolean;
   group: 1 | 2 | 3;
 }[] = [
-  { label: "Up to 3 clients",         starter: true,  group: 1 },
-  { label: "Up to 10 jobs",           starter: true,  group: 1 },
-  { label: "Basic job tracking",      starter: true,  group: 1 },
-  { label: "Client portal",           starter: true,  group: 1 },
-  { label: "Unlimited clients",       starter: false, group: 2 },
-  { label: "Unlimited jobs",          starter: false, group: 2 },
-  { label: "Advanced reporting",      starter: false, group: 2 },
-  { label: "Team collaboration",      starter: false, group: 2 },
+  { label: "Up to 3 clients", starter: true, group: 1 },
+  { label: "Up to 10 jobs", starter: true, group: 1 },
+  { label: "Basic job tracking", starter: true, group: 1 },
+  { label: "Client portal", starter: true, group: 1 },
+  { label: "Unlimited clients", starter: false, group: 2 },
+  { label: "Unlimited jobs", starter: false, group: 2 },
+  { label: "Advanced reporting", starter: false, group: 2 },
+  { label: "Team collaboration", starter: false, group: 2 },
   { label: "Automations & workflows", starter: false, group: 2 },
-  { label: "Priority support",        starter: false, group: 2 },
-  { label: "Unlimited technicians",   starter: false, group: 3 },
-  { label: "Multi-location support",  starter: false, group: 3 },
-  { label: "Custom branding",         starter: false, group: 3 },
-  { label: "API access",              starter: false, group: 3 },
-  { label: "Dedicated onboarding",    starter: false, group: 3 },
+  { label: "Priority support", starter: false, group: 2 },
+  { label: "Unlimited technicians", starter: false, group: 3 },
+  { label: "Multi-location support", starter: false, group: 3 },
+  { label: "Custom branding", starter: false, group: 3 },
+  { label: "API access", starter: false, group: 3 },
+  { label: "Dedicated onboarding", starter: false, group: 3 },
 ];
 
 // ─── Billing toggle ───────────────────────────────────────────────────────────
@@ -2934,8 +4833,8 @@ function FeatureRow({
           color: available
             ? "rgba(0,0,0,0.72)"
             : isPro
-            ? "rgba(0,0,0,0.72)"
-            : "rgba(0,0,0,0.30)",
+              ? "rgba(0,0,0,0.72)"
+              : "rgba(0,0,0,0.30)",
         }}
       >
         {label}
@@ -2955,7 +4854,10 @@ function FounderProgress() {
   return (
     <div ref={ref} className="flex flex-col gap-2 w-full">
       <div className="flex justify-between items-center">
-        <span className="text-xs font-semibold" style={{ color: "rgba(0,0,0,0.38)" }}>
+        <span
+          className="text-xs font-semibold"
+          style={{ color: "rgba(0,0,0,0.38)" }}
+        >
           {claimed} of {total} spots claimed
         </span>
         <span className="text-xs font-bold" style={{ color: "#4bac50" }}>
@@ -3009,10 +4911,16 @@ function FounderBanner({ onStartTrial }: { onStartTrial: () => void }) {
           <div className="flex flex-col gap-1.5">
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-neutral-900">
               Free for life.{" "}
-              <span style={{ color: "#4bac50" }}>First 20 businesses only.</span>
+              <span style={{ color: "#4bac50" }}>
+                First 20 businesses only.
+              </span>
             </h2>
-            <p className="text-sm font-medium leading-relaxed" style={{ color: "rgba(0,0,0,0.42)" }}>
-              Get every Pro feature, forever, for being one of our first partners.
+            <p
+              className="text-sm font-medium leading-relaxed"
+              style={{ color: "rgba(0,0,0,0.42)" }}
+            >
+              Get every Pro feature, forever, for being one of our first
+              partners.
             </p>
           </div>
         </div>
@@ -3074,7 +4982,7 @@ function PricingCard({
   const group2 = features.filter((f) => f.group === 2);
   const group3 = features.filter((f) => f.group === 3);
 
-  const featureAvailable = (f: typeof COMPARISON_FEATURES[number]) => {
+  const featureAvailable = (f: (typeof COMPARISON_FEATURES)[number]) => {
     if (isScale) return true;
     if (isPro) return f.group !== 3;
     return f.starter;
@@ -3085,7 +4993,11 @@ function PricingCard({
       ref={ref}
       initial={{ opacity: 0, y: 28 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-      transition={{ duration: 0.52, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+      transition={{
+        duration: 0.52,
+        delay: index * 0.08,
+        ease: [0.16, 1, 0.3, 1],
+      }}
       className="relative flex-1"
     >
       <div
@@ -3105,7 +5017,10 @@ function PricingCard({
         <div className="flex flex-col gap-6 flex-1">
           <div className="flex flex-col gap-1.5">
             <span className="text-base font-bold text-neutral-900">{name}</span>
-            <span className="text-sm leading-snug" style={{ color: "rgba(0,0,0,0.38)" }}>
+            <span
+              className="text-sm leading-snug"
+              style={{ color: "rgba(0,0,0,0.38)" }}
+            >
               {tagline}
             </span>
           </div>
@@ -3124,12 +5039,18 @@ function PricingCard({
                 </motion.span>
               </AnimatePresence>
               {!isFree && priceVal !== "Custom" && (
-                <span className="text-sm font-medium mb-2" style={{ color: "rgba(0,0,0,0.35)" }}>
+                <span
+                  className="text-sm font-medium mb-2"
+                  style={{ color: "rgba(0,0,0,0.35)" }}
+                >
                   /mo
                 </span>
               )}
             </div>
-            <span className="text-xs font-medium" style={{ color: "rgba(0,0,0,0.30)" }}>
+            <span
+              className="text-xs font-medium"
+              style={{ color: "rgba(0,0,0,0.30)" }}
+            >
               {note}
             </span>
           </div>
@@ -3162,29 +5083,57 @@ function PricingCard({
               whileTap={{ scale: 0.985 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               className="w-full py-3 rounded-full text-sm font-bold border focus:outline-none"
-              style={{ color: "#0f1210", borderColor: "rgba(0,0,0,0.12)", background: "transparent" }}
+              style={{
+                color: "#0f1210",
+                borderColor: "rgba(0,0,0,0.12)",
+                background: "transparent",
+              }}
             >
               {cta}
             </motion.button>
           )}
-          <div className="h-px w-full" style={{ background: "rgba(0,0,0,0.06)" }} />
+          <div
+            className="h-px w-full"
+            style={{ background: "rgba(0,0,0,0.06)" }}
+          />
           <ul className="flex flex-col gap-3">
             {group1.map((f) => (
-              <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={isPro || !!isScale} />
+              <FeatureRow
+                key={f.label}
+                label={f.label}
+                available={featureAvailable(f)}
+                isPro={isPro || !!isScale}
+              />
             ))}
           </ul>
-          <div className="h-px w-full" style={{ background: "rgba(0,0,0,0.05)" }} />
+          <div
+            className="h-px w-full"
+            style={{ background: "rgba(0,0,0,0.05)" }}
+          />
           <ul className="flex flex-col gap-3">
             {group2.map((f) => (
-              <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={isPro || !!isScale} />
+              <FeatureRow
+                key={f.label}
+                label={f.label}
+                available={featureAvailable(f)}
+                isPro={isPro || !!isScale}
+              />
             ))}
           </ul>
           {group3.length > 0 && (
             <>
-              <div className="h-px w-full" style={{ background: "rgba(0,0,0,0.05)" }} />
+              <div
+                className="h-px w-full"
+                style={{ background: "rgba(0,0,0,0.05)" }}
+              />
               <ul className="flex flex-col gap-3">
                 {group3.map((f) => (
-                  <FeatureRow key={f.label} label={f.label} available={featureAvailable(f)} isPro={!!isScale} />
+                  <FeatureRow
+                    key={f.label}
+                    label={f.label}
+                    available={featureAvailable(f)}
+                    isPro={!!isScale}
+                  />
                 ))}
               </ul>
             </>
@@ -3203,8 +5152,11 @@ function PricingSection({ onStartTrial }: { onStartTrial: () => void }) {
   return (
     <section
       id={SECTIONS.pricing}
-      className="w-full flex flex-col items-center px-6 py-24 gap-10"
-      style={{ background: "#f7f8f6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      className="w-full flex flex-col items-center px-6 py-24 gap-10 border-t border-black/6"
+      style={{
+        background: "#f7f8f6",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
     >
       {/* Header */}
       <motion.div
@@ -3214,13 +5166,19 @@ function PricingSection({ onStartTrial }: { onStartTrial: () => void }) {
         transition={{ duration: 0.52, ease: [0.16, 1, 0.3, 1] }}
         className="flex flex-col items-center gap-4 text-center max-w-xl"
       >
-        <span className="text-xs font-bold tracking-widest uppercase" style={{ color: "#4bac50" }}>
+        <span
+          className="text-xs font-bold tracking-widest uppercase"
+          style={{ color: "#4bac50" }}
+        >
           Pricing
         </span>
         <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.08] text-neutral-900">
           Simple, honest pricing.
         </h2>
-        <p className="text-base font-medium leading-relaxed max-w-sm" style={{ color: "rgba(0,0,0,0.42)" }}>
+        <p
+          className="text-base font-medium leading-relaxed max-w-sm"
+          style={{ color: "rgba(0,0,0,0.42)" }}
+        >
           Start free. Upgrade only when you outgrow it.
         </p>
       </motion.div>
@@ -3250,7 +5208,10 @@ function PricingSection({ onStartTrial }: { onStartTrial: () => void }) {
             tagline="For growing teams who need full ops."
             badge="Most popular"
             price={{ monthly: "$6", annual: "$5" }}
-            priceNote={{ monthly: "per month", annual: "per month, billed annually" }}
+            priceNote={{
+              monthly: "per month",
+              annual: "per month, billed annually",
+            }}
             cta="Upgrade to Pro"
             isPro={true}
             features={COMPARISON_FEATURES}
@@ -3269,7 +5230,12 @@ function PricingSection({ onStartTrial }: { onStartTrial: () => void }) {
             isScale={true}
             features={COMPARISON_FEATURES}
             index={2}
-            onCta={() => window.open("mailto:hello@rinse.app?subject=Scale%20plan%20inquiry", "_blank")}
+            onCta={() =>
+              window.open(
+                "mailto:hello@rinse.app?subject=Scale%20plan%20inquiry",
+                "_blank",
+              )
+            }
             cycle={cycle}
           />
         </div>
@@ -3283,7 +5249,8 @@ function PricingSection({ onStartTrial }: { onStartTrial: () => void }) {
         className="text-xs font-medium text-center"
         style={{ color: "rgba(0,0,0,0.30)" }}
       >
-        No credit card required&nbsp;&nbsp;·&nbsp;&nbsp;Cancel any time&nbsp;&nbsp;·&nbsp;&nbsp;Upgrade anytime
+        No credit card required&nbsp;&nbsp;·&nbsp;&nbsp;Cancel any
+        time&nbsp;&nbsp;·&nbsp;&nbsp;Upgrade anytime
       </motion.p>
     </section>
   );
@@ -3298,7 +5265,7 @@ function CTASection({
   onBookDemo: () => void;
 }) {
   return (
-    <section id={SECTIONS.cta} className="py-32 px-6 lg:px-12">
+    <section id={SECTIONS.cta} className="py-32 px-6 lg:px-12 border-t border-black/6">
       <div className="max-w-7xl mx-auto">
         <FadeUpWhenVisible>
           <div
@@ -3329,7 +5296,8 @@ function CTASection({
                 like the pros do.
               </h2>
               <p className="text-base lg:text-lg text-black/40 max-w-xl mx-auto mb-10 leading-relaxed">
-                Join 2,400+ detailing businesses using Rinse to book more, earn more, and build something worth owning.
+                Join 2,400+ detailing businesses using Rinse to book more, earn
+                more, and build something worth owning.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
@@ -3356,7 +5324,10 @@ function CTASection({
 }
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
-const FOOTER_LINKS: Record<string, { label: string; href?: string; action?: "scroll" | "mailto" }[]> = {
+const FOOTER_LINKS: Record<
+  string,
+  { label: string; href?: string; action?: "scroll" | "mailto" }[]
+> = {
   Product: [
     { label: "Features", action: "scroll", href: SECTIONS.features },
     { label: "Pricing", action: "scroll", href: SECTIONS.pricing },
@@ -3387,13 +5358,21 @@ const FOOTER_LINKS: Record<string, { label: string; href?: string; action?: "scr
 };
 
 function Footer() {
-  const handleFooterClick = (link: { label: string; href?: string; action?: "scroll" | "mailto" }) => {
+  const handleFooterClick = (link: {
+    label: string;
+    href?: string;
+    action?: "scroll" | "mailto";
+  }) => {
     if (link.action === "scroll" && link.href) {
       scrollToSection(link.href);
       return;
     }
     if (link.href) {
-      window.open(link.href, link.href.startsWith("mailto:") ? "_self" : "_blank", "noopener,noreferrer");
+      window.open(
+        link.href,
+        link.href.startsWith("mailto:") ? "_self" : "_blank",
+        "noopener,noreferrer",
+      );
     }
   };
 
@@ -3441,7 +5420,10 @@ function Footer() {
           <div className="flex items-center gap-4">
             {[
               { label: "Twitter", href: "https://twitter.com/rinseapp" },
-              { label: "LinkedIn", href: "https://linkedin.com/company/rinseapp" },
+              {
+                label: "LinkedIn",
+                href: "https://linkedin.com/company/rinseapp",
+              },
               { label: "GitHub", href: "https://github.com/rinseapp" },
             ].map((s) => (
               <a
@@ -3533,9 +5515,7 @@ function HeroSection({
             <motion.span key={line} className="block" variants={fadeUp}>
               {line.includes("mobile") ? (
                 <>
-                  for{" "}
-                  <span className="text-[#4bac50]">mobile</span>
-                  {" "}detailing.
+                  for <span className="text-[#4bac50]">mobile</span> detailing.
                 </>
               ) : (
                 line
@@ -3551,7 +5531,8 @@ function HeroSection({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.55 }}
         >
-          Bookings, scheduling, CRM, invoices, payments, and analytics — unified in one platform built exclusively for detailing professionals.
+          Bookings, scheduling, CRM, invoices, payments, and analytics — unified
+          in one platform built exclusively for detailing professionals.
         </motion.p>
 
         {/* CTAs */}
@@ -3611,14 +5592,17 @@ function LogoBar() {
     "ProWash Mobile",
   ];
   return (
-    <div className="py-12 px-6 lg:px-12 border-b border-black/5">
+    <div className="py-12 px-6 lg:px-12 border-y border-black/6">
       <div className="max-w-7xl mx-auto">
         <p className="text-center text-[10px] font-mono text-black/20 uppercase tracking-[0.2em] mb-8">
-          Trusted by 2,400+ detailing businesses
+          Built for detailing professionals
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
           {names.map((n) => (
-            <span key={n} className="text-xs font-semibold text-black/18 hover:text-black/35 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] cursor-default">
+            <span
+              key={n}
+              className="text-xs font-semibold text-black/18 hover:text-black/35 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] cursor-default"
+            >
               {n}
             </span>
           ))}
@@ -3631,10 +5615,10 @@ function LogoBar() {
 // ─── Product Showcase ─────────────────────────────────────────────────────────
 function ShowcaseSection() {
   return (
-    <section className="py-32 px-6 lg:px-12 border-t border-black/5">
+    <section className="px-6 lg:px-12 border-t border-black/6">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-stretch">
+          <div className="py-24 lg:py-32 lg:pr-16 lg:border-r border-black/6">
             <FadeUpWhenVisible className="mb-4">
               <span className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em]">
                 Technician Management
@@ -3649,14 +5633,22 @@ function ShowcaseSection() {
             </FadeUpWhenVisible>
             <FadeUpWhenVisible delay={0.1} className="mb-8">
               <p className="text-sm text-black/40 leading-relaxed">
-                Real-time GPS, job status updates, photo documentation, and performance dashboards — all from one screen. Know exactly where every tech is and what they're working on.
+                Real-time GPS, job status updates, photo documentation, and
+                performance dashboards — all from one screen. Know exactly where
+                every tech is and what they're working on.
               </p>
             </FadeUpWhenVisible>
             <FadeUpWhenVisible delay={0.13}>
               <div className="space-y-3">
                 {[
-                  { icon: MapPin, text: "Live GPS tracking for all technicians" },
-                  { icon: Bell, text: "Push notifications for new and updated jobs" },
+                  {
+                    icon: MapPin,
+                    text: "Live GPS tracking for all technicians",
+                  },
+                  {
+                    icon: Bell,
+                    text: "Push notifications for new and updated jobs",
+                  },
                   { icon: Shield, text: "Photo capture and digital sign-off" },
                   { icon: Zap, text: "Performance scoring and leaderboards" },
                 ].map((item) => (
@@ -3671,31 +5663,60 @@ function ShowcaseSection() {
             </FadeUpWhenVisible>
           </div>
 
-          <FadeUpWhenVisible delay={0.15}>
+          <FadeUpWhenVisible delay={0.15} className="flex items-center py-24 lg:py-32 lg:pl-16">
             {/* Team mockup */}
             <div className="rounded-2xl border border-black/8 bg-white overflow-hidden shadow-[0_40px_80px_-15px_rgba(0,0,0,0.7)]">
               <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
-                <span className="text-sm font-semibold text-neutral-900">Live Team View</span>
+                <span className="text-sm font-semibold text-neutral-900">
+                  Live Team View
+                </span>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] font-mono text-emerald-400">3 active</span>
+                  <span className="text-[10px] font-mono text-emerald-400">
+                    3 active
+                  </span>
                 </div>
               </div>
               <div className="p-4 space-y-3">
                 {[
-                  { name: "Marcus T.", status: "In transit", job: "BMW M3 · 1.2 mi away", pct: 72, color: "#4bac50" },
-                  { name: "Jordan K.", status: "On job", job: "Porsche 911 · In progress", pct: 45, color: "#22C55E" },
-                  { name: "Ryan S.", status: "Wrapping up", job: "Range Rover · Final rinse", pct: 91, color: "#A855F7" },
+                  {
+                    name: "Marcus T.",
+                    status: "In transit",
+                    job: "BMW M3 · 1.2 mi away",
+                    pct: 72,
+                    color: "#4bac50",
+                  },
+                  {
+                    name: "Jordan K.",
+                    status: "On job",
+                    job: "Porsche 911 · In progress",
+                    pct: 45,
+                    color: "#22C55E",
+                  },
+                  {
+                    name: "Ryan S.",
+                    status: "Wrapping up",
+                    job: "Range Rover · Final rinse",
+                    pct: 91,
+                    color: "#A855F7",
+                  },
                 ].map((tech) => (
-                  <div key={tech.name} className="rounded-xl border border-black/5 bg-black/2 p-3">
+                  <div
+                    key={tech.name}
+                    className="rounded-xl border border-black/5 bg-black/2 p-3"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-xs font-bold text-neutral-900">
                           {tech.name[0]}
                         </div>
                         <div>
-                          <div className="text-xs font-semibold text-neutral-900">{tech.name}</div>
-                          <div className="text-[10px] text-black/30 font-mono">{tech.job}</div>
+                          <div className="text-xs font-semibold text-neutral-900">
+                            {tech.name}
+                          </div>
+                          <div className="text-[10px] text-black/30 font-mono">
+                            {tech.job}
+                          </div>
                         </div>
                       </div>
                       <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-black/5 text-black/40">
@@ -3709,10 +5730,16 @@ function ShowcaseSection() {
                         initial={{ width: 0 }}
                         whileInView={{ width: `${tech.pct}%` }}
                         viewport={{ once: true }}
-                        transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+                        transition={{
+                          duration: 1,
+                          delay: 0.2,
+                          ease: "easeOut",
+                        }}
                       />
                     </div>
-                    <div className="text-right text-[9px] font-mono text-black/20 mt-1">{tech.pct}% complete</div>
+                    <div className="text-right text-[9px] font-mono text-black/20 mt-1">
+                      {tech.pct}% complete
+                    </div>
                   </div>
                 ))}
               </div>
@@ -3726,16 +5753,19 @@ function ShowcaseSection() {
 
 // ─── Integration Ecosystem Showcase ────────────────────────────────────────────
 const ECOSYSTEM_INTEGRATIONS = [
-  { id: 0, name: "Stripe",          color: "#635BFF", icon: CreditCard    },
-  { id: 1, name: "Google Calendar", color: "#4285F4", icon: Calendar      },
-  { id: 2, name: "QuickBooks",      color: "#2CA01C", icon: BookOpen      },
-  { id: 4, name: "Zapier",          color: "#FF4A00", icon: Zap           },
-  { id: 5, name: "Google Maps",     color: "#34A853", icon: MapPin        },
-  { id: 6, name: "Apple Pay",       color: "#A0A0A0", icon: Smartphone    },
-  { id: 7, name: "Mailchimp",       color: "#FFE01B", icon: Mail          },
+  { id: 0, name: "Stripe", color: "#635BFF", icon: CreditCard },
+  { id: 1, name: "Google Calendar", color: "#4285F4", icon: Calendar },
+  { id: 2, name: "QuickBooks", color: "#2CA01C", icon: BookOpen },
+  { id: 4, name: "Zapier", color: "#FF4A00", icon: Zap },
+  { id: 5, name: "Google Maps", color: "#34A853", icon: MapPin },
+  { id: 6, name: "Apple Pay", color: "#A0A0A0", icon: Smartphone },
+  { id: 7, name: "Mailchimp", color: "#FFE01B", icon: Mail },
 ] as const;
 
-const ECOSYSTEM_TOP_ROW    = [...ECOSYSTEM_INTEGRATIONS, ...ECOSYSTEM_INTEGRATIONS];
+const ECOSYSTEM_TOP_ROW = [
+  ...ECOSYSTEM_INTEGRATIONS,
+  ...ECOSYSTEM_INTEGRATIONS,
+];
 const ECOSYSTEM_BOTTOM_ROW = [
   ...ECOSYSTEM_INTEGRATIONS.slice(4),
   ...ECOSYSTEM_INTEGRATIONS.slice(0, 4),
@@ -3796,82 +5826,81 @@ function EcosystemCard({ name, color, icon: Icon }: EcosystemCardProps) {
 
 function EcosystemSection() {
   return (
-    <section className="relative w-full py-32 bg-white overflow-hidden">
+    <section className="relative w-full py-32 bg-white overflow-hidden border-t border-black/6">
       <style>{`
         @keyframes marquee-left {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
         }
-        @keyframes marquee-right {
-          from { transform: translateX(-50%); }
-          to   { transform: translateX(0); }
-        }
-        .eco-scroll-left  { animation: marquee-left  32s linear infinite; }
-        .eco-scroll-right { animation: marquee-right 32s linear infinite; }
-        .eco-marquee-zone:hover .eco-scroll-left,
-        .eco-marquee-zone:hover .eco-scroll-right {
+        .eco-scroll-left { animation: marquee-left 32s linear infinite; }
+        .eco-marquee-zone:hover .eco-scroll-left {
           animation-play-state: paused;
         }
       `}</style>
 
-      {/* Header */}
-      <div className="relative z-10 text-center px-6 mb-16">
-        <FadeUpWhenVisible className="mb-5">
-          <p className="text-xs tracking-[0.28em] uppercase font-medium text-[#4bac50] font-mono">
-            Ecosystem
-          </p>
-        </FadeUpWhenVisible>
-        <FadeUpWhenVisible delay={0.06} className="mb-8">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-neutral-900">
-            Plays well with the tools
-            <br />
-            you already run.
-          </h2>
-        </FadeUpWhenVisible>
-        <FadeUpWhenVisible delay={0.12}>
-          <motion.button
-            onClick={() => scrollToSection(SECTIONS.cta)}
-            whileHover={{ borderColor: "rgba(75,172,80,0.55)", background: "rgba(75,172,80,0.1)" }}
-            whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-colors"
-            style={{
-              border: "1px solid rgba(75,172,80,0.28)",
-              color: "#4bac50",
-              background: "rgba(75,172,80,0.05)",
-            }}
-          >
-            See all integrations
-            <ArrowRight size={13} strokeWidth={2.5} />
-          </motion.button>
-        </FadeUpWhenVisible>
+      {/* Header — left-aligned, with CTA on the right */}
+      <div className="relative z-10 px-6 lg:px-12 mb-16">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+          <div>
+            <FadeUpWhenVisible className="mb-4">
+              <p className="text-[10px] tracking-[0.2em] uppercase font-medium text-[#4bac50] font-mono">
+                Ecosystem
+              </p>
+            </FadeUpWhenVisible>
+            <FadeUpWhenVisible delay={0.06}>
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-neutral-900">
+                Plays well with the tools
+                <br />
+                you already run.
+              </h2>
+            </FadeUpWhenVisible>
+          </div>
+          <FadeUpWhenVisible delay={0.1}>
+            <motion.button
+              onClick={() => scrollToSection(SECTIONS.cta)}
+              whileHover={{
+                borderColor: "rgba(75,172,80,0.55)",
+                background: "rgba(75,172,80,0.1)",
+              }}
+              whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-colors flex-shrink-0"
+              style={{
+                border: "1px solid rgba(75,172,80,0.28)",
+                color: "#4bac50",
+                background: "rgba(75,172,80,0.05)",
+              }}
+            >
+              See all integrations
+              <ArrowRight size={13} strokeWidth={2.5} />
+            </motion.button>
+          </FadeUpWhenVisible>
+        </div>
       </div>
 
-      {/* Marquee rows */}
+      {/* Single marquee row */}
       <div className="relative eco-marquee-zone">
         {/* Edge fades */}
         <div
           className="absolute inset-y-0 left-0 z-10 pointer-events-none"
-          style={{ width: 120, background: "linear-gradient(to right, #ffffff 0%, transparent 100%)" }}
+          style={{
+            width: 140,
+            background: "linear-gradient(to right, #ffffff 0%, transparent 100%)",
+          }}
         />
         <div
           className="absolute inset-y-0 right-0 z-10 pointer-events-none"
-          style={{ width: 120, background: "linear-gradient(to left, #ffffff 0%, transparent 100%)" }}
+          style={{
+            width: 140,
+            background: "linear-gradient(to left, #ffffff 0%, transparent 100%)",
+          }}
         />
-
-        {/* Row 1 — scrolls left */}
-        <div className="overflow-hidden mb-4">
-          <div className="eco-scroll-left flex gap-4 py-3" style={{ width: "max-content" }}>
+        <div className="overflow-hidden">
+          <div
+            className="eco-scroll-left flex gap-4 py-3"
+            style={{ width: "max-content" }}
+          >
             {ECOSYSTEM_TOP_ROW.map((item, i) => (
               <EcosystemCard key={`t-${i}`} {...item} />
-            ))}
-          </div>
-        </div>
-
-        {/* Row 2 — scrolls right */}
-        <div className="overflow-hidden">
-          <div className="eco-scroll-right flex gap-4 py-3" style={{ width: "max-content" }}>
-            {ECOSYSTEM_BOTTOM_ROW.map((item, i) => (
-              <EcosystemCard key={`b-${i}`} {...item} />
             ))}
           </div>
         </div>
@@ -3902,12 +5931,15 @@ export default function App() {
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       <Nav onStartTrial={handleStartTrial} />
-      <HeroSection onStartTrial={handleStartTrial} onOpenDemo={handleOpenDemo} />
+      <HeroSection
+        onStartTrial={handleStartTrial}
+        onOpenDemo={handleOpenDemo}
+      />
       <LogoBar />
       <StatsBar />
 
       {/* Workflow section header */}
-      <div className="pt-32 px-6 lg:px-12">
+      <div className="pt-32 px-6 lg:px-12 border-t border-black/6">
         <div className="max-w-7xl mx-auto">
           <FadeUpWhenVisible className="mb-3">
             <h2 className="text-4xl lg:text-5xl font-bold text-neutral-900 tracking-tight leading-tight">
@@ -3918,7 +5950,8 @@ export default function App() {
           </FadeUpWhenVisible>
           <FadeUpWhenVisible delay={0.07} className="mb-0">
             <p className="text-base text-black/35 max-w-lg leading-relaxed">
-              From the moment a customer books to the second the money hits your account — Rinse handles every step automatically.
+              From the moment a customer books to the second the money hits your
+              account — Rinse handles every step automatically.
             </p>
           </FadeUpWhenVisible>
         </div>
