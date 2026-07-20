@@ -1091,113 +1091,115 @@ function HeroMainWindow() {
 function HeroWindowCluster() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Which window is on top / focused
   const [focused, setFocused] = useState<"main" | "chat" | "log" | "video" | null>(null);
-
-  // Side panels are hidden until the user scrolls even a little
-  const [showSide, setShowSide] = useState(false);
-  // Once the entrance animation finishes, flip to fast focus transitions
+  const [showSide, setShowSide]     = useState(false);
   const [sideEntered, setSideEntered] = useState(false);
 
   const { scrollY } = useScroll();
+
+  // Scroll-driven scale: large at top → normal once side panels appear
+  const mainScale = useTransform(scrollY, [0, 220], [1.22, 1.0]);
+
   useMotionValueEvent(scrollY, "change", (v) => {
-    if (v > 50)  { setShowSide(true); }
-    if (v <= 50) { setShowSide(false); setSideEntered(false); }
+    if (v > 100) { setShowSide(true); }
+    if (v <= 100) { setShowSide(false); setSideEntered(false); }
   });
 
-  // ── helpers ──────────────────────────────────────────────────────────────────
   const zFor = (id: "main" | "chat" | "log" | "video", base: number) =>
     focused === id ? 50 : base;
 
-  // Fast transition for focus changes; slower for entrance
-  const FOCUS_T  = { duration: 0.13, ease: "easeOut" as const };
-  const enterT   = (delay: number) => ({ duration: 0.38, ease: EASE, delay });
-
-  // Per-element transition: fast once entered, staggered on entrance
-  const trans = (id: string, delay: number, dir: "x" | "y" = "x") =>
-    sideEntered
-      ? FOCUS_T
-      : { opacity: enterT(delay), [dir]: enterT(delay), scale: FOCUS_T };
+  const ENTER_T = (delay: number) => ({ duration: 0.4, ease: EASE, delay });
+  const EXIT_T  = { duration: 0.28, ease: "easeIn" as const };
 
   const dragProps = {
     drag: true as const,
     dragMomentum: false,
     dragElastic: 0.08,
     dragConstraints: containerRef,
-    whileDrag: { scale: 1.018, zIndex: 99 },
+    whileDrag: { zIndex: 99 },
   };
 
   return (
+    // Extra height so the scaled-up main window doesn't clip
     <div
       ref={containerRef}
       className="relative mx-auto"
-      style={{ width: 1040, height: 460 }}
+      style={{ width: 1040, height: 520 }}
     >
-      {/* ── Main dashboard — draggable, visible immediately on load ─────────── */}
+      {/* ── Main dashboard — large at top, shrinks as side panels emerge ──── */}
       <motion.div
         {...dragProps}
         className="absolute cursor-grab active:cursor-grabbing select-none"
-        style={{ top: 8, left: "calc(50% - 310px)", zIndex: zFor("main", 30) }}
+        style={{
+          top: 8,
+          left: "calc(50% - 310px)",
+          zIndex: zFor("main", 30),
+          scale: mainScale,
+          transformOrigin: "top center",
+        }}
         initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={
-          sideEntered
-            ? FOCUS_T
-            : {
-                opacity: { duration: 0.5, ease: EASE },
-                y:       { duration: 0.5, ease: EASE },
-                scale:   FOCUS_T,
-              }
-        }
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ opacity: { duration: 0.5, ease: EASE }, y: { duration: 0.5, ease: EASE } }}
         onPointerDown={() => setFocused("main")}
       >
         <HeroMainWindow />
       </motion.div>
 
-      {/* ── Side panels — revealed staggered on first scroll ─────────────────── */}
-      {showSide && (
-        <>
-          {/* Chat — top-left */}
+      {/* ── Side panels — staggered in on scroll, staggered out on scroll back ── */}
+      <AnimatePresence>
+        {showSide && (
           <motion.div
+            key="chat"
             {...dragProps}
             className="absolute cursor-grab active:cursor-grabbing select-none"
             style={{ top: 20, left: 0, zIndex: zFor("chat", 20) }}
-            initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={trans("chat", 0)}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={sideEntered ? EXIT_T : ENTER_T(0)}
             onPointerDown={() => setFocused("chat")}
             onAnimationComplete={() => { if (!sideEntered) setSideEntered(true); }}
           >
             <HeroChatPanel />
           </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* Log — bottom-left */}
+      <AnimatePresence>
+        {showSide && (
           <motion.div
+            key="log"
             {...dragProps}
             className="absolute cursor-grab active:cursor-grabbing select-none"
             style={{ bottom: 0, left: 40, zIndex: zFor("log", 20) }}
-            initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={trans("log", 0.14)}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={sideEntered ? EXIT_T : ENTER_T(0.14)}
             onPointerDown={() => setFocused("log")}
           >
             <HeroLogPanel />
           </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* Video — top-right */}
+      <AnimatePresence>
+        {showSide && (
           <motion.div
+            key="video"
             {...dragProps}
             className="absolute cursor-grab active:cursor-grabbing select-none"
             style={{ top: 44, right: 0, zIndex: zFor("video", 20) }}
-            initial={{ opacity: 0, x: 18 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={trans("video", 0.26)}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={sideEntered ? EXIT_T : ENTER_T(0.26)}
             onPointerDown={() => setFocused("video")}
           >
             <HeroVideoPanel />
           </motion.div>
-        </>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }
