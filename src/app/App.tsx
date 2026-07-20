@@ -1848,118 +1848,41 @@ function FeaturesPage() {
 }
 
 // ─── Ecosystem Modal ──────────────────────────────────────────────────────────
-function EcosystemModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onClose]);
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          key="eco-modal-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          onClick={onClose}
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 backdrop-blur-sm px-6"
-        >
-          <motion.div
-            key="eco-modal-panel"
-            initial={{ opacity: 0, scale: 0.96, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 18 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-xl bg-white rounded-2xl border border-black/8 shadow-[0_32px_80px_rgba(0,0,0,0.22)] overflow-hidden"
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between px-6 pt-6 pb-5 border-b border-black/6">
-              <div>
-                <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-1.5">
-                  Ecosystem
-                </p>
-                <h2 className="text-xl font-bold text-neutral-900 leading-snug">
-                  Plays well with the tools<br />you already run.
-                </h2>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-black/35 hover:text-neutral-900 transition-colors mt-0.5"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Marquee */}
-            <div className="py-7 relative overflow-hidden bg-white">
-              <style>{`
-                @keyframes eco-modal-marquee {
-                  from { transform: translateX(0); }
-                  to   { transform: translateX(-50%); }
-                }
-                .eco-modal-scroll { animation: eco-modal-marquee 22s linear infinite; }
-                .eco-modal-zone:hover .eco-modal-scroll { animation-play-state: paused; }
-              `}</style>
-              <div className="absolute inset-y-0 left-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to right,#fff,transparent)" }} />
-              <div className="absolute inset-y-0 right-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to left,#fff,transparent)" }} />
-              <div className="overflow-hidden eco-modal-zone">
-                <div className="eco-modal-scroll flex gap-3 py-1" style={{ width: "max-content" }}>
-                  {ECOSYSTEM_TOP_ROW.map((item, i) => (
-                    <EcosystemCard key={`em-${i}`} {...item} />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 pb-6 flex justify-end">
-              <button
-                onClick={onClose}
-                className="px-5 py-2 text-sm text-black/40 hover:text-neutral-900 transition-colors border border-black/8 rounded-xl hover:border-black/16"
-              >
-                Close
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-// ─── Ecosystem Trigger (replaces the full EcosystemSection) ───────────────────
-function EcosystemTrigger({ onOpen }: { onOpen: () => void }) {
+// ─── Ecosystem Inline Panel (contained card on the page, no popup) ────────────
+function EcosystemInlinePanel() {
   return (
     <section className="border-t border-black/6 px-6 lg:px-12 py-16">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-2">
+      <style>{`
+        @keyframes eco-modal-marquee {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        .eco-modal-scroll { animation: eco-modal-marquee 22s linear infinite; }
+        .eco-modal-zone:hover .eco-modal-scroll { animation-play-state: paused; }
+      `}</style>
+      <div className="max-w-xl mx-auto bg-white rounded-2xl border border-black/8 shadow-[0_8px_32px_rgba(0,0,0,0.08)] overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-5 border-b border-black/6">
+          <p className="text-[10px] font-mono text-[#4bac50] uppercase tracking-[0.2em] mb-1.5">
             Ecosystem
           </p>
-          <h2 className="text-2xl font-bold text-neutral-900 leading-snug">
-            Plays well with the tools you already run.
+          <h2 className="text-xl font-bold text-neutral-900 leading-snug">
+            Plays well with the tools<br />you already run.
           </h2>
         </div>
-        <motion.button
-          onClick={onOpen}
-          whileHover={{ borderColor: "rgba(75,172,80,0.55)", background: "rgba(75,172,80,0.1)" }}
-          whileTap={{ scale: 0.97 }}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium flex-shrink-0 transition-colors"
-          style={{
-            border: "1px solid rgba(75,172,80,0.28)",
-            color: "#4bac50",
-            background: "rgba(75,172,80,0.05)",
-          }}
-        >
-          See all integrations
-          <ArrowRight size={13} strokeWidth={2.5} />
-        </motion.button>
+
+        {/* Marquee */}
+        <div className="py-7 relative overflow-hidden bg-white">
+          <div className="absolute inset-y-0 left-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to right,#fff,transparent)" }} />
+          <div className="absolute inset-y-0 right-0 z-10 pointer-events-none" style={{ width: 56, background: "linear-gradient(to left,#fff,transparent)" }} />
+          <div className="overflow-hidden eco-modal-zone">
+            <div className="eco-modal-scroll flex gap-3 py-1" style={{ width: "max-content" }}>
+              {ECOSYSTEM_TOP_ROW.map((item, i) => (
+                <EcosystemCard key={`ep-${i}`} {...item} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -6039,7 +5962,6 @@ function HomePage({
   onOpenDemo: () => void;
   onBookDemo: () => void;
 }) {
-  const [ecoOpen, setEcoOpen] = useState(false);
   return (
     <div
       className="min-h-screen bg-background text-foreground"
@@ -6070,13 +5992,11 @@ function HomePage({
 
       <NodeCanvasSection />
       <ShowcaseSection />
-      <EcosystemTrigger onOpen={() => setEcoOpen(true)} />
+      <EcosystemInlinePanel />
       <TestimonialsSection />
       <PricingSection onStartTrial={onStartTrial} />
       <CTASection onStartTrial={onStartTrial} onBookDemo={onBookDemo} />
       <Footer />
-
-      <EcosystemModal open={ecoOpen} onClose={() => setEcoOpen(false)} />
     </div>
   );
 }
