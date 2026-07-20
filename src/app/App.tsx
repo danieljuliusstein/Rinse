@@ -1089,10 +1089,12 @@ function HeroMainWindow() {
 }
 
 function HeroWindowCluster() {
+  // dragRef spans the full viewport width — windows can be dragged to screen edges
+  const dragRef      = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [focused, setFocused] = useState<"main" | "chat" | "log" | "video" | null>(null);
-  const [showSide, setShowSide]     = useState(false);
+  const [showSide, setShowSide]       = useState(false);
   const [sideEntered, setSideEntered] = useState(false);
 
   const { scrollY } = useScroll();
@@ -1101,7 +1103,7 @@ function HeroWindowCluster() {
   const mainScale = useTransform(scrollY, [0, 220], [1.22, 1.0]);
 
   useMotionValueEvent(scrollY, "change", (v) => {
-    if (v > 100) { setShowSide(true); }
+    if (v > 100)  { setShowSide(true); }
     if (v <= 100) { setShowSide(false); setSideEntered(false); }
   });
 
@@ -1114,18 +1116,34 @@ function HeroWindowCluster() {
   const dragProps = {
     drag: true as const,
     dragMomentum: false,
-    dragElastic: 0.08,
-    dragConstraints: containerRef,
+    dragElastic: 0.06,
+    dragConstraints: dragRef,   // ← full-viewport constraint, not the 1040px box
     whileDrag: { zIndex: 99 },
   };
 
   return (
-    // Extra height so the scaled-up main window doesn't clip
-    <div
-      ref={containerRef}
-      className="relative mx-auto"
-      style={{ width: 1040, height: 520 }}
-    >
+    <div className="relative mx-auto" style={{ width: 1040, height: 520 }}>
+      {/*
+        Full-viewport-width invisible zone used only as drag bounds.
+        Positioned by getBoundingClientRect so framer-motion can compare
+        it against each window's rect regardless of DOM hierarchy.
+      */}
+      <div
+        ref={dragRef}
+        className="pointer-events-none absolute"
+        style={{
+          top: -40,
+          height: "calc(100% + 80px)",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "100vw",
+        }}
+      />
+      {/* Positioning anchor — windows are placed relative to this 1040px box */}
+      <div
+        ref={containerRef}
+        className="absolute inset-0"
+      />
       {/* ── Main dashboard — large at top, shrinks as side panels emerge ──── */}
       <motion.div
         {...dragProps}
