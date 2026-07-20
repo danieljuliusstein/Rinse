@@ -1088,79 +1088,118 @@ function HeroMainWindow() {
   );
 }
 
-// Draggable floating window wrapper — grab/throw physics, constrained to the hero container.
-function DraggableWindow({
-  children,
-  containerRef,
-  style,
-  reveal,
-}: {
-  children: React.ReactNode;
-  containerRef: React.RefObject<HTMLDivElement>;
-  style: React.CSSProperties;
-  reveal: { x?: number; y?: number; delay: number };
-}) {
-  return (
-    <motion.div
-      className="absolute cursor-grab active:cursor-grabbing"
-      style={style}
-      drag
-      dragMomentum
-      dragElastic={0.18}
-      dragConstraints={containerRef}
-      whileDrag={{ scale: 1.02 }}
-      initial={{ opacity: 0, x: reveal.x ?? 0, y: reveal.y ?? 0 }}
-      animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut", delay: reveal.delay }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 function HeroWindowCluster() {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Which window is on top / focused
+  const [focused, setFocused] = useState<"main" | "chat" | "log" | "video" | null>(null);
+
+  // Side panels are hidden until the user scrolls even a little
+  const [showSide, setShowSide] = useState(false);
+  // Once the entrance animation finishes, flip to fast focus transitions
+  const [sideEntered, setSideEntered] = useState(false);
+
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, "change", (v) => {
+    if (v > 50) setShowSide(true);
+  });
+
+  // ── helpers ──────────────────────────────────────────────────────────────────
+  const dimmed   = (id: string) => focused !== null && focused !== id;
+  const wOpacity = (id: string) => (dimmed(id) ? 0.65 : 1);
+  const wScale   = (id: string) => (dimmed(id) ? 0.984 : 1);
+  const zFor     = (id: "main" | "chat" | "log" | "video", base: number) =>
+    focused === id ? 50 : base;
+
+  // Fast transition for focus changes; slower for entrance
+  const FOCUS_T  = { duration: 0.13, ease: "easeOut" as const };
+  const enterT   = (delay: number) => ({ duration: 0.38, ease: EASE, delay });
+
+  // Per-element transition: fast once entered, staggered on entrance
+  const trans = (id: string, delay: number, dir: "x" | "y" = "x") =>
+    sideEntered
+      ? FOCUS_T
+      : { opacity: enterT(delay), [dir]: enterT(delay), scale: FOCUS_T };
+
+  const dragProps = {
+    drag: true as const,
+    dragMomentum: false,
+    dragElastic: 0.08,
+    dragConstraints: containerRef,
+    whileDrag: { scale: 1.018, zIndex: 99 },
+  };
 
   return (
     <div
       ref={containerRef}
-      className="relative mx-auto hidden lg:block"
+      className="relative mx-auto"
       style={{ width: 1040, height: 460 }}
     >
-      {/* Main window — front and center */}
+      {/* ── Main dashboard — draggable, visible immediately on load ─────────── */}
       <motion.div
-        className="absolute z-30"
-        style={{ top: 8, left: "50%", x: "-50%" }}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: EASE }}
+        {...dragProps}
+        className="absolute cursor-grab active:cursor-grabbing select-none"
+        style={{ top: 8, left: "calc(50% - 310px)", zIndex: zFor("main", 30) }}
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: wOpacity("main"), y: 0, scale: wScale("main") }}
+        transition={
+          sideEntered
+            ? FOCUS_T
+            : {
+                opacity: { duration: 0.5, ease: EASE },
+                y:       { duration: 0.5, ease: EASE },
+                scale:   FOCUS_T,
+              }
+        }
+        onPointerDown={() => setFocused("main")}
       >
         <HeroMainWindow />
       </motion.div>
 
-      <DraggableWindow
-        containerRef={containerRef}
-        style={{ top: 20, left: 0, zIndex: 20 }}
-        reveal={{ x: -20, delay: 0.15 }}
-      >
-        <HeroChatPanel />
-      </DraggableWindow>
+      {/* ── Side panels — revealed staggered on first scroll ─────────────────── */}
+      {showSide && (
+        <>
+          {/* Chat — top-left */}
+          <motion.div
+            {...dragProps}
+            className="absolute cursor-grab active:cursor-grabbing select-none"
+            style={{ top: 20, left: 0, zIndex: zFor("chat", 20) }}
+            initial={{ opacity: 0, x: -18 }}
+            animate={{ opacity: wOpacity("chat"), x: 0, scale: wScale("chat") }}
+            transition={trans("chat", 0)}
+            onPointerDown={() => setFocused("chat")}
+            onAnimationComplete={() => { if (!sideEntered) setSideEntered(true); }}
+          >
+            <HeroChatPanel />
+          </motion.div>
 
-      <DraggableWindow
-        containerRef={containerRef}
-        style={{ bottom: 0, left: 40, zIndex: 20 }}
-        reveal={{ x: -20, delay: 0.15 }}
-      >
-        <HeroLogPanel />
-      </DraggableWindow>
+          {/* Log — bottom-left */}
+          <motion.div
+            {...dragProps}
+            className="absolute cursor-grab active:cursor-grabbing select-none"
+            style={{ bottom: 0, left: 40, zIndex: zFor("log", 20) }}
+            initial={{ opacity: 0, x: -18 }}
+            animate={{ opacity: wOpacity("log"), x: 0, scale: wScale("log") }}
+            transition={trans("log", 0.14)}
+            onPointerDown={() => setFocused("log")}
+          >
+            <HeroLogPanel />
+          </motion.div>
 
-      <DraggableWindow
-        containerRef={containerRef}
-        style={{ top: 44, right: 0, zIndex: 20 }}
-        reveal={{ x: 20, delay: 0.25 }}
-      >
-        <HeroVideoPanel />
-      </DraggableWindow>
+          {/* Video — top-right */}
+          <motion.div
+            {...dragProps}
+            className="absolute cursor-grab active:cursor-grabbing select-none"
+            style={{ top: 44, right: 0, zIndex: zFor("video", 20) }}
+            initial={{ opacity: 0, x: 18 }}
+            animate={{ opacity: wOpacity("video"), x: 0, scale: wScale("video") }}
+            transition={trans("video", 0.26)}
+            onPointerDown={() => setFocused("video")}
+          >
+            <HeroVideoPanel />
+          </motion.div>
+        </>
+      )}
     </div>
   );
 }
