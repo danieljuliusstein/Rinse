@@ -5730,7 +5730,7 @@ function HeroSection({
             className="inline-flex items-center gap-2 text-[11px] font-mono text-black/50 border border-black/10 bg-black/3 px-4 py-1.5 rounded-full hover:border-black/20 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-[#4bac50]" />
-            Introducing Route Optimization 2.0
+            Built for mobile detailing businesses
             <ChevronRight size={11} className="text-black/30" />
           </button>
         </motion.div>
