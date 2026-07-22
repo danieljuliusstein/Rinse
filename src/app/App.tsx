@@ -1704,7 +1704,7 @@ function NodeCanvasSection() {
                 <div className="border-t border-black/6 mb-10" />
 
                 {/* Mockup */}
-                <div className="flex items-center justify-start">
+                <div className="flex items-center justify-center">
                   {step.mockup}
                 </div>
               </div>
