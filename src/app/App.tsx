@@ -1615,19 +1615,22 @@ function NodeCanvasSection() {
   const [activeStep, setActiveStep] = useState(0);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // IntersectionObserver — step becomes active when it crosses into the top
-  // 40 % of the viewport. Real native scroll, no pinning.
+  // Scroll listener — always picks whichever step's top is nearest to the
+  // 35 % trigger line, falling back to the last step that has passed it.
   useEffect(() => {
-    const observers = stepRefs.current.map((el, i) => {
-      if (!el) return null;
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveStep(i); },
-        { rootMargin: "0px 0px -55% 0px", threshold: 0 },
-      );
-      obs.observe(el);
-      return obs;
-    });
-    return () => observers.forEach((o) => o?.disconnect());
+    const onScroll = () => {
+      const trigger = window.innerHeight * 0.35;
+      let best = 0;
+      stepRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const top = el.getBoundingClientRect().top;
+        if (top <= trigger) best = i;
+      });
+      setActiveStep(best);
+    };
+    onScroll(); // set correct state on mount
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const scrollToStep = useCallback((i: number) => {
@@ -1658,7 +1661,7 @@ function NodeCanvasSection() {
               <button
                 key={i}
                 onClick={() => scrollToStep(i)}
-                className={`block w-full text-left py-2.5 pl-4 border-l-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                className={`block w-full text-center py-2.5 border-l-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                   i === activeStep
                     ? "border-[#4bac50] text-neutral-900"
                     : "border-black/8 text-black/25 hover:text-black/50 hover:border-black/20"
