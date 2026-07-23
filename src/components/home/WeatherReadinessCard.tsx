@@ -10,7 +10,8 @@ import {
   weatherReadinessCompactSummary,
   weatherReadinessPartialNote,
 } from '@/src/lib/weather-readiness'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors, spacing } from '@/src/theme/colors'
+import { homeCardStyles } from './homeCardStyles'
 
 type WeatherReadinessCardProps = {
   result: WeatherReadinessResult | null
@@ -38,7 +39,7 @@ export function WeatherReadinessCard({ result, loading, compact = false }: Weath
   if (compact) {
     if (loading) {
       return (
-        <View style={[styles.compactCard, styles.compactClear]} accessibilityRole="summary">
+        <View style={[homeCardStyles.card, styles.compactCard, styles.compactClear]} accessibilityRole="summary">
           <View style={styles.compactInner}>
             <ActivityIndicator size="small" color={colors.greenText} />
             <AppText variant="bodySemiBold" style={styles.compactTitle}>
@@ -72,7 +73,7 @@ export function WeatherReadinessCard({ result, loading, compact = false }: Weath
           : styles.compactClear
 
     return (
-      <View style={[styles.compactCard, cardTone]} accessibilityRole="summary">
+      <View style={[homeCardStyles.card, cardTone, styles.compactCard]} accessibilityRole="summary">
         <View style={styles.compactInner}>
           <Icon size={18} color={iconColor} weight="duotone" />
           <AppText variant="bodySemiBold" style={styles.compactTitle}>
@@ -85,7 +86,7 @@ export function WeatherReadinessCard({ result, loading, compact = false }: Weath
 
   if (loading) {
     return (
-      <View style={styles.card}>
+      <View style={[homeCardStyles.card, styles.card]}>
         <View style={styles.header}>
           <ActivityIndicator size="small" color={colors.greenText} />
           <AppText variant="bodySemiBold" style={styles.title}>
@@ -99,7 +100,7 @@ export function WeatherReadinessCard({ result, loading, compact = false }: Weath
   if (!result) return null
 
   return (
-    <View style={styles.card}>
+    <View style={[homeCardStyles.card, styles.card]}>
       {result.status === 'no_jobs' ? (
         <View style={styles.header}>
           <Sun size={22} color={colors.green} weight="duotone" />
@@ -141,8 +142,6 @@ export function WeatherReadinessCard({ result, loading, compact = false }: Weath
 
 const styles = StyleSheet.create({
   compactCard: {
-    borderRadius: radii.sheet,
-    borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 14,
     paddingHorizontal: spacing.md,
   },
@@ -168,11 +167,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.sheet,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    padding: spacing.md,
     gap: spacing.sm,
   },
   header: {

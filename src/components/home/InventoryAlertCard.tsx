@@ -3,6 +3,7 @@ import { Warning, WarningCircle } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui'
 import type { InventoryAlertData } from '@/src/lib/home-dashboard'
 import { colors, spacing } from '@/src/theme/colors'
+import { homeCardStyles } from './homeCardStyles'
 
 interface InventoryAlertCardProps {
   alert: InventoryAlertData
@@ -15,7 +16,12 @@ export function InventoryAlertCard({ alert, onPress }: InventoryAlertCardProps) 
 
   return (
     <Pressable
-      style={[styles.card, danger ? styles.cardDanger : styles.cardWarning]}
+      style={({ pressed }) => [
+        homeCardStyles.card,
+        danger ? styles.cardDanger : styles.cardWarning,
+        styles.card,
+        pressed && styles.cardPressed,
+      ]}
       onPress={onPress}
       accessibilityRole="button"
     >
@@ -35,9 +41,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   cardWarning: {
     backgroundColor: '#fffbeb',
@@ -46,6 +49,9 @@ const styles = StyleSheet.create({
   cardDanger: {
     backgroundColor: '#fef2f2',
     borderColor: '#fca5a5',
+  },
+  cardPressed: {
+    opacity: 0.92,
   },
   body: {
     flex: 1,

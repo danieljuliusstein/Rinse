@@ -8,6 +8,7 @@ import { normalizeJobDate } from '@/src/lib/jobs-list'
 import type { WeatherReadinessResult } from '@/src/lib/weather-readiness'
 import { colors, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
+import { homeCardStyles } from './homeCardStyles'
 
 interface HomeMonthCalendarProps {
   jobs: JobWithRelations[]
@@ -150,7 +151,7 @@ export function HomeMonthCalendar({
   }
 
   return (
-    <View style={styles.card} {...panResponder.panHandlers}>
+    <View style={homeCardStyles.card} {...panResponder.panHandlers}>
       <View style={styles.head}>
         <Pressable
           accessibilityLabel="Previous month"
@@ -214,13 +215,6 @@ export function HomeMonthCalendar({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
   head: {
     flexDirection: 'row',
     alignItems: 'center',

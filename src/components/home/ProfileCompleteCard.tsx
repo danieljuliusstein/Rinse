@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { AppText, PrimaryButton } from '@/src/components/ui'
 import type { ProfileCompletion } from '@/src/lib/profile-completion'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors, spacing } from '@/src/theme/colors'
+import { homeCardStyles } from './homeCardStyles'
 
 type ProfileCompleteCardProps = {
   completion: ProfileCompletion
@@ -18,7 +19,7 @@ export function ProfileCompleteCard({ completion }: ProfileCompleteCardProps) {
   const continueHref = completion.nextStep?.href ?? '/settings/business'
 
   return (
-    <View style={styles.card}>
+    <View style={[homeCardStyles.card, styles.card]}>
       <View style={styles.top}>
         <AppText variant="sectionLabel">{t('home.completeProfile')}</AppText>
         <AppText style={styles.percent}>{completion.percent}%</AppText>
@@ -40,11 +41,6 @@ export function ProfileCompleteCard({ completion }: ProfileCompleteCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.sheet,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    padding: spacing.md,
     gap: 10,
   },
   top: {

@@ -294,31 +294,47 @@ export default function HomeScreen() {
               </BlockStagger>
             ) : null}
 
-            {isHomeModuleEnabled(homeModules, 'ar_alert') ? (
+            {isHomeModuleEnabled(homeModules, 'today_jobs') ? (
               <BlockStagger index={3}>
-                <ArSummaryCard summary={arSummary} />
+                <HomeSection label={t('home.todaysJobs')}>
+                  <TodayJobCard
+                    job={todayJob}
+                    onDirections={(address) => void Linking.openURL(openMaps(address))}
+                    onOpenJob={(jobId) => openJob(jobId)}
+                    onSchedule={() => router.push('/jobs/new')}
+                  />
+                </HomeSection>
+              </BlockStagger>
+            ) : null}
+
+            {moreTodayJobs.length > 0 && isHomeModuleEnabled(homeModules, 'today_jobs') ? (
+              <BlockStagger index={4}>
+                <SectionGroup title={t('home.alsoToday')}>
+                  {moreTodayJobs.map((job) => (
+                    <ListRow
+                      key={job.id}
+                      title={job.clientName}
+                      subtitle={todayJobDetailsLine(job)}
+                      meta={job.startTimeLabel ?? undefined}
+                      showChevron={false}
+                      onPress={() => openJob(job.id)}
+                    />
+                  ))}
+                </SectionGroup>
               </BlockStagger>
             ) : null}
 
             {isHomeModuleEnabled(homeModules, 'job_readiness') ? (
-              <BlockStagger index={4}>
+              <BlockStagger index={5}>
                 <HomeSection label={t('home.jobReadiness')}>
                   <WeatherReadinessCard result={weather} loading={weatherLoading} compact />
                 </HomeSection>
               </BlockStagger>
             ) : null}
 
-            {isHomeModuleEnabled(homeModules, 'invoice_month_carousel') && invoiceMonthCarousel.length > 0 ? (
-              <BlockStagger index={5}>
-                <HomeSection label={t('home.collected')}>
-                  <MonthCarousel items={invoiceMonthCarousel} />
-                </HomeSection>
-              </BlockStagger>
-            ) : null}
-
-            {isHomeModuleEnabled(homeModules, 'revenue_chart') ? (
+            {isHomeModuleEnabled(homeModules, 'ar_alert') ? (
               <BlockStagger index={6}>
-                <HomeRevenueChart jobs={jobs} />
+                <ArSummaryCard summary={arSummary} />
               </BlockStagger>
             ) : null}
 
@@ -344,38 +360,8 @@ export default function HomeScreen() {
               </BlockStagger>
             ) : null}
 
-            {isHomeModuleEnabled(homeModules, 'today_jobs') ? (
-              <BlockStagger index={9}>
-                <HomeSection label={t('home.todaysJobs')}>
-                  <TodayJobCard
-                    job={todayJob}
-                    onDirections={(address) => void Linking.openURL(openMaps(address))}
-                    onOpenJob={(jobId) => openJob(jobId)}
-                    onSchedule={() => router.push('/jobs/new')}
-                  />
-                </HomeSection>
-              </BlockStagger>
-            ) : null}
-
-            {moreTodayJobs.length > 0 && isHomeModuleEnabled(homeModules, 'today_jobs') ? (
-              <BlockStagger index={10}>
-                <SectionGroup title={t('home.alsoToday')}>
-                  {moreTodayJobs.map((job) => (
-                    <ListRow
-                      key={job.id}
-                      title={job.clientName}
-                      subtitle={todayJobDetailsLine(job)}
-                      meta={job.startTimeLabel ?? undefined}
-                      showChevron={false}
-                      onPress={() => openJob(job.id)}
-                    />
-                  ))}
-                </SectionGroup>
-              </BlockStagger>
-            ) : null}
-
             {upcomingJobs.length > 0 && isHomeModuleEnabled(homeModules, 'upcoming') ? (
-              <BlockStagger index={11}>
+              <BlockStagger index={9}>
                 <SectionGroup title={t('home.upcoming')}>
                   {upcomingJobs.map((job) => (
                     <ListRow
@@ -393,6 +379,20 @@ export default function HomeScreen() {
                     />
                   ))}
                 </SectionGroup>
+              </BlockStagger>
+            ) : null}
+
+            {isHomeModuleEnabled(homeModules, 'invoice_month_carousel') && invoiceMonthCarousel.length > 0 ? (
+              <BlockStagger index={10}>
+                <HomeSection label={t('home.collected')}>
+                  <MonthCarousel items={invoiceMonthCarousel} />
+                </HomeSection>
+              </BlockStagger>
+            ) : null}
+
+            {isHomeModuleEnabled(homeModules, 'revenue_chart') ? (
+              <BlockStagger index={11}>
+                <HomeRevenueChart jobs={jobs} />
               </BlockStagger>
             ) : null}
           </View>

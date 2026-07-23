@@ -53,19 +53,21 @@ export function HomeCtaRow() {
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 10,
+    gap: spacing.sm,
   },
   primary: {
     backgroundColor: colors.green,
-    borderRadius: radii.sheet,
-    paddingVertical: 15,
+    borderRadius: radii.md,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   ctaInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
   primaryLabel: {
     fontSize: 16,
@@ -74,15 +76,17 @@ const styles = StyleSheet.create({
   },
   secondaryRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: spacing.sm,
   },
   secondary: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: radii.sheet,
+    borderRadius: radii.md,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    paddingVertical: 15,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
   },
   secondaryLabel: {

@@ -7,6 +7,7 @@ import { fmt } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
 import { aggregateJobsRevenue, donutArcPath, filterJobsByRange } from '@/src/lib/jobs-revenue'
 import { colors, spacing } from '@/src/theme/colors'
+import { homeCardStyles } from './homeCardStyles'
 
 const CX = 54
 const CY = 54
@@ -36,7 +37,7 @@ export function HomeRevenueChart({ jobs }: HomeRevenueChartProps) {
   if (stats.jobCount === 0) return null
 
   return (
-    <View style={styles.card}>
+    <View style={[homeCardStyles.card, styles.card]}>
       <AppText variant="sectionLabel">{t('home.serviceMix')}</AppText>
       <AppText variant="caption" style={styles.meta}>
         {fmt(stats.totalRevenue)} this month
@@ -74,11 +75,6 @@ export function HomeRevenueChart({ jobs }: HomeRevenueChartProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
     gap: 4,
   },
   meta: {
