@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Linking, ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
@@ -51,6 +51,7 @@ import {
   monthDateRange,
 } from '@/src/lib/booking-calendar'
 import { confirmUnblockCalendarDay } from '@/src/lib/confirm-unblock-day'
+import type { BookingSchedule } from '@/src/lib/booking-schedule'
 import { getTimeBlocks } from '@/src/lib/time-blocks-api'
 import { useOffline } from '@/src/providers/OfflineProvider'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
@@ -58,6 +59,9 @@ import { useModuleSearch } from '@/src/hooks/useModuleSearch'
 import { useDataRefresh } from '@/src/providers/DataRefreshProvider'
 import { useAuth } from '@/src/providers/AuthProvider'
 import { colors, spacing } from '@/src/theme/colors'
+
+const HOME_CORE_TIMEOUT_MS = 8000
+const HOME_WEATHER_TIMEOUT_MS = 5000
 
 function greetingKey(): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
   const h = new Date().getHours()
@@ -104,6 +108,7 @@ export default function HomeScreen() {
   const [weatherLoading, setWeatherLoading] = useState(true)
   const [profilePercent, setProfilePercent] = useState<ReturnType<typeof computeProfileCompletion> | null>(null)
   const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
+  const [bookingSchedule, setBookingSchedule] = useState<BookingSchedule>(DEFAULT_BOOKING_SCHEDULE)
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date()
@@ -111,13 +116,17 @@ export default function HomeScreen() {
   })
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+  const hasLoadedOnceRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
 
   const displayName = useMemo(() => displayNameFromUser(user?.name), [user?.name])
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
+    if (!hasLoadedOnceRef.current) {
+      setLoading(true)
+    }
     setWeatherLoading(true)
     setError(null)
 
@@ -133,13 +142,13 @@ export default function HomeScreen() {
       try {
         const [jobRows, invoiceRows, leads, packageRows, supplyRows, settings, weatherResult] =
           await Promise.all([
-            withTimeout(listJobs(200), 12000, [] as JobWithRelations[]),
-            withTimeout(listInvoices(), 12000, [] as Invoice[]),
-            withTimeout(listLeads(), 12000, [] as Awaited<ReturnType<typeof listLeads>>),
-            withTimeout(listPackages(), 12000, [] as Package[]),
-            withTimeout(listSupplies(), 12000, [] as Supply[]),
-            withTimeout(loadSettings(), 12000, null),
-            withTimeout(fetchWeatherReadiness(), 12000, null),
+            withTimeout(listJobs(200), HOME_CORE_TIMEOUT_MS, [] as JobWithRelations[]),
+            withTimeout(listInvoices(), HOME_CORE_TIMEOUT_MS, [] as Invoice[]),
+            withTimeout(listLeads(), HOME_CORE_TIMEOUT_MS, [] as Awaited<ReturnType<typeof listLeads>>),
+            withTimeout(listPackages(), HOME_CORE_TIMEOUT_MS, [] as Package[]),
+            withTimeout(listSupplies(), HOME_CORE_TIMEOUT_MS, [] as Supply[]),
+            withTimeout(loadSettings(), HOME_CORE_TIMEOUT_MS, null),
+            withTimeout(fetchWeatherReadiness(), HOME_WEATHER_TIMEOUT_MS, null),
           ])
         if (cancelled) return
         setJobs(jobRows)
@@ -150,10 +159,18 @@ export default function HomeScreen() {
         if (settings) {
           setProfilePercent(computeProfileCompletion(settings))
           setHomeModules(settings.home_modules ?? {})
+          setBookingSchedule(settings.booking_schedule ?? DEFAULT_BOOKING_SCHEDULE)
         }
         setWeather(weatherResult)
+        hasLoadedOnceRef.current = true
+        setHasLoadedOnce(true)
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load dashboard')
+        if (!cancelled) {
+          if (!hasLoadedOnceRef.current) {
+            setError(e instanceof Error ? e.message : 'Failed to load dashboard')
+          }
+          // soft-refresh failure: keep previous data, no full-screen error
+        }
       } finally {
         if (!cancelled) {
           setLoading(false)
@@ -168,13 +185,12 @@ export default function HomeScreen() {
   }, [tick])
 
   const loadBlockedDates = useCallback(async (year: number, month: number) => {
-    const settings = await loadSettings()
-    const schedule = settings.booking_schedule ?? DEFAULT_BOOKING_SCHEDULE
+    const schedule = bookingSchedule
     const { from, to } = monthDateRange(year, month)
     const blocks = await getTimeBlocks(from, to)
     const allDay = blocks.filter((b) => b.all_day).map((b) => b.date)
     setBlockedDates(computeBlockedDates(datesInMonth(year, month), schedule, allDay))
-  }, [])
+  }, [bookingSchedule])
 
   const handleViewMonthChange = useCallback((year: number, month: number) => {
     setCalendarMonth((prev) => (prev.year === year && prev.month === month ? prev : { year, month }))
@@ -229,7 +245,7 @@ export default function HomeScreen() {
     <OperatorScreen customHeader={greetingHeader}>
       {loading ? (
         <ScreenLoading variant="home" />
-      ) : error ? (
+      ) : error && !hasLoadedOnce ? (
         <AppText variant="body" style={styles.error}>
           {error}
         </AppText>
