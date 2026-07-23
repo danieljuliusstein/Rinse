@@ -1686,8 +1686,8 @@ function NodeCanvasSection() {
                 style={{ minHeight: "80vh", paddingTop: "8vh", paddingBottom: "8vh" }}
               >
                 {/* Text block */}
-                <div className="mb-8 max-w-lg">
-                  <div className="flex items-center gap-2.5 mb-4">
+                <div className="mb-8 max-w-lg mx-auto text-center">
+                  <div className="flex items-center justify-center gap-2.5 mb-4">
                     <div className="w-6 h-6 rounded-lg bg-[#4bac50]/15 text-[#4bac50] flex items-center justify-center flex-shrink-0">
                       <step.icon size={12} />
                     </div>
