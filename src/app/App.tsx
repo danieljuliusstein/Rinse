@@ -1682,7 +1682,7 @@ function NodeCanvasSection() {
               <div
                 key={i}
                 ref={(el) => { stepRefs.current[i] = el; }}
-                className={i < WORKFLOW_STEPS.length - 1 ? "border-b border-black/6" : ""}
+                className="border-b border-black/6"
                 style={{ minHeight: "80vh", paddingTop: "8vh", paddingBottom: "8vh" }}
               >
                 {/* Text block */}
@@ -1712,6 +1712,9 @@ function NodeCanvasSection() {
                 </div>
               </div>
             ))}
+
+            {/* Integration logos marquee — beneath all steps */}
+            <WorkflowIntegrationStrip />
           </div>
         </div>
 
@@ -1930,6 +1933,90 @@ const ECO_INTEGRATIONS = [
 
 // Triple the list so the loop never shows a gap during drag
 const ECO_ROW = [...ECO_INTEGRATIONS, ...ECO_INTEGRATIONS, ...ECO_INTEGRATIONS];
+
+// ─── Compact integration marquee — reused inside the workflow section ──────────
+function WorkflowIntegrationStrip() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const rafRef   = useRef<number>(0);
+  const state    = useRef({ offset: 0, dragging: false, startX: 0, startOffset: 0 });
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const TILE   = 64 + 10; // tile width + gap
+    const LOOP_W = ECO_INTEGRATIONS.length * TILE;
+    const SPEED  = 0.28;
+    const tick = () => {
+      if (!state.current.dragging)
+        state.current.offset = (state.current.offset + SPEED) % LOOP_W;
+      track.style.transform = `translateX(${-state.current.offset}px)`;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    const onDown = (x: number) => { state.current.dragging = true; state.current.startX = x; state.current.startOffset = state.current.offset; };
+    const onMove = (x: number) => { if (!state.current.dragging) return; state.current.offset = ((state.current.startOffset + state.current.startX - x) % LOOP_W + LOOP_W) % LOOP_W; };
+    const onUp   = () => { state.current.dragging = false; };
+    const md = (e: MouseEvent) => { onDown(e.clientX); e.preventDefault(); };
+    const mm = (e: MouseEvent) => onMove(e.clientX);
+    const ts = (e: TouchEvent) => onDown(e.touches[0].clientX);
+    const tm = (e: TouchEvent) => { onMove(e.touches[0].clientX); e.preventDefault(); };
+    track.addEventListener("mousedown", md);
+    window.addEventListener("mousemove", mm);
+    window.addEventListener("mouseup", onUp);
+    track.addEventListener("touchstart", ts, { passive: true });
+    track.addEventListener("touchmove", tm, { passive: false });
+    window.addEventListener("touchend", onUp);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      track.removeEventListener("mousedown", md);
+      window.removeEventListener("mousemove", mm);
+      window.removeEventListener("mouseup", onUp);
+      track.removeEventListener("touchstart", ts);
+      track.removeEventListener("touchmove", tm);
+      window.removeEventListener("touchend", onUp);
+    };
+  }, []);
+
+  return (
+    <div className="pt-10 pb-4 border-t border-black/6">
+      <p className="text-center text-[9px] font-mono text-black/25 tracking-[0.2em] uppercase mb-6">
+        Works with your stack
+      </p>
+      <div className="relative overflow-hidden cursor-grab active:cursor-grabbing select-none">
+        {/* Edge fades */}
+        <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+        {/* Doubled list so the loop is seamless */}
+        <div
+          ref={trackRef}
+          className="flex gap-[10px] py-1"
+          style={{ width: "max-content" }}
+        >
+          {[...ECO_INTEGRATIONS, ...ECO_INTEGRATIONS].map((item, i) => (
+            <div
+              key={i}
+              className="flex flex-col items-center gap-1.5"
+              style={{ width: 64 }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-black/[0.04] border border-black/[0.06] flex items-center justify-center">
+                <img
+                  src={`https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${item.slug}.svg`}
+                  alt={item.name}
+                  className="w-4 h-4"
+                  style={{ opacity: 0.35 }}
+                  draggable={false}
+                />
+              </div>
+              <span className="text-[8px] font-mono text-black/30 text-center leading-tight whitespace-nowrap">
+                {item.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function EcosystemInlinePanel() {
   const trackRef = useRef<HTMLDivElement>(null);
