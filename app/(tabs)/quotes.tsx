@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { RefreshControl, StyleSheet } from 'react-native'
+import { RefreshControl, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { FileText } from 'phosphor-react-native'
 import { fmt } from '@rinse/core'
@@ -48,7 +48,12 @@ export default function QuotesListScreen() {
       title="Quotes"
       subtitle={`${quotes.length} total`}
       onBack={goBack}
-      headerRight={<HeaderAction label="+ New" onPress={() => router.push('/quotes/new')} />}
+      headerRight={
+        <View style={styles.headerActions}>
+          <HeaderAction label="Scan" onPress={() => router.push('/scan')} />
+          <HeaderAction label="+ New" onPress={() => router.push('/quotes/new')} />
+        </View>
+      }
     >
       {loading ? (
         <ScreenLoading variant="list" />
@@ -85,5 +90,10 @@ export default function QuotesListScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   list: {},
 })

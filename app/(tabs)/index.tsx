@@ -16,12 +16,15 @@ import { buildInvoiceMonthCarouselItems } from '@/src/lib/invoice-month-revenue'
 import { InventoryAlertCard } from '@/src/components/home/InventoryAlertCard'
 import { ProfileCompleteCard } from '@/src/components/home/ProfileCompleteCard'
 import { WeatherReadinessCard } from '@/src/components/home/WeatherReadinessCard'
+import { WeatherRescheduleSheet } from '@/src/components/home/WeatherRescheduleSheet'
+import { hasWeatherRisk } from '@/src/lib/weather-readiness'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import {
   AppText,
   Badge,
   BlockStagger,
   ListRow,
+  PrimaryButton,
   ScreenLoading,
   SearchField,
   SectionGroup,
@@ -102,6 +105,7 @@ export default function HomeScreen() {
   const [pipelineCount, setPipelineCount] = useState(0)
   const [weather, setWeather] = useState<WeatherReadinessResult | null>(null)
   const [weatherLoading, setWeatherLoading] = useState(true)
+  const [weatherRescheduleOpen, setWeatherRescheduleOpen] = useState(false)
   const [profilePercent, setProfilePercent] = useState<ReturnType<typeof computeProfileCompletion> | null>(null)
   const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
@@ -219,7 +223,6 @@ export default function HomeScreen() {
       dateLabel={compactDateLabel()}
       avatarInitial={avatarInitial(displayName)}
       pipelineBadge={pipelineCount}
-      settingsDot={Boolean(profilePercent && !profilePercent.isComplete)}
       onSearchPress={toggleSearch}
       searchActive={searchActive}
     />
@@ -304,6 +307,13 @@ export default function HomeScreen() {
               <BlockStagger index={4}>
                 <HomeSection label={t('home.jobReadiness')}>
                   <WeatherReadinessCard result={weather} loading={weatherLoading} compact />
+                  {hasWeatherRisk(weather) ? (
+                    <PrimaryButton
+                      label="Reschedule day"
+                      onPress={() => setWeatherRescheduleOpen(true)}
+                      style={{ marginTop: spacing.sm }}
+                    />
+                  ) : null}
                 </HomeSection>
               </BlockStagger>
             ) : null}
@@ -399,6 +409,15 @@ export default function HomeScreen() {
           )}
         </ScrollView>
       )}
+      <WeatherRescheduleSheet
+        visible={weatherRescheduleOpen}
+        onClose={() => setWeatherRescheduleOpen(false)}
+        jobs={jobs}
+        today={new Date().toISOString().slice(0, 10)}
+        onDone={() => {
+          void listJobs(200).then(setJobs).catch(() => undefined)
+        }}
+      />
     </OperatorScreen>
   )
 }

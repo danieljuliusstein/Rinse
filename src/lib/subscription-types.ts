@@ -39,6 +39,14 @@ export function isFoundingMember(org: OrgSubscription): boolean {
   return org.founding_member === true || org.plan === 'founding'
 }
 
+/** Pro (or founding) — matches apps/api `isProPlan` for receipt OCR / Pro features. */
+export function isProPlan(org: OrgSubscription | null, now = new Date()): boolean {
+  if (!org) return false
+  if (isFoundingMember(org)) return true
+  if (!isSubscriptionActive(org, now)) return false
+  return org.plan === 'pro'
+}
+
 /** Canceled paid org → read-only vault (not Free). */
 export function isVaultAccess(org: OrgSubscription | null): boolean {
   if (!org || isFoundingMember(org)) return false

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Alert, RefreshControl, ScrollView, StyleSheet } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { Plus, Receipt } from 'phosphor-react-native'
 import type { BusinessExpense, BusinessExpenseInput } from '@rinse/core'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
@@ -20,11 +20,13 @@ import {
   deleteBusinessExpense,
   listBusinessExpenses,
   updateBusinessExpense,
+  type ReceiptImageAsset,
 } from '@/src/lib/business-expenses-api'
 import { formatExpenseDate, monthKey, monthLabel, todayIso } from '@/src/lib/expense-format'
-import { colors, spacing } from '@/src/theme/colors'
+import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 
 export default function SettingsBusinessExpensesScreen() {
+  const router = useRouter()
   const [expenses, setExpenses] = useState<BusinessExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -76,14 +78,14 @@ export default function SettingsBusinessExpensesScreen() {
     setEditing(null)
   }
 
-  const handleSave = async (input: BusinessExpenseInput) => {
+  const handleSave = async (input: BusinessExpenseInput, receipt?: ReceiptImageAsset | null) => {
     setSaving(true)
     try {
       if (editing) {
-        const updated = await updateBusinessExpense(editing.id, input)
+        const updated = await updateBusinessExpense(editing.id, input, receipt)
         if (!updated) throw new Error('Could not save expense')
       } else {
-        await createBusinessExpense(input)
+        await createBusinessExpense(input, receipt)
       }
       closeSheet()
       await load(true)
@@ -123,13 +125,19 @@ export default function SettingsBusinessExpensesScreen() {
   const expenseSubtitle = (expense: BusinessExpense) => {
     const parts = [formatExpenseDate(expense.date), expense.category ?? 'other']
     if (expense.vendor) parts.push(expense.vendor)
+    if (expense.receipt_url) parts.push('Receipt')
     return parts.join(' · ')
   }
 
   const headerRight = (
-    <IconHeaderButton label="Add business expense" onPress={openAdd}>
-      <Plus size={18} color={colors.textSecondary} weight="bold" />
-    </IconHeaderButton>
+    <View style={styles.headerActions}>
+      <IconHeaderButton label="Scan receipt" onPress={() => router.push('/expenses/new?scan=1')}>
+        <Receipt size={18} color={colors.textSecondary} weight="duotone" />
+      </IconHeaderButton>
+      <IconHeaderButton label="Add business expense" onPress={openAdd}>
+        <Plus size={18} color={colors.textSecondary} weight="bold" />
+      </IconHeaderButton>
+    </View>
   )
 
   return (
@@ -172,17 +180,21 @@ export default function SettingsBusinessExpensesScreen() {
             />
           ) : (
             <SectionGroup title="All expenses">
-              {expenses.map((expense) => (
-                <ListRow
-                  key={expense.id}
-                  icon={<Receipt size={18} color={colors.amber} weight="duotone" />}
-                  iconTone="amber"
-                  title={expense.name}
-                  subtitle={expenseSubtitle(expense)}
-                  trailing={<CurrencyAmount value={expense.amount} variant="expense" precision="detailed" />}
-                  onPress={() => openEdit(expense)}
-                />
-              ))}
+              {expenses.map((expense) => {
+                const hasReceipt = Boolean(expense.receipt_url)
+                const tone = hasReceipt ? iconTonePalette.green : iconTonePalette.amber
+                return (
+                  <ListRow
+                    key={expense.id}
+                    icon={<Receipt size={18} color={tone.fg} weight="duotone" />}
+                    iconTone={hasReceipt ? 'green' : 'amber'}
+                    title={expense.name}
+                    subtitle={expenseSubtitle(expense)}
+                    trailing={<CurrencyAmount value={expense.amount} variant="expense" precision="detailed" />}
+                    onPress={() => openEdit(expense)}
+                  />
+                )
+              })}
             </SectionGroup>
           )}
         </ScrollView>
@@ -193,7 +205,7 @@ export default function SettingsBusinessExpensesScreen() {
         saving={saving}
         expense={editing}
         onClose={closeSheet}
-        onSave={(input) => void handleSave(input)}
+        onSave={(input, receipt) => void handleSave(input, receipt)}
         onDelete={editing ? handleDelete : undefined}
       />
     </SettingsScreen>
@@ -204,6 +216,11 @@ const styles = StyleSheet.create({
   scroll: {
     paddingBottom: spacing.xl,
     gap: spacing.md,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm - 2,
   },
   hero: {
     marginBottom: 0,

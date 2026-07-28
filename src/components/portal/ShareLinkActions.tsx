@@ -6,6 +6,9 @@ import { SHARE_LINK_PRESETS, type ShareLinkContext } from '@/src/lib/share-link-
 import { loadSettings } from '@/src/lib/settings-store'
 import { checkPremiumGate } from '@/src/lib/subscription'
 import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
+import { TipsSheet } from '@/src/components/invoice/TipsSheet'
+import { DEFAULT_TIP_PREFS, normalizeTipPrefs } from '@/src/lib/wave5-prefs'
+import type { TipPrefs } from '@rinse/core'
 import { colors, spacing } from '@/src/theme/colors'
 
 export interface ShareLinkActionsProps {
@@ -41,6 +44,16 @@ export function ShareLinkActions({
   const [url, setUrl] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
+  const [tipPrefs, setTipPrefs] = useState<TipPrefs>({
+    ...DEFAULT_TIP_PREFS,
+    presets: [...DEFAULT_TIP_PREFS.presets],
+  })
+  const [tipsOpen, setTipsOpen] = useState(false)
+  const [pendingShare, setPendingShare] = useState<'copy' | 'email' | null>(null)
+
+  useEffect(() => {
+    void loadSettings().then((s) => setTipPrefs(normalizeTipPrefs(s.tip_prefs)))
+  }, [])
 
   const transformationBlocked =
     Boolean(preset.requiresTransformation && (!jobId || !hasBeforeAndAfter))
@@ -137,6 +150,21 @@ export function ShareLinkActions({
     }
   }
 
+  const maybeTipsThen = (action: 'copy' | 'email') => {
+    if (!ensureTransformation()) return
+    if (
+      tipPrefs.suggest_on_pay_link &&
+      !transformationBlocked &&
+      (context === 'invoice' || context === 'full')
+    ) {
+      setPendingShare(action)
+      setTipsOpen(true)
+      return
+    }
+    if (action === 'copy') void handleCopy()
+    else void handleEmail()
+  }
+
   const qrUri = url
     ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`
     : null
@@ -164,7 +192,7 @@ export function ShareLinkActions({
         label={preset.primaryActionLabel}
         loading={busy}
         disabled={!clientEmail || transformationBlocked}
-        onPress={() => void handleEmail()}
+        onPress={() => maybeTipsThen('email')}
       />
 
       {!clientEmail ? (
@@ -178,7 +206,7 @@ export function ShareLinkActions({
           label={msg === 'Link copied' ? 'Copied' : 'Copy link'}
           loading={busy}
           disabled={transformationBlocked}
-          onPress={() => void handleCopy()}
+          onPress={() => maybeTipsThen('copy')}
           style={styles.secondaryBtn}
         />
         {onPdf ? (
@@ -192,6 +220,23 @@ export function ShareLinkActions({
           {url}
         </AppText>
       ) : null}
+
+      <TipsSheet
+        visible={tipsOpen}
+        onClose={() => {
+          setTipsOpen(false)
+          setPendingShare(null)
+        }}
+        tipPrefs={tipPrefs}
+        busy={busy}
+        onContinue={() => {
+          const next = pendingShare
+          setTipsOpen(false)
+          setPendingShare(null)
+          if (next === 'copy') void handleCopy()
+          else if (next === 'email') void handleEmail()
+        }}
+      />
     </View>
   )
 }

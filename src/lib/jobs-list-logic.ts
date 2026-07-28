@@ -18,7 +18,21 @@ function isRecurringJob(cadence?: string | null): boolean {
 }
 
 export function filterJobsByDate(jobs: JobWithRelations[], date: string): JobWithRelations[] {
-  return jobs.filter((job) => normalizeJobDate(job.date) === date)
+  return sortJobsByRouteOrder(jobs.filter((job) => normalizeJobDate(job.date) === date))
+}
+
+/** Route order ASC (nulls last), then start_time ASC. */
+export function sortJobsByRouteOrder(jobs: JobWithRelations[]): JobWithRelations[] {
+  return [...jobs].sort((a, b) => {
+    const ao = a.route_order
+    const bo = b.route_order
+    const aHas = ao != null && Number.isFinite(ao)
+    const bHas = bo != null && Number.isFinite(bo)
+    if (aHas && bHas && ao !== bo) return (ao as number) - (bo as number)
+    if (aHas && !bHas) return -1
+    if (!aHas && bHas) return 1
+    return (a.start_time ?? '').localeCompare(b.start_time ?? '')
+  })
 }
 
 function vehicleSearchText(vehicle: Vehicle): string {
@@ -137,6 +151,16 @@ export function groupJobsByPeriod(jobs: JobWithRelations[]): JobListSection[] {
 
   const sorted = [...jobs].sort((a, b) => {
     if (a.date !== b.date) return b.date.localeCompare(a.date)
+    const ao = a.route_order
+    const bo = b.route_order
+    const aHas = ao != null && Number.isFinite(ao)
+    const bHas = bo != null && Number.isFinite(bo)
+    if (a.date === today) {
+      if (aHas && bHas && ao !== bo) return (ao as number) - (bo as number)
+      if (aHas && !bHas) return -1
+      if (!aHas && bHas) return 1
+      return (a.start_time ?? '').localeCompare(b.start_time ?? '')
+    }
     return (b.start_time ?? '').localeCompare(a.start_time ?? '')
   })
 

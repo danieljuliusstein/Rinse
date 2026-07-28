@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
-import { RinseLogo } from '@/src/components/onboarding/RinseLogo'
+import { RinseLockupAnimated } from '@/src/components/onboarding/RinseLogo'
 import { colors, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
@@ -12,7 +12,7 @@ export function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.body}>
-        <RinseLogo size={48} />
+        <RinseLockupAnimated height={40} />
         <AppText variant="caption" style={styles.eyebrow}>
           Mobile detailing
         </AppText>

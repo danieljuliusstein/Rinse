@@ -39,7 +39,38 @@ import { Badge } from '@/src/components/ui/Badge'
 import { CurrencyAmount } from '@/src/components/ui/CurrencyAmount'
 import { ListRow } from '@/src/components/ui/ListRow'
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button'
+import { SharePayLinkSheet } from '@/src/components/invoice/SharePayLinkSheet'
+import { CollectDepositSheet } from '@/src/components/jobs/CollectDepositSheet'
+import { CancelJobPolicySheet } from '@/src/components/jobs/CancelJobPolicySheet'
+import { depositBadgeLabel, depositBadgeTone, computeDepositDue } from '@/src/lib/deposits'
+import {
+  DEFAULT_BUSINESS_POLICIES,
+  DEFAULT_TIP_PREFS,
+  normalizeBusinessPolicies,
+  normalizeTipPrefs,
+  normalizeTechRoster,
+} from '@/src/lib/wave5-prefs'
+import type { BusinessPolicies, TipPrefs, TechRosterEntry } from '@rinse/core'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
+import { listEntityEvents, type EntityEvent } from '@/src/lib/entity-events'
+
+function JobHistorySection({ jobId }: { jobId: string }) {
+  const [events, setEvents] = useState<EntityEvent[]>([])
+  useEffect(() => {
+    void listEntityEvents('job', jobId).then(setEvents)
+  }, [jobId])
+  if (events.length === 0) return null
+  return (
+    <View style={styles.section}>
+      <AppText variant="sectionLabel">History</AppText>
+      {events.slice(0, 8).map((event) => (
+        <AppText key={event.id} variant="caption" style={styles.muted}>
+          {event.action} · {new Date(event.occurred_at).toLocaleString()}
+        </AppText>
+      ))}
+    </View>
+  )
+}
 
 interface JobDetailBodyProps {
   jobId: string
@@ -74,6 +105,16 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
   const [cancelling, setCancelling] = useState(false)
   const [trackSupplies, setTrackSupplies] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [policies, setPolicies] = useState<BusinessPolicies>(DEFAULT_BUSINESS_POLICIES)
+  const [tipPrefs, setTipPrefs] = useState<TipPrefs>({
+    ...DEFAULT_TIP_PREFS,
+    presets: [...DEFAULT_TIP_PREFS.presets],
+  })
+  const [techRoster, setTechRoster] = useState<TechRosterEntry[]>([])
+  const [depositOpen, setDepositOpen] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [depositBusy, setDepositBusy] = useState(false)
+  const [sharePayOpen, setSharePayOpen] = useState(false)
 
   const load = useCallback(async () => {
     setError(null)
@@ -108,7 +149,12 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
   }, [load])
 
   useEffect(() => {
-    void loadSettings().then((s) => setTrackSupplies(s.track_job_supplies === true))
+    void loadSettings().then((s) => {
+      setTrackSupplies(s.track_job_supplies === true)
+      setPolicies(normalizeBusinessPolicies(s.business_policies))
+      setTipPrefs(normalizeTipPrefs(s.tip_prefs))
+      setTechRoster(normalizeTechRoster(s.tech_roster))
+    })
   }, [])
 
   const handleRefreshFromServer = async () => {
@@ -144,6 +190,23 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
   const invoiceChip = invoice ? invoiceStatusChip(invoice.status) : null
   const isUpcoming = job.status === 'scheduled' || job.status === 'in_progress'
   const dateLabel = formatJobDate(job.date)
+  const depositTone = depositBadgeTone(job.deposit_status)
+  const depositLabel = depositBadgeLabel(job.deposit_status)
+  const depositDueAmount =
+    job.deposit_amount != null && job.deposit_amount > 0
+      ? job.deposit_amount
+      : computeDepositDue(policies, job.revenue)
+  const techName = job.assignee_id
+    ? techRoster.find((t) => t.id === job.assignee_id)?.name ?? 'Assigned'
+    : 'You'
+  const photoCounts = countJobPhotosByType(photos)
+  const timeLabel = [
+    formatStartTimeLabel(job.start_time),
+    job.hours_worked > 0 ? `${job.hours_worked}h` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  const vehicleLine = capitalize(job.vehicle_type)
   const showNextService =
     (job.status === 'completed' || job.status === 'paid' || job.status === 'invoiced') &&
     Boolean(job.package && job.client)
@@ -236,25 +299,50 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
   }
 
   const handleCancel = () => {
-    Alert.alert(t('jobDetail.cancelConfirm'), t('jobDetail.cancelBody'), [
-      { text: t('common.keep'), style: 'cancel' },
-      {
-        text: t('jobs.cancelJob'),
-        style: 'destructive',
-        onPress: () => {
-          setCancelling(true)
-          void deleteJob(jobId).then((result) => {
-            if (result.ok) {
-              onClose?.()
-              if (variant === 'screen') router.replace('/(tabs)/jobs')
-            } else {
-              setCancelling(false)
-              Alert.alert(t('common.cancel'), result.error ?? 'Could not cancel job')
-            }
-          })
-        },
-      },
-    ])
+    setCancelOpen(true)
+  }
+
+  const confirmCancelJob = () => {
+    setCancelling(true)
+    void deleteJob(jobId).then((result) => {
+      setCancelling(false)
+      setCancelOpen(false)
+      if (result.ok) {
+        onClose?.()
+        if (variant === 'screen') router.replace('/(tabs)/jobs')
+      } else {
+        Alert.alert(t('common.cancel'), result.error ?? 'Could not cancel job')
+      }
+    })
+  }
+
+  const patchDeposit = async (patch: {
+    deposit_status: NonNullable<JobWithRelations['deposit_status']>
+    deposit_amount?: number
+    deposit_paid_at?: string
+  }) => {
+    setDepositBusy(true)
+    try {
+      const updated = await updateJob(jobId, {
+        date: job!.date,
+        packageId: job!.package_id,
+        vehicleType: job!.vehicle_type,
+        locationType: job!.location_type,
+        revenue: job!.revenue,
+        tip: job!.tip,
+        hours_worked: job!.hours_worked,
+        start_time: job!.start_time,
+        status: job!.status,
+        notes: job!.notes,
+        ...patch,
+      })
+      setJob(updated)
+      setDepositOpen(false)
+    } catch (e) {
+      Alert.alert('Deposit', e instanceof Error ? e.message : 'Could not update deposit')
+    } finally {
+      setDepositBusy(false)
+    }
   }
 
   const handleSharePdf = async () => {
@@ -362,8 +450,100 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
         <ConflictBanner onRefresh={() => void handleRefreshFromServer()} refreshing={refreshing} />
       ) : null}
 
+      <View style={styles.card}>
+        <AppText variant="caption" style={styles.kvLabel}>
+          VEHICLE
+        </AppText>
+        <AppText variant="bodySemiBold">{vehicleLine}</AppText>
+        {job.location_type === 'mobile' && job.client?.address ? (
+          <AppText variant="caption" style={styles.muted}>
+            {job.client.address}
+          </AppText>
+        ) : (
+          <AppText variant="caption" style={styles.muted}>
+            {capitalize(job.location_type)}
+          </AppText>
+        )}
+      </View>
+
+      <View style={[styles.card, styles.serviceCard]}>
+        {(
+          [
+            { label: 'Service', value: job.package?.name ?? '—' },
+            { label: 'Time', value: timeLabel || dateLabel },
+            { label: 'Technician', value: techName, chip: true },
+            { label: 'Status', value: status.replace('_', ' '), badge: true },
+          ] as const
+        ).map((row, i, arr) => (
+          <View
+            key={row.label}
+            style={[styles.serviceRow, i < arr.length - 1 && styles.serviceRowBorder]}
+          >
+            <AppText variant="body" style={styles.muted}>
+              {row.label}
+            </AppText>
+            {'badge' in row && row.badge ? (
+              <Badge tone={statusBadgeTone(status)} label={String(row.value)} />
+            ) : 'chip' in row && row.chip ? (
+              <View style={styles.techChip}>
+                <AppText variant="caption" style={styles.techChipText}>
+                  {String(row.value)}
+                </AppText>
+              </View>
+            ) : (
+              <AppText variant="bodySemiBold">{String(row.value)}</AppText>
+            )}
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.moneyRow}>
+          <AppText variant="bodySemiBold">Deposit</AppText>
+          {depositTone && depositLabel ? <Badge tone={depositTone} label={depositLabel} /> : null}
+        </View>
+        {job.deposit_status === 'due' || (!job.deposit_status && depositDueAmount > 0) ? (
+          <>
+            <AppText variant="caption" style={styles.muted}>
+              ${depositDueAmount.toFixed(2)} due at booking
+            </AppText>
+            <PrimaryButton label="Collect Deposit" onPress={() => setDepositOpen(true)} />
+          </>
+        ) : null}
+        {job.deposit_status === 'paid' ? (
+          <AppText variant="caption" style={styles.profit}>
+            ✓ ${(job.deposit_amount ?? depositDueAmount).toFixed(2)} collected
+          </AppText>
+        ) : null}
+        {job.deposit_status === 'waived' ? (
+          <AppText variant="caption" style={styles.muted}>
+            Deposit waived
+          </AppText>
+        ) : null}
+      </View>
+
+      <Pressable
+        style={styles.card}
+        onPress={() => {
+          onClose?.()
+          router.push(`/(tabs)/jobs/${jobId}/photos` as never)
+        }}
+      >
+        <AppText variant="sectionLabel">Before / After</AppText>
+        <AppText variant="body">
+          {photoCounts.before} before · {photoCounts.after} after
+        </AppText>
+        <AppText variant="caption" style={styles.muted}>
+          {jobPhotoCompletenessMessage(photoCounts)}
+        </AppText>
+      </Pressable>
+
+      {job.client ? (
+        <PrimaryButton label="Share Pay Link / Tip" onPress={() => setSharePayOpen(true)} />
+      ) : null}
+
       {isUpcoming ? (
-        <PrimaryButton
+        <SecondaryButton
           label={completing ? t('jobDetail.markingComplete') : t('jobDetail.markComplete')}
           loading={completing}
           onPress={() => promptComplete()}
@@ -393,18 +573,6 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       ) : null}
 
       <JobTimer jobId={job.id} onStopped={(hours) => void handleTimerStop(hours)} />
-
-      <View style={styles.card}>
-        <View style={styles.kvGrid}>
-          <KvCell label={t('common.package')} value={job.package?.name ?? '—'} />
-          <KvCell label={t('common.vehicle')} value={capitalize(job.vehicle_type)} />
-          <KvCell label={t('common.location')} value={capitalize(job.location_type)} />
-          <KvCell
-            label={t('jobDetail.hoursWorked')}
-            value={job.hours_worked > 0 ? t('jobDetail.hoursValue', { hours: job.hours_worked }) : '—'}
-          />
-        </View>
-      </View>
 
       <View style={styles.card}>
         <View style={styles.moneyRow}>
@@ -535,6 +703,8 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
         />
       ) : null}
 
+      <JobHistorySection jobId={jobId} />
+
       <View style={styles.section}>
         <ListRow
           icon={<ImageIcon size={18} color={iconTonePalette.green.fg} weight="duotone" />}
@@ -568,9 +738,88 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       ) : null}
 
       {isUpcoming ? (
-        <SecondaryButton
-          label={cancelling ? t('jobDetail.cancelling') : t('jobDetail.cancelAppointment')}
-          onPress={handleCancel}
+        <>
+          <SecondaryButton label="Collect deposit" onPress={() => setDepositOpen(true)} />
+          <SecondaryButton
+            label={cancelling ? t('jobDetail.cancelling') : t('jobDetail.cancelAppointment')}
+            onPress={handleCancel}
+          />
+        </>
+      ) : (
+        <SecondaryButton label="Deposit" onPress={() => setDepositOpen(true)} />
+      )}
+
+      <CollectDepositSheet
+        visible={depositOpen}
+        onClose={() => setDepositOpen(false)}
+        revenue={job.revenue}
+        policies={policies}
+        currentStatus={job.deposit_status}
+        currentAmount={job.deposit_amount}
+        busy={depositBusy}
+        onMarkPaid={(amount) =>
+          void patchDeposit({
+            deposit_status: 'paid',
+            deposit_amount: amount,
+            deposit_paid_at: new Date().toISOString(),
+          }).then(() =>
+            import('@/src/lib/entity-events').then(({ appendEntityEvent }) =>
+              appendEntityEvent({
+                entity: 'job',
+                entity_id: jobId,
+                action: 'deposit_paid',
+                patch: { deposit_amount: amount },
+              }),
+            ),
+          )
+        }
+        onWaive={() =>
+          void patchDeposit({
+            deposit_status: 'waived',
+            deposit_amount: job.deposit_amount ?? 0,
+          })
+        }
+        onSendPayLink={
+          job.client
+            ? async (amount) => {
+                try {
+                  await patchDeposit({
+                    deposit_status: 'due',
+                    deposit_amount: amount,
+                  })
+                  const link = await createPortalLink({
+                    clientId: job.client_id,
+                    scope: 'invoice',
+                    jobId: job.id,
+                  })
+                  await Linking.openURL(openSms(job.client!.phone ?? '', `Deposit for your detail: ${link.url}`))
+                } catch (e) {
+                  Alert.alert('Pay link', e instanceof Error ? e.message : 'Could not send link')
+                }
+              }
+            : undefined
+        }
+      />
+      <CancelJobPolicySheet
+        visible={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        policies={policies}
+        busy={cancelling}
+        onConfirmCancel={confirmCancelJob}
+      />
+      {job.client ? (
+        <SharePayLinkSheet
+          visible={sharePayOpen}
+          onClose={() => setSharePayOpen(false)}
+          job={job}
+          tipPrefs={tipPrefs}
+          invoiceTotal={invoice?.total ?? job.revenue + job.tip}
+          hasBeforeAndAfter={jobHasBeforeAndAfter(photos)}
+          onRequirePhotos={() => {
+            setSharePayOpen(false)
+            onClose?.()
+            router.push(`/(tabs)/jobs/${jobId}/photos` as never)
+          }}
         />
       ) : null}
     </ScrollView>
@@ -613,6 +862,31 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     gap: spacing.sm,
+  },
+  serviceCard: {
+    paddingVertical: 0,
+    paddingHorizontal: spacing.md,
+    gap: 0,
+  },
+  serviceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 11,
+  },
+  serviceRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  techChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: iconTonePalette.green.bg,
+  },
+  techChipText: {
+    color: colors.greenText,
+    fontWeight: '600',
   },
   kvGrid: {
     flexDirection: 'row',

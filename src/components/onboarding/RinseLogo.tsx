@@ -1,6 +1,8 @@
 import { Image, StyleSheet, View } from 'react-native'
 import { BRAND } from '@/src/lib/brand-assets'
 
+export { RinseLockupAnimated } from '@/src/components/onboarding/RinseLockupAnimated'
+
 export function RinseLogo({ size = 48 }: { size?: number }) {
   return (
     <View style={[styles.wrap, { width: size, height: size }]}>

@@ -49,3 +49,4 @@ marketing/export/
 # generated native folders
 /ios
 /android
+.superpowers/

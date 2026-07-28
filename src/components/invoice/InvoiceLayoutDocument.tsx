@@ -60,9 +60,10 @@ export function InvoiceLayoutDocument({
           {
             width: PAPER_WIDTH,
             height: PAPER_HEIGHT,
-            left: -((PAPER_WIDTH * (1 - scale)) / 2),
-            top: -((PAPER_HEIGHT * (1 - scale)) / 2),
+            left: 0,
+            top: 0,
             transform: [{ scale }],
+            transformOrigin: 'top left',
           },
         ]}
       >

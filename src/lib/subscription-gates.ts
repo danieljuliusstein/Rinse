@@ -2,6 +2,7 @@ import {
   hasStarterAccess,
   isFoundingMember,
   isOnFreeTier,
+  isProPlan,
   isSubscribedOnStripe,
   isVaultAccess,
   trialDaysLeft,
@@ -18,6 +19,9 @@ export type PremiumAction =
   | 'create_job'
   | 'new_lead'
   | 'receipt_ocr'
+
+/** Actions that require Pro (matches apps/api `ProAction` / `requireProPlan`). */
+export const PRO_REQUIRED_ACTIONS: ReadonlySet<PremiumAction> = new Set(['receipt_ocr'])
 
 export type GateReason = 'full' | 'nudge' | 'lapsed' | 'free' | 'vault' | 'loading'
 
@@ -118,8 +122,39 @@ export function resolveGate(
   const featureLabel = PREMIUM_ACTION_LABELS[action]
   const reason = resolveSubscriptionMode(org, loading, options.now)
   const nudgeDismissed = options.nudgeDismissed ?? false
+  const now = options.now ?? new Date()
 
-  if (reason === 'loading' || reason === 'full') {
+  if (reason === 'loading') {
+    return {
+      allowed: true,
+      reason,
+      featureLabel,
+      showPaywall: false,
+      blockAction: false,
+    }
+  }
+
+  // Pro-only features (receipt OCR, etc.) — Starter/trial must upgrade, matching API requireProPlan.
+  if (PRO_REQUIRED_ACTIONS.has(action) && !isProPlan(org, now)) {
+    if (reason === 'lapsed' || reason === 'free' || reason === 'vault') {
+      return {
+        allowed: false,
+        reason,
+        featureLabel,
+        showPaywall: true,
+        blockAction: true,
+      }
+    }
+    return {
+      allowed: false,
+      reason: reason === 'nudge' ? 'nudge' : 'full',
+      featureLabel,
+      showPaywall: true,
+      blockAction: true,
+    }
+  }
+
+  if (reason === 'full') {
     return {
       allowed: true,
       reason,

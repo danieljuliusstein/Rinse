@@ -2,14 +2,16 @@ import { useCallback, useMemo, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Car, Plus } from 'phosphor-react-native'
-import { deleteJob, listJobs } from '@/src/lib/api'
+import { Car, MapTrifold, Plus, UserPlus } from 'phosphor-react-native'
+import type { TechRosterEntry } from '@rinse/core'
+import { deleteJob, listJobs, updateJob } from '@/src/lib/api'
 import type { JobWithRelations, Vehicle } from '@rinse/core'
 import { appIntlLocale } from '@/src/i18n'
 import { trackProductEvent } from '@/src/lib/telemetry'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import {
   AppText,
+  Badge,
   CurrencyAmount,
   EmptyState,
   GreenHeaderButton,
@@ -41,16 +43,31 @@ import {
   filterJobsByDate,
   filterJobsList,
   groupJobsByPeriod,
-  JOB_FILTER_CHIPS,
   matchingVehicleForQuery,
-  type JobsListFilter,
 } from '@/src/lib/jobs-list-logic'
+import { depositBadgeLabel, depositBadgeTone } from '@/src/lib/deposits'
+import { driveSubtitlesForDayJobs } from '@/src/lib/drive-time'
+import { loadSettings } from '@/src/lib/settings-store'
+import { normalizeTechRoster } from '@/src/lib/wave5-prefs'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 
 const VISIBLE_PER_SECTION = 4
 
+type TechFilter = 'all' | 'you' | string
+
 function jobsPeriodLabel() {
   return new Date().toLocaleDateString(appIntlLocale(), { month: 'long', year: 'numeric' })
+}
+
+function assigneeLabel(job: JobWithRelations, roster: TechRosterEntry[]): string {
+  if (!job.assignee_id) return 'You'
+  return roster.find((t) => t.id === job.assignee_id)?.name ?? 'Tech'
+}
+
+function filterByTech(jobs: JobWithRelations[], techFilter: TechFilter): JobWithRelations[] {
+  if (techFilter === 'all') return jobs
+  if (techFilter === 'you') return jobs.filter((j) => !j.assignee_id)
+  return jobs.filter((j) => j.assignee_id === techFilter)
 }
 
 export default function JobsScreen() {
@@ -65,21 +82,29 @@ export default function JobsScreen() {
   const [vehiclesByClient, setVehiclesByClient] = useState<Map<string, Vehicle[]>>(new Map())
   const { query, setQuery, visible: searchVisible, active: searchActive, toggle: toggleSearch, inputRef } =
     useModuleSearch()
-  const [chip, setChip] = useState<JobsListFilter>('all')
+  const [techFilter, setTechFilter] = useState<TechFilter>('all')
+  const [techRoster, setTechRoster] = useState<TechRosterEntry[]>([])
+  const [driveByJobId, setDriveByJobId] = useState<Record<string, string>>({})
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [routeMode, setRouteMode] = useState(false)
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
     setError(null)
     try {
-      const [rows, vehicles] = await Promise.all([listJobs(200), listAllVehicles()])
+      const [rows, vehicles, settings] = await Promise.all([
+        listJobs(200),
+        listAllVehicles(),
+        loadSettings(),
+      ])
       setJobs(rows)
       setVehiclesByClient(groupVehiclesByClient(vehicles))
+      setTechRoster(normalizeTechRoster(settings.tech_roster))
     } catch (e) {
       setError(e instanceof Error ? e.message : t('jobs.loadFailed'))
     } finally {
@@ -91,16 +116,35 @@ export default function JobsScreen() {
   useFocusEffect(
     useCallback(() => {
       void load()
-    }, [load, tick])
+    }, [load, tick]),
   )
 
   const filtered = useMemo(() => {
-    const base = filterJobsList(jobs, query, chip, vehiclesByClient)
-    return dateFilter ? filterJobsByDate(base, dateFilter) : base
-  }, [jobs, query, chip, dateFilter, vehiclesByClient])
+    const base = filterJobsList(jobs, query, 'all', vehiclesByClient)
+    const dated = dateFilter ? filterJobsByDate(base, dateFilter) : base
+    return filterByTech(dated, techFilter)
+  }, [jobs, query, dateFilter, vehiclesByClient, techFilter])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!dateFilter || filtered.length === 0) {
+        setDriveByJobId({})
+        return
+      }
+      let cancelled = false
+      void driveSubtitlesForDayJobs(filtered).then((map) => {
+        if (!cancelled) setDriveByJobId(map)
+      })
+      return () => {
+        cancelled = true
+      }
+    }, [dateFilter, filtered]),
+  )
+
   const sections = useMemo(() => groupJobsByPeriod(filtered), [filtered])
   const searching = query.trim().length > 0
-  const jobCount = searching || chip !== 'all' || dateFilter ? filtered.length : jobs.length
+  const jobCount =
+    searching || dateFilter || techFilter !== 'all' ? filtered.length : jobs.length
   const dateLabel = dateFilter
     ? new Date(`${dateFilter}T12:00:00`).toLocaleDateString(appIntlLocale(), {
         weekday: 'short',
@@ -108,12 +152,20 @@ export default function JobsScreen() {
         day: 'numeric',
       })
     : null
-  const subtitle =
-    dateFilter
-      ? t('jobs.onDate', { count: filtered.length, date: dateLabel })
-      : searching || chip !== 'all'
-        ? t('jobs.shown', { count: filtered.length })
-        : t('jobs.totalPeriod', { count: jobCount, period: jobsPeriodLabel() })
+  const subtitle = dateFilter
+    ? t('jobs.onDate', { count: filtered.length, date: dateLabel })
+    : searching || techFilter !== 'all'
+      ? t('jobs.shown', { count: filtered.length })
+      : t('jobs.totalPeriod', { count: jobCount, period: jobsPeriodLabel() })
+
+  const techChipOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All' },
+      { value: 'you', label: 'You' },
+      ...techRoster.map((tech) => ({ value: tech.id, label: tech.name })),
+    ],
+    [techRoster],
+  )
 
   const jobSubtitle = (job: JobWithRelations) => {
     if (!searching) return jobListRowSubtitle(job)
@@ -159,25 +211,90 @@ export default function JobsScreen() {
     Alert.alert(job.client?.name ?? t('jobs.title'), t('jobs.jobActions'), actions)
   }
 
+  const moveRoute = async (jobId: string, direction: -1 | 1) => {
+    const ordered = dateFilter ? filtered : []
+    const idx = ordered.findIndex((j) => j.id === jobId)
+    const swapIdx = idx + direction
+    if (idx < 0 || swapIdx < 0 || swapIdx >= ordered.length) return
+    const next = [...ordered]
+    const tmp = next[idx]!
+    next[idx] = next[swapIdx]!
+    next[swapIdx] = tmp
+    try {
+      await Promise.all(
+        next.map((job, i) =>
+          updateJob(job.id, {
+            date: job.date,
+            packageId: job.package_id,
+            vehicleType: job.vehicle_type,
+            locationType: job.location_type,
+            revenue: job.revenue,
+            tip: job.tip,
+            hours_worked: job.hours_worked,
+            start_time: job.start_time,
+            status: job.status,
+            notes: job.notes,
+            route_order: i + 1,
+          }),
+        ),
+      )
+      void load(true)
+    } catch (e) {
+      Alert.alert('Route', e instanceof Error ? e.message : 'Could not reorder')
+    }
+  }
+
   const renderJobRow = (job: JobWithRelations, grouped: boolean, isLast: boolean, staggerIndex: number) => {
     const iconTone = jobListIconTone(job)
+    const routeIndex = dateFilter && routeMode ? filtered.findIndex((j) => j.id === job.id) + 1 : 0
+    const depositTone = depositBadgeTone(job.deposit_status)
+    const depositLabel = depositBadgeLabel(job.deposit_status)
+    const drive = driveByJobId[job.id]
+    const metaBits = [
+      assigneeLabel(job, techRoster),
+      depositLabel,
+      drive,
+      job.weather_hold ? 'Weather hold' : null,
+    ].filter(Boolean)
+
     const row = (
       <ListRow
         grouped={grouped}
         isLast={isLast}
         icon={<Car size={18} color={iconTonePalette[iconTone].fg} weight="duotone" />}
         iconTone={iconTone}
-        title={job.client?.name ?? t('common.client')}
-        subtitle={jobSubtitle(job)}
+        title={
+          routeIndex > 0
+            ? `${routeIndex}. ${job.client?.name ?? t('common.client')}`
+            : (job.client?.name ?? t('common.client'))
+        }
+        subtitle={[jobSubtitle(job), metaBits.length ? metaBits.join(' · ') : null]
+          .filter(Boolean)
+          .join('\n')}
         badgeLabel={t(`jobs.status.${jobListStatusKey(job)}`)}
         badgeTone={jobListBadgeTone(job)}
         showChevron={false}
         trailing={
           <View style={styles.trailing}>
+            {routeMode && dateFilter ? (
+              <View style={styles.routeBtns}>
+                <Pressable onPress={() => void moveRoute(job.id, -1)} hitSlop={8}>
+                  <AppText variant="caption" style={styles.routeBtn}>
+                    ↑
+                  </AppText>
+                </Pressable>
+                <Pressable onPress={() => void moveRoute(job.id, 1)} hitSlop={8}>
+                  <AppText variant="caption" style={styles.routeBtn}>
+                    ↓
+                  </AppText>
+                </Pressable>
+              </View>
+            ) : null}
             <CurrencyAmount value={job.revenue + job.tip} variant="revenue" />
             <AppText variant="caption" style={styles.trailingTime}>
               {jobListRightTime(job)}
             </AppText>
+            {depositTone && depositLabel ? <Badge tone={depositTone} label={depositLabel} /> : null}
           </View>
         }
         onPress={() => openJob(job.id)}
@@ -245,13 +362,47 @@ export default function JobsScreen() {
           autoFocus
         />
       ) : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
-        <PillGroup
-          options={JOB_FILTER_CHIPS.map((c) => ({ value: c.key, label: t(c.labelKey) }))}
-          value={chip}
-          onChange={setChip}
-        />
-      </ScrollView>
+
+      <View style={styles.techRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.techChips}>
+          <PillGroup options={techChipOptions} value={techFilter} onChange={setTechFilter} />
+          <Pressable
+            onPress={() => router.push('/settings/team')}
+            style={styles.addTech}
+            accessibilityRole="button"
+            accessibilityLabel="Add technicians"
+          >
+            <UserPlus size={16} color={colors.greenText} weight="bold" />
+            <AppText variant="caption" style={styles.addTechText}>
+              Team
+            </AppText>
+          </Pressable>
+        </ScrollView>
+        <Pressable
+          onPress={() => {
+            if (!dateFilter) {
+              Alert.alert('Route', 'Open a day from Home (or filter by date) to reorder stops.')
+              return
+            }
+            setRouteMode((v) => !v)
+          }}
+          style={[styles.routeToggle, routeMode && styles.routeToggleOn]}
+          accessibilityRole="button"
+        >
+          <MapTrifold size={14} color={routeMode ? '#fff' : colors.textSecondary} weight="bold" />
+          <AppText variant="caption" style={[styles.routeToggleText, routeMode && styles.routeToggleTextOn]}>
+            Route
+          </AppText>
+        </Pressable>
+      </View>
+
+      {dateFilter && routeMode ? (
+        <View style={styles.routeBanner}>
+          <AppText variant="caption" style={styles.routeBannerText}>
+            Reorder stop sequence
+          </AppText>
+        </View>
+      ) : null}
 
       {dateFilter ? (
         <Pressable
@@ -275,7 +426,9 @@ export default function JobsScreen() {
         <EmptyState
           illustration="jobs"
           title={t('jobs.emptyTitle')}
-          description={query || chip !== 'all' ? t('jobs.emptyFiltered') : t('jobs.emptyDefault')}
+          description={
+            query || techFilter !== 'all' ? t('jobs.emptyFiltered') : t('jobs.emptyDefault')
+          }
           actionLabel={t('jobs.create')}
           onAction={() => router.push('/jobs/new')}
         />
@@ -326,9 +479,29 @@ export default function JobsScreen() {
 }
 
 const styles = StyleSheet.create({
-  chips: {
-    maxHeight: 56,
-    marginBottom: spacing.sm,
+  techRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  techChips: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingRight: spacing.sm,
+  },
+  addTech: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: iconTonePalette.green.bg,
+  },
+  addTechText: {
+    color: colors.greenText,
+    fontWeight: '600',
   },
   dateBanner: {
     alignSelf: 'flex-start',
@@ -340,6 +513,19 @@ const styles = StyleSheet.create({
   },
   dateBannerText: {
     color: colors.greenText,
+  },
+  routeBanner: {
+    marginBottom: spacing.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: iconTonePalette.blue.bg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: iconTonePalette.blue.fg,
+  },
+  routeBannerText: {
+    color: iconTonePalette.blue.fg,
+    fontWeight: '600',
   },
   list: {
     paddingBottom: spacing.lg,
@@ -367,6 +553,38 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: 2,
     minWidth: 72,
+  },
+  routeBtns: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 2,
+  },
+  routeBtn: {
+    color: colors.greenText,
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  routeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  routeToggleOn: {
+    backgroundColor: colors.green,
+    borderColor: colors.green,
+  },
+  routeToggleText: {
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  routeToggleTextOn: {
+    color: '#fff',
   },
   trailingTime: {
     fontSize: 12,

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Receipt } from 'phosphor-react-native'
+import { Camera, Receipt, Wallet } from 'phosphor-react-native'
 import { fmt, jobHasBeforeAndAfter, transformationPdfMissingMessage } from '@rinse/core'
 import type { Client, Invoice } from '@rinse/core'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
@@ -11,6 +11,7 @@ import {
   AppText,
   CurrencyAmount,
   EmptyState,
+  IconHeaderButton,
   ListRow,
   PillGroup,
   ScreenLoading,
@@ -254,6 +255,16 @@ export default function InvoicesScreen() {
       title={t('invoices.title')}
       subtitle={t('jobs.shown', { count: filtered.length })}
       onBack={goBack}
+      headerRight={
+        <View style={styles.headerActions}>
+          <IconHeaderButton label="Scan" onPress={() => router.push('/scan')}>
+            <Camera size={18} color={colors.textSecondary} weight="duotone" />
+          </IconHeaderButton>
+          <IconHeaderButton label="Expenses" onPress={() => router.push('/settings/business-expenses')}>
+            <Wallet size={18} color={colors.textSecondary} weight="duotone" />
+          </IconHeaderButton>
+        </View>
+      }
     >
       {loading ? (
         <ScreenLoading variant="list" />
@@ -287,6 +298,11 @@ export default function InvoicesScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   summary: {
     backgroundColor: colors.surface,
     borderRadius: 12,

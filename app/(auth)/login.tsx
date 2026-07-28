@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { useAuth } from '@/src/providers/AuthProvider'
-import { RinseLockup } from '@/src/components/onboarding/RinseLogo'
+import { RinseLockupAnimated } from '@/src/components/onboarding/RinseLogo'
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui'
 import { AppText } from '@/src/components/ui/AppText'
 import { requestPasswordReset } from '@/src/lib/auth'
@@ -125,7 +125,7 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.logoWrap}>
-          <RinseLockup height={36} />
+          <RinseLockupAnimated height={36} />
         </View>
 
         <AppText variant="h1" style={styles.title}>

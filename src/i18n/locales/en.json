@@ -296,6 +296,7 @@
   },
   "business": {
     "title": "Business",
+    "revenuePayouts": "Revenue & Payouts",
     "searchPlaceholder": "Search services, expenses, jobs…",
     "netProfit": "Net profit",
     "netLoss": "Net loss",

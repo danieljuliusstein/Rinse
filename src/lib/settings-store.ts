@@ -9,11 +9,30 @@ import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { requireOrganizationId } from './org'
 import { appOrigin, loadOrganizationSlug } from './org-slug'
-import { normalizeDocumentLocale, type DocumentLocale } from '@rinse/core'
+import {
+  normalizeDocumentLocale,
+  type BusinessPolicies,
+  type DocumentLocale,
+  type PortalPermissions,
+  type ReviewPrefs,
+  type SopTemplate,
+  type TaxPreset,
+  type TechRosterEntry,
+  type TipPrefs,
+} from '@rinse/core'
 
 import type { BookingSchedule } from './booking-schedule'
 import { DEFAULT_BOOKING_SCHEDULE, normalizeBookingSchedule } from './booking-schedule'
 import { normalizeEmailDeliverability } from './email-deliverability'
+import {
+  normalizeBusinessPolicies,
+  normalizePortalPermissions,
+  normalizeReviewPrefs,
+  normalizeSopTemplates,
+  normalizeTaxPresets,
+  normalizeTechRoster,
+  normalizeTipPrefs,
+} from './wave5-prefs'
 
 export type { BookingSchedule } from './booking-schedule'
 export { DEFAULT_BOOKING_SCHEDULE, normalizeBookingSchedule } from './booking-schedule'
@@ -103,6 +122,13 @@ export interface AppSettings {
   quiet_end_hour?: number
   /** Operator checklist for custom sending domain (SPF/DKIM/DMARC). */
   email_deliverability?: import('./email-deliverability').EmailDeliverabilityChecklist
+  business_policies?: BusinessPolicies
+  tip_prefs?: TipPrefs
+  portal_permissions?: PortalPermissions
+  tax_presets?: TaxPreset[]
+  sop_templates?: SopTemplate[]
+  tech_roster?: TechRosterEntry[]
+  review_prefs?: ReviewPrefs
 }
 
 export const DEFAULT_INVOICE_TERMS = 'Due on receipt. Thank you for your business.'
@@ -190,6 +216,17 @@ function recordToSettings(record: Record<string, unknown>, logoUrl?: string): Ap
           ? record.sms_quiet_end_hour
           : undefined,
     email_deliverability: normalizeEmailDeliverability(record.email_deliverability),
+    business_policies: record.business_policies
+      ? normalizeBusinessPolicies(record.business_policies)
+      : undefined,
+    tip_prefs: record.tip_prefs ? normalizeTipPrefs(record.tip_prefs) : undefined,
+    portal_permissions: record.portal_permissions
+      ? normalizePortalPermissions(record.portal_permissions)
+      : undefined,
+    tax_presets: record.tax_presets ? normalizeTaxPresets(record.tax_presets) : undefined,
+    sop_templates: record.sop_templates ? normalizeSopTemplates(record.sop_templates) : undefined,
+    tech_roster: record.tech_roster ? normalizeTechRoster(record.tech_roster) : undefined,
+    review_prefs: record.review_prefs ? normalizeReviewPrefs(record.review_prefs) : undefined,
   }
 }
 
@@ -369,6 +406,27 @@ export async function saveSettings(patch: Partial<AppSettings>): Promise<AppSett
   }
   if (next.email_deliverability !== undefined) {
     payload.email_deliverability = normalizeEmailDeliverability(next.email_deliverability)
+  }
+  if (next.business_policies !== undefined) {
+    payload.business_policies = normalizeBusinessPolicies(next.business_policies)
+  }
+  if (next.tip_prefs !== undefined) {
+    payload.tip_prefs = normalizeTipPrefs(next.tip_prefs)
+  }
+  if (next.portal_permissions !== undefined) {
+    payload.portal_permissions = normalizePortalPermissions(next.portal_permissions)
+  }
+  if (next.tax_presets !== undefined) {
+    payload.tax_presets = normalizeTaxPresets(next.tax_presets)
+  }
+  if (next.sop_templates !== undefined) {
+    payload.sop_templates = normalizeSopTemplates(next.sop_templates)
+  }
+  if (next.tech_roster !== undefined) {
+    payload.tech_roster = normalizeTechRoster(next.tech_roster)
+  }
+  if (next.review_prefs !== undefined) {
+    payload.review_prefs = normalizeReviewPrefs(next.review_prefs)
   }
 
   let record: Record<string, unknown>

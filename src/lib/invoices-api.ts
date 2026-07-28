@@ -114,6 +114,7 @@ export async function createInvoiceForJob(jobId: string): Promise<Invoice> {
     amount_paid: draft.amount_paid,
     balance_due: draft.balance_due,
     terms: draft.terms,
+    extra_line_items: Array.isArray(job.extra_line_items) ? job.extra_line_items : [],
   })
 
   await pb().collection('jobs').update(jobId, {

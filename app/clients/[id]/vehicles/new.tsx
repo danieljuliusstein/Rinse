@@ -14,15 +14,22 @@ import { VehicleTypePicker } from '@/src/lib/vehicle-type-icons'
 import { spacing } from '@/src/theme/colors'
 
 export default function NewVehicleScreen() {
-  const { id: clientId } = useLocalSearchParams<{ id: string }>()
+  const { id: clientId, vin: vinParam, make: makeParam, model: modelParam, year: yearParam } =
+    useLocalSearchParams<{
+      id: string
+      vin?: string
+      make?: string
+      model?: string
+      year?: string
+    }>()
   const router = useRouter()
-  const [make, setMake] = useState('')
-  const [model, setModel] = useState('')
-  const [year, setYear] = useState('')
+  const [make, setMake] = useState(typeof makeParam === 'string' ? makeParam : '')
+  const [model, setModel] = useState(typeof modelParam === 'string' ? modelParam : '')
+  const [year, setYear] = useState(typeof yearParam === 'string' ? yearParam : '')
   const [color, setColor] = useState('')
   const [colorHex, setColorHex] = useState('')
   const [plate, setPlate] = useState('')
-  const [vin, setVin] = useState('')
+  const [vin, setVin] = useState(typeof vinParam === 'string' ? vinParam : '')
   const [type, setType] = useState<VehicleType>('sedan')
   const [busy, setBusy] = useState(false)
 

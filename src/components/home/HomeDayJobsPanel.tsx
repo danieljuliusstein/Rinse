@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
@@ -8,6 +8,7 @@ import type { JobWithRelations } from '@rinse/core'
 import { AppText, ListRow, SectionGroup } from '@/src/components/ui'
 import { jobListBadgeTone, jobListStatusLabel } from '@/src/lib/jobs-list'
 import { jobsForDate } from '@/src/lib/home-dashboard'
+import { driveSubtitlesForDayJobs } from '@/src/lib/drive-time'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 
 interface HomeDayJobsPanelProps {
@@ -24,6 +25,17 @@ export function HomeDayJobsPanel({ date, jobs, onClear }: HomeDayJobsPanelProps)
   const router = useRouter()
   const { openJob } = useDetailNavigation()
   const dayJobs = useMemo(() => jobsForDate(jobs, date), [jobs, date])
+  const [driveSubs, setDriveSubs] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    void driveSubtitlesForDayJobs(dayJobs).then((map) => {
+      if (!cancelled) setDriveSubs(map)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [dayJobs])
 
   const label = new Date(`${date}T12:00:00`).toLocaleDateString('en-US', {
     weekday: 'long',
@@ -62,7 +74,9 @@ export function HomeDayJobsPanel({ date, jobs, onClear }: HomeDayJobsPanelProps)
                 icon={<Car size={18} color={iconTonePalette.green.fg} weight="duotone" />}
                 iconTone="green"
                 title={job.client?.name ?? 'Client'}
-                subtitle={`${job.package?.name ?? 'Detail'} · ${capitalize(job.vehicle_type)}`}
+                subtitle={`${job.package?.name ?? 'Detail'} · ${capitalize(job.vehicle_type)}${
+                  driveSubs[job.id] ? ` · ${driveSubs[job.id]}` : ''
+                }${job.weather_hold ? ' · Weather hold' : ''}`}
                 badgeLabel={jobListStatusLabel(job)}
                 badgeTone={jobListBadgeTone(job)}
                 trailing={<AppText variant="bodySemiBold">{fmt(job.revenue + job.tip)}</AppText>}

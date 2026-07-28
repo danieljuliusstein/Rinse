@@ -1,6 +1,6 @@
-import * as FileSystem from 'expo-file-system/legacy'
-import type { ExpenseLine } from '@rinse/core'
-import { appApiJson } from './app-api'
+import type { ExpenseLine, ReceiptHeuristicLine } from '@rinse/core'
+import { parseReceiptHeuristics } from '@rinse/core'
+import { recognizeReceiptText } from './receipt-ocr'
 
 export interface ReceiptParseResult {
   lines: ExpenseLine[]
@@ -9,24 +9,28 @@ export interface ReceiptParseResult {
   total?: number
 }
 
-export async function parseReceiptImage(uri: string, mimeType = 'image/jpeg'): Promise<ReceiptParseResult> {
-  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 })
+export function includedLinesToExpenseLines(rows: ReceiptHeuristicLine[]): ExpenseLine[] {
+  return rows
+    .filter((r) => r.included)
+    .map((r) => ({
+      category: 'supplies' as const,
+      description: r.text.trim(),
+      amount: Number(r.amount) || 0,
+    }))
+    .filter((r) => r.description.length > 0)
+}
 
-  const data = await appApiJson<ReceiptParseResult & { error?: string }>('/api/receipts/parse', {
-    method: 'POST',
-    body: JSON.stringify({ image: base64, mimeType }),
-  })
-
-  const lines = (data.lines ?? []).filter((line) => line.description && Number(line.amount) > 0)
-  if (lines.length === 0) {
-    throw new Error('No line items found on receipt')
+export async function parseReceiptImage(uri: string, _mimeType = 'image/jpeg'): Promise<ReceiptParseResult> {
+  const text = await recognizeReceiptText(uri)
+  if (!text) {
+    return { lines: [] }
   }
-
+  const heuristics = parseReceiptHeuristics(text)
   return {
-    lines,
-    merchant: data.merchant,
-    date: data.date,
-    total: data.total,
+    lines: includedLinesToExpenseLines(heuristics.lines),
+    merchant: heuristics.merchant,
+    date: heuristics.date,
+    total: heuristics.total,
   }
 }
 

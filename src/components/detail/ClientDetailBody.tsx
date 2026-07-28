@@ -25,7 +25,9 @@ import {
   openMaps,
   openPhone,
   openSms,
+  updateClient,
 } from '@/src/lib/api'
+import { PillGroup } from '@/src/components/ui'
 import { listVehiclesForClient, vehicleDisplayName } from '@/src/lib/damage-api'
 import { getQuotesForClient } from '@/src/lib/quotes-api'
 import { checkRecordConflict, refreshRecordFromServer } from '@/src/lib/conflict'
@@ -330,6 +332,36 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
           </View>
         </View>
       ) : null}
+
+      <View style={styles.section}>
+        <AppText variant="sectionLabel">Membership</AppText>
+        <View style={styles.card}>
+          <PillGroup
+            options={[
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'biweekly', label: 'Biweekly' },
+              { value: 'monthly', label: 'Monthly' },
+            ]}
+            value={client.membership_cadence ?? 'monthly'}
+            onChange={(membership_cadence) => {
+              void updateClient(clientId, { name: client.name, membership_cadence }).then(setClient)
+            }}
+          />
+          <AppText variant="caption" style={styles.muted}>
+            Next visit: {client.membership_next_visit || '—'}
+            {client.membership_paused ? ' · Paused' : ''}
+          </AppText>
+          <SecondaryButton
+            label={client.membership_paused ? 'Resume membership' : 'Pause membership'}
+            onPress={() => {
+              void updateClient(clientId, {
+                name: client.name,
+                membership_paused: !client.membership_paused,
+              }).then(setClient)
+            }}
+          />
+        </View>
+      </View>
 
       {recentQuotes.length > 0 ? (
         <View style={styles.section}>

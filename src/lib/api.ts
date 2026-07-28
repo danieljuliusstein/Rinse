@@ -33,6 +33,13 @@ function mapClient(record: Record<string, unknown>): Client {
     lead_source: record.lead_source ? String(record.lead_source) : undefined,
     notes: record.notes ? String(record.notes) : undefined,
     parent_client_id: record.parent_client_id ? String(record.parent_client_id) : undefined,
+    membership_cadence: record.membership_cadence
+      ? (String(record.membership_cadence) as Client['membership_cadence'])
+      : undefined,
+    membership_paused: record.membership_paused === true,
+    membership_next_visit: record.membership_next_visit
+      ? String(record.membership_next_visit)
+      : undefined,
     created: record.created ? String(record.created) : undefined,
   }
 }
@@ -85,6 +92,26 @@ function mapJob(record: Record<string, unknown>, expand?: Record<string, unknown
       : undefined,
     inspection_vehicle_id: record.inspection_vehicle_id
       ? String(record.inspection_vehicle_id)
+      : undefined,
+    deposit_status: record.deposit_status
+      ? (String(record.deposit_status) as JobWithRelations['deposit_status'])
+      : undefined,
+    deposit_amount:
+      record.deposit_amount != null && record.deposit_amount !== ''
+        ? Number(record.deposit_amount)
+        : undefined,
+    deposit_paid_at: record.deposit_paid_at ? String(record.deposit_paid_at) : undefined,
+    route_order:
+      record.route_order != null && record.route_order !== ''
+        ? Number(record.route_order)
+        : undefined,
+    assignee_id: record.assignee_id ? String(record.assignee_id) : undefined,
+    weather_hold: record.weather_hold === true,
+    checklist_items: Array.isArray(record.checklist_items)
+      ? (record.checklist_items as JobWithRelations['checklist_items'])
+      : undefined,
+    extra_line_items: Array.isArray(record.extra_line_items)
+      ? (record.extra_line_items as JobWithRelations['extra_line_items'])
       : undefined,
     created: record.created ? String(record.created) : undefined,
     updated: record.updated ? String(record.updated) : undefined,
@@ -297,6 +324,9 @@ export async function updateClient(id: string, input: Partial<ClientFormValues>)
       input.parent_client_id !== undefined
         ? input.parent_client_id.trim() || undefined
         : existing.parent_client_id,
+    membership_cadence: input.membership_cadence ?? existing.membership_cadence,
+    membership_paused: input.membership_paused ?? existing.membership_paused,
+    membership_next_visit: input.membership_next_visit ?? existing.membership_next_visit,
   }
 
   const mirrorData: Record<string, unknown> = {
@@ -321,6 +351,11 @@ export async function updateClient(id: string, input: Partial<ClientFormValues>)
         notes: merged.notes ?? '',
         parent_client_id: merged.parent_client_id ?? '',
         ...(merged.lead_source ? { lead_source: merged.lead_source } : {}),
+        ...(merged.membership_cadence
+          ? { membership_cadence: merged.membership_cadence }
+          : { membership_cadence: '' }),
+        membership_paused: merged.membership_paused === true,
+        membership_next_visit: merged.membership_next_visit ?? '',
       })
       return mapClient(updated as Record<string, unknown>)
     },
@@ -453,6 +488,14 @@ export async function updateJob(id: string, data: JobEditData): Promise<JobWithR
       if (data.inspection_vehicle_id !== undefined) {
         patch.inspection_vehicle_id = data.inspection_vehicle_id
       }
+      if (data.deposit_status !== undefined) patch.deposit_status = data.deposit_status
+      if (data.deposit_amount !== undefined) patch.deposit_amount = data.deposit_amount
+      if (data.deposit_paid_at !== undefined) patch.deposit_paid_at = data.deposit_paid_at
+      if (data.route_order !== undefined) patch.route_order = data.route_order
+      if (data.assignee_id !== undefined) patch.assignee_id = data.assignee_id
+      if (data.weather_hold !== undefined) patch.weather_hold = data.weather_hold
+      if (data.checklist_items !== undefined) patch.checklist_items = data.checklist_items
+      if (data.extra_line_items !== undefined) patch.extra_line_items = data.extra_line_items
       const updated = await pb.collection('jobs').update(id, patch)
       return mapJob(updated as Record<string, unknown>)
     },

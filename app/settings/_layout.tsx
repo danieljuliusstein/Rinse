@@ -27,6 +27,10 @@ export default function SettingsLayout() {
       <Stack.Screen name="language" />
       <Stack.Screen name="overhead" />
       <Stack.Screen name="packages" />
+      <Stack.Screen name="policies" />
+      <Stack.Screen name="team" />
+      <Stack.Screen name="addons" />
+      <Stack.Screen name="crm-extras" />
       <Stack.Screen name="preferences" />
       <Stack.Screen name="privacy" />
       <Stack.Screen name="progress" />

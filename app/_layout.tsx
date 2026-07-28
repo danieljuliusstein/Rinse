@@ -100,12 +100,15 @@ function RootLayout() {
                   <Stack.Screen name="inventory/equipment/[id]" options={sheetScreenOptions} />
                   <Stack.Screen name="inventory/wishlist/[id]" options={sheetScreenOptions} />
                   <Stack.Screen name="expenses/new" options={sheetScreenOptions} />
+                  <Stack.Screen name="expenses/receipt-review" options={sheetScreenOptions} />
+                  <Stack.Screen name="scan" options={{ presentation: 'card' }} />
                   <Stack.Screen name="invoices/[id]" options={{ presentation: 'card' }} />
                   <Stack.Screen name="invoices/new" options={sheetScreenOptions} />
                   <Stack.Screen name="quotes/new" options={sheetScreenOptions} />
                   <Stack.Screen name="quotes/[id]" options={{ presentation: 'card' }} />
                   <Stack.Screen name="leads/new" options={sheetScreenOptions} />
                   <Stack.Screen name="pipeline/[id]" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="reports/pl" options={{ presentation: 'card' }} />
                   <Stack.Screen name="settings" />
                 </Stack>
               </PaywallGateProvider>

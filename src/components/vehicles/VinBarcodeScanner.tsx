@@ -1,14 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native'
-import { CameraView, useCameraPermissions } from 'expo-camera'
+import { Modal, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native'
+import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Lightning, X } from 'phosphor-react-native'
-import { AppText, SecondaryButton } from '@/src/components/ui'
-import { extractVinCandidate } from '@/src/lib/vin-decode'
+import { CaretDown, CaretUp, Lightning, X } from 'phosphor-react-native'
+import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
+import { extractVinCandidate, isValidVin, normalizeVin } from '@/src/lib/vin-decode'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
 const VIN_BARCODE_TYPES = ['code39', 'code128', 'code93', 'pdf417', 'datamatrix', 'qr'] as const
+
+function barcodePayloadData(payload: BarcodeScanningResult | { data?: string } | { nativeEvent?: { data?: string } }): string | undefined {
+  if (payload && typeof payload === 'object') {
+    if ('data' in payload && typeof payload.data === 'string') return payload.data
+    if ('nativeEvent' in payload && typeof payload.nativeEvent?.data === 'string') {
+      return payload.nativeEvent.data
+    }
+  }
+  return undefined
+}
 
 export function VinBarcodeScanner({
   visible,
@@ -27,6 +37,8 @@ export function VinBarcodeScanner({
   const [error, setError] = useState<string | null>(null)
   const [torch, setTorch] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
+  const [manualOpen, setManualOpen] = useState(Platform.OS === 'web')
+  const [manualVin, setManualVin] = useState('')
   const handledRef = useRef(false)
   const cooldownRef = useRef(0)
 
@@ -34,46 +46,75 @@ export function VinBarcodeScanner({
     if (!visible) {
       setTorch(false)
       setCameraReady(false)
+      setManualVin('')
+      setError(null)
+      setManualOpen(Platform.OS === 'web')
       return
     }
     handledRef.current = false
     setError(null)
     cooldownRef.current = 0
     if (!permission?.granted) void requestPermission()
+    // Web / some devices never fire onCameraReady — enable scanning anyway after a beat.
+    const readyFallback = setTimeout(() => setCameraReady(true), 600)
+    return () => clearTimeout(readyFallback)
   }, [visible, permission?.granted, requestPermission])
 
-  const handleScanned = useCallback(
-    ({ data }: { data: string }) => {
-      if (!cameraReady || handledRef.current) return
-      const now = Date.now()
-      if (now - cooldownRef.current < 800) return
-      cooldownRef.current = now
-
-      const candidate = extractVinCandidate(data)
+  const submitVin = useCallback(
+    (raw: string) => {
+      if (handledRef.current) return
+      const candidate = extractVinCandidate(raw) ?? (isValidVin(raw) ? normalizeVin(raw) : null)
       if (!candidate) {
-        setError('Scanned code is not a valid 17-character VIN. Try again or use photo scan.')
+        setError('Need a valid 17-character VIN (no I, O, or Q).')
         return
       }
       handledRef.current = true
       onVin(candidate)
       onClose()
     },
-    [cameraReady, onClose, onVin],
+    [onClose, onVin],
+  )
+
+  const handleScanned = useCallback(
+    (payload: BarcodeScanningResult | { data?: string } | { nativeEvent?: { data?: string } }) => {
+      if (handledRef.current) return
+      const data = barcodePayloadData(payload)
+      if (!data) return
+      const now = Date.now()
+      if (now - cooldownRef.current < 800) return
+      cooldownRef.current = now
+
+      const candidate = extractVinCandidate(data)
+      if (!candidate) {
+        const preview = normalizeVin(data).slice(0, 24)
+        setError(
+          preview
+            ? `Read “${preview}” but it’s not a valid VIN. Try again, photo, or type it.`
+            : 'Scanned code is not a valid 17-character VIN. Try again, use photo, or type it.',
+        )
+        setManualOpen(true)
+        return
+      }
+      submitVin(candidate)
+    },
+    [submitVin],
   )
 
   if (!visible) return null
+
+  const cameraGranted = permission?.granted === true
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom + spacing.md }]}>
         <View style={styles.header}>
-          <AppText style={styles.title}>Scan VIN barcode</AppText>
+          <AppText style={styles.title}>Scan VIN</AppText>
           <Pressable accessibilityRole="button" accessibilityLabel="Close scanner" onPress={onClose} style={styles.close}>
             <X size={22} color={colors.textPrimary} />
           </Pressable>
         </View>
 
-        {!permission?.granted ? (
+        {!cameraGranted ? (
           <View style={styles.permission}>
             <AppText style={styles.permissionText}>
               Allow camera access to scan the VIN barcode on the door jamb or windshield.
@@ -100,12 +141,17 @@ export function VinBarcodeScanner({
               onCameraReady={() => setCameraReady(true)}
               onMountError={(e) => {
                 setCameraReady(false)
-                setError(e.message || 'Camera failed to start — try photo scan instead.')
+                setError(e.message || 'Camera failed — type the VIN or use photo scan.')
+                setManualOpen(true)
               }}
             />
             <View style={styles.frame} pointerEvents="none" />
             <AppText variant="caption" style={styles.hint}>
-              {!cameraReady ? 'Starting camera…' : 'Align the VIN barcode inside the frame'}
+              {!cameraReady
+                ? 'Starting camera…'
+                : Platform.OS === 'web'
+                  ? 'Hold the VIN barcode steady in the frame (web scanning is limited)'
+                  : 'Align the VIN barcode inside the frame'}
             </AppText>
           </View>
         )}
@@ -116,8 +162,44 @@ export function VinBarcodeScanner({
           </AppText>
         ) : null}
 
-        {permission?.granted ? (
-          <View style={styles.footer}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setManualOpen((v) => !v)}
+          style={styles.manualToggle}
+        >
+          <AppText style={styles.manualToggleLabel}>Or type VIN</AppText>
+          {manualOpen ? (
+            <CaretUp size={16} color={colors.textSecondary} />
+          ) : (
+            <CaretDown size={16} color={colors.textSecondary} />
+          )}
+        </Pressable>
+
+        {manualOpen ? (
+          <View style={styles.manualBlock}>
+            <TextInput
+              style={styles.manualInput}
+              value={manualVin}
+              onChangeText={(t) => {
+                setManualVin(normalizeVin(t).slice(0, 17))
+                setError(null)
+              }}
+              placeholder="17-character VIN"
+              placeholderTextColor={colors.textDim}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={17}
+            />
+            <PrimaryButton
+              label="Use this VIN"
+              onPress={() => submitVin(manualVin)}
+              disabled={manualVin.length < 17}
+            />
+          </View>
+        ) : null}
+
+        <View style={styles.footer}>
+          {cameraGranted ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={torch ? 'Turn torch off' : 'Turn torch on'}
@@ -127,19 +209,21 @@ export function VinBarcodeScanner({
             >
               <Lightning size={20} color={torch ? '#071407' : colors.textSecondary} weight={torch ? 'fill' : 'regular'} />
             </Pressable>
-            {onRequestPhotoScan ? (
-              <View style={styles.photoWrap}>
-                <SecondaryButton
-                  label="Scan from photo instead"
-                  onPress={() => {
-                    onClose()
-                    onRequestPhotoScan()
-                  }}
-                />
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+          ) : (
+            <View style={styles.torchSpacer} />
+          )}
+          {onRequestPhotoScan ? (
+            <View style={styles.photoWrap}>
+              <SecondaryButton
+                label="Scan from photo"
+                onPress={() => {
+                  onClose()
+                  onRequestPhotoScan()
+                }}
+              />
+            </View>
+          ) : null}
+        </View>
       </View>
     </Modal>
   )
@@ -150,7 +234,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
     paddingHorizontal: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   header: {
     flexDirection: 'row',
@@ -176,6 +260,7 @@ const styles = StyleSheet.create({
   },
   cameraWrap: {
     flex: 1,
+    minHeight: 280,
     gap: spacing.sm,
   },
   camera: {
@@ -185,10 +270,10 @@ const styles = StyleSheet.create({
   },
   frame: {
     position: 'absolute',
-    top: '22%',
+    top: '18%',
     left: spacing.lg,
     right: spacing.lg,
-    height: '36%',
+    height: '42%',
     borderWidth: 2,
     borderColor: colors.green,
     borderRadius: radii.lg,
@@ -200,6 +285,37 @@ const styles = StyleSheet.create({
   error: {
     color: colors.danger,
     textAlign: 'center',
+  },
+  manualToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  manualToggleLabel: {
+    color: colors.textSecondary,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+  },
+  manualBlock: {
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    padding: spacing.md,
+  },
+  manualInput: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 16,
+    letterSpacing: 1,
+    color: colors.textPrimary,
+    backgroundColor: colors.bg,
+    borderRadius: radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 12,
   },
   footer: {
     flexDirection: 'row',
@@ -215,6 +331,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+  },
+  torchSpacer: {
+    width: 44,
   },
   torchDisabled: {
     opacity: 0.4,

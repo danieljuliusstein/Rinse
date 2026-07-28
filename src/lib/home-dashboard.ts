@@ -1,6 +1,7 @@
 import { formatScheduledLabel } from '@rinse/core'
 import type { JobWithRelations, Package, Supply } from '@rinse/core'
 import { normalizeJobDate } from '@/src/lib/jobs-list'
+import { sortJobsByRouteOrder } from '@/src/lib/jobs-list-logic'
 
 export interface TodayJobCardData {
   id: string
@@ -59,9 +60,7 @@ export function formatStartTimeLabel(startTime?: string, arrivalWindowEnd?: stri
 }
 
 export function jobsForDate(jobs: JobWithRelations[], date: string): JobWithRelations[] {
-  return jobs
-    .filter((j) => normalizeJobDate(j.date) === date)
-    .sort((a, b) => (a.start_time ?? '').localeCompare(b.start_time ?? ''))
+  return sortJobsByRouteOrder(jobs.filter((j) => normalizeJobDate(j.date) === date))
 }
 
 export function buildTodayJobCard(jobs: JobWithRelations[]): TodayJobCardData | null {
