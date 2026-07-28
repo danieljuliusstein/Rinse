@@ -17,10 +17,14 @@ Marketing site for **Rinse**, an all-in-one platform for mobile detailing busine
 
 ## Project structure
 
-- `src/app/App.tsx` — root component
-- `src/app/components/` — page sections and UI components (`ui/` holds shadcn primitives, `figma/` holds Figma-exported assets/components)
+- `src/app/App.tsx` — routes and top-level page wiring
+- `src/app/pages/` — marketing pages (`HomePage`, `FeaturesPage`)
+- `src/app/layout/` — shared chrome (`Nav`, `Footer`, `DemoModal`)
+- `src/app/sections/` — page sections (mockups nested with their parent section)
+- `src/app/shared/` — scroll helpers and shared motion utilities
+- `src/app/components/ui/` — shadcn/Radix primitives; `components/figma/` for Figma-exported assets
 - `src/styles/` — Tailwind, theme, fonts, and global CSS
-- `src/assets/` — imported via the `figma:asset/` alias resolved in `vite.config.ts`
+- `src/assets/` — static assets (e.g. logo)
 
 ## User preferences
 
