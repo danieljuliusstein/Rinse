@@ -12,9 +12,12 @@ import 'leaflet/dist/leaflet.css'
 import { colors } from '@/theme/colors'
 import type { DeskJob } from '@/lib/types'
 
-/** Same-origin proxy — see vite.config.ts `/map-tiles/carto`.
+/** Carto Voyager tiles. Prefer CDN in prod — Vite `/map-tiles` proxy is local-only.
  * `{r}` → `@2x` on retina so Carto serves 512px tiles (avoids soft 1× stretch). */
-const TILE_URL = '/map-tiles/carto/{z}/{x}/{y}{r}.png'
+const TILE_URL =
+  import.meta.env.DEV
+    ? '/map-tiles/carto/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
 
 type Props = {
   jobs: DeskJob[]
