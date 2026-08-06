@@ -3,6 +3,7 @@ import { Menu, X } from "lucide-react";
 import rinseLogo from "../../assets/rinse-logo.svg";
 import { useNavigate } from "react-router";
 import { SECTIONS, scrollToSection } from "../shared/scroll";
+import { SIGN_IN_URL } from "../shared/urls";
 
 export const SCROLL_NAV_LINKS = [
   { label: "Workflow", id: SECTIONS.workflow },
@@ -70,14 +71,16 @@ export function Nav({ onStartTrial }: { onStartTrial: () => void }) {
 
         {/* CTAs */}
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href="https://app.rinse.app/login"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-black/50 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)]"
-          >
-            Sign in
-          </a>
+          {SIGN_IN_URL && (
+            <a
+              href={SIGN_IN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-black/50 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)]"
+            >
+              Sign in
+            </a>
+          )}
           <button
             onClick={onStartTrial}
             className="text-sm font-semibold text-white bg-neutral-900 hover:bg-neutral-800 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] px-4 py-2 rounded-xl"
@@ -114,15 +117,17 @@ export function Nav({ onStartTrial }: { onStartTrial: () => void }) {
               {item.label}
             </button>
           ))}
-          <a
-            href="https://app.rinse.app/login"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-            className="block w-full text-left text-sm text-black/50 hover:text-neutral-900 py-1.5"
-          >
-            Sign in
-          </a>
+          {SIGN_IN_URL && (
+            <a
+              href={SIGN_IN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="block w-full text-left text-sm text-black/50 hover:text-neutral-900 py-1.5"
+            >
+              Sign in
+            </a>
+          )}
           <button
             onClick={() => { onStartTrial(); setOpen(false); }}
             className="block w-full text-sm font-semibold text-white bg-neutral-900 px-4 py-2.5 rounded-xl text-center mt-2"
