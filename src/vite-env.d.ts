@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_CAMPAIGN_MAIL_URL?: string
   /** Detailing apps/api base URL for geocode + OSRM trip (e.g. http://localhost:3000). */
   readonly VITE_APP_API_URL?: string
+  /** Google Maps JS API key (Places Autocomplete). Restrict by HTTP referrer in Cloud Console. */
+  readonly VITE_GOOGLE_MAPS_API_KEY?: string
   /** MapLibre style JSON URL. Defaults to MapLibre demo tiles when unset. */
   readonly VITE_MAP_STYLE_URL?: string
 }

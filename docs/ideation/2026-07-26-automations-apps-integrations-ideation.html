@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ideation: Automations Apps / Integrations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --ink: #1c1b19;
+    --muted: #6b6560;
+    --line: #ddd6cb;
+    --card: #fffdf9;
+    --accent: #0f6b4c;
+    --accent-soft: #e4f2ec;
+    --warn: #8a5a12;
+    --chip: #ebe6dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 400px at 10% -10%, #e8f3ee 0%, transparent 55%),
+      radial-gradient(700px 360px at 100% 0%, #f3ebe0 0%, transparent 50%),
+      var(--bg);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  header.meta {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  header.meta h1 {
+    font-size: 1.85rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 1rem;
+    font-size: 0.92rem;
+  }
+  .meta-grid dt { color: var(--muted); }
+  .meta-grid dd { margin: 0; }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.85rem;
+    margin: 1.25rem 0 2rem;
+    font-size: 0.88rem;
+  }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  h2 {
+    font-size: 1.2rem;
+    margin: 2.25rem 0 0.75rem;
+    letter-spacing: -0.01em;
+  }
+  h3 { font-size: 1.05rem; margin: 0 0 0.5rem; }
+  p, li { color: var(--ink); }
+  .muted { color: var(--muted); }
+  .axes {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .axes li {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    padding: 0.55rem 0.75rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .axes .n {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    min-width: 1.5rem;
+  }
+  .jump {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0.75rem 0 1.5rem;
+    padding: 0.85rem 1rem;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+  .jump a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .jump a:hover { text-decoration: underline; }
+  .idea {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.15rem 1.25rem 1.25rem;
+    margin: 0 0 1.15rem;
+    scroll-margin-top: 1rem;
+  }
+  .idea .rank {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.55rem 0 0.85rem;
+  }
+  .chip {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: var(--chip);
+    color: var(--muted);
+  }
+  .chip.axis { background: var(--accent-soft); color: var(--accent); }
+  .field { margin: 0.55rem 0; font-size: 0.94rem; }
+  .field strong {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin-bottom: 0.15rem;
+  }
+  .viz {
+    margin: 0.9rem 0 0.3rem;
+    padding: 0.85rem;
+    background: #f3f1eb;
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  .viz svg { display: block; max-width: 100%; height: auto; }
+  .viz .cap {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.45rem;
+  }
+  table.reject {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin-top: 0.75rem;
+  }
+  table.reject th, table.reject td {
+    text-align: left;
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.reject th { color: var(--muted); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  footer.composition-signal {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.86em;
+    background: var(--chip);
+    padding: 0.05em 0.3em;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="meta">
+    <h1>Ideation: Automations Apps / Integrations</h1>
+    <dl class="meta-grid">
+      <dt>Date</dt><dd><time datetime="2026-07-26">2026-07-26</time></dd>
+      <dt>Topic</dt><dd>automations-apps-integrations</dd>
+      <dt>Focus</dt><dd>Surface the landing marquee tools inside the Automations tab (catalog + canvas placement + honest readiness). API keys / OAuth are a separate plan.</dd>
+      <dt>Mode</dt><dd>repo-grounded</dd>
+      <dt>Apps</dt><dd>Notion, Slack, ChatGPT, Claude, Stripe, Zapier, Mailchimp, Google Calendar, Google Maps, Linear, Apple, Twilio, QuickBooks, HubSpot, Xero, GitHub</dd>
+    </dl>
+  </header>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#grounding">Grounding</a>
+    <a href="#axes">Topic axes</a>
+    <a href="#ideas">Ranked ideas</a>
+    <a href="#rejections">Rejection summary</a>
+  </nav>
+
+  <section id="grounding">
+    <h2>Grounding context</h2>
+    <p><strong>Codebase.</strong> Automations is a first-party React Flow builder: list hub (templates + workflows) and full-page editor (palette | canvas | inspector). Triggers/actions are closed CRM unions; <code>validateWorkflow</code> rejects unknown kinds; <code>executeActionNode</code> only runs CRM actions that write Activities. POV: first-party spine now, Zapier later as adapter. No Apps catalog or connect-state model exists; Settings only mentions Stripe under invoicing.</p>
+    <p><strong>Learnings.</strong> One transferable constraint from <code>deals-board-teleport-fix</code>: visible UI must match actionable targets — don’t show Slack as runnable if it isn’t.</p>
+    <p><strong>External.</strong> Attio gated blocks (visible when unconnected + Connect CTA); HubSpot app-named picker groups; Zapier embed as long-tail; promote AI as a tier. Keys-later “design first” is common.</p>
+  </section>
+
+  <section id="axes">
+    <h2>Topic axes</h2>
+    <ol class="axes">
+      <li><span class="n">A1</span> Catalog discovery — Apps on the Automations list hub</li>
+      <li><span class="n">A2</span> Canvas &amp; palette placement — how apps become building blocks</li>
+      <li><span class="n">A3</span> Connect &amp; readiness UX — stubs without real OAuth</li>
+      <li><span class="n">A4</span> App taxonomy &amp; priority — 16 tools without a logo dump</li>
+      <li><span class="n">A5</span> First-party spine relationship — CRM events as hub; apps as spokes</li>
+    </ol>
+  </section>
+
+  <section id="ideas">
+    <h2>Ranked ideas</h2>
+    <p class="muted">7 survivors from ~40 raw candidates across 5 frames. Jump list:</p>
+    <div class="jump">
+      <a href="#i1">1. Destination stamps + branded Activity shadows</a>
+      <a href="#i2">2. APP_CATALOG / Manifest registry</a>
+      <a href="#i3">3. App-journey templates</a>
+      <a href="#i4">4. Liaison / Mark-for-connect</a>
+      <a href="#i5">5. Zapier as sole foreign adapter node</a>
+      <a href="#i6">6. Costume / stub-first app nodes</a>
+      <a href="#i7">7. Activity Feed as App Connect Inbox</a>
+    </div>
+
+    <article class="idea" id="i1">
+      <div class="rank">I1 · Rank 1</div>
+      <h3>Destination stamps + branded Activity shadows</h3>
+      <div class="chips">
+        <span class="chip axis">A2 Canvas &amp; palette · A5 Spine</span>
+        <span class="chip">Conf 88%</span>
+        <span class="chip">Cx Medium</span>
+      </div>
+      <div class="field"><strong>Description</strong>
+        Keep Triggers / Actions / Logic / Templates as today. Do <em>not</em> invent 16 new runnable node kinds. Instead, first-party actions (<code>create_activity</code>, Log note, tags) gain an optional <strong>destination stamp</strong> in the inspector (Slack, Notion, Stripe, …). Runtime still executes the CRM action; subject/body is branded e.g. <code>[Slack] Deal booked</code> so Contact Activity shows the intended fan-out. OAuth later upgrades stamp → real delivery without rewriting graphs.
+      </div>
+      <div class="field"><strong>Basis</strong>
+        direct: closed <code>AutomationAction</code> unions + CRM-only <code>executeActionNode</code>; <code>AutomationNodeData</code> already has open string index for <code>appId</code>; POV Activities-as-hub; learning visible=actionable.
+      </div>
+      <div class="field"><strong>Rationale</strong>
+        Ships the marquee promise inside Automations without lying that Slack runs today, and without waiting on the keys plan. Matches the POV that Desk CRM is the integration hub.
+      </div>
+      <div class="field"><strong>Downsides</strong>
+        Marketing may want literal Slack nodes; stamps can feel “fake Slack” unless chrome is brutally honest. Inspector must stay clear that the write is an Activity until Connect ships.
+      </div>
+      <div class="viz" aria-hidden="true">
+        <svg viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="50" width="120" height="56" rx="10" fill="#fff" stroke="#0f6b4c" stroke-width="2"/>
+          <text x="80" y="82" text-anchor="middle" font-size="12" font-family="DM Sans, sans-serif" fill="#1c1b19">Deal stage</text>
+          <path d="M140 78 H200" stroke="#6b6560" stroke-width="2" marker-end="url(#a)"/>
+          <rect x="200" y="50" width="150" height="56" rx="10" fill="#fff" stroke="#1c1b19" stroke-width="2"/>
+          <text x="275" y="74" text-anchor="middle" font-size="12" font-family="DM Sans, sans-serif">Log note</text>
+          <text x="275" y="92" text-anchor="middle" font-size="10" font-family="IBM Plex Mono, monospace" fill="#0f6b4c">stamp: Slack</text>
+          <path d="M350 78 H410" stroke="#6b6560" stroke-width="2" marker-end="url(#a)"/>
+          <rect x="410" y="40" width="200" height="76" rx="10" fill="#e4f2ec" stroke="#0f6b4c" stroke-width="2"/>
+          <text x="510" y="72" text-anchor="middle" font-size="12" font-family="DM Sans, sans-serif">Activity</text>
+          <text x="510" y="92" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="#0f6b4c">[Slack] Deal booked</text>
+          <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#6b6560"/></marker></defs>
+        </svg>
+        <p class="cap">CRM spine stays executable; apps are destinations on the Activity write.</p>
+      </div>
+    </article>
+
+    <article class="idea" id="i2">
+      <div class="rank">I2 · Rank 2</div>
+      <h3>APP_CATALOG / Manifest registry</h3>
+      <div class="chips">
+        <span class="chip axis">A4 App taxonomy</span>
+        <span class="chip">Conf 90%</span>
+        <span class="chip">Cx Low</span>
+      </div>
+      <div class="field"><strong>Description</strong>
+        Add a static <code>APP_CATALOG</code> (clone Forms <code>FIELD_CATALOG</code>): id, label, icon, formation (AI / Notify / Money / Sync / Escape), readiness (<code>fielded</code> | <code>liaison</code> | <code>paper</code>), spine roles, and default stamp copy. One registry feeds list hub tiles, palette rows, inspector stamp picker, and later OAuth status.
+      </div>
+      <div class="field"><strong>Basis</strong>
+        direct: Forms field catalog + FieldPalette pattern; closed unions make ad-hoc string lists painful; Stripe already appears as settings copy without a registry.
+      </div>
+      <div class="field"><strong>Rationale</strong>
+        Makes every future app a data row instead of a type-system change. Encodes taxonomy (AI first, Zapier last) as product policy in code.
+      </div>
+      <div class="field"><strong>Downsides</strong>
+        Empty registry with no UI is dead weight — must ship with at least stamps or journeys. Don’t grow enums for each app.
+      </div>
+    </article>
+
+    <article class="idea" id="i3">
+      <div class="rank">I3 · Rank 3</div>
+      <h3>App-journey templates (Template-to-App Binding)</h3>
+      <div class="chips">
+        <span class="chip axis">A1 Catalog discovery</span>
+        <span class="chip">Conf 86%</span>
+        <span class="chip">Cx Low</span>
+      </div>
+      <div class="field"><strong>Description</strong>
+        Don’t lead with a logo wall. Extend the existing “Start from a template” grid with branded journeys: “Form → Slack-ready note”, “Deal booked → Stripe invoice prep”, “Chat → Claude summary note”. Graphs remain CRM-only (or stamp-ready). Unpaired tools (GitHub, Linear, Maps) sit on a secondary “by the glass” rail.
+      </div>
+      <div class="field"><strong>Basis</strong>
+        direct: Automations list discovery is already templates + workflows; <code>templates.ts</code> accents <code>form|deal|chat</code>; council push for English templates over jargon.
+      </div>
+      <div class="field"><strong>Rationale</strong>
+        Answers “where do the 16 apps live?” on the surface users already use to start work — without inventing a marketplace that can’t connect yet.
+      </div>
+      <div class="field"><strong>Downsides</strong>
+        GTM may still want equal logo weight; editorial pairings need ownership or they rot.
+      </div>
+    </article>
+
+    <article class="idea" id="i4">
+      <div class="rank">I4 · Rank 4</div>
+      <h3>Liaison / Mark-for-connect (honest readiness)</h3>
+      <div class="chips">
+        <span class="chip axis">A3 Connect &amp; readiness</span>
+        <span class="chip">Conf 85%</span>
+        <span class="chip">Cx Low</span>
+      </div>
+      <div class="field"><strong>Description</strong>
+        Ban fake “Connect” that implies OAuth. Reuse Settings’ <code>Mobile only</code> / opacity pattern: states <strong>Available on spine</strong> · <strong>Marked for connect</strong> · <strong>Live (later)</strong>. CTA opens an Automations sheet: what the app will do, which CRM events it pairs with, “Credentials in a later plan / Notify me.” Stripe’s sheet can deep-link Money / Payments copy.
+      </div>
+      <div class="field"><strong>Basis</strong>
+        direct: Settings hub disabled rows with “Mobile only”; POV defers OAuth/Zapier review; user constraint that keys are a separate plan.
+      </div>
+      <div class="field"><strong>Rationale</strong>
+        Gives a shippable Connect UX that won’t train users to expect a broken OAuth dance — and queues demand for the credentials plan.
+      </div>
+      <div class="field"><strong>Downsides</strong>
+        Less flashy than Attio’s Connect CTA; product language must stay consistent across list + inspector.
+      </div>
+    </article>
+
+    <article class="idea" id="i5">
+      <div class="rank">I5 · Rank 5</div>
+      <h3>Zapier as the sole foreign adapter node</h3>
+      <div class="chips">
+        <span class="chip axis">A4 Taxonomy · A2 Palette</span>
+        <span class="chip">Conf 82%</span>
+        <span class="chip">Cx Medium</span>
+      </div>
+      <div class="field"><strong>Description</strong>
+        Fifteen marquee apps appear as stamps / journeys. One palette item — <strong>Zapier / webhook (soon)</strong> — is the named long-tail escape hatch: dimmed, inspector shows payload shape (<code>contact_id</code>, trigger, stage…), non-executing until the adapter plan. Avoids treating Zapier as peer to Slack.
+      </div>
+      <div class="field"><strong>Basis</strong>
+        direct: POV “Zapier later as adapter, not prerequisite”; external Zapier-embed-node pattern; palette already uses disabled styling for structural unreadiness.
+      </div>
+      <div class="field"><strong>Rationale</strong>
+        Keeps the type-system story clean: one foreign concept for the long tail; natives stay spine-first.
+      </div>
+      <div class="field"><strong>Downsides</strong>
+        Power users may want Zapier live immediately; dimmed node must not look broken.
+      </div>
+    </article>
+
+    <article class="idea" id="i6">
+      <div class="rank">I6 · Rank 6</div>
+      <h3>Costume / stub-first app nodes</h3>
+      <div class="chips">
+        <span class="chip axis">A2 Canvas &amp; palette</span>
+        <span class="chip">Conf 78%</span>
+        <span class="chip">Cx High</span>
+      </div>
+      <div class="field"><strong>Description</strong>
+        Heavier alternative to stamps: add an Apps palette section; dropping Slack places a branded “fitting” node (dashed border / Fitting chip). Graphs save; <code>validateWorkflow</code> warns fittings don’t run (or they only write Activity receipts). Live CRM actions remain the only performable nodes until OAuth.
+      </div>
+      <div class="field"><strong>Basis</strong>
+        external: Attio gated blocks; direct: <code>validateWorkflow</code> already errors unknown action kinds; learning visible=actionable prefers explicit warning over silent skip.
+      </div>
+      <div class="field"><strong>Rationale</strong>
+        Best when composition of multi-app chains matters more than honesty-of-spine. Pair with liaison language.
+      </div>
+      <div class="field"><strong>Downsides</strong>
+        Touches unions, icons, inspector schemas, runner — higher burden than stamps for the same marketing claim. Prefer I1 unless users must see app-shaped topology.
+      </div>
+    </article>
+
+    <article class="idea" id="i7">
+      <div class="rank">I7 · Rank 7</div>
+      <h3>Activity Feed as App Connect Inbox</h3>
+      <div class="chips">
+        <span class="chip axis">A5 First-party spine</span>
+        <span class="chip">Conf 74%</span>
+        <span class="chip">Cx Medium</span>
+      </div>
+      <div class="field"><strong>Description</strong>
+        Once stamps/shadows write <code>[Slack]</code> / <code>[Stripe]</code> Activities, add an Activities filter + inline “Mark for connect” on those rows. No new Integrations page — the audit spine becomes the demand inbox for the later credentials plan.
+      </div>
+      <div class="field"><strong>Basis</strong>
+        direct: Activities already aggregates cross-module events; shadows make subjects filterable; council framed Activity as notification center.
+      </div>
+      <div class="field"><strong>Rationale</strong>
+        Compounds I1: every stub run creates visible proof and a queue for OAuth work.
+      </div>
+      <div class="field"><strong>Downsides</strong>
+        Depends on I1 shipping first; Activities UI scope creeps if Connect UI is overbuilt here.
+      </div>
+    </article>
+  </section>
+
+  <section id="rejections">
+    <h2>Rejection summary</h2>
+    <p class="muted">~33 cut after merge / adversarial filter. Representative cuts:</p>
+    <table class="reject">
+      <thead><tr><th>Idea</th><th>Why cut</th></tr></thead>
+      <tbody>
+        <tr><td>Ask AI executable node via rule engine</td><td>Basis weak — <code>buildAiSuggestions</code> is advisory; no ChatGPT/Claude runtime. Fold AI into catalog tier + stamps instead.</td></tr>
+        <tr><td>Phantom transit map hub</td><td>Pure analogy; no structural hook on AutomationsPage.</td></tr>
+        <tr><td>Zero-apps until first live automation</td><td>Hides marquee; conflicts with visible=actionable discovery.</td></tr>
+        <tr><td>Progressive tier unlock / gamification</td><td>No unlock model; speculative for this CRM.</td></tr>
+        <tr><td>CRM-Event × App value-map grid</td><td>Educational only; no functional pattern in list hub.</td></tr>
+        <tr><td>Standalone <code>app_action</code> node type</td><td>Sound but heavier duplicate of stamps/stubs — keep as implementation option under I6.</td></tr>
+        <tr><td>Preview-as-connected (full-color lie)</td><td>Weaker honesty than liaison + stamps; risk of trust break.</td></tr>
+        <tr><td>ORBAT / ATC / finish-schedule metaphors</td><td>Useful for taxonomy thinking; folded into I2/I4 naming, not standalone product ideas.</td></tr>
+        <tr><td>Generic “Apps logo section in Settings”</td><td>Out of Automations-tab scope; Settings already has static hub rows without connect model.</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="margin-top:1rem">Axis coverage: all five axes have survivors. No deliberate axis gap.</p>
+  </section>
+
+  <footer class="composition-signal">
+    Composed 2026-07-26T18:10Z by ce-ideate (run <code>6b56a9f7</code>) from user focus: marquee apps inside Automations (keys/OAuth deferred).
+  </footer>
+</div>
+</body>
+</html>

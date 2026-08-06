@@ -1,0 +1,91 @@
+Generate a three-page Figma design file (1440px desktop frame size) for a sophisticated Business Management Platform, leveraging design patterns and layouts from referenced images. The file must include:
+
+Page 1: A comprehensive Finance/Money Overview.
+
+Page 2: A core Dashboard (derived from "image_c16a7a.png" and "image_c16dc4.jpg").
+
+Page 3: A Kanban Sales Pipeline (derived from "image_c16da4.png").
+
+General Design System Instructions:
+Color Palette: Use the deep purple/plum primary color and teal/green accent color seen in "image_c16a7a.png". These will be the primary branding colors. Use neutral greys for borders, backgrounds, and text.
+
+Typography: Set a clear, legible sans-serif font family (e.g., Inter or Roboto). Create text styles for H1 (Title), H2 (Card Title), Body, and Caption.
+
+Components: Create reusable components: Button (Primary [Purple], Secondary [Outline]), Input Field, Card (White background, light shadow), Avatar, and Icon.
+
+Grid: All frames use a standard 12-column grid.
+
+Page 1: Finance/Money Overview
+Main Frame: Name: "01_Money_Overview". 1440px width. Left sidebar (260px) and a main content area.
+
+Sidebar (Reuse component for all pages): Dark purple background ("image_c16a7a.png"). Create a navigation menu with icons and text: "Dashboard," "Sales," "Money" (Active state: bold, light highlight), "Contacts," "Settings." Add user profile avatar at the bottom.
+
+Header (Reuse component): "Money Dashboard" title. Search bar (top center). Action buttons (top right): "Help" icon, "Create New" (Purple button), user profile.
+
+Content Area - Top KPIs (Inspired by "image_c16a98.jpg"):
+
+Create a row of four (4) KPI cards, styled with a distinct purple outline border.
+
+Card 1: "Total Revenue" (Large $ amount, e.g., $1.2M), small teal "+12.5%" percentage trend.
+
+Card 2: "Total Expenses" (Large $ amount, e.g., $800K), small red "-5.2%" percentage trend.
+
+Card 3: "Net Profit" (Large $ amount, e.g., $400K), small teal "+8.1%" percentage trend.
+
+Card 4: "Accounts Receivable" (Large $ amount, e.g., $250K).
+
+Content Area - Main Chart (Inspired by "image_c16a98.jpg"):
+
+Add one large card covering 12 columns.
+
+Title: "Monthly Revenue vs. Expenses."
+
+Sub-Header: Date picker ("Aug 2024 - Aug 2025").
+
+Graph: Area chart with two overlapping lines (Revenue: Purple, Expenses: Teal) over a 12-month timeline, including filled gradients below the lines. Show y-axis and x-axis labels.
+
+Content Area - Bottom Sections (Two Columns):
+
+Column 1 (6 Cols): "Bank Accounts" (List component with 3 items: Account Name, Balance, small bar chart sparkline for each).
+
+Column 2 (6 Cols): "Recent Transactions" (List component: Icon [expense/income], Description, Date, Amount). Add "View All" button below.
+
+Page 2: Core Dashboard
+Main Frame: Name: "02_Main_Dashboard". (Reuse Sidebar and Header from Page 1).
+
+Main Content Area (Structure derived from "image_c16a7a.png" and "image_c16dc4.jpg"): Replicate the 3x3 grid layout of distinct, self-contained cards.
+
+Card 1 (Contacts KPI): Style of "image_c16dc4.jpg". Left-aligned text "120 New contacts" with a small line chart sparkline underneath.
+
+Card 2 (Revenue Won KPI): Style of "image_c16dc4.jpg". Left-aligned text "$545 Won from 9 deals" with a small area chart sparkline underneath. Use purple branding.
+
+Card 3 (Pipeline Chart - Derived from "image_c16a7a.png"): Create a chart card titled "Contacts by Label" with the large donut chart. Show the multi-colored legend with counts next to it.
+
+Card 4 (Email Metric): Circle chart style from "image_c16dc4.jpg". Titled "Emails Opened." Central "100%" text with a full green/teal circle border.
+
+Card 5 (Pipeline Funnel - Style derived from "image_c16a7a.png" and "image_c16dc4.jpg"): Create a card titled "Deals by Pipeline." Feature the multi-colored horizontal stacked bar chart funnel with percentages and counts (e.g., Interested, Quotation, Won).
+
+Card 6 (Campaign Metric): Replicate the campaign list from "image_c16a7a.png". Title: "Campaigns (11)". List with four items showing Name, Date, Edit/Delete icons. Add "View All" and "New Campaign" buttons at the bottom.
+
+Card 7 (Line Chart - Derived from "image_c16a7a.png"): Titled "Contact Trend." Replicate the multi-point line graph over 7 days (Sun-Sat) with blue dots and y-axis labels.
+
+Card 8 (Activities List - Style derived from "image_c16a7a.png"): Titled "Recent Activities." List with five items, showing user avatars, activity text (e.g., "Call with William"), date, and status tags (teal/purple). Add "View All" and "New Activity" buttons.
+
+Card 9 (Bar Chart): Create a bar chart card titled "Task Report." Show a vertical stacked bar chart showing counts of Pending, In Progress, Completed tasks.
+
+Page 3: Sales Pipeline (Kanban)
+Main Frame: Name: "03_Sales_Pipeline". (Reuse Sidebar and Header from Page 1).
+
+Content Area Header (derived from "image_c16da4.png"): Sub-header bar containing "Teams / Opportunities" text with a small settings cog. Add a unified search input (center) and "Sales Team" filters.
+
+Content Area - Kanban Board (Grid Structure derived from "image_c16da4.png"):
+
+Create four (4) main columns: "New," "Qualified," "Proposition," "Won." Each column frame must have a background border color (Purple/Teal/Yellow/Green) and show the total value in the column (e.g., "$64,000" or "$40,600"). Add a "+" icon in each column header for creating new cards.
+
+Content Area - Kanban Cards (Derived from "image_c16da4.png"): Create a master component for the cards (White card, light shadow).
+
+Card Elements: Card Title (e.g., "Office Design Project"), Deal Value (e.g., "$24,000.00"), Company Name (e.g., "Deco Addict"), color-coded multi-tags (e.g., "Design," "Product," "Services"), 3-star rating system (fill/outline), contact icons (email, call, chat), and the contact owner avatar.
+
+Populate the Columns: Populate the columns with 2-3 cards each, varying the content based on the text provided in "image_c16da4.png".
+
+Final Layout: Arrange the four columns horizontally across the frame, with cards stacked vertically within each column. Ensure consistent spacing.

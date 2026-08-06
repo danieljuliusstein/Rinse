@@ -1,0 +1,432 @@
+{
+  "run_id": "trun_ee31bb7ca6124c2d8797cc098f845b7a",
+  "interaction_id": "trun_ee31bb7ca6124c2d8797cc098f845b7a",
+  "result_url": "https://platform.parallel.ai/play/deep-research/trun_ee31bb7ca6124c2d8797cc098f845b7a",
+  "status": "completed",
+  "output": {
+    "basis": [
+      {
+        "field": "executive_summary",
+        "reasoning": "Reasoning about completeness:\n- The field_description requests an executive summary style synthesis covering desktop vs mobile roles, dashboards and metrics (health, funnel, SLA, utilization), UX patterns (alert-to-drilldown), queue-driven design, writeback patterns, and cross-vendor best practices (Jobber, Housecall Pro, ServiceTitan, Tableau/Power BI).\n- The provided field_answer touches on all of these areas: separation of desktop analytics vs mobile field app; mobile capabilities; dispatch boards and scheduling; office configuration and templates; metric hierarchy and drill-path design; queue-first UX patterns; detailing reality vs field capture; and sparse writeback with a policy/template-centric desk versus mobile event streams. It also cites dates and sources that align with the excerpts.\n- It does not attempt to prove every point with a stand-alone citation, but the content aligns with the topics in the field_description. Therefore, completeness can be considered true because the answer comprehensively covers the expected aspects (roles, patterns, UX, writeback, best-practices).\n\nReasoning about support from excerpts:\n- Excerpts provide evidence for several concrete claims: Jobber reporting basics for desktop analytics/export (excerpt 0); mobile app capabilities (excerpt 1); ServiceTitan dispatch boards and weekly board (excerpts 2, 3); Housecall Pro feature set (excerpt 4); Salesforce field service metrics (excerpt 6); Tableau/Power BI guidance on dashboards and drill-through (excerpts 7, 8, 9); auto detailing and Fieldd/Jobber references for detailing reality (excerpts 10, 11).\n- The field_answer weaves these excerpts into a cohesive executive-summaries-style synthesis, including patterns like sparse writeback and one authoritative event stream. While not every sentence is directly quotable from a single excerpt, the core assertions are supported by the provided excerpts.\n- Therefore, the field_answer is largely supported by the excerpts.\n\nOverall assessment:\n- completeness: true\n- supported: true",
+        "citations": [
+          {
+            "url": "https://help.getjobber.com/hc/en-us/articles/115009784848-Reports-Basics",
+            "excerpts": [
+              "Reports Basics\nApr 17, 2026 \u2014 With the Report Scheduler app, your reports in Jobber can be set up on a schedule to be exported and emailed to you automatically. The Report"
+            ],
+            "title": "Reports Basics"
+          },
+          {
+            "url": "http://getjobber.com/features/field-service-management-app",
+            "excerpts": [
+              "Jobber helps you schedule work, manage your team, communicate with customers, and more\u2014from any mobile device. Download from the app store today."
+            ],
+            "title": "Top Mobile App for Field Services"
+          },
+          {
+            "url": "http://help.servicetitan.com/docs/dispatching",
+            "excerpts": [
+              "Dispatching Home - ServiceTitan\nUse the Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board to manage technicians and job appointments across your business."
+            ],
+            "title": "Dispatching Home - ServiceTitan"
+          },
+          {
+            "url": "http://help.servicetitan.com/docs/use-the-weekly-dispatch-board",
+            "excerpts": [
+              "Use the Weekly Dispatch Board - ServiceTitan\nMay 19, 2026 \u00b7 The Jobs Tray on the Weekly Board includes an Assigned tab that shows job appointments that are Scheduled and Assigned. You can expand the Jobs"
+            ],
+            "title": "Use the Weekly Dispatch Board - ServiceTitan"
+          },
+          {
+            "url": "https://www.housecallpro.com/",
+            "excerpts": [
+              "Housecall Pro: Home Services Business Management Software\nNo credit card required. Features \u00b7 Scheduling \u00b7 Dispatching \u00b7 Estimates \u00b7 Price Book \u00b7 HCP Assist \u00b7 Quickbooks \u00b7 Employee Time Tracking \u00b7 Review"
+            ],
+            "title": "Housecall Pro: Home Services Business Management Software"
+          },
+          {
+            "url": "https://help.housecallpro.com/en/collections/2284878-checklists",
+            "excerpts": [],
+            "title": "Checklists | Housecall Pro Help Center"
+          },
+          {
+            "url": "https://help.salesforce.com/s/articleView?id=analytics.bi_app_field_service_wave_dashboards.htm&language=en_US&type=5",
+            "excerpts": [
+              "Field Service Analytics Prebuilt Dashboard - Salesforce\nQuickly review first-time fix rates, utilization, SLA compliance, and travel-time analysis. Start from a territory overview of all accounts, products, and teams and zoom into the technician and work order level."
+            ],
+            "title": "Field Service Analytics Prebuilt Dashboard - Salesforce"
+          },
+          {
+            "url": "https://help.tableau.com/current/pro/desktop/en-us/dashboards_best_practices.htm",
+            "excerpts": [
+              "Best Practices for Effective Dashboards\nA well-designed dashboard can align your organization's efforts, help uncover key insights, and speed up decision-making."
+            ],
+            "title": "Best Practices for Effective Dashboards"
+          },
+          {
+            "url": "https://help.tableau.com/current/pro/desktop/en-us/actions_filter.htm",
+            "excerpts": [
+              "Filter Actions"
+            ],
+            "title": "Filter Actions Tableau https://help.tableau.com \u203a current \u203a pro \u203a desktop \u203a en-us"
+          },
+          {
+            "url": "https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-drillthrough",
+            "excerpts": [
+              "Drillthrough in Power BI Reports: Navigate to Detailed Insights\nMar 2, 2026 \u00b7 If Drillthrough doesn't appear in the context menu, verify that the drillthrough filter field is present in the visual you're right-clicking."
+            ],
+            "title": "Drillthrough in Power BI Reports: Navigate to Detailed Insights"
+          },
+          {
+            "url": "https://www.getjobber.com/industries/auto-detailing-software",
+            "excerpts": [
+              "Auto Detailing Software | Booking, Estimating, Scheduling & CRM\nJobber\u2019s mobile auto detailing software reduces administrative work at every stage of the job to help you streamline your workflow. That means quoting, scheduling, job management, customer communication, and invoicing\u2014all in one place."
+            ],
+            "title": "Auto Detailing Software | Booking, Estimating, Scheduling & CRM"
+          },
+          {
+            "url": "https://fieldd.co/industries/auto-detailing-software",
+            "excerpts": [
+              "Auto detailing | Fieldd | Software for Services\nSoftware built for auto detailing businesses. Fieldd keeps your calendar full, your team in sync, and your clients coming back."
+            ],
+            "title": "Auto detailing | Fieldd | Software for Services"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "three_surfaces_one_system_stop_building_a_second_field_ops_twin",
+        "reasoning": "Assessment steps:\n- Field likely expects a clear stance on whether a three-surfaces-one-system approach (desktop review, desktop configure, mobile execution) is the right model and what permissions/writeback patterns to use. The provided field_answer outlines a desktop control tower, a mobile execution mode, and a third writeback-only mode, plus a three-surface table with responsibilities and writeback rules, concluding with a three-permission model (review, configure, execute). It also provides a decision. This aligns with the implied field description about separating desktop vs mobile surfaces and governance boundaries.\n- Completeness check: The answer directly addresses the three surfaces concept, the governance boundary, and the recommended permissions. It provides concrete writeback rules and anti-patterns, plus a decision. Therefore, it appears to fully cover the expected aspects (surface roles, data/writeback separation, and governance model).\n- Excerpt relevance: Excerpts discuss Jobber/mobile vs desktop capabilities and ServiceTitan\u2019s dispatch boards, which corroborate the notion of separate desktop/mobile surfaces and a governance boundary, supporting the gist of the field answer. While excerpts do not map 1:1 to every detail, they corroborate the core separation and surface roles.\n- Confidence: Moderate-to-high that the field answer is complete and supported by excerpts, given alignment with cited sources on surface separation and governance patterns.\n",
+        "citations": [
+          {
+            "url": "https://help.getjobber.com/hc/en-us/articles/115009784848-Reports-Basics",
+            "excerpts": [
+              "Reports Basics\nApr 17, 2026 \u2014 With the Report Scheduler app, your reports in Jobber can be set up on a schedule to be exported and emailed to you automatically. The Report"
+            ],
+            "title": "Reports Basics"
+          },
+          {
+            "url": "http://getjobber.com/features/field-service-management-app",
+            "excerpts": [
+              "Jobber helps you schedule work, manage your team, communicate with customers, and more\u2014from any mobile device. Download from the app store today."
+            ],
+            "title": "Top Mobile App for Field Services"
+          },
+          {
+            "url": "http://help.servicetitan.com/docs/dispatching",
+            "excerpts": [
+              "Dispatching Home - ServiceTitan\nUse the Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board to manage technicians and job appointments across your business."
+            ],
+            "title": "Dispatching Home - ServiceTitan"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/servicetitan-mobile",
+            "excerpts": [
+              "ServiceTitan Mobile (Legacy) Home\nMay 11, 2026 \u2014 Use this handbook to learn how to sell estimates, collect payments, close out jobs, and more with ServiceTitan Mobile."
+            ],
+            "title": "ServiceTitan Mobile (Legacy) Home"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "jobber_housecall_pro_and_servicetitan_three_useful_product_patterns",
+        "reasoning": "Assessment steps:\n- Field answer provides a comparative pattern analysis across Jobber, Housecall Pro, and ServiceTitan, focusing on desk vs mobile, analytics boundaries, and governance/permissions trade-offs. It also includes a concluding decision with proposed borrowings and cautions about not copying entire navigation or assuming equal authority.\n- Completeness judgment: The answer directly addresses the expected domain: patterns across three vendors, desk vs mobile responsibilities, analytics/control lessons, and a concluding decision summarizing best practices. It also articulates specific governance lessons (desktop-first reporting boundary, checklist-gated completion, and weekly-to-daily dispatch layers). Therefore, it appears to fully satisfy the implied field description and query scope.\n- Reasoning alignment: The decision paragraph explicitly maps to the field\u2019s intent (describing patterns and governance) and cites the cited extracts in the excerpts. No evident missing subtopics from the provided field prompt are uncovered.\n- Confidence note: The field answer is coherent and aligned with the excerpts; the provided excerpts cover the referenced patterns (Jobber reports, Housecall Pro workflows/checklists, ServiceTitan dispatch boards).",
+        "citations": [
+          {
+            "url": "http://help.getjobber.com/hc/en-us",
+            "excerpts": [
+              "Learn about each step of your workflow\u2014requests, quotes, jobs, invoices, timesheets, and expenses. Contact Us 1-888-721-1115 hello@getjobber.com"
+            ],
+            "title": "Jobber Help Center"
+          },
+          {
+            "url": "https://help.getjobber.com/hc/en-us/articles/115009784848-Reports-Basics",
+            "excerpts": [
+              "Reports Basics\nApr 17, 2026 \u2014 With the Report Scheduler app, your reports in Jobber can be set up on a schedule to be exported and emailed to you automatically. The Report"
+            ],
+            "title": "Reports Basics"
+          },
+          {
+            "url": "https://help.housecallpro.com/en/articles/4372680-scheduling-invoicing-and-payments-training",
+            "excerpts": [
+              "Scheduling, Invoicing, and Payments Training - Housecall Pro\nIn this Scheduling, Dispatch, and Payments Training, we provide a comprehensive overview of the essential workflows for managing scheduling, dispatching, and payments in Housecall Pro."
+            ],
+            "title": "Scheduling, Invoicing, and Payments Training - Housecall Pro"
+          },
+          {
+            "url": "https://help.housecallpro.com/en/collections/2284878-checklists",
+            "excerpts": [],
+            "title": "Checklists | Housecall Pro Help Center"
+          },
+          {
+            "url": "http://help.servicetitan.com/docs/dispatching",
+            "excerpts": [
+              "Dispatching Home - ServiceTitan\nUse the Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board to manage technicians and job appointments across your business."
+            ],
+            "title": "Dispatching Home - ServiceTitan"
+          },
+          {
+            "url": "http://help.servicetitan.com/docs/use-the-weekly-dispatch-board",
+            "excerpts": [
+              "Use the Weekly Dispatch Board - ServiceTitan\nMay 19, 2026 \u00b7 The Jobs Tray on the Weekly Board includes an Assigned tab that shows job appointments that are Scheduled and Assigned. You can expand the Jobs"
+            ],
+            "title": "Use the Weekly Dispatch Board - ServiceTitan"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/servicetitan-mobile",
+            "excerpts": [
+              "ServiceTitan Mobile (Legacy) Home\nMay 11, 2026 \u2014 Use this handbook to learn how to sell estimates, collect payments, close out jobs, and more with ServiceTitan Mobile."
+            ],
+            "title": "ServiceTitan Mobile (Legacy) Home"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment",
+        "reasoning": "Assessment reasoning:\n- The field_description outlines a comprehensive taxonomy for quote-to-cash in field service, with emphasis on desk vs mobile split, five metric families, drill paths, readability, and governance (clickable ratios, definitions, immutable stage timestamps, separate quotes/invoices/payments, etc.).\n- The field_answer provides a detailed narrative that covers: (a) end-to-end lifecycle (quote, schedule, dispatch, field execution, invoice, payment, reporting), (b) local definitions for metric families and recommended denominators, (c) primary drill paths and desk decisions, (d) emphasis on not conflating completion with invoicing, (e) discussion of utilization with cautions and preferred patterns (travel-time analysis alongside utilization), and (f) a concrete decision to build five linked metric families with drillable ratios and explicit definitions.\n- The completeness assessment: The answer appears to address the core elements requested by the field_description (five metric families, definitions, drill paths, desk decisions, lifecycle coverage, and governance). It provides explicit table-based metrics, guidance on dashboard interactions, and an architectural decision. Therefore, it seems complete with respect to the user\u2019s query.\n- The excerpts provided include supporting sources (Simpro field service lifecycle, Salesforce field service analytics, and Jobber reports basics) that align with parts of the field_answer (end-to-end lifecycle, utilization/SLA, and separate quotes/invoices/payments mentions). While the excerpts don\u2019t cover every nuanced point, they substantiate key claims in the field_answer about dashboards and lifecycle stages. Based on that, the field_answer is reasonably supported by the excerpts.\n- Confidence level: moderate to high for completeness; moderate for excerpt-level coverage of every detailed claim, but overall alignment is strong.\n",
+        "citations": [
+          {
+            "url": "https://www.simprogroup.com/",
+            "excerpts": [
+              "Field service management software helps trade businesses manage work from first customer request through quote, schedule, dispatch, field execution, invoicing, payment and reporting."
+            ],
+            "title": "Field Service Management Software | Simpro AI-First Platform"
+          },
+          {
+            "url": "https://help.salesforce.com/s/articleView?id=analytics.bi_app_field_service_wave_dashboards.htm&language=en_US&type=5",
+            "excerpts": [
+              "Field Service Analytics Prebuilt Dashboard - Salesforce\nQuickly review first-time fix rates, utilization, SLA compliance, and travel-time analysis. Start from a territory overview of all accounts, products, and teams and zoom into the technician and work order level."
+            ],
+            "title": "Field Service Analytics Prebuilt Dashboard - Salesforce"
+          },
+          {
+            "url": "https://help.getjobber.com/hc/en-us/articles/115009784848-Reports-Basics",
+            "excerpts": [
+              "Reports Basics\nApr 17, 2026 \u2014 With the Report Scheduler app, your reports in Jobber can be set up on a schedule to be exported and emailed to you automatically. The Report"
+            ],
+            "title": "Reports Basics"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "alert_to_drilldown_ux_from_red_tile_to_owned_queue",
+        "reasoning": "Assessment steps:\n- Field to evaluate: alert_to_drilldown_ux_from_red_tile_to_owned_queue. \n- Field description likely expects guidance on alert-to-drilldown UX for a red tile, including how to drill down to the owning queue/job with context preserved, and recommended UX patterns (signal -> queue -> record -> action, four-step interaction), plus example mappings for various alert types and how desk/mobile handoffs should work. \n- Field answer contents: Provides sequence of questions to answer (what changed, where concentration, what reviewer can do), references Tableau and Power BI drilldown/drillthrough concepts, outlines a four-step interaction, describes what a signal card should show, emphasizes filtering the queue to specific source job, and includes a table mapping alert types to default queue, drilldown fields, desk actions, and mobile handoff. Includes cross-references to dashboards best practices and real-time filtering recommendations. Concludes with a decision target (resolve in under 30 seconds) and context preservation requirements.\n- Completeness assessment:\n  - The answer directly addresses the user experience flow for alert-to-drilldown in a desk/mobile context, including mechanisms to preserve filters and context, and provides actionable steps and examples. \n  - It covers the main components expected from a UX guidance field: sequence of actions, what to display on signal cards, how drilldown should behave, and explicit desk/mobile actions per alert type. \n  - It aligns with the field\u2019s likely intent (alert-to-owning-queue drilldown UX, with context preservation, and actionable outcomes). \n  - Therefore, completeness is true.\n- Excerpts support assessment:\n  - Excerpts include best practices for dashboards, filter actions in Tableau, drillthrough in Power BI, and interactive filtering/drill-down guidance. These support the techniques and recommendations given in the field answer (signal -> queue -> record -> action; filter/drilldown patterns; preserving context). \n  - The presence of these excerpts supports the field answer\u2019s claims about UX patterns and capabilities. \n- Conclusion: completeness = true; supported = true.",
+        "citations": [
+          {
+            "url": "https://help.tableau.com/current/pro/desktop/en-us/dashboards_best_practices.htm",
+            "excerpts": [
+              "Best Practices for Effective Dashboards\nA well-designed dashboard can align your organization's efforts, help uncover key insights, and speed up decision-making."
+            ],
+            "title": "Best Practices for Effective Dashboards"
+          },
+          {
+            "url": "https://help.tableau.com/current/pro/desktop/en-us/actions_filter.htm",
+            "excerpts": [
+              "Filter Actions"
+            ],
+            "title": "Filter Actions Tableau https://help.tableau.com \u203a current \u203a pro \u203a desktop \u203a en-us"
+          },
+          {
+            "url": "https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-drillthrough",
+            "excerpts": [
+              "Drillthrough in Power BI Reports: Navigate to Detailed Insights\nMar 2, 2026 \u00b7 If Drillthrough doesn't appear in the context menu, verify that the drillthrough filter field is present in the visual you're right-clicking."
+            ],
+            "title": "Drillthrough in Power BI Reports: Navigate to Detailed Insights"
+          },
+          {
+            "url": "http://getmaintainx.com/blog/how-to-build-a-work-order-dashboard-for-maintenance",
+            "excerpts": [
+              "Interactive filtering and drill-down capabilities Dashboards can always provide a high-level view, but you should be able to dive deeper when you need"
+            ],
+            "title": "How To Build A Work Order Dashboard for Maintenance"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "the_sunday_planning_board_a_seven_day_promise_not_live_dispatch",
+        "reasoning": "Reasoning: The field_answer provides a detailed view on Sunday planning cadence, advocating a weekly horizon view for capacity with separate desk vs mobile responsibilities, and citing ServiceTitan's Weekly Dispatch Board patterns (Assigned tab, capacity counting for non-job events). The excerpts include ServiceTitan docs about the Weekly Dispatch Board (with an Assigned tab showing scheduled/assigned jobs) and a Dispatch & Track Your Technicians doc describing how non-job events can count against capacity. This supports the core concepts (weekly planning board, capacity focus, desk vs mobile handoff, and capacity/demand considerations) but may not explicitly confirm every claimed governance detail (e.g., exact seven-day promise semantics beyond the weekly planning notion). Overall, the field answer is largely aligned with the excerpts and addresses the query aspects (who reviews vs config vs mobile, cadence, outputs, exceptions, and decision). Therefore completeness appears true. Excerpts support the core ideas but do not cover every line item exhaustively; still they substantiate the central claims.",
+        "citations": [
+          {
+            "url": "http://help.servicetitan.com/docs/use-the-weekly-dispatch-board",
+            "excerpts": [
+              "Use the Weekly Dispatch Board - ServiceTitan\nMay 19, 2026 \u00b7 The Jobs Tray on the Weekly Board includes an Assigned tab that shows job appointments that are Scheduled and Assigned. You can expand the Jobs"
+            ],
+            "title": "Use the Weekly Dispatch Board - ServiceTitan"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/dispatch-track-your-technicians",
+            "excerpts": [
+              "Dispatch & Track Your Technicians\nTo add a new one, on the Dispatch Board, click a technician's timeline within the time slot when you want to schedule the event and on the non-job event flyout that opens, set the type, time, technician, and whether it counts against capacity."
+            ],
+            "title": "Dispatch & Track Your Technicians"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "sparse_writeback_configure_the_system_capture_the_work_once",
+        "reasoning": "Assessment reasoning:\n- The field description asks for guidance on sparse writeback and how the system should coordinate desktop vs mobile writes, with a recommended pattern and a decision summary. \n- The field_answer provides a comprehensive stance on sparse writeback (desktop for configuration/aggregation, mobile for evidence/event capture), a table of write patterns for various data/actions, references to specific vendors, and a final decision to separate desktop writes from mobile writes and keep metrics derived.\n- Completeness check: The answer directly addresses the topic (sparse writeback configuration, roles, patterns, and a final decision). It covers multiple data/action areas and recommended write patterns, aligning with the field description. Therefore, completeness is true.\n- Excerpts support check: The provided excerpts discuss mobile apps, reports scheduling, and legacy mobile guidance for a few vendors. They do not substantiate the detailed sparse writeback patterns or the desktop/mobile governance decisions present in the field_answer. Therefore, excerpts do not support the specific claims in the field_answer. Support should be false.\n- Result: completeness = true, supported = false.",
+        "citations": [
+          {
+            "url": "http://getjobber.com/features/field-service-management-app",
+            "excerpts": [
+              "Jobber helps you schedule work, manage your team, communicate with customers, and more\u2014from any mobile device. Download from the app store today."
+            ],
+            "title": "Top Mobile App for Field Services"
+          },
+          {
+            "url": "https://help.getjobber.com/hc/en-us/articles/115009784848-Reports-Basics",
+            "excerpts": [
+              "Reports Basics\nApr 17, 2026 \u2014 With the Report Scheduler app, your reports in Jobber can be set up on a schedule to be exported and emailed to you automatically. The Report"
+            ],
+            "title": "Reports Basics"
+          },
+          {
+            "url": "https://help.housecallpro.com/en/collections/2284878-checklists",
+            "excerpts": [],
+            "title": "Checklists | Housecall Pro Help Center"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/servicetitan-mobile",
+            "excerpts": [
+              "ServiceTitan Mobile (Legacy) Home\nMay 11, 2026 \u2014 Use this handbook to learn how to sell estimates, collect payments, close out jobs, and more with ServiceTitan Mobile."
+            ],
+            "title": "ServiceTitan Mobile (Legacy) Home"
+          }
+        ],
+        "confidence": "medium"
+      },
+      {
+        "field": "detailing_specific_control_tower_route_vehicle_package_proof_payment",
+        "reasoning": "Reasoning: The field_answer provides a comprehensive synthesis of how detailing desk review should function, including the importance of first-class dimensions (vehicle, location, package, proof, payment), desk vs mobile responsibilities, exception-focused design, and patterns from competitors (Jobber, Fieldd). It also presents a structured table of detailed desk vs mobile interactions and key metrics/alerts, and concludes with a design decision. This aligns with the field description's emphasis on desk configurability, exception review, and UX for alerts and drilldown, as well as best practices and competitor patterns. Therefore, the answer appears to be complete. Excerpts supplied show relevant industry positioning (Jobber and Fieldd capabilities) that support the general claims about desk vs mobile capabilities and workflows, even though exact citation strings in the field_answer do not map one-to-one to the provided excerpts. Overall, completeness = true; supported = true.",
+        "citations": [
+          {
+            "url": "https://www.getjobber.com/industries/auto-detailing-software",
+            "excerpts": [
+              "Auto Detailing Software | Booking, Estimating, Scheduling & CRM\nJobber\u2019s mobile auto detailing software reduces administrative work at every stage of the job to help you streamline your workflow. That means quoting, scheduling, job management, customer communication, and invoicing\u2014all in one place."
+            ],
+            "title": "Auto Detailing Software | Booking, Estimating, Scheduling & CRM"
+          },
+          {
+            "url": "http://getjobber.com/features/field-service-management-app",
+            "excerpts": [
+              "Jobber helps you schedule work, manage your team, communicate with customers, and more\u2014from any mobile device. Download from the app store today."
+            ],
+            "title": "Top Mobile App for Field Services"
+          },
+          {
+            "url": "https://fieldd.co/industries/auto-detailing-software",
+            "excerpts": [
+              "Auto detailing | Fieldd | Software for Services\nSoftware built for auto detailing businesses. Fieldd keeps your calendar full, your team in sync, and your clients coming back."
+            ],
+            "title": "Auto detailing | Fieldd | Software for Services"
+          },
+          {
+            "url": "https://fieldd.co/",
+            "excerpts": [
+              "Fieldd | The all-in-one software your business was missing\nFieldd connects every booking with the right worker at the right time, keeping your schedule smooth and double-booking free."
+            ],
+            "title": "Fieldd | The all-in-one software your business was missing"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "synthesis_choose_the_control_tower_pattern_not_the_feature_checklist",
+        "reasoning": "Evaluation reasoning:\n- The field answer provides a synthesized pattern comparison (control tower pattern vs feature checklist) and a concrete decision/roadmap for desktop-first deployment, including the ordering of features and governance posture.\n- It covers high-level principles (analytical control tower, when to write audited exceptions, desktop vs mobile roles, data truth layer) and a staged rollout plan (metrics contract, funnel/schedule health, SLA/backlog alerts, planning board, config/audited writes).\n- Completeness assessment leans toward true because the answer directly addresses the requested concept (control-tower vs feature-checklist, recommended pattern, and rollout posture) and provides a decision narrative and deployment sequence.\n- However, the excerpts supplied are limited and do not explicitly back all detailed claims in the synthesis; this reduces external support but does not invalidate the internal completeness of the field answer.\n- Confidence in completeness is moderate-to-high; the answer seems to satisfy the implied request for a synthesis and recommended pattern, though external excerpts do not fully corroborate every point.\n",
+        "citations": [
+          {
+            "url": "https://help.getjobber.com/hc/en-us/articles/115009784848-Reports-Basics",
+            "excerpts": [
+              "Reports Basics\nApr 17, 2026 \u2014 With the Report Scheduler app, your reports in Jobber can be set up on a schedule to be exported and emailed to you automatically. The Report"
+            ],
+            "title": "Reports Basics"
+          },
+          {
+            "url": "https://help.housecallpro.com/en/collections/2284878-checklists",
+            "excerpts": [],
+            "title": "Checklists | Housecall Pro Help Center"
+          },
+          {
+            "url": "http://help.servicetitan.com/docs/use-the-weekly-dispatch-board",
+            "excerpts": [
+              "Use the Weekly Dispatch Board - ServiceTitan\nMay 19, 2026 \u00b7 The Jobs Tray on the Weekly Board includes an Assigned tab that shows job appointments that are Scheduled and Assigned. You can expand the Jobs"
+            ],
+            "title": "Use the Weekly Dispatch Board - ServiceTitan"
+          }
+        ],
+        "confidence": "medium"
+      }
+    ],
+    "content": {
+      "executive_summary": "- **Surface Separation**: Jobber's April 17, 2026 reporting guide says reports require Jobber.com, are unavailable in the mobile app, include **20+ built-in reports**, and can be scheduled for export -> make the desktop an analytics and governance surface, not a duplicate field app ([executive_summary[0]] [39]).\n- **Mobile Closure**: Jobber's mobile product supports scheduling from the field, quotes, job forms, photos, clock-in/out, customer messaging, and invoice generation after completion -> leave timestamped service evidence and customer-facing completion to mobile ([executive_summary[1]] [54]).\n- **Dispatch Layers**: ServiceTitan documents Daily and Weekly Dispatch Boards, a Job Tray, and a Schedule Board; its weekly-board documentation is tagged for Admin and CSR Dispatch and was updated May 19, 2026 -> use the weekly board for capacity promises and the daily board for execution ([executive_summary[2]] [16]; [executive_summary[3]] [17]).\n- **Office Configuration**: Housecall Pro groups scheduling, dispatching, estimates, price book, accounting integration, and employee time tracking in its business-management product, while its help center treats checklist templates as controls that employees must complete before a job can be finished -> configure rules and templates at the desk, then collect completion evidence in the field ([executive_summary[4]] [25]; [executive_summary[5]] [63]).\n- **Metric Hierarchy**: Salesforce's field-service dashboard explicitly combines first-time fix, utilization, SLA compliance, and travel-time analysis, moving from territory, account, product, and team views to technician and work-order detail -> design a business-to-queue-to-job drill path rather than a page of isolated tiles ([executive_summary[6]] [7]).\n- **Queue-First UX**: Tableau recommends purpose-built dashboards and supports filter actions, while Power BI's drillthrough pattern carries a selected field into a detailed page -> every alert should open a filtered, actionable queue with context preserved ([executive_summary[7]] [32]; [executive_summary[8]] [78]; [executive_summary[9]] [74]).\n- **Detailing Reality**: Jobber positions auto-detailing around booking, estimating, scheduling, route optimization, and invoicing; Fieldd emphasizes a full calendar, team synchronization, dispatch, reminders, payments, and follow-ups -> put location, travel, vehicle, service-package, photo, and payment exceptions into the control tower, while the technician app captures the proof ([executive_summary[10]] [20]; [executive_summary[11]] [80]).\n- **Sparse Writeback**: The strongest common pattern is not full desktop/mobile parity. The desk should write policies, templates, assignments, and justified corrections; mobile should write arrival, work, photos, checklist, customer approval, and payment events -> preserve one authoritative event stream and make corrections auditable.\n\nThe retrieved evidence is concentrated in current 2026 documentation: Jobber's reporting article shows April 17, 2026; Housecall Pro's scheduling training appeared as updated February 14, 2026; ServiceTitan's weekly-board documentation shows May 19, 2026, and its dispatch, dashboard, and mobile documentation was updated July 10-11, 2026. These sources support current operating patterns, not a claim that every feature existed unchanged throughout 2024.",
+      "three_surfaces_one_system_stop_building_a_second_field_ops_twin": "The right model is a **desktop control tower**, not a second field-operations twin. The desk sees the system as a set of queues, trends, commitments, and configuration rules. The mobile app sees it as a sequence of real-world events that must be captured with minimal friction. A third, often overlooked, mode is controlled office writeback for assignments and exceptions.\n\n| Surface | Primary question | Canonical responsibilities | Writeback allowed | Anti-pattern to avoid |\n|---|---|---|---|---|\n| Desktop review | What is healthy, late, stuck, under-filled, or unprofitable? | Funnel, schedule health, SLA queue, backlog aging, utilization, travel, quality, invoice and payment status | Acknowledge, assign owner, set priority, open source record, record an exception reason | Editing field timestamps or re-entering photos and notes just to make the dashboard look complete |\n| Desktop configure | What rules make the workflow repeatable? | Service catalog, durations, prices, quote stages, SLA windows, capacity rules, route zones, roles, templates, notifications, checklist templates | Publish versioned configuration and controlled corrections | Letting every dispatcher or technician silently redefine a metric or checklist |\n| Mobile execution | What happened at the vehicle, customer, or job site? | Navigate, arrive, start and stop work, capture photos, complete forms and checklists, record materials, obtain approval, create or finalize invoice, collect payment | Timestamped event evidence tied to the job and user | Requiring a technician to reproduce the full desktop dashboard or maintain duplicate administrative records |\n\nThis boundary is consistent with Jobber's explicit surface evidence. Its reports require signing in to Jobber.com and are not available in the app, but its mobile product supports field scheduling, quotes, job forms, photos, clock-in/out, customer messaging, and invoice generation after a job is marked complete ([three_surfaces_one_system_stop_building_a_second_field_ops_twin[0]] [39]; [three_surfaces_one_system_stop_building_a_second_field_ops_twin[1]] [54]). ServiceTitan expresses the same separation through office dispatch boards and a mobile handbook for selling estimates, collecting payments, and closing jobs ([three_surfaces_one_system_stop_building_a_second_field_ops_twin[2]] [16]; [three_surfaces_one_system_stop_building_a_second_field_ops_twin[3]] [67]).\n\nThe control tower should therefore be **read-mostly for event data** and **write-enabled for policy and coordination**. A reviewer may move an unassigned job, change a priority, add a capacity block, or correct a status with a reason. The reviewer should not invent an arrival time, replace a technician's photo, or silently overwrite a customer payment event. That distinction protects trust in utilization, SLA, and job-cost metrics.\n\n**Decision:** Implement three permissions in the product model: `review`, `configure`, and `execute`. Give the desktop reviewer broad read access and narrow exception-write access; give mobile users fast event capture; keep configuration changes versioned and attributable.",
+      "jobber_housecall_pro_and_servicetitan_three_useful_product_patterns": "| Competitor | Desk or office pattern | Mobile or field pattern | Analytics and control lesson | Main trade-off |\n|---|---|---|---|---|\n| Jobber | Web reports, report customization, CSV export, scheduled report email, quote/invoice/payment/visit reporting; the reporting guide says reports are not in the app | Field scheduling, map-based visit view, quotes, forms, photos, clock-in/out, notifications, customer texts, and completion-triggered invoice generation | Strongest explicit proof that analytics can be desktop-first while execution remains mobile | Mobile can do some administrative actions, so permissions must prevent duplicate authority |\n| Housecall Pro | Product surface lists scheduling, dispatching, estimates, price book, accounting integration, and employee time tracking; training covers scheduling, dispatching, invoices, and payments | Public help materials center jobs, estimates, invoices, and employee checklists; checklist templates can gate job completion | Good pattern for configuring templates and commercial workflow while field staff complete job-specific evidence | Public help content is less explicit about a hard web/mobile boundary; validate the exact plan and role permissions |\n| ServiceTitan | Daily and Weekly Dispatch Boards, Job Tray, Schedule Board, dashboard and scorecard views, schedule-engine administration, capacity-counted non-job events | Mobile handbook covers estimates, payments, and closeout; field mobile product is positioned for technician work | Clearest multi-horizon dispatch model: weekly planning, daily dispatch, then mobile closeout | More board types and status transitions create governance and training overhead |\n\nJobber's case is especially useful for a small detailing CRM. Its help center defines a workflow containing requests, quotes, jobs, invoices, timesheets, and expenses, while its reporting article says the business can use more than **20** built-in reports and schedule exports. That is a strong precedent for making the desk the place where a reviewer compares quote, visit, invoice, and payment populations instead of asking technicians to maintain an analytics view ([jobber_housecall_pro_and_servicetitan_three_useful_product_patterns[0]] [55]; [jobber_housecall_pro_and_servicetitan_three_useful_product_patterns[1]] [39]).\n\nHousecall Pro provides a different lesson. Its scheduling training explicitly frames the operational chain as scheduling and dispatching jobs, sending invoices, and taking payment, and its checklist collection says templates are added to jobs and must be completed by employees before a job can be marked finished ([jobber_housecall_pro_and_servicetitan_three_useful_product_patterns[2]] [28]; [jobber_housecall_pro_and_servicetitan_three_useful_product_patterns[3]] [63]). That implies a useful split even where the public docs do not state a strict surface prohibition: the desk owns the template and control, while the field worker supplies the completion evidence.\n\nServiceTitan demonstrates the value of explicit horizons. Its dispatch documentation names Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board, while its weekly-board page exposes an Assigned tab for appointments that are both scheduled and assigned. Its mobile handbook separately covers selling estimates, collecting payments, and closing out jobs ([jobber_housecall_pro_and_servicetitan_three_useful_product_patterns[4]] [16]; [jobber_housecall_pro_and_servicetitan_three_useful_product_patterns[5]] [17]; [jobber_housecall_pro_and_servicetitan_three_useful_product_patterns[6]] [67]).\n\n**Decision:** Borrow Jobber's desktop-only reporting boundary, Housecall Pro's checklist-gated completion, and ServiceTitan's weekly-to-daily dispatch layers. Do not copy any vendor's entire navigation or assume that a mobile-capable action should have equal authority on desktop.",
+      "the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment": "A useful dashboard does not merely list KPIs. It defines the business stage, denominator, time window, owner, freshness, and next action for every metric. Simpro's product description provides a useful end-to-end backbone: request, quote, schedule, dispatch, field execution, invoice, payment, and reporting ([the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment[0]] [71]). Salesforce adds the operational layer by naming first-time fix, utilization, SLA compliance, and travel-time analysis and by drilling from territory and team views to technician and work-order detail ([the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment[1]] [7]).\n\nThe ratios below are **recommended local definitions**, not universal industry standards. Publish them as a metric contract so that the business does not change the denominator during a performance dispute.\n\n| Metric family | Recommended measures and definitions | Primary drill path | Desk decision |\n|---|---|---|---|\n| Pipeline and quote-to-cash | Quote acceptance = accepted quotes / sent quotes. Quote-to-job = booked jobs attributable to accepted quotes / accepted quotes. Job-to-invoice = invoices created / completed jobs. Invoice-to-cash = paid invoices / sent invoices, paired with days to payment. | Source or campaign -> customer -> quote -> job -> invoice -> payment | Decide whether the issue is demand, sales conversion, fulfillment, billing, or collections |\n| Schedule health | Unassigned jobs, late starts, reschedules, cancellations, no-shows, on-time arrival, travel-time variance, route overlap, and scheduled hours / available hours | Week -> day -> route or technician -> appointment | Reassign, add capacity, protect a service window, or contact the customer |\n| SLA and backlog | SLA attainment = jobs completed within the promised window / jobs due in the window. Backlog count and value by age bucket, due date, priority, and blocked reason. | SLA tier -> due or overdue queue -> customer -> job | Escalate due-soon work, unblock work, or reset an expectation with an audit reason |\n| Labor and service quality | Utilization = the locally defined productive or on-job hours / available paid hours. First-time fix = jobs closed without a return visit / closed jobs, if that definition fits the business. Separate travel, waiting, and rework hours. | Team -> technician -> job -> time entries and return visit | Change staffing, service duration, route design, training, or job scoping |\n| Quality and cash | Checklist completion, required-photo completion, customer approval, invoice lag, unpaid aging, failed payment, and payment method mix | Service package -> job evidence -> invoice -> payment | Hold completion, correct the invoice, follow up, or change the package and checklist |\n\nThe funnel needs immutable stage timestamps. A quote that is accepted on Sunday but scheduled on Monday should be counted once in each appropriate stage, with the elapsed time between stages visible. The desk should not infer completion from an invoice alone if the source workflow has a separate job-complete event. Jobber's reports explicitly distinguish quotes, invoices, payments, and visits, which supports this separation ([the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment[2]] [39]).\n\nUtilization deserves special caution. A high ratio can conceal bad routing, unpaid travel, or technicians rushing work; a low ratio can be healthy during training, weather disruption, or planned maintenance. Display productive hours, travel hours, available hours, and rework separately, then make the local denominator visible beside the number. Salesforce's inclusion of travel-time analysis alongside utilization is the right pattern ([the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment[1]] [7]).\n\n**Decision:** Build five linked metric families, not one composite score. Make every ratio clickable to its numerator and denominator records, and expose the definition beside the value.",
+      "alert_to_drilldown_ux_from_red_tile_to_owned_queue": "The desktop should answer three questions in sequence: what changed, where is the concentration, and what can the reviewer do now? Tableau's dashboard guidance emphasizes a clear purpose, while its filter-action model sends information from a selected mark to one or more target views. Power BI's drillthrough model similarly navigates to a detail page filtered by the selected context ([alert_to_drilldown_ux_from_red_tile_to_owned_queue[0]] [32]; [alert_to_drilldown_ux_from_red_tile_to_owned_queue[1]] [78]; [alert_to_drilldown_ux_from_red_tile_to_owned_queue[2]] [74]).\n\nUse a four-step interaction: **signal -> queue -> record -> action**. A signal card should show actual, target, variance, count, age, owner, and last refresh. Clicking the card should open a filtered queue, not a generic jobs list. Selecting a row should open the source job with the same filters and a visible breadcrumb; returning to the dashboard should preserve the review context.\n\n| Alert | Default queue | Drilldown fields | Desk action | Mobile handoff |\n|---|---|---|---|---|\n| SLA due soon or overdue | Jobs due within the configured window, then overdue jobs | Promise window, priority, customer, route, technician, last status | Prioritize, reassign, contact customer, or record an exception | Confirm next status and capture arrival/completion evidence |\n| Unassigned or under-covered schedule | Appointments with no owner or hours exceeding capacity | Day, route, technician, available hours, travel gap | Assign, move, add capacity block, or approve overflow | Receive the assignment and acknowledge the schedule change |\n| Aging backlog | Open jobs by age bucket and blocked reason | Job stage, service package, customer, quote age, last activity | Unblock, rescope, close stale work, or escalate | Supply missing field evidence or next visit status |\n| Quote stalled | Quotes with no response or no scheduled job | Quote age, value, source, service, customer history | Follow up, revise package, or close with reason | Optional site clarification or new estimate evidence |\n| Job completed but invoice missing | Completed visits without invoice or payment path | Completion timestamp, line items, checklist, photos | Correct workflow, generate invoice, or resolve exception | Confirm completion inputs; do not re-enter the visit |\n| Utilization or travel outlier | Technician or route outside threshold | On-job, travel, waiting, available hours, route | Adjust duration, territory, staffing, or training | Capture accurate time and route events |\n\nAlerts should be sparse. A red indicator without an owner, due date, or action becomes background noise. Use thresholds by service type where necessary, because a mobile detail with a long travel window should not share the same schedule-health threshold as a fixed-site shop job. MaintainX's work-order dashboard guidance also supports real-time visibility with interactive filtering and drill-down, which is a more useful operating pattern than a static report ([alert_to_drilldown_ux_from_red_tile_to_owned_queue[3]] [34]).\n\n**Decision:** Set a product target that a reviewer can move from an alert to the owning job and next action in under **30 seconds**, while preserving the filter context and source-record link at every step.",
+      "the_sunday_planning_board_a_seven_day_promise_not_live_dispatch": "Sunday is a recommended operating cadence, not a day explicitly mandated by the vendor documentation. The product pattern to borrow is ServiceTitan's separation of a Weekly Dispatch Board from daily dispatch. The weekly documentation is marked for Admin and CSR Dispatch and includes an Assigned tab for appointments that are scheduled and assigned; the dispatch documentation also lets an office user add a non-job event and specify whether it counts against capacity ([the_sunday_planning_board_a_seven_day_promise_not_live_dispatch[0]] [17]; [the_sunday_planning_board_a_seven_day_promise_not_live_dispatch[1]] [82]).\n\nThe Sunday board should answer: can the next seven days absorb the committed work, what backlog must be placed, and where is capacity or route risk already visible? It should use accepted work as the planning baseline, treat unaccepted quotes as demand scenarios rather than committed jobs, include non-job events that consume capacity, and expose route or location conflicts. The output is a provisional capacity promise with named exceptions, not a frozen minute-by-minute schedule.\n\n| Cadence | Board purpose | Inputs | Outputs |\n|---|---|---|---|\n| Sunday or weekly planning session | Commit the next seven-day capacity plan | Accepted jobs, SLA due dates, backlog age, technician availability, non-job capacity blocks, service duration, location and travel assumptions | Assigned work, overflow list, protected SLA work, route risks, unresolved exceptions |\n| Daily dispatch review | Convert the weekly promise into today's executable sequence | Current status, cancellations, weather or access changes, technician acknowledgements, new urgent work | Today's assignments, customer communications, reassignments, priority order |\n| Intraday exception review | Protect the plan when reality changes | Late arrival, overrun, no-show, failed payment, missing evidence, new high-priority request | One controlled change, owner, customer update, revised expectation |\n| End-of-day closeout | Reconcile planned versus actual | Completed events, time, photos, checklists, invoices, payment, return visits | Clean event stream, next-visit backlog, metric refresh, unresolved data-quality queue |\n\nA Sunday board fails when it becomes a second mobile schedule editor. It also fails when it treats every quote as capacity, ignores travel, or leaves the overflow list unowned. The board should instead create a clean handoff: the desk owns the plan and exceptions; the mobile worker owns the truth of what happened.\n\n**Decision:** Make Sunday planning a weekly horizon view with capacity and exception outputs. Keep live arrival, work, evidence, and closeout in mobile and let the daily board absorb only justified changes.",
+      "sparse_writeback_configure_the_system_capture_the_work_once": "Sparse writeback means the desktop writes the smallest set of fields needed to coordinate work and govern the system. It does not mean a weak desktop. The desktop should be powerful at aggregation, configuration, prioritization, and exception management while remaining deliberately conservative about event evidence.\n\n| Data or action | Desktop policy | Mobile event authority | Recommended write pattern |\n|---|---|---|---|\n| Service catalog, package, price, standard duration | Configure and version | Read the published version | Desktop publish; mobile consumes the version and records deviations |\n| SLA window, priority, route zone, capacity rule | Configure and assign | Read and acknowledge | Desktop writes policy and assignment; mobile reports actual timing |\n| Checklist and required-photo template | Configure and attach | Complete and submit | Desktop owns template; mobile owns answers, photos, and completion timestamp |\n| Schedule and technician assignment | Review and coordinate | Acknowledge and execute | Desktop can assign or reschedule with reason; mobile confirms receipt and status |\n| Arrival, start, stop, travel, material use | Review only, except audited correction | Capture in the field | One authoritative event source; corrections append an audit record |\n| Customer approval, signature, payment, invoice inputs | Review exceptions and approve corrections | Capture at completion | Mobile captures proof; desktop resolves missing or failed transactions |\n| Utilization, SLA status, backlog age, funnel conversion | Derived review | Contribute source events | Never manually edit the derived KPI; correct the source event or metric definition |\n\nJobber's mobile feature set illustrates why duplicating these writes is unnecessary: it supports forms, photos, time capture, customer messaging, and invoice generation at the job, while reports sit on Jobber.com ([sparse_writeback_configure_the_system_capture_the_work_once[0]] [54]; [sparse_writeback_configure_the_system_capture_the_work_once[1]] [39]). Housecall Pro's checklist design offers a concrete control pattern: the template is configured centrally, but employees must complete it before marking the job finished ([sparse_writeback_configure_the_system_capture_the_work_once[2]] [63]). ServiceTitan's mobile documentation likewise assigns estimates, payments, and closeout to the mobile workflow rather than treating the desk as the field worker ([sparse_writeback_configure_the_system_capture_the_work_once[3]] [67]).\n\nFull parity is justified only when the same user legitimately operates both surfaces in the same work session, such as an owner-operator who also services vehicles. Even then, the product should preserve event provenance and make the mobile-originated record visibly distinct from a desk correction. Otherwise, parity creates two places to change status, two timestamps, and two explanations for utilization or SLA failure.\n\n**Decision:** Make desk writes configuration, assignment, priority, and audited exceptions. Make mobile writes evidence and real-world events. Make all metrics derived and traceable.",
+      "detailing_specific_control_tower_route_vehicle_package_proof_payment": "Auto detailing is not simply generic field service with a different label. The value chain is sensitive to location, travel, vehicle condition, service package, add-ons, before-and-after proof, customer access, and on-site payment. Jobber's detailing page explicitly positions booking, estimating, scheduling, route optimization, and invoicing; its mobile page adds forms, photos, time, and customer communication ([detailing_specific_control_tower_route_vehicle_package_proof_payment[0]] [20]; [detailing_specific_control_tower_route_vehicle_package_proof_payment[1]] [54]). Fieldd's own product positioning emphasizes a full calendar, team synchronization, booking, dispatch, reminders, payments, and follow-ups, so it is useful as a market pattern but should be treated as vendor positioning rather than independent performance evidence ([detailing_specific_control_tower_route_vehicle_package_proof_payment[2]] [80]; [detailing_specific_control_tower_route_vehicle_package_proof_payment[3]] [44]).\n\n| Detailing object | Desk reviewer and configurator | Mobile capture | High-value metric or alert |\n|---|---|---|---|\n| Customer, vehicle, address, access notes | Review duplicates, service history, access risk, and route grouping | Confirm vehicle and site on arrival; add a correction | Address or access exception before dispatch |\n| Package, duration, add-on, and price | Configure package versions, standard duration, eligibility, and upsell rules | Confirm actual condition, add-on approval, and materials | Estimate-to-job conversion, add-on acceptance, duration variance |\n| Route and appointment window | Review travel gaps, route overlap, and capacity coverage | Navigate, report arrival, and capture actual travel or access delay | Travel outlier, late start, route conflict |\n| Vehicle condition and result proof | Review required evidence and dispute queue | Complete checklist, before-and-after photos, notes, customer approval | Missing photo, incomplete checklist, rework or complaint |\n| Completion and payment | Review invoice lag, failed payments, refunds, and unpaid aging | Mark complete, send or finalize invoice, collect payment | Completed-without-invoice, payment failure, days to cash |\n| Repeat or recurring service | Review retention, next-service date, and dormant customers | Confirm customer preference and next-visit details | Repeat booking rate and overdue follow-up queue |\n\nThe critical design implication is that the desk should not ask a technician to supply a second narrative after the fact. It should show the reviewer the exact package, route, proof, and payment exceptions that matter, then link back to the mobile evidence. The user-provided prior Jobber review also points in this direction: reviewers valued better organization, faster responses, and job management, which are outcomes of a clean operational handoff rather than a need for more desktop data entry.\n\nA detailing dashboard should therefore place route and proof exceptions beside revenue metrics. A high quote-to-job rate is not healthy if travel consumes the margin or if missing photos create disputes. Conversely, a lower utilization day may be acceptable when it protects route quality, customer access windows, and repeat-service opportunities.\n\n**Decision:** Treat vehicle, location, package, proof, and payment as first-class dimensions. Optimize the desk for exception review and the mobile app for trustworthy evidence.",
+      "synthesis_choose_the_control_tower_pattern_not_the_feature_checklist": "| Dimension | Jobber pattern | Housecall Pro pattern | ServiceTitan pattern | Recommended CRM pattern |\n|---|---|---|---|---|\n| Core mechanism | Integrated request-to-quote-to-job-to-invoice workflow with desktop reports and capable mobile execution | Business workflow centered on scheduling, dispatch, estimates, invoices, payments, and checklists | Explicit weekly and daily dispatch layers plus mobile estimate, payment, and closeout | One event stream with separate review, configure, and execute permissions |\n| Scope | Small and mid-sized service workflow; detailing page adds route and invoice needs | Broad home-service administration with job and employee controls | More explicit multi-board coordination and capacity management | Start with one control tower, then add team, route, and territory levels only when needed |\n| Trade-off | Reports are clearly desktop-oriented, but mobile can also schedule and invoice | Surface boundary is less explicit in public help content, so role design must be deliberate | Strong planning model, but more states and boards require training | Avoid both underpowered review and full parity; use sparse, audited writeback |\n| Evidence base | Reports not in app; 20+ built-in reports; mobile forms, photos, time, messaging | Official product and help materials; checklist completion gate | Daily/weekly boards, Job Tray, capacity-counted events, mobile closeout docs | Combine explicit vendor patterns with a published metric and data contract |\n| Time horizon | Business health and scheduled exports | Job and payment workflow plus template governance | Weekly capacity -> daily dispatch -> intraday exception -> mobile closeout | Sunday planning -> daily execution -> end-of-day reconciliation |\n\nThe main tension is between **capability parity** and **authority parity**. Jobber proves that a mobile app may perform administrative actions without becoming the reporting authority. Housecall Pro shows that a checklist can be configured as a central control while completion stays with the employee. ServiceTitan shows that a single schedule becomes more governable when the product distinguishes weekly planning, daily dispatch, and mobile closeout ([synthesis_choose_the_control_tower_pattern_not_the_feature_checklist[0]] [39]; [synthesis_choose_the_control_tower_pattern_not_the_feature_checklist[1]] [63]; [synthesis_choose_the_control_tower_pattern_not_the_feature_checklist[2]] [17]).\n\nThe non-obvious conclusion is that the desk should be **more analytical but less operationally imitative**. It should know every job, but it should not pretend to be standing beside every vehicle. It should be able to configure a checklist, but it should not mark that checklist complete on behalf of the technician without an audited exception. It should plan a week, but it should not erase the mobile evidence created when the plan met reality.\n\nThe final product posture is therefore: **desktop reviews the system, configures the rules, and coordinates exceptions; mobile records the work; the data layer calculates the truth**. That posture gives a detailing operator a useful control tower without the cost, confusion, and data-quality risk of building a full field-ops twin.\n\n**Decision:** Ship the desktop in this order: (1) metric contract and source-record links, (2) funnel and schedule-health queues, (3) SLA and backlog alerts, (4) weekly planning board, (5) configuration and audited exception writes. Keep mobile parity limited to the events and evidence that only the field can observe."
+    },
+    "type": "json",
+    "beta_fields": null,
+    "mcp_tool_calls": null,
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "executive_summary": {
+          "type": "string",
+          "title": "Executive Summary"
+        },
+        "three_surfaces_one_system_stop_building_a_second_field_ops_twin": {
+          "type": "string",
+          "title": "Three Surfaces, One System: Stop Building a Second Field-Ops Twin"
+        },
+        "jobber_housecall_pro_and_servicetitan_three_useful_product_patterns": {
+          "type": "string",
+          "title": "Jobber, Housecall Pro, and ServiceTitan: Three Useful Product Patterns"
+        },
+        "the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment": {
+          "type": "string",
+          "title": "The Metrics Taxonomy: Quote to Cash, Schedule to Service, and Evidence to Payment"
+        },
+        "alert_to_drilldown_ux_from_red_tile_to_owned_queue": {
+          "type": "string",
+          "title": "Alert-to-Drilldown UX: From Red Tile to Owned Queue"
+        },
+        "the_sunday_planning_board_a_seven_day_promise_not_live_dispatch": {
+          "type": "string",
+          "title": "The Sunday Planning Board: A Seven-Day Promise, Not Live Dispatch"
+        },
+        "sparse_writeback_configure_the_system_capture_the_work_once": {
+          "type": "string",
+          "title": "Sparse Writeback: Configure the System, Capture the Work Once"
+        },
+        "detailing_specific_control_tower_route_vehicle_package_proof_payment": {
+          "type": "string",
+          "title": "Detailing-Specific Control Tower: Route, Vehicle, Package, Proof, Payment"
+        },
+        "synthesis_choose_the_control_tower_pattern_not_the_feature_checklist": {
+          "type": "string",
+          "title": "Synthesis: Choose the Control-Tower Pattern, Not the Feature Checklist"
+        }
+      },
+      "required": [
+        "executive_summary",
+        "three_surfaces_one_system_stop_building_a_second_field_ops_twin",
+        "jobber_housecall_pro_and_servicetitan_three_useful_product_patterns",
+        "the_metrics_taxonomy_quote_to_cash_schedule_to_service_and_evidence_to_payment",
+        "alert_to_drilldown_ux_from_red_tile_to_owned_queue",
+        "the_sunday_planning_board_a_seven_day_promise_not_live_dispatch",
+        "sparse_writeback_configure_the_system_capture_the_work_once",
+        "detailing_specific_control_tower_route_vehicle_package_proof_payment",
+        "synthesis_choose_the_control_tower_pattern_not_the_feature_checklist"
+      ]
+    }
+  }
+}

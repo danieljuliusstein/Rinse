@@ -97,11 +97,21 @@ function mapVehicle(record: Record<string, unknown>, fileToken?: string): DeskVe
 function mapJob(record: Record<string, unknown>, expand?: Record<string, unknown>): DeskJob {
   const clientExpand = expand?.client_id as Record<string, unknown> | undefined
   const packageExpand = expand?.package_id as Record<string, unknown> | undefined
+  const rawStatus = String(record.status ?? 'scheduled')
+  const status: JobStatus =
+    rawStatus === 'scheduled' ||
+    rawStatus === 'in_progress' ||
+    rawStatus === 'completed' ||
+    rawStatus === 'invoiced' ||
+    rawStatus === 'paid' ||
+    rawStatus === 'cancelled'
+      ? rawStatus
+      : 'scheduled'
   return {
     id: String(record.id),
     date: String(record.date ?? '').slice(0, 10),
     start_time: record.start_time ? String(record.start_time) : undefined,
-    status: (record.status as JobStatus) ?? 'scheduled',
+    status,
     revenue: Number(record.revenue ?? 0),
     tip: Number(record.tip ?? 0),
     client_id: String(record.client_id ?? ''),
@@ -230,24 +240,47 @@ async function listOrgRecords(collection: string, options: { sort?: string; expa
   const pb = getPocketBase()
   const filter = orgFilter()
   const limit = options.limit ?? 500
-  try {
-    const result = await pb.collection(collection).getList(1, limit, {
-      filter,
-      sort: options.sort,
-      expand: options.expand,
+
+  const fetchPage = (opts: { sort?: string; expand?: string; filter?: string }) =>
+    pb.collection(collection).getList(1, limit, {
+      filter: opts.filter ?? filter,
+      sort: opts.sort,
+      expand: opts.expand,
     })
-    return result.items
-  } catch (err) {
-    // Retry without expand — relation expand can 400 on bad refs
-    if (options.expand) {
-      const result = await pb.collection(collection).getList(1, limit, {
-        filter,
-        sort: options.sort,
-      })
-      return result.items
-    }
-    throw err
+
+  // Prefer durable sorts: Fly schemas often lack `created`/`updated` autodates → HTTP 400 on -created/-updated.
+  const preferredSort = options.sort
+  const sortFallbacks: Array<string | undefined> = []
+  if (preferredSort) sortFallbacks.push(preferredSort)
+  if (preferredSort === '-created' || preferredSort === '-updated') {
+    sortFallbacks.push('-id')
   }
+  if (!sortFallbacks.includes(undefined)) sortFallbacks.push(undefined)
+
+  const attempts: Array<{ sort?: string; expand?: string }> = []
+  for (const sort of sortFallbacks) {
+    if (options.expand) attempts.push({ sort, expand: options.expand })
+    attempts.push({ sort, expand: undefined })
+  }
+  // Dedupe identical attempts
+  const seen = new Set<string>()
+  const uniqueAttempts = attempts.filter((a) => {
+    const key = `${a.sort ?? ''}|${a.expand ?? ''}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  let lastErr: unknown
+  for (const attempt of uniqueAttempts) {
+    try {
+      const result = await fetchPage(attempt)
+      return result.items
+    } catch (err) {
+      lastErr = err
+    }
+  }
+  throw lastErr
 }
 
 export async function listClients(limit = 500): Promise<DeskClient[]> {
@@ -324,7 +357,7 @@ export async function listJobs(limit = 500): Promise<DeskJob[]> {
 export async function listLeads(): Promise<DeskLead[]> {
   try {
     const items = await listOrgRecords('leads', {
-      sort: '-created',
+      sort: '-id',
       expand: 'package_id',
       limit: 500,
     })
@@ -339,7 +372,7 @@ export async function listLeads(): Promise<DeskLead[]> {
 
 export async function listInvoices(): Promise<DeskInvoice[]> {
   try {
-    const items = await listOrgRecords('invoices', { sort: '-created', limit: 500 })
+    const items = await listOrgRecords('invoices', { sort: '-id', limit: 500 })
     return items.map((r) => mapInvoice(r as unknown as Record<string, unknown>))
   } catch (err) {
     console.warn('[desk] listInvoices failed', err)
@@ -349,7 +382,7 @@ export async function listInvoices(): Promise<DeskInvoice[]> {
 
 export async function listQuotes(): Promise<DeskQuote[]> {
   try {
-    const items = await listOrgRecords('quotes', { sort: '-created', limit: 500 })
+    const items = await listOrgRecords('quotes', { sort: '-id', limit: 500 })
     return items.map((r) => mapQuote(r as unknown as Record<string, unknown>))
   } catch {
     return []
@@ -395,6 +428,9 @@ export async function createClient(input: {
   notes?: string
   tags?: string[]
   parent_client_id?: string
+  lat?: number
+  lng?: number
+  geocoded_at?: string
 }): Promise<DeskClient> {
   const pb = getPocketBase()
   const created = await pb.collection('clients').create({
@@ -407,27 +443,28 @@ export async function createClient(input: {
     parent_client_id: input.parent_client_id ?? '',
     organization_id: requireOrganizationId(),
     created: new Date().toISOString(),
+    ...(input.lat != null && input.lng != null
+      ? { lat: input.lat, lng: input.lng, geocoded_at: input.geocoded_at ?? new Date().toISOString() }
+      : {}),
   })
   return mapClient(created as unknown as Record<string, unknown>)
 }
 
 export async function updateClient(
   id: string,
-  patch: Partial<
-    Pick<
-      DeskClient,
-      | 'name'
-      | 'phone'
-      | 'email'
-      | 'address'
-      | 'notes'
-      | 'tags'
-      | 'parent_client_id'
-      | 'lat'
-      | 'lng'
-      | 'geocoded_at'
-    >
-  >,
+  patch: {
+    name?: string
+    phone?: string
+    email?: string
+    address?: string
+    notes?: string
+    tags?: string[]
+    parent_client_id?: string
+    /** Pass null to clear stale map pins when the address changes. */
+    lat?: number | null
+    lng?: number | null
+    geocoded_at?: string | null
+  },
 ): Promise<DeskClient> {
   const pb = getPocketBase()
   const updated = await pb.collection('clients').update(id, patch)
@@ -541,6 +578,15 @@ export async function updateLead(
   )
 }
 
+export async function deleteLead(id: string): Promise<void> {
+  const pb = getPocketBase()
+  try {
+    await pb.collection('leads').delete(id)
+  } catch (err) {
+    throw new Error(formatPbError(err, 'Could not delete deal'))
+  }
+}
+
 export async function createPackage(input: {
   name: string
   base_price?: number
@@ -646,22 +692,58 @@ export async function convertLeadToJob(
 export async function updateJob(
   id: string,
   patch: Partial<
-    Pick<DeskJob, 'notes' | 'date' | 'start_time' | 'status' | 'route_order' | 'deposit_status' | 'hours_worked'>
+    Pick<
+      DeskJob,
+      | 'notes'
+      | 'date'
+      | 'start_time'
+      | 'status'
+      | 'route_order'
+      | 'deposit_status'
+      | 'hours_worked'
+      | 'client_id'
+      | 'package_id'
+    >
   >,
 ): Promise<DeskJob> {
   const pb = getPocketBase()
-  const updated = await pb.collection('jobs').update(id, patch, {
-    expand: 'client_id,package_id',
-  })
-  return mapJob(
-    updated as unknown as Record<string, unknown>,
-    (updated as { expand?: Record<string, unknown> }).expand,
-  )
+  try {
+    const updated = await pb.collection('jobs').update(id, patch, {
+      expand: 'client_id,package_id',
+    })
+    return mapJob(
+      updated as unknown as Record<string, unknown>,
+      (updated as { expand?: Record<string, unknown> }).expand,
+    )
+  } catch (err) {
+    // #region agent log
+    {
+      const e = err as { status?: number; message?: string; response?: { message?: string; data?: unknown } }
+      fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'pre-fix',hypothesisId:'B',location:'api.ts:updateJob:fail',message:'updateJob failed (may look like delete in Network if same id)',data:{jobId:id,patchKeys:Object.keys(patch),patch,status:e?.status??null,errMessage:e?.message??null,pbMessage:e?.response?.message??null,pbData:e?.response?.data??null},timestamp:Date.now()})}).catch(()=>{});
+    }
+    // #endregion
+    throw err
+  }
 }
 
 export async function deleteJob(id: string): Promise<void> {
+  // Hard DELETE is rejected on Fly (HTTP 400 — likely relation constraints / delete rules).
+  // Calendar "delete" soft-cancels so the event leaves the schedule without removing the row.
   const pb = getPocketBase()
-  await pb.collection('jobs').delete(id)
+  try {
+    await pb.collection('jobs').update(id, { status: 'cancelled' })
+    // #region agent log
+    fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'A',location:'api.ts:deleteJob:ok',message:'deleteJob soft-cancel succeeded',data:{jobId:id},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  } catch (err) {
+    // #region agent log
+    {
+      const e = err as { status?: number; message?: string; response?: { message?: string; data?: unknown } }
+      fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'A',location:'api.ts:deleteJob:fail',message:'deleteJob soft-cancel failed',data:{jobId:id,status:e?.status??null,errMessage:e?.message??null,pbMessage:e?.response?.message??null,pbData:e?.response?.data??null},timestamp:Date.now()})}).catch(()=>{});
+    }
+    // #endregion
+    throw new Error(formatPbError(err, 'Could not delete event'))
+  }
 }
 
 export async function listTimeBlocks(fromDate: string, toDate: string): Promise<DeskTimeBlock[]> {

@@ -1,0 +1,8 @@
+.env
+.env.local
+node_modules
+dist
+.DS_Store
+
+# Campaign mail secrets
+server/campaign-mail/.env

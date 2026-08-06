@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Leaflet tile check</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      html,
+      body,
+      #map {
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+      #log {
+        position: absolute;
+        z-index: 1000;
+        left: 12px;
+        top: 12px;
+        background: #111;
+        color: #9f9;
+        font: 12px/1.4 ui-monospace, monospace;
+        padding: 8px 10px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="log">booting…</pre>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const log = (m) => {
+        document.getElementById('log').textContent += '\n' + m
+      }
+      const map = L.map('map').setView([33.749, -84.388], 12)
+      L.tileLayer('/map-tiles/carto/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '© OSM © CARTO',
+      }).addTo(map)
+      map.whenReady(() => log('Leaflet ready — streets via /map-tiles/carto'))
+    </script>
+  </body>
+</html>

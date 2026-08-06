@@ -1,4 +1,4 @@
-export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'invoiced' | 'paid'
+export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'invoiced' | 'paid' | 'cancelled'
 export type LeadStage = 'inquiry' | 'quoted' | 'booked'
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'void' | 'cancelled'
 export type DepositStatus = 'none' | 'due' | 'paid' | 'waived'
@@ -15,6 +15,7 @@ export type PageId =
   | 'cars'
   | 'contacts'
   | 'calendar'
+  | 'routes'
   | 'activities'
   | 'campaigns'
   | 'forms'

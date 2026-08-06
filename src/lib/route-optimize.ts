@@ -2,7 +2,7 @@ import type { DeskJob } from './types'
 
 /** Jobs for a calendar day (YYYY-MM-DD). */
 export function jobsForDate(jobs: DeskJob[], date: string): DeskJob[] {
-  return jobs.filter((j) => j.date === date)
+  return jobs.filter((j) => j.date === date && j.status !== 'cancelled')
 }
 
 export type RouteStopView = {
@@ -18,12 +18,13 @@ export function buildRouteStops(jobs: DeskJob[]): RouteStopView[] {
     const address = job.client?.address?.trim() ?? ''
     const lat = job.client?.lat
     const lng = job.client?.lng
-    const plottable =
-      Boolean(address) &&
+    const coordsOk =
       lat != null &&
       lng != null &&
       Number.isFinite(lat) &&
-      Number.isFinite(lng)
+      Number.isFinite(lng) &&
+      !(Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01)
+    const plottable = Boolean(address) && coordsOk
     return {
       job,
       address,
@@ -57,7 +58,13 @@ export function lineCoordsFromStops(
   for (const j of orderedJobs) {
     const lat = j.client?.lat
     const lng = j.client?.lng
-    if (lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)) {
+    if (
+      lat != null &&
+      lng != null &&
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      !(Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01)
+    ) {
       coords.push([lng, lat])
     }
   }

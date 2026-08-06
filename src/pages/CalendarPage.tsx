@@ -12,29 +12,36 @@ import type {
   SlotLabelContentArg,
   SlotLaneContentArg,
 } from '@fullcalendar/core'
-import type { EventResizeDoneArg } from '@fullcalendar/interaction'
+import type { DateClickArg, EventResizeDoneArg } from '@fullcalendar/interaction'
+import { CalendarDays, CalendarOff, ListOrdered, Plus, Sun } from 'lucide-react'
 import { Header } from '../App'
 import { useData } from '@/providers/DataProvider'
 import { useDeskNav } from '@/providers/DeskNavProvider'
 import { useUi } from '@/providers/UiProvider'
 import { PanelEdgeToggle } from '@/components/automations/PanelEdgeToggle'
-import RouteDayPanel from '@/components/calendar/RouteDayPanel'
+import { EventPopover } from '@/components/calendar/EventPopover'
+import { EventDetailSidebar } from '@/components/calendar/EventDetailSidebar'
+import { DayAgendaView } from '@/components/calendar/DayAgendaView'
+import { DayAmPmView } from '@/components/calendar/DayAmPmView'
+import { ScheduleListView } from '@/components/calendar/ScheduleListView'
+import { CleanWeekEmpty } from '@/components/calendar/CleanWeekEmpty'
+import {
+  addDaysISO,
+  formatDateLocalFromDate,
+  weekStartFromISO,
+} from '@/components/calendar/calendarListModel'
 import * as api from '@/lib/api'
-import { loadAppSettings } from '@/lib/settings-api'
 import type { DeskClient, DeskJob, DeskPackage, DeskTimeBlock, JobStatus } from '@/lib/types'
 import { colors } from '@/theme/colors'
 import { todayISO } from '@/lib/metrics'
 import {
   type CalCategory,
-  CATEGORY_COLOR_PRESETS,
-  addCategory,
   assignEventCategory,
   assignEventColor,
   categoryForJob,
   clearEventMeta,
   colorForJob,
   loadCategories,
-  removeCategory,
 } from '@/lib/calendar-categories'
 
 type ViewMode = 'month' | 'week' | 'day' | 'schedule'
@@ -56,7 +63,6 @@ interface CalEvent {
   job: DeskJob
 }
 
-const PRIORITY_COLORS: Record<string, string> = { High: '#ef4444', Medium: '#f59e0b', Low: '#10b981' }
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 const VIEW_MAP: Record<ViewMode, string> = {
@@ -239,22 +245,16 @@ function draftToFcEvent(ev: CalEvent): EventInput {
   return { ...base, start, end, allDay: false }
 }
 
-/** Day AM/PM bands: Morning 6–12, Afternoon 12–17, Evening 17–24 */
-function dayBandForHour(hour: number): 'night' | 'morning' | 'afternoon' | 'evening' {
-  if (hour >= 6 && hour < 12) return 'morning'
-  if (hour >= 12 && hour < 17) return 'afternoon'
-  if (hour >= 17) return 'evening'
-  return 'night'
+function endHHMMFromStart(start: string, hours: number): string {
+  const parts = parseStartTime(start)
+  if (!parts) return '17:00'
+  const total = parts.h * 60 + parts.m + Math.max(15, Math.round(hours * 60))
+  const eh = Math.floor(total / 60) % 24
+  const em = total % 60
+  return `${pad(eh)}:${pad(em)}`
 }
 
-function dayBandLabel(hour: number, minute: number): string | null {
-  if (minute !== 0) return null
-  if (hour === 6) return 'Morning'
-  if (hour === 12) return 'Afternoon'
-  if (hour === 17) return 'Evening'
-  return null
-}
-
+/** Background hatch so blocked ranges gray out the grid (jobs stay on top). */
 function blockToFcEvent(block: DeskTimeBlock): EventInput {
   const date = block.date.slice(0, 10)
   const title = block.label?.trim() || 'Time off'
@@ -265,10 +265,7 @@ function blockToFcEvent(block: DeskTimeBlock): EventInput {
     startEditable: false,
     durationEditable: false,
     classNames: ['fc-time-block', 'cursor-pointer'],
-    backgroundColor: 'rgba(100, 116, 139, 0.55)',
-    borderColor: '#64748b',
-    textColor: '#1e293b',
-    display: 'auto' as const,
+    display: 'background' as const,
     extendedProps: { kind: 'block' as const, block },
   }
 
@@ -313,24 +310,13 @@ function blockToFcEvent(block: DeskTimeBlock): EventInput {
   }
 }
 
-/** List/schedule views — same solid grey blocks. */
-function blockToListEvent(block: DeskTimeBlock): EventInput {
-  const bg = blockToFcEvent(block)
-  return {
-    ...bg,
-    display: 'auto',
-    backgroundColor: '#cbd5e1',
-    borderColor: '#64748b',
-    textColor: '#1e293b',
-  }
-}
-
 export default function CalendarPage() {
   const now = new Date()
   const { jobs, setJobs, clients, setClients, packages } = useData()
   const { alert, toast, promptForm } = useUi()
-  const { calendarDraft, clearCalendarDraft } = useDeskNav()
+  const { calendarDraft, clearCalendarDraft, setPage } = useDeskNav()
   const calendarRef = useRef<FullCalendar | null>(null)
+  const calendarHostRef = useRef<HTMLDivElement | null>(null)
   const panelHeadingRef = useRef<HTMLHeadingElement | null>(null)
   const titleInputRef = useRef<HTMLInputElement | null>(null)
   const blocksRangeRef = useRef<{ from: Date; to: Date } | null>(null)
@@ -340,35 +326,21 @@ export default function CalendarPage() {
   const [title, setTitle] = useState('')
   const [selected, setSelected] = useState<CalEvent | null>(null)
   const [selectedBlock, setSelectedBlock] = useState<DeskTimeBlock | null>(null)
-  const [routeMode, setRouteMode] = useState(false)
-  const [businessAddress, setBusinessAddress] = useState('')
-  const [depotCoords, setDepotCoords] = useState<{ lat: number; lng: number } | null>(null)
+  /** When true, Save creates/converts to a time block instead of a job. */
+  const [asBlocked, setAsBlocked] = useState(false)
   const [saving, setSaving] = useState(false)
   const [blockSaving, setBlockSaving] = useState(false)
   const [anchorDate, setAnchorDate] = useState(todayISO())
   const [categories, setCategories] = useState<CalCategory[]>(() => loadCategories())
   const [colorTick, setColorTick] = useState(0)
   const [timeBlocks, setTimeBlocks] = useState<DeskTimeBlock[]>([])
-  const [addingCat, setAddingCat] = useState(false)
-  const [newCatName, setNewCatName] = useState('')
-  const [newCatColor, setNewCatColor] = useState(CATEGORY_COLOR_PRESETS[0]!)
 
   const isDraft = Boolean(selected && isDraftEventId(selected.id))
-  const panelOpen = !routeMode && (selected !== null || selectedBlock !== null)
+  const panelOpen = selected !== null || selectedBlock !== null
 
   useEffect(() => {
     setCategories(loadCategories())
   }, [])
-
-  useEffect(() => {
-    void loadAppSettings()
-      .then((s) => setBusinessAddress(s.business_address ?? ''))
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    if (view !== 'day') setRouteMode(false)
-  }, [view])
 
   useEffect(() => {
     if (!calendarDraft) return
@@ -408,16 +380,119 @@ export default function CalendarPage() {
   }, [calendarDraft, clients, packages, categories, clearCalendarDraft, alert])
 
   const jobFcEvents = useMemo(
-    () => jobs.map((j) => jobToFcEvent(j, categories)),
+    () => jobs.filter((j) => j.status !== 'cancelled').map((j) => jobToFcEvent(j, categories)),
     [jobs, categories, colorTick],
   )
 
-  const fcView =
-    view === 'day' && dayLayout === 'agenda'
-      ? 'listDay'
-      : VIEW_MAP[view]
+  /** Bolt-style custom surfaces — FullCalendar stays for month / week / day grid. */
+  const useCustomSurface =
+    view === 'schedule' || (view === 'day' && (dayLayout === 'agenda' || dayLayout === 'thirds'))
 
-  const isListView = fcView === 'listWeek' || fcView === 'listDay'
+  const weekStartISO = useMemo(
+    () => formatDateLocalFromDate(weekStartFromISO(anchorDate)),
+    [anchorDate],
+  )
+
+  const weekIsEmpty = useMemo(() => {
+    if (view !== 'week') return false
+    const end = addDaysISO(weekStartISO, 6)
+    const hasJob = jobs.some((j) => {
+      if (j.status === 'cancelled') return false
+      const d = j.date.slice(0, 10)
+      return d >= weekStartISO && d <= end
+    })
+    const hasBlock = timeBlocks.some((b) => {
+      const d = b.date.slice(0, 10)
+      return d >= weekStartISO && d <= end
+    })
+    return !hasJob && !hasBlock && !selected && !selectedBlock
+  }, [view, weekStartISO, jobs, timeBlocks, selected, selectedBlock])
+
+  const showFc = !useCustomSurface && !weekIsEmpty
+
+  function titleForAnchor(iso: string, mode: ViewMode): string {
+    const d = new Date(`${iso.slice(0, 10)}T12:00:00`)
+    if (mode === 'day') {
+      return d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    }
+    if (mode === 'schedule' || mode === 'week') {
+      const start = weekStartFromISO(iso)
+      const end = new Date(start)
+      end.setDate(end.getDate() + 6)
+      const sameMonth = start.getMonth() === end.getMonth()
+      if (sameMonth) {
+        return `${start.toLocaleDateString('en-US', { month: 'long' })} ${start.getDate()} – ${end.getDate()}, ${end.getFullYear()}`
+      }
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    }
+    return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+  }
+
+  function loadBlocksAround(iso: string, mode: ViewMode) {
+    const start = new Date(`${iso.slice(0, 10)}T00:00:00`)
+    const end = new Date(start)
+    if (mode === 'day') end.setDate(end.getDate() + 1)
+    else if (mode === 'month') end.setMonth(end.getMonth() + 1)
+    else end.setDate(end.getDate() + 7)
+    void loadBlocksForRange(start, end)
+  }
+
+  function shiftAnchor(dir: -1 | 1) {
+    const d = new Date(`${anchorDate.slice(0, 10)}T12:00:00`)
+    if (view === 'day') d.setDate(d.getDate() + dir)
+    else if (view === 'month') d.setMonth(d.getMonth() + dir)
+    else d.setDate(d.getDate() + 7 * dir)
+    const next = formatDateLocalFromDate(d)
+    setAnchorDate(next)
+    setTitle(titleForAnchor(next, view))
+    loadBlocksAround(next, view)
+    calendarRef.current?.getApi().gotoDate(next)
+  }
+
+  function goTodayAnchor() {
+    const next = todayISO()
+    setAnchorDate(next)
+    setTitle(titleForAnchor(next, view))
+    loadBlocksAround(next, view)
+    calendarRef.current?.getApi().today()
+  }
+
+  function openDraftAtHour(dateISO: string, startHour: number) {
+    const h = Math.floor(startHour)
+    const m = Math.round((startHour - h) * 60)
+    openDraft(
+      buildDraftCalEvent({
+        date: dateISO,
+        startTime: `${pad(h)}:${pad(m)}`,
+        hoursWorked: 1,
+        allDay: false,
+        title: 'New event',
+        cats: categories,
+        client: clients[0],
+        pkg: packages[0],
+      }),
+    )
+  }
+
+  function openNewEventDraft() {
+    openDraft(
+      buildDraftCalEvent({
+        date: anchorDate,
+        startTime: '09:00',
+        hoursWorked: 1,
+        allDay: false,
+        title: 'New event',
+        cats: categories,
+        client: clients[0],
+        pkg: packages[0],
+      }),
+    )
+  }
 
   const fcEvents = useMemo(() => {
     const selectedId = selected?.id
@@ -438,7 +513,7 @@ export default function CalendarPage() {
       }
     })
     const blocks = timeBlocks.map((b) => {
-      const mapped = isListView ? blockToListEvent(b) : blockToFcEvent(b)
+      const mapped = blockToFcEvent(b)
       if (selectedBlock?.id === b.id) {
         const base = Array.isArray(mapped.classNames)
           ? mapped.classNames
@@ -447,8 +522,7 @@ export default function CalendarPage() {
             : []
         return {
           ...mapped,
-          classNames: [...base, 'fc-event-selected'],
-          backgroundColor: '#94a3b8',
+          classNames: [...base, 'fc-event-selected', 'fc-time-block-selected'],
         }
       }
       return mapped
@@ -456,7 +530,7 @@ export default function CalendarPage() {
     const draftEv =
       selected && isDraftEventId(selected.id) ? [draftToFcEvent(selected)] : []
     return [...jobsMapped, ...blocks, ...draftEv]
-  }, [jobFcEvents, timeBlocks, isListView, selected, selectedBlock])
+  }, [jobFcEvents, timeBlocks, selected, selectedBlock])
 
   async function loadBlocksForRange(from: Date, to: Date) {
     blocksRangeRef.current = { from, to }
@@ -477,17 +551,20 @@ export default function CalendarPage() {
   const changeView = useCallback(
     (mode: ViewMode) => {
       setView(mode)
+      setTitle(titleForAnchor(anchorDate, mode))
+      loadBlocksAround(anchorDate, mode)
       const api = calendarRef.current?.getApi()
       if (!api) return
-      if (mode === 'day' && dayLayout === 'agenda') {
-        api.changeView('listDay')
-      } else if (mode === 'day' && dayLayout === 'thirds') {
-        api.changeView('timeGridDay')
-      } else {
-        api.changeView(VIEW_MAP[mode])
+      if (mode === 'schedule' || (mode === 'day' && (dayLayout === 'agenda' || dayLayout === 'thirds'))) {
+        // Custom surface — keep FC on a nearby grid view for gotoDate sync
+        api.changeView(mode === 'day' ? 'timeGridDay' : 'timeGridWeek')
+        api.gotoDate(anchorDate)
+        return
       }
+      api.changeView(VIEW_MAP[mode])
+      api.gotoDate(anchorDate)
     },
-    [dayLayout],
+    [dayLayout, anchorDate],
   )
 
   const applyDayLayout = useCallback(
@@ -496,67 +573,33 @@ export default function CalendarPage() {
       if (view !== 'day') return
       const api = calendarRef.current?.getApi()
       if (!api) return
-      if (layout === 'agenda') api.changeView('listDay')
-      else {
-        api.changeView('timeGridDay')
-        if (layout === 'thirds') api.scrollToTime('06:00:00')
-      }
+      api.changeView('timeGridDay')
+      api.gotoDate(anchorDate)
+      setTitle(titleForAnchor(anchorDate, 'day'))
     },
-    [view],
+    [view, anchorDate],
   )
 
-  const showDayBands = view === 'day' && dayLayout === 'thirds'
+  const slotLaneClassNames = useCallback((_arg: SlotLaneContentArg) => [], [])
 
-  const slotLaneClassNames = useCallback(
-    (arg: SlotLaneContentArg) => {
-      if (!showDayBands || !arg.date) return []
-      return [`fc-slot-band-${dayBandForHour(arg.date.getHours())}`]
-    },
-    [showDayBands],
-  )
-
-  const slotLabelContent = useCallback(
-    (arg: SlotLabelContentArg) => {
-      const timeText = arg.text
-      if (!showDayBands || !arg.date) return timeText
-      const band = dayBandLabel(arg.date.getHours(), arg.date.getMinutes())
-      if (!band) return timeText
-      const bandKey = dayBandForHour(arg.date.getHours())
-      return (
-        <div className={`fc-slot-label-with-band fc-slot-label-${bandKey}`}>
-          <span className="fc-slot-band-name">{band}</span>
-          <span className="fc-slot-time-text">{timeText}</span>
-        </div>
-      )
-    },
-    [showDayBands],
-  )
+  const slotLabelContent = useCallback((arg: SlotLabelContentArg) => arg.text, [])
 
   function select(ev: CalEvent) {
-    setRouteMode(false)
     setSelectedBlock(null)
+    setAsBlocked(false)
     setSelected(ev)
   }
 
   function dismissPanel() {
     setSelected(null)
     setSelectedBlock(null)
-    setAddingCat(false)
+    setAsBlocked(false)
     calendarRef.current?.getApi().unselect()
   }
 
-  function openRouteMode() {
-    dismissPanel()
-    setRouteMode(true)
-  }
-
-  function closeRouteMode() {
-    setRouteMode(false)
-  }
-
   function openDraft(ev: CalEvent) {
-    setRouteMode(false)
     setSelectedBlock(null)
+    setAsBlocked(false)
     setSelected(ev)
     calendarRef.current?.getApi().unselect()
   }
@@ -567,6 +610,17 @@ export default function CalendarPage() {
     endTime?: string
     allDay?: boolean
   }) {
+    const date = defaults?.date ?? todayISO()
+    const jobsOnDay = jobs.filter(
+      (j) => j.status !== 'cancelled' && j.date.slice(0, 10) === date,
+    )
+    // Don't default to all-day when the day already has jobs — that reads as "day fully off".
+    const defaultAllDay =
+      defaults?.allDay === true
+        ? jobsOnDay.length === 0
+        : defaults?.allDay === false
+          ? false
+          : jobsOnDay.length === 0
     const values = await promptForm({
       title: 'Block time',
       submitLabel: 'Block',
@@ -582,7 +636,7 @@ export default function CalendarPage() {
           label: 'Date',
           type: 'date',
           required: true,
-          defaultValue: defaults?.date ?? todayISO(),
+          defaultValue: date,
         },
         {
           name: 'all_day',
@@ -592,7 +646,7 @@ export default function CalendarPage() {
             { value: 'yes', label: 'Yes' },
             { value: 'no', label: 'No' },
           ],
-          defaultValue: defaults?.allDay === false ? 'no' : 'yes',
+          defaultValue: defaultAllDay ? 'yes' : 'no',
         },
         {
           name: 'start_time',
@@ -609,11 +663,21 @@ export default function CalendarPage() {
       ],
     })
     if (!values?.date) return
-    const allDay = values.all_day !== 'no'
+    let allDay = values.all_day !== 'no'
+    const blockDate = values.date.slice(0, 10)
+    const stillHasJobs = jobs.some(
+      (j) => j.status !== 'cancelled' && j.date.slice(0, 10) === blockDate,
+    )
+    if (allDay && stillHasJobs) {
+      const proceed = window.confirm(
+        'This day already has scheduled jobs. An all-day block grays the whole day as unavailable — jobs stay, but booking will treat the day as blocked. Prefer a timed block unless you mean the full day.\n\nUse all-day anyway?',
+      )
+      if (!proceed) allDay = false
+    }
     setBlockSaving(true)
     try {
       const created = await api.createTimeBlock({
-        date: values.date,
+        date: blockDate,
         all_day: allDay,
         start_time: allDay ? undefined : values.start_time || '09:00',
         end_time: allDay ? undefined : values.end_time || '17:00',
@@ -621,6 +685,7 @@ export default function CalendarPage() {
       })
       await reloadBlocks()
       setSelected(null)
+      setAsBlocked(false)
       setSelectedBlock(created)
       toast('Time blocked')
     } catch (err) {
@@ -675,10 +740,20 @@ export default function CalendarPage() {
       hours_worked: number
       categoryId: string
       color: string
+      client_id: string
+      package_id: string
     }>,
   ) {
     setSelected((prev) => {
       if (!prev || !isDraftEventId(prev.id)) return prev
+      const client =
+        patch.client_id !== undefined
+          ? clients.find((c) => c.id === patch.client_id)
+          : prev.job.client ?? clients.find((c) => c.id === prev.job.client_id)
+      const pkg =
+        patch.package_id !== undefined
+          ? packages.find((p) => p.id === patch.package_id)
+          : packages.find((p) => p.id === prev.job.package_id)
       const nextJob: DeskJob = {
         ...prev.job,
         notes: patch.title !== undefined ? patch.title : prev.job.notes,
@@ -689,6 +764,11 @@ export default function CalendarPage() {
             : prev.job.start_time,
         hours_worked:
           patch.hours_worked !== undefined ? patch.hours_worked : prev.job.hours_worked,
+        client_id: patch.client_id !== undefined ? patch.client_id : prev.job.client_id,
+        package_id: patch.package_id !== undefined ? patch.package_id : prev.job.package_id,
+        client: client ?? prev.job.client,
+        packageName: pkg?.name ?? prev.job.packageName,
+        revenue: pkg?.base_price ?? prev.job.revenue,
       }
       const cat =
         patch.categoryId !== undefined
@@ -743,29 +823,23 @@ export default function CalendarPage() {
     if (job) refreshSelected(job)
   }
 
-  function onAddCategory() {
-    const created = addCategory(newCatName || 'New category', newCatColor)
-    setCategories(loadCategories())
-    setNewCatName('')
-    setAddingCat(false)
-    if (selected && !isEphemeralEventId(selected.id)) {
-      setEventCategory(selected.id, created.id)
-    } else if (selected && isDraftEventId(selected.id)) {
-      patchDraft({ categoryId: created.id, color: created.color })
-    }
-  }
-
   async function deleteSelected() {
     if (!selected || isEphemeralEventId(selected.id)) return
     const id = selected.id
+    // #region agent log
+    fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'C',location:'CalendarPage.tsx:deleteSelected',message:'deleteSelected called (soft-cancel)',data:{jobId:id,title:selected.title??null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     setSaving(true)
     try {
       await api.deleteJob(id)
       clearEventMeta(id)
-      setJobs((prev) => prev.filter((j) => j.id !== id))
+      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: 'cancelled' as const } : j)))
       setSelected(null)
       toast('Event deleted')
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'A',location:'CalendarPage.tsx:deleteSelected:catch',message:'deleteSelected UI caught error',data:{jobId:id,errMessage:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       alert(err instanceof Error ? err.message : 'Could not delete event', 'Delete failed')
     } finally {
       setSaving(false)
@@ -774,7 +848,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && selected) {
+      if (e.key === 'Escape' && (selected || selectedBlock)) {
         e.preventDefault()
         dismissPanel()
         return
@@ -782,19 +856,42 @@ export default function CalendarPage() {
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
       const el = e.target as HTMLElement | null
       if (el?.closest?.('input, textarea, select, [contenteditable="true"]')) return
-      if (!selected || isEphemeralEventId(selected.id) || saving) return
+
+      if (selectedBlock) {
+        if (blockSaving) return
+        e.preventDefault()
+        void deleteSelectedBlock()
+        return
+      }
+
+      if (!selected || saving) return
+
+      // Drafts: Delete dismisses the unsaved preview
+      if (isDraftEventId(selected.id)) {
+        e.preventDefault()
+        dismissPanel()
+        return
+      }
+
+      if (isEphemeralEventId(selected.id)) return
       e.preventDefault()
       void deleteSelected()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selected, saving])
+  }, [selected, selectedBlock, saving, blockSaving])
 
   useEffect(() => {
     if (!selected) return
     const t = window.setTimeout(() => {
-      titleInputRef.current?.focus()
-      if (!titleInputRef.current) panelHeadingRef.current?.focus()
+      // Drafts: jump into the title so you can name the new event immediately.
+      // Saved events: focus the panel heading (not an input) so Delete/Backspace work.
+      if (isDraftEventId(selected.id)) {
+        titleInputRef.current?.focus()
+        titleInputRef.current?.select()
+      } else {
+        panelHeadingRef.current?.focus()
+      }
     }, 0)
     return () => window.clearTimeout(t)
   }, [selected?.id])
@@ -805,13 +902,24 @@ export default function CalendarPage() {
     status?: JobStatus
     start_time?: string
     hours_worked?: number
+    client_id?: string
+    package_id?: string
   }) {
     if (!selected || isEphemeralEventId(selected.id)) return
     setSaving(true)
     try {
       const updated = await api.updateJob(selected.id, patch)
-      setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)))
-      refreshSelected(updated)
+      const client =
+        clients.find((c) => c.id === (patch.client_id ?? updated.client_id)) ?? updated.client
+      const pkg =
+        packages.find((p) => p.id === (patch.package_id ?? updated.package_id))
+      const hydrated = {
+        ...updated,
+        client: updated.client ?? client,
+        packageName: updated.packageName ?? pkg?.name,
+      }
+      setJobs((prev) => prev.map((j) => (j.id === hydrated.id ? hydrated : j)))
+      refreshSelected(hydrated)
       toast('Event saved')
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not save', 'Save failed')
@@ -820,14 +928,90 @@ export default function CalendarPage() {
     }
   }
 
+  async function saveDraftAsBlock() {
+    if (!selected || !isDraftEventId(selected.id)) return
+    const draft = selected
+    const allDay = draft.allDay || !draft.time
+    const start_time = allDay ? undefined : draft.time || draft.job.start_time || '09:00'
+    const hours =
+      draft.job.hours_worked && draft.job.hours_worked > 0 ? draft.job.hours_worked : 1
+    const end_time = allDay || !start_time ? undefined : endHHMMFromStart(start_time, hours)
+    const label =
+      draft.title.trim() && draft.title.trim() !== 'New event'
+        ? draft.title.trim()
+        : 'Time off'
+    setSaving(true)
+    try {
+      const created = await api.createTimeBlock({
+        date: draft.date.slice(0, 10),
+        all_day: allDay,
+        start_time,
+        end_time,
+        label,
+      })
+      await reloadBlocks()
+      setSelected(null)
+      setAsBlocked(false)
+      setSelectedBlock(created)
+      toast('Time blocked')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not block time', 'Calendar')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function convertSelectedToBlock() {
+    if (!selected || isEphemeralEventId(selected.id)) return
+    const ev = selected
+    const allDay = ev.allDay || !ev.time
+    const start_time = allDay ? undefined : ev.time || ev.job.start_time || '09:00'
+    const hours =
+      ev.job.hours_worked && ev.job.hours_worked > 0 ? ev.job.hours_worked : 1
+    const end_time = allDay || !start_time ? undefined : endHHMMFromStart(start_time, hours)
+    const label = ev.title.trim() || 'Time off'
+    setSaving(true)
+    try {
+      const created = await api.createTimeBlock({
+        date: ev.date.slice(0, 10),
+        all_day: allDay,
+        start_time,
+        end_time,
+        label,
+      })
+      await api.deleteJob(ev.id)
+      clearEventMeta(ev.id)
+      setJobs((prev) =>
+        prev.map((j) => (j.id === ev.id ? { ...j, status: 'cancelled' as const } : j)),
+      )
+      await reloadBlocks()
+      setSelected(null)
+      setAsBlocked(false)
+      setSelectedBlock(created)
+      toast('Converted to blocked time')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not convert', 'Calendar')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function saveDraft() {
     if (!selected || !isDraftEventId(selected.id)) return
-    if (!clients.length || !packages.length) {
+    if (asBlocked) {
+      await saveDraftAsBlock()
+      return
+    }
+    const client =
+      clients.find((c) => c.id === selected.job.client_id) ?? clients[0]
+    const pkg =
+      packages.find((p) => p.id === selected.job.package_id) ??
+      packages.filter((p) => p.active)[0] ??
+      packages[0]
+    if (!client || !pkg) {
       alert('Add a client and package first.', 'Cannot create event')
       return
     }
-    const client = clients[0]!
-    const pkg = packages[0]!
     const draft = selected
     const allDay = draft.allDay
     const start_time = allDay ? undefined : draft.time || draft.job.start_time || '09:00'
@@ -930,8 +1114,8 @@ export default function CalendarPage() {
     }
     if (props.kind === 'block') {
       if (props.block) {
-        setRouteMode(false)
         setSelected(null)
+        setAsBlocked(false)
         setSelectedBlock(props.block)
       }
       return
@@ -944,15 +1128,14 @@ export default function CalendarPage() {
     if (job && !isDraftEventId(job.id)) select(jobToEvent(job, categories))
   }
 
-  function onDateSelect(arg: DateSelectArg) {
-    const date = formatDateLocal(arg.start)
-    const allDay = arg.allDay
+  function openDraftFromRange(start: Date, end: Date | null, allDay: boolean) {
+    const date = formatDateLocal(start)
     let startTime: string | undefined
     let hoursWorked = 1
     if (!allDay) {
-      startTime = formatTimeLocal(arg.start)
-      if (arg.end) {
-        hoursWorked = durationHours(arg.start, arg.end)
+      startTime = formatTimeLocal(start)
+      if (end) {
+        hoursWorked = durationHours(start, end)
       }
     }
     openDraft(
@@ -969,6 +1152,23 @@ export default function CalendarPage() {
     )
   }
 
+  /** Drag-to-create: selection spans start → end (requires selectMinDistance). */
+  function onDateSelect(arg: DateSelectArg) {
+    openDraftFromRange(arg.start, arg.end ?? null, arg.allDay)
+  }
+
+  /** Double-click empty slot/day to create a 1-hour (or all-day) draft. */
+  function onDateClick(arg: DateClickArg) {
+    if (arg.jsEvent.detail !== 2) return
+    const start = arg.date
+    let end: Date | null = null
+    if (!arg.allDay) {
+      end = new Date(start.getTime())
+      end.setHours(end.getHours() + 1)
+    }
+    openDraftFromRange(start, end, arg.allDay)
+  }
+
   const slotLabelFormat = { hour: 'numeric' as const, minute: '2-digit' as const, omitZeroMinute: false, meridiem: 'short' as const }
 
   return (
@@ -977,14 +1177,26 @@ export default function CalendarPage() {
         title="Calendar"
         subtitle="Jobs & time off (shared with mobile)"
         actions={
-          <button
-            type="button"
-            disabled={blockSaving}
-            onClick={() => void openCreateTimeBlock({ date: anchorDate.slice(0, 10), allDay: true })}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-          >
-            Block time
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={blockSaving}
+              onClick={() => void openCreateTimeBlock({ date: anchorDate.slice(0, 10) })}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-900 shadow-sm hover:bg-gray-50 hover:border-gray-300 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40"
+            >
+              <CalendarOff className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+              Block time
+            </button>
+            <button
+              type="button"
+              onClick={() => openNewEventDraft()}
+              className="inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-medium text-white shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-green-600"
+              style={{ background: colors.green }}
+            >
+              <Plus className="h-4 w-4" strokeWidth={2} aria-hidden />
+              New event
+            </button>
+          </div>
         }
       />
 
@@ -995,7 +1207,10 @@ export default function CalendarPage() {
               <button
                 type="button"
                 aria-label="Previous period"
-                onClick={() => calendarRef.current?.getApi().prev()}
+                onClick={() => {
+                  if (useCustomSurface || weekIsEmpty) shiftAnchor(-1)
+                  else calendarRef.current?.getApi().prev()
+                }}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
                 ‹
@@ -1003,7 +1218,10 @@ export default function CalendarPage() {
               <button
                 type="button"
                 aria-label="Next period"
-                onClick={() => calendarRef.current?.getApi().next()}
+                onClick={() => {
+                  if (useCustomSurface || weekIsEmpty) shiftAnchor(1)
+                  else calendarRef.current?.getApi().next()
+                }}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
                 ›
@@ -1011,79 +1229,63 @@ export default function CalendarPage() {
             </div>
             <button
               type="button"
-              onClick={() => calendarRef.current?.getApi().today()}
+              onClick={() => {
+                if (useCustomSurface || weekIsEmpty) goTodayAnchor()
+                else calendarRef.current?.getApi().today()
+              }}
               className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
             >
               Today
             </button>
             <h2 className="text-lg font-semibold text-gray-900 ml-1">{title || `${MONTHS[now.getMonth()]} ${now.getFullYear()}`}</h2>
 
-            <button
-              type="button"
-              onClick={() => {
-                openDraft(
-                  buildDraftCalEvent({
-                    date: anchorDate,
-                    startTime: '09:00',
-                    hoursWorked: 1,
-                    allDay: false,
-                    title: 'New event',
-                    cats: categories,
-                    client: clients[0],
-                    pkg: packages[0],
-                  }),
-                )
-              }}
-              className="ml-3 px-3 py-1.5 text-sm font-semibold text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-green-600"
-              style={{ background: colors.green }}
-            >
-              + New event
-            </button>
-
             {view === 'day' && (
-              <div className="flex items-center gap-1 ml-2" role="group" aria-label="Day layout">
-                <span className="text-xs text-gray-600 mr-1">Day layout</span>
-                {(
-                  [
-                    { id: 'grid' as const, label: 'Grid' },
-                    { id: 'agenda' as const, label: 'Agenda' },
-                    { id: 'thirds' as const, label: 'AM/PM' },
-                  ] as const
-                ).map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    aria-pressed={dayLayout === opt.id}
-                    onClick={() => applyDayLayout(opt.id)}
-                    className={`px-2.5 py-1.5 text-xs rounded-md border focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 ${
-                      dayLayout === opt.id
-                        ? 'border-green-500 bg-green-50 text-green-900 font-semibold'
-                        : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                    }`}
-                    title={
-                      opt.id === 'grid'
-                        ? 'Hour grid from 12 AM to 12 AM'
-                        : opt.id === 'agenda'
-                          ? 'Chronological list for the day'
-                          : 'Morning / afternoon / evening bands'
-                    }
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  aria-pressed={routeMode}
-                  onClick={() => (routeMode ? closeRouteMode() : openRouteMode())}
-                  className={`ml-1 px-2.5 py-1.5 text-xs rounded-md border focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 ${
-                    routeMode
-                      ? 'border-green-500 bg-green-50 text-green-900 font-semibold'
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                  }`}
-                  title="Plan stop order on a map"
-                >
-                  Route
-                </button>
+              <div className="ml-2 flex items-center gap-2" role="group" aria-label="Day layout">
+                <span className="text-[12px] font-medium text-gray-400">Day layout</span>
+                <div className="inline-flex items-center rounded-lg bg-gray-100 p-0.5">
+                  {(
+                    [
+                      {
+                        id: 'grid' as const,
+                        label: 'Grid',
+                        Icon: CalendarDays,
+                        title: 'Hour grid from 12 AM to 12 AM',
+                      },
+                      {
+                        id: 'agenda' as const,
+                        label: 'Agenda',
+                        Icon: ListOrdered,
+                        title: 'Chronological list for the day',
+                      },
+                      {
+                        id: 'thirds' as const,
+                        label: 'AM/PM',
+                        Icon: Sun,
+                        title: 'Morning / afternoon columns',
+                      },
+                    ] as const
+                  ).map((opt) => {
+                    const active = dayLayout === opt.id
+                    const Icon = opt.Icon
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => applyDayLayout(opt.id)}
+                        title={opt.title}
+                        className={`inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-[13px] font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 ${
+                          active
+                            ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/[0.04]'
+                            : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
@@ -1112,31 +1314,104 @@ export default function CalendarPage() {
           </div>
 
           <div
-            className={`flex-1 overflow-hidden px-2 pb-2 relative ${
-              showDayBands ? 'fc-day-thirds' : ''
-            }`}
+            ref={calendarHostRef}
+            className="flex-1 overflow-hidden relative flex flex-col min-h-0"
           >
+            {view === 'day' && dayLayout === 'agenda' ? (
+              <DayAgendaView
+                dateISO={anchorDate.slice(0, 10)}
+                jobs={jobs}
+                blocks={timeBlocks}
+                categories={categories}
+                selectedId={selected && !isDraftEventId(selected.id) ? selected.id : null}
+                selectedBlockId={selectedBlock?.id ?? null}
+                onSelectJob={(job) => select(jobToEvent(job, categories))}
+                onSelectBlock={(block) => {
+                  setSelected(null)
+                  setAsBlocked(false)
+                  setSelectedBlock(block)
+                }}
+                onDraftAt={openDraftAtHour}
+              />
+            ) : null}
+
+            {view === 'day' && dayLayout === 'thirds' ? (
+              <DayAmPmView
+                dateISO={anchorDate.slice(0, 10)}
+                jobs={jobs}
+                blocks={timeBlocks}
+                categories={categories}
+                selectedId={selected && !isDraftEventId(selected.id) ? selected.id : null}
+                selectedBlockId={selectedBlock?.id ?? null}
+                onSelectJob={(job) => select(jobToEvent(job, categories))}
+                onSelectBlock={(block) => {
+                  setSelected(null)
+                  setAsBlocked(false)
+                  setSelectedBlock(block)
+                }}
+                onDraftAt={openDraftAtHour}
+              />
+            ) : null}
+
+            {view === 'schedule' ? (
+              <ScheduleListView
+                anchorISO={anchorDate.slice(0, 10)}
+                jobs={jobs}
+                blocks={timeBlocks}
+                categories={categories}
+                selectedId={selected && !isDraftEventId(selected.id) ? selected.id : null}
+                selectedBlockId={selectedBlock?.id ?? null}
+                onSelectJob={(job) => select(jobToEvent(job, categories))}
+                onSelectBlock={(block) => {
+                  setSelected(null)
+                  setAsBlocked(false)
+                  setSelectedBlock(block)
+                }}
+                onOpenRoutes={() => setPage('routes')}
+              />
+            ) : null}
+
+            {weekIsEmpty ? (
+              <CleanWeekEmpty
+                anchorISO={anchorDate.slice(0, 10)}
+                onDraftAt={openDraftAtHour}
+                onNewEvent={openNewEventDraft}
+                onBlockTime={() =>
+                  void openCreateTimeBlock({ date: anchorDate.slice(0, 10), allDay: true })
+                }
+              />
+            ) : null}
+
+            <div
+              className={
+                showFc
+                  ? 'flex-1 min-h-0 px-2 pb-2'
+                  : 'absolute w-px h-px overflow-hidden opacity-0 pointer-events-none'
+              }
+              aria-hidden={!showFc}
+            >
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-              initialView={fcView}
+              initialView={VIEW_MAP.week}
               headerToolbar={false}
               height="100%"
               events={fcEvents}
               editable
               selectable
               selectMirror
+              selectMinDistance={6}
+              nowIndicator
               eventStartEditable
               eventDurationEditable
               eventResizableFromStart
               dragScroll
-              nowIndicator
               allDaySlot
               slotMinTime="00:00:00"
               slotMaxTime="24:00:00"
               slotDuration="00:30:00"
               snapDuration="00:15:00"
-              scrollTime={showDayBands ? '06:00:00' : '07:00:00'}
+              scrollTime="07:00:00"
               expandRows
               weekends
               dayMaxEvents={3}
@@ -1145,6 +1420,7 @@ export default function CalendarPage() {
               slotLabelContent={slotLabelContent}
               eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }}
               datesSet={(arg) => {
+                if (!showFc) return
                 setTitle(arg.view.title)
                 setAnchorDate(formatDateLocal(arg.view.currentStart))
                 void loadBlocksForRange(arg.start, arg.end)
@@ -1153,6 +1429,7 @@ export default function CalendarPage() {
               eventDrop={onEventDrop}
               eventResize={onEventResize}
               select={onDateSelect}
+              dateClick={onDateClick}
               eventClassNames={(arg) => {
                 const kind = (arg.event.extendedProps as { kind?: string }).kind
                 if (kind === 'block') return ['fc-time-block']
@@ -1163,6 +1440,7 @@ export default function CalendarPage() {
                 return classes
               }}
               eventDidMount={(info) => {
+                info.el.setAttribute('data-cal-event-id', info.event.id)
                 const kind = (info.event.extendedProps as { kind?: string }).kind
                 if (kind === 'block') return
                 if (kind === 'draft') {
@@ -1178,6 +1456,7 @@ export default function CalendarPage() {
                 return kind !== 'block' && kind !== 'draft'
               }}
             />
+            </div>
           </div>
         </div>
 
@@ -1272,6 +1551,17 @@ export default function CalendarPage() {
                 </div>
               </>
             )}
+            {selectedBlock.all_day &&
+            jobs.some(
+              (j) =>
+                j.status !== 'cancelled' &&
+                j.date.slice(0, 10) === selectedBlock.date.slice(0, 10),
+            ) ? (
+              <p className="text-[12px] text-ink-500 leading-snug rounded-lg bg-ink-50 px-3 py-2">
+                This day still has jobs. The block grays availability — it doesn&apos;t cancel
+                those events. Switch to timed hours if you only meant part of the day.
+              </p>
+            ) : null}
             <button
               type="button"
               disabled={blockSaving}
@@ -1285,297 +1575,240 @@ export default function CalendarPage() {
         )}
 
         {panelOpen && selected && !selectedBlock && (
-        <aside
-          className="relative w-72 bg-white border-l border-gray-100 flex flex-col overflow-hidden flex-shrink-0"
-          aria-label={isDraft ? 'New event draft' : 'Task details'}
-        >
-          <PanelEdgeToggle side="right" expanded onToggle={dismissPanel} label="details" />
-          <div className="px-5 py-4 border-b border-gray-100 flex items-start gap-2">
-            <div className="min-w-0 flex-1">
-              <h3
-                ref={panelHeadingRef}
-                tabIndex={-1}
-                className="text-base font-semibold text-gray-900 outline-none"
-              >
-                {isDraft ? 'New event' : 'Task Details'}
-              </h3>
-              <p className="text-xs text-gray-600 mt-0.5">
-                {isDraft
-                  ? 'Unsaved — Save to add to calendar'
-                  : 'Drag or resize to reschedule. Press Delete to remove an event.'}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={dismissPanel}
-              aria-label="Close event panel"
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block" htmlFor="cal-event-title">
-                  Title
-                </label>
-                <input
-                  id="cal-event-title"
-                  ref={titleInputRef}
-                  type="text"
-                  defaultValue={selected.title}
-                  key={selected.id + '-title'}
-                  onBlur={(e) => {
-                    const next = e.target.value.trim() || 'New event'
-                    if (isDraft) {
-                      if (next !== selected.title) patchDraft({ title: next })
-                      return
+          view === 'month' ? (
+          <EventPopover
+            model={{
+              id: selected.id,
+              title: selected.title,
+              date: selected.date,
+              time: selected.time,
+              allDay: selected.allDay,
+              hoursWorked: selected.job.hours_worked || (selected.time ? 1 : 0),
+              clientId: selected.job.client_id || '',
+              packageId: selected.job.package_id || '',
+              notes: selected.job.notes || '',
+              categoryId: selected.categoryId,
+              color: selected.color,
+              statusLabel: `${selected.job.status.replace('_', ' ')}${
+                selected.job.client?.name ? ` · ${selected.job.client.name}` : ''
+              }${selected.job.packageName ? ` · ${selected.job.packageName}` : ''}`,
+              isDraft,
+            }}
+            clients={clients}
+            packages={packages}
+            categories={categories}
+            saving={saving}
+            calendarRoot={calendarHostRef.current}
+            headingRef={panelHeadingRef}
+            titleInputRef={titleInputRef}
+            onClose={dismissPanel}
+            onChangeTitle={(title) => {
+              if (isDraft) patchDraft({ title })
+              else void saveSelected({ notes: title })
+            }}
+            onChangeClient={(clientId) => {
+              if (isDraft) {
+                patchDraft({ client_id: clientId })
+                return
+              }
+              void saveSelected({ client_id: clientId })
+            }}
+            onChangeLocation={async ({ address, lat, lng }) => {
+              const clientId = selected.job.client_id
+              if (!clientId) {
+                alert('Pick a contact before adding a location.', 'Calendar')
+                return
+              }
+              const patch: Parameters<typeof api.updateClient>[1] = { address }
+              if (lat !== undefined) patch.lat = lat
+              if (lng !== undefined) patch.lng = lng
+              if (lat === null || lng === null) {
+                patch.geocoded_at = null
+              } else if (typeof lat === 'number' && typeof lng === 'number') {
+                patch.geocoded_at = new Date().toISOString()
+              }
+              const updated = await api.updateClient(clientId, patch)
+              setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+              setJobs((prev) =>
+                prev.map((j) =>
+                  j.client_id === updated.id
+                    ? { ...j, client: j.client ? { ...j.client, ...updated } : updated }
+                    : j,
+                ),
+              )
+              setSelected((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      job: {
+                        ...prev.job,
+                        client: prev.job.client ? { ...prev.job.client, ...updated } : updated,
+                        client_id: updated.id,
+                      },
                     }
-                    if (next !== (selected.job.notes || '').trim()) void saveSelected({ notes: next })
-                  }}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-gray-900"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Status note</label>
-                <p className="text-sm text-gray-700 border border-gray-100 rounded-lg px-3 py-2 bg-gray-50">
-                  {isDraft
-                    ? 'Draft — not saved yet'
-                    : `${selected.job.status.replace('_', ' ')}${
-                        selected.job.client?.name ? ` · ${selected.job.client.name}` : ''
-                      }${selected.job.packageName ? ` · ${selected.job.packageName}` : ''}`}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Activity Date</label>
-                <input
-                  type="date"
-                  defaultValue={selected.date}
-                  key={selected.id + '-date'}
-                  onChange={(e) => {
-                    if (isDraft) patchDraft({ date: e.target.value })
-                    else void saveSelected({ date: e.target.value })
-                  }}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-gray-900"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Start time</label>
-                <input
-                  type="time"
-                  defaultValue={selected.time || ''}
-                  key={selected.id + '-time'}
-                  onChange={(e) => {
-                    if (isDraft) {
-                      patchDraft({
-                        time: e.target.value,
-                        hours_worked: e.target.value ? selected.job.hours_worked || 1 : 0,
-                      })
-                      return
-                    }
-                    void saveSelected({
-                      start_time: e.target.value || '',
-                      hours_worked: e.target.value ? selected.job.hours_worked || 1 : 0,
-                    })
-                  }}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-gray-900"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Duration (hours)</label>
-                <input
-                  type="number"
-                  min={0.25}
-                  step={0.25}
-                  defaultValue={selected.job.hours_worked || (selected.time ? 1 : 0)}
-                  key={selected.id + '-dur'}
-                  onChange={(e) => {
-                    const hours = Number(e.target.value) || 1
-                    if (isDraft) patchDraft({ hours_worked: hours })
-                    else void saveSelected({ hours_worked: hours })
-                  }}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-gray-900"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Priority</label>
-                <div className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ background: PRIORITY_COLORS[selected.priority] }} />
-                  <span className="text-gray-900">{selected.priority}</span>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Category</label>
-                <div className="flex gap-2 flex-wrap">
-                  {categories.map((cat) => {
-                    const active = selected.categoryId === cat.id
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        disabled={saving || (isEphemeralEventId(selected.id) && !isDraft)}
-                        onClick={() => setEventCategory(selected.id, cat.id)}
-                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition-all"
-                        style={
-                          active
-                            ? { borderColor: cat.color, background: cat.color + '22', color: cat.color }
-                            : { borderColor: '#e5e7eb', color: '#9ca3af' }
-                        }
-                      >
-                        <span className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
-                        {cat.name}
-                      </button>
-                    )
-                  })}
-                  <button
-                    type="button"
-                    onClick={() => setAddingCat((v) => !v)}
-                    className="text-xs px-2 py-1 rounded-lg border border-dashed border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-700"
-                  >
-                    + Add
-                  </button>
-                </div>
-
-                {selected.categoryId && (
-                  <div className="mt-2">
-                    <p className="text-xs text-gray-600 mb-1.5" id="cal-color-label">
-                      Color
-                    </p>
-                    <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="cal-color-label">
-                      {CATEGORY_COLOR_PRESETS.map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          aria-label={`Set event color ${c}`}
-                          aria-pressed={selected.color.toLowerCase() === c.toLowerCase()}
-                          title={c}
-                          onClick={() => onRecolorEvent(selected.id, c)}
-                          className={`w-6 h-6 rounded-full border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-800 ${
-                            selected.color.toLowerCase() === c.toLowerCase()
-                              ? 'border-gray-900 scale-110'
-                              : 'border-white shadow ring-1 ring-gray-300'
-                          }`}
-                          style={{ background: c }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {categories.length > 1 && selected.categoryId && !isDraft && (
-                  <button
-                    type="button"
-                    className="mt-2 w-full py-2 text-sm font-medium rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                    onClick={() => {
-                      setCategories(removeCategory(selected.categoryId))
-                      setColorTick((t) => t + 1)
-                      const job = jobs.find((j) => j.id === selected.id)
-                      if (job) refreshSelected(job)
-                    }}
-                  >
-                    Delete category
-                  </button>
-                )}
-
-                {addingCat && (
-                  <div className="mt-2 p-2 rounded-lg border border-gray-100 bg-gray-50 space-y-2">
-                    <input
-                      value={newCatName}
-                      onChange={(e) => setNewCatName(e.target.value)}
-                      placeholder="Category name"
-                      className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-green-400"
-                    />
-                    <div className="flex flex-wrap gap-1.5">
-                      {CATEGORY_COLOR_PRESETS.map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setNewCatColor(c)}
-                          className={`w-5 h-5 rounded-full border-2 ${
-                            newCatColor === c ? 'border-gray-800' : 'border-white ring-1 ring-gray-200'
-                          }`}
-                          style={{ background: c }}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex gap-1.5">
-                      <button
-                        type="button"
-                        onClick={onAddCategory}
-                        className="flex-1 text-xs py-1.5 rounded-lg text-white font-medium"
-                        style={{ background: colors.green }}
-                      >
-                        Add category
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAddingCat(false)}
-                        className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-500"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              {isDraft ? (
-                <>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => void saveDraft()}
-                    className="w-full py-2 text-xs font-medium text-white rounded-lg mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
-                    style={{ background: colors.green }}
-                  >
-                    {saving ? 'Saving…' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={dismissPanel}
-                    className="w-full py-2 text-xs font-medium rounded-lg mt-1.5 border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    disabled={saving || isEphemeralEventId(selected.id)}
-                    onClick={() => void saveSelected({ notes: selected.title })}
-                    className="w-full py-2 text-xs font-medium text-white rounded-lg mt-2 hover:opacity-90 transition-opacity disabled:opacity-60"
-                    style={{ background: colors.blue }}
-                  >
-                    {saving ? 'Saving…' : 'Save Task'}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving || isEphemeralEventId(selected.id)}
-                    onClick={() => void deleteSelected()}
-                    className="w-full py-2 text-xs font-medium rounded-lg mt-1.5 border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60"
-                  >
-                    Delete event
-                  </button>
-                </>
-              )}
-            </div>
-        </aside>
-        )}
-
-        {routeMode && view === 'day' && (
-          <RouteDayPanel
-            date={anchorDate}
-            jobs={jobs}
-            setJobs={setJobs}
-            setClients={setClients}
-            businessAddress={businessAddress}
-            depotCoords={depotCoords}
-            onDepotCoords={setDepotCoords}
-            onClose={closeRouteMode}
-            toast={(msg) => toast(msg)}
+                  : prev,
+              )
+              toast('Location saved')
+            }}
+            onChangePackage={(packageId) => {
+              if (isDraft) {
+                patchDraft({ package_id: packageId })
+                return
+              }
+              void saveSelected({ package_id: packageId })
+            }}
+            onChangeDate={(date) => {
+              if (isDraft) patchDraft({ date })
+              else void saveSelected({ date })
+            }}
+            onChangeTime={(time) => {
+              if (isDraft) {
+                patchDraft({
+                  time,
+                  hours_worked: time ? selected.job.hours_worked || 1 : 0,
+                })
+                return
+              }
+              void saveSelected({
+                start_time: time || '',
+                hours_worked: time ? selected.job.hours_worked || 1 : 0,
+              })
+            }}
+            onChangeDuration={(hours) => {
+              if (isDraft) patchDraft({ hours_worked: hours })
+              else void saveSelected({ hours_worked: hours })
+            }}
+            onChangeNotes={(notes) => {
+              if (isDraft) patchDraft({ title: notes || 'New event' })
+              else void saveSelected({ notes })
+            }}
+            onChangeCategory={(categoryId) => setEventCategory(selected.id, categoryId)}
+            onChangeColor={(color) => onRecolorEvent(selected.id, color)}
+            onCategoriesChange={setCategories}
+            asBlocked={asBlocked}
+            onChangeAsBlocked={setAsBlocked}
+            onSave={() => {
+              if (isDraft) void saveDraft()
+              else if (asBlocked) void convertSelectedToBlock()
+              else void saveSelected({ notes: selected.title })
+            }}
+            onDelete={isDraft ? undefined : () => void deleteSelected()}
           />
+          ) : (
+          <EventDetailSidebar
+            model={{
+              id: selected.id,
+              title: selected.title,
+              date: selected.date,
+              time: selected.time,
+              allDay: selected.allDay,
+              hoursWorked: selected.job.hours_worked || (selected.time ? 1 : 0),
+              clientId: selected.job.client_id || '',
+              packageId: selected.job.package_id || '',
+              notes: selected.job.notes || '',
+              categoryId: selected.categoryId,
+              color: selected.color,
+              statusLabel: `${selected.job.status.replace('_', ' ')}${
+                selected.job.client?.name ? ` · ${selected.job.client.name}` : ''
+              }${selected.job.packageName ? ` · ${selected.job.packageName}` : ''}`,
+              isDraft,
+            }}
+            clients={clients}
+            packages={packages}
+            categories={categories}
+            saving={saving}
+            headingRef={panelHeadingRef}
+            titleInputRef={titleInputRef}
+            onClose={dismissPanel}
+            onChangeTitle={(title) => {
+              if (isDraft) patchDraft({ title })
+              else void saveSelected({ notes: title })
+            }}
+            onChangeClient={(clientId) => {
+              if (isDraft) {
+                patchDraft({ client_id: clientId })
+                return
+              }
+              void saveSelected({ client_id: clientId })
+            }}
+            onChangeLocation={async ({ address, lat, lng }) => {
+              const clientId = selected.job.client_id
+              if (!clientId) {
+                alert('Pick a contact before adding a location.', 'Calendar')
+                return
+              }
+              const patch: Parameters<typeof api.updateClient>[1] = { address }
+              if (lat !== undefined) patch.lat = lat
+              if (lng !== undefined) patch.lng = lng
+              if (lat === null || lng === null) {
+                patch.geocoded_at = null
+              } else if (typeof lat === 'number' && typeof lng === 'number') {
+                patch.geocoded_at = new Date().toISOString()
+              }
+              const updated = await api.updateClient(clientId, patch)
+              setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+              setJobs((prev) =>
+                prev.map((j) =>
+                  j.client_id === updated.id
+                    ? { ...j, client: j.client ? { ...j.client, ...updated } : updated }
+                    : j,
+                ),
+              )
+              setSelected((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      job: {
+                        ...prev.job,
+                        client: prev.job.client ? { ...prev.job.client, ...updated } : updated,
+                        client_id: updated.id,
+                      },
+                    }
+                  : prev,
+              )
+              toast('Location saved')
+            }}
+            onChangePackage={(packageId) => {
+              if (isDraft) {
+                patchDraft({ package_id: packageId })
+                return
+              }
+              void saveSelected({ package_id: packageId })
+            }}
+            onChangeDate={(date) => {
+              if (isDraft) patchDraft({ date })
+              else void saveSelected({ date })
+            }}
+            onChangeTime={(time) => {
+              if (isDraft) {
+                patchDraft({
+                  time,
+                  hours_worked: time ? selected.job.hours_worked || 1 : 0,
+                })
+                return
+              }
+              void saveSelected({
+                start_time: time || '',
+                hours_worked: time ? selected.job.hours_worked || 1 : 0,
+              })
+            }}
+            onChangeDuration={(hours) => {
+              if (isDraft) patchDraft({ hours_worked: hours })
+              else void saveSelected({ hours_worked: hours })
+            }}
+            onChangeCategory={(categoryId) => setEventCategory(selected.id, categoryId)}
+            onChangeColor={(color) => onRecolorEvent(selected.id, color)}
+            onCategoriesChange={setCategories}
+            asBlocked={asBlocked}
+            onChangeAsBlocked={setAsBlocked}
+            onSave={() => {
+              if (isDraft) void saveDraft()
+              else if (asBlocked) void convertSelectedToBlock()
+              else void saveSelected({ notes: selected.title })
+            }}
+            onDelete={isDraft ? undefined : () => void deleteSelected()}
+          />
+          )
         )}
       </div>
 
@@ -1611,6 +1844,31 @@ export default function CalendarPage() {
           color: #4b5563;
           font-size: 12px;
           font-weight: 500;
+        }
+        /* Current-time indicator — Bolt-style red dot + hairline across today */
+        .fc {
+          --fc-now-indicator-color: #ef4444;
+        }
+        .fc .fc-timegrid-now-indicator-arrow {
+          display: none;
+        }
+        .fc .fc-timegrid-now-indicator-line {
+          border: none;
+          border-top: none;
+          height: 1px;
+          background: rgba(239, 68, 68, 0.7);
+          z-index: 5;
+        }
+        .fc .fc-timegrid-now-indicator-line::before {
+          content: '';
+          position: absolute;
+          left: -4px;
+          top: -3.5px;
+          width: 8px;
+          height: 8px;
+          border-radius: 9999px;
+          background: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
         }
         .fc .fc-list-day-cushion {
           color: #111827;
@@ -1669,27 +1927,35 @@ export default function CalendarPage() {
         .fc .fc-event .fc-event-time {
           font-weight: 600;
         }
-        .fc .fc-bg-event {
+        .fc .fc-bg-event,
+        .fc .fc-time-block.fc-bg-event {
           opacity: 1;
           background: repeating-linear-gradient(
             -45deg,
-            rgba(100, 116, 139, 0.22),
-            rgba(100, 116, 139, 0.22) 6px,
-            rgba(100, 116, 139, 0.12) 6px,
-            rgba(100, 116, 139, 0.12) 12px
+            rgba(100, 116, 139, 0.28),
+            rgba(100, 116, 139, 0.28) 6px,
+            rgba(148, 163, 184, 0.18) 6px,
+            rgba(148, 163, 184, 0.18) 12px
           ) !important;
+        }
+        .fc .fc-daygrid-bg-harness .fc-time-block,
+        .fc .fc-timegrid-bg-harness .fc-time-block {
+          cursor: pointer;
+        }
+        .fc .fc-time-block.fc-time-block-selected {
+          background: repeating-linear-gradient(
+            -45deg,
+            rgba(71, 85, 105, 0.4),
+            rgba(71, 85, 105, 0.4) 6px,
+            rgba(100, 116, 139, 0.28) 6px,
+            rgba(100, 116, 139, 0.28) 12px
+          ) !important;
+          outline: 2px solid #475569;
+          outline-offset: -2px;
         }
         .fc .fc-time-block.fc-event .fc-event-main {
           color: #1e293b;
         }
-        .fc .fc-timegrid-now-indicator-line {
-          border-color: ${colors.green};
-        }
-        .fc .fc-timegrid-now-indicator-arrow {
-          border-top-color: ${colors.green};
-          border-bottom-color: ${colors.green};
-        }
-
         /* Day AM/PM bands — tinted lanes + labels on the time axis */
         .fc-day-thirds .fc-timegrid-slot.fc-slot-band-morning,
         .fc-day-thirds .fc-timegrid-slot-lane.fc-slot-band-morning {
