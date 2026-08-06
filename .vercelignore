@@ -1,0 +1,16 @@
+node_modules
+dist
+.env
+.env.local
+Untitled
+.cursor
+*.json
+!package.json
+!tsconfig.json
+!vercel.json
+server
+docs
+AGENTS.md
+CLAUDE.md
+*.md
+!README.md
