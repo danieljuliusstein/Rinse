@@ -384,7 +384,6 @@ export function EventDetailSidebar({
               <AddressAutocompleteInput
                 compact
                 requireStructuredManual
-                defaultMode="structured"
                 value={locationDraft}
                 initiallyPinned={locationPinned}
                 context={businessAddress}

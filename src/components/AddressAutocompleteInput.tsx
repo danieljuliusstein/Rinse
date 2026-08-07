@@ -1,8 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import {
   composeManualAddress,
-  emptyManualParts,
-  hasManualParts,
   isManualAddressSufficient,
   isManualPartsSufficient,
   manualAddressHint,
@@ -18,7 +16,6 @@ import {
   type PlaceSuggestion,
 } from '@/lib/google-places'
 import {
-  addressesLookSame,
   isRouteApiConfigured,
   suggestAddress,
   type GeocodeHit,
@@ -37,27 +34,23 @@ type Props = {
   'aria-label'?: string
   disabled?: boolean
   /**
-   * When true, empty address is allowed; non-empty manual address must include
+   * When true, empty address is allowed; non-empty address must include
    * city+state or ZIP unless a suggestion was picked.
    */
   requireStructuredManual?: boolean
-  /** Compact UI (table cells). */
+  /** Compact UI (table cells / calendar). Same fields, tighter spacing. */
   compact?: boolean
   /** Pre-existing map pin (edit contact already has lat/lng). */
   initiallyPinned?: boolean
-  /**
-   * Default entry mode. Contacts default to structured fields (no live lookup).
-   * Use `search` for freeform autocomplete-as-you-type.
-   */
-  defaultMode?: 'structured' | 'search'
 }
 
 const DEBOUNCE_MS = 320
 const MIN_CHARS = 3
 
 /**
- * Structured street / city / state / ZIP by default (geocode on save elsewhere).
- * Optional address search (Google Places → Nominatim) via toggle.
+ * Checkout-style address entry: street · city · ST · ZIP always visible.
+ * Autocomplete attaches to the street field only (no mode toggle).
+ * Full geocode still happens on save when no suggestion was picked.
  */
 export default function AddressAutocompleteInput({
   value,
@@ -72,10 +65,10 @@ export default function AddressAutocompleteInput({
   requireStructuredManual = true,
   compact = false,
   initiallyPinned = false,
-  defaultMode = 'structured',
 }: Props) {
   const listId = useId()
   const wrapRef = useRef<HTMLDivElement>(null)
+  const streetWrapRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -83,15 +76,13 @@ export default function AddressAutocompleteInput({
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<Array<GeocodeHit | PlaceSuggestion>>([])
   const [error, setError] = useState<string | null>(null)
-  const [manual, setManual] = useState(defaultMode !== 'search')
   const [parts, setParts] = useState<ManualAddressParts>(() => parseManualAddress(value))
   const [pinned, setPinned] = useState(initiallyPinned)
   const [provider, setProvider] = useState<'google' | 'nominatim' | 'none'>('none')
-  const lastLookup = useRef('')
+  const skipSuggestRef = useRef(false)
 
   const googleReady = isGooglePlacesConfigured() && !isPlacesDailyCapReached()
   const nominatimReady = isRouteApiConfigured()
-  const useStructuredManual = manual
 
   useEffect(() => {
     if (googleReady) setProvider('google')
@@ -107,10 +98,14 @@ export default function AddressAutocompleteInput({
     return () => document.removeEventListener('mousedown', onDoc)
   }, [])
 
+  // Suggest only from the street line — not city/state/ZIP keystrokes.
   useEffect(() => {
-    // Live lookup only in search mode — structured fields geocode on save.
-    if (manual || disabled || pinned) return
-    const q = value.trim()
+    if (disabled || pinned || provider === 'none') return
+    if (skipSuggestRef.current) {
+      skipSuggestRef.current = false
+      return
+    }
+    const q = parts.street.trim()
     if (q.length < MIN_CHARS) {
       setSuggestions([])
       setOpen(false)
@@ -122,7 +117,7 @@ export default function AddressAutocompleteInput({
     }, DEBOUNCE_MS)
     return () => window.clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, manual, disabled, pinned, provider])
+  }, [parts.street, disabled, pinned, provider])
 
   async function ensureSession() {
     if (!sessionRef.current) {
@@ -155,25 +150,22 @@ export default function AddressAutocompleteInput({
         }
         setSuggestions(list)
         setOpen(list.length > 0)
-        lastLookup.current = q
       } else {
         await lookupNominatim(q, ac.signal)
       }
-    } catch (e) {
+    } catch {
       if (ac.signal.aborted) return
       if (provider === 'google' && nominatimReady) {
         setProvider('nominatim')
         try {
           await lookupNominatim(q, ac.signal)
           return
-        } catch (e2) {
+        } catch {
           setSuggestions([])
-          setError(e2 instanceof Error ? e2.message : 'Could not look up address')
           setOpen(false)
         }
       } else {
         setSuggestions([])
-        setError(e instanceof Error ? e.message : 'Could not look up address')
         setOpen(false)
       }
     } finally {
@@ -182,16 +174,21 @@ export default function AddressAutocompleteInput({
   }
 
   async function lookupNominatim(q: string, signal?: AbortSignal) {
-    const result = await suggestAddress(q, { limit: 5, context, near })
+    // Bias with city/state already typed when present.
+    const bias = [parts.city, parts.state, parts.zip].filter(Boolean).join(', ')
+    const query = bias ? `${q}, ${bias}` : q
+    const result = await suggestAddress(query, {
+      limit: 5,
+      context: context || undefined,
+      near,
+    })
     if (signal?.aborted) return
-    lastLookup.current = q
     const list = (result.suggestions?.length ? result.suggestions : [result]).filter(
       (hit) => hit.quality !== 'area',
     )
     const usable = list.length ? list : result.suggestions?.length ? result.suggestions : [result]
     setSuggestions(usable)
-    const needsOffer = usable.some((hit) => !addressesLookSame(q, hit.display_name))
-    setOpen(needsOffer || usable.length > 1)
+    setOpen(usable.length > 0)
   }
 
   async function pickGoogle(s: PlaceSuggestion) {
@@ -200,19 +197,7 @@ export default function AddressAutocompleteInput({
     try {
       const hit = await resolvePlaceSuggestion(s)
       sessionRef.current = null
-      onChange(hit.display_name)
-      setParts({
-        street: hit.street ?? '',
-        city: hit.city ?? '',
-        state: hit.state ?? '',
-        zip: hit.zip ?? '',
-      })
-      onPickSuggestion?.(hit)
-      setPinned(true)
-      setSuggestions([])
-      setOpen(false)
-      setManual(true)
-      lastLookup.current = hit.display_name
+      applyHit(hit)
       if (isPlacesDailyCapReached() && nominatimReady) setProvider('nominatim')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not resolve address')
@@ -221,43 +206,36 @@ export default function AddressAutocompleteInput({
     }
   }
 
-  function pickNominatim(hit: GeocodeHit) {
-    onChange(hit.display_name)
-    setParts(parseManualAddress(hit.display_name))
+  function applyHit(hit: GeocodeHit & {
+    street?: string
+    city?: string
+    state?: string
+    zip?: string
+  }) {
+    skipSuggestRef.current = true
+    const parsed = parseManualAddress(hit.display_name)
+    const next: ManualAddressParts = {
+      street: hit.street?.trim() || parsed.street || hit.display_name,
+      city: hit.city?.trim() || parsed.city,
+      state: hit.state?.trim() || parsed.state,
+      zip: hit.zip?.trim() || parsed.zip,
+    }
+    setParts(next)
+    onChange(composeManualAddress(next) || hit.display_name)
     onPickSuggestion?.(hit)
     setPinned(true)
-    setManual(true)
-    lastLookup.current = hit.display_name
     setSuggestions([])
     setOpen(false)
     setError(null)
+  }
+
+  function pickNominatim(hit: GeocodeHit) {
+    applyHit(hit)
   }
 
   function pick(item: GeocodeHit | PlaceSuggestion) {
     if ('placeId' in item) void pickGoogle(item)
     else pickNominatim(item)
-  }
-
-  function enterManual() {
-    setManual(true)
-    setSuggestions([])
-    setOpen(false)
-    setError(null)
-    if (hasManualParts(parts)) {
-      onChange(composeManualAddress(parts))
-    } else if (value.trim()) {
-      const parsed = parseManualAddress(value)
-      setParts(parsed)
-      const composedLine = composeManualAddress(parsed)
-      if (composedLine) onChange(composedLine)
-    } else {
-      setParts(emptyManualParts())
-    }
-    setPinned(false)
-  }
-
-  function leaveManual() {
-    setManual(false)
   }
 
   function updatePart<K extends keyof ManualAddressParts>(key: K, next: string) {
@@ -269,23 +247,18 @@ export default function AddressAutocompleteInput({
     setPinned(false)
     onChange(composeManualAddress(updated))
     setError(null)
+    if (key !== 'street') {
+      setSuggestions([])
+      setOpen(false)
+    }
   }
 
-  function onSearchChange(next: string) {
-    onChange(next)
-    setParts(emptyManualParts())
-    setPinned(false)
-    setSuggestions([])
-    setOpen(false)
-    setError(null)
-  }
-
-  const composed = useStructuredManual ? composeManualAddress(parts) : value
+  const composed = composeManualAddress(parts)
   const manualWarning =
     requireStructuredManual &&
     !pinned &&
     composed.trim() &&
-    (useStructuredManual ? !isManualPartsSufficient(parts) : !isManualAddressSufficient(value))
+    !isManualPartsSufficient(parts)
 
   const hintSize = compact ? 'text-[10px]' : 'text-xs'
   const fieldClass =
@@ -294,134 +267,101 @@ export default function AddressAutocompleteInput({
 
   return (
     <div ref={wrapRef} className="relative min-w-0 w-full">
-      {useStructuredManual ? (
-        <div className={`space-y-2 ${compact ? 'space-y-1.5' : ''}`}>
+      <div className={`space-y-2 ${compact ? 'space-y-1.5' : ''}`}>
+        <div ref={streetWrapRef} className="relative">
           <input
             className={fieldClass}
             value={parts.street}
             disabled={disabled}
-            placeholder="Street address"
-            aria-label="Street address"
+            placeholder={placeholder || 'Street address'}
+            aria-label={ariaLabel || 'Street address'}
+            aria-autocomplete="list"
+            aria-controls={listId}
+            aria-expanded={open}
             autoComplete="street-address"
             onChange={(e) => updatePart('street', e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setOpen(false)
+            }}
           />
-          <div
-            className={`grid gap-2 ${
-              compact ? 'grid-cols-[1fr_3.5rem_4.5rem]' : 'grid-cols-[1fr_4.5rem_5.5rem]'
-            }`}
-          >
-            <input
-              className={fieldClass}
-              value={parts.city}
-              disabled={disabled}
-              placeholder="City"
-              aria-label="City"
-              autoComplete="address-level2"
-              onChange={(e) => updatePart('city', e.target.value)}
-            />
-            <input
-              className={fieldClass}
-              value={parts.state}
-              disabled={disabled}
-              placeholder="ST"
-              aria-label="State"
-              autoComplete="address-level1"
-              maxLength={2}
-              onChange={(e) => updatePart('state', e.target.value)}
-            />
-            <input
-              className={fieldClass}
-              value={parts.zip}
-              disabled={disabled}
-              placeholder="ZIP"
-              aria-label="ZIP"
-              autoComplete="postal-code"
-              inputMode="numeric"
-              onChange={(e) => updatePart('zip', e.target.value.replace(/[^\d-]/g, '').slice(0, 10))}
-            />
-          </div>
-        </div>
-      ) : (
-        <input
-          className={fieldClass}
-          value={value}
-          disabled={disabled}
-          placeholder={placeholder === 'Street address' ? 'Start typing an address…' : placeholder}
-          aria-label={ariaLabel}
-          aria-autocomplete="list"
-          aria-controls={listId}
-          aria-expanded={open}
-          autoComplete="street-address"
-          onChange={(e) => onSearchChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setOpen(false)
-          }}
-        />
-      )}
 
-      <div className={`mt-1.5 flex items-center gap-3 ${hintSize}`}>
-        {manual ? (
-          <button
-            type="button"
-            className="text-green-700 hover:underline"
-            disabled={disabled || provider === 'none'}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={leaveManual}
-          >
-            Use address search
-          </button>
-        ) : provider !== 'none' ? (
-          <button
-            type="button"
-            className="text-gray-500 hover:text-gray-800 hover:underline"
+          {open && suggestions.length > 0 ? (
+            <ul
+              id={listId}
+              role="listbox"
+              className="absolute left-0 right-0 z-[40] mt-1 max-h-48 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-md"
+            >
+              {suggestions.map((item) => {
+                const label = 'placeId' in item ? item.description : item.display_name
+                const key =
+                  'placeId' in item
+                    ? item.placeId
+                    : `${item.lat},${item.lng},${item.display_name}`
+                return (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      role="option"
+                      className={`w-full px-2.5 py-1.5 text-left leading-snug text-gray-700 hover:bg-green-50 ${
+                        compact ? 'text-[11px]' : 'text-xs'
+                      }`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => pick(item)}
+                    >
+                      {label}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
+        </div>
+
+        <div
+          className={`grid gap-2 ${
+            compact ? 'grid-cols-[1fr_3.5rem_4.5rem]' : 'grid-cols-[1fr_4.5rem_5.5rem]'
+          }`}
+        >
+          <input
+            className={fieldClass}
+            value={parts.city}
             disabled={disabled}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={enterManual}
-          >
-            Enter street, city, state, ZIP
-          </button>
-        ) : null}
-        {pinned ? <span className="text-green-700">Pinned</span> : null}
+            placeholder="City"
+            aria-label="City"
+            autoComplete="address-level2"
+            onChange={(e) => updatePart('city', e.target.value)}
+          />
+          <input
+            className={fieldClass}
+            value={parts.state}
+            disabled={disabled}
+            placeholder="ST"
+            aria-label="State"
+            autoComplete="address-level1"
+            maxLength={2}
+            onChange={(e) => updatePart('state', e.target.value)}
+          />
+          <input
+            className={fieldClass}
+            value={parts.zip}
+            disabled={disabled}
+            placeholder="ZIP"
+            aria-label="ZIP"
+            autoComplete="postal-code"
+            inputMode="numeric"
+            onChange={(e) => updatePart('zip', e.target.value.replace(/[^\d-]/g, '').slice(0, 10))}
+          />
+        </div>
       </div>
 
-      {loading ? <p className={`mt-0.5 ${hintSize} text-gray-400`}>Looking up…</p> : null}
-      {error ? <p className={`mt-0.5 ${hintSize} text-red-600`}>{error}</p> : null}
-      {manualWarning ? (
-        <p className={`mt-0.5 ${hintSize} text-amber-700`}>{manualAddressHint()}</p>
-      ) : null}
-      {manual && !manualWarning ? (
-        <p className={`mt-0.5 ${hintSize} text-gray-400`}>
-          Map pin is set when you save (or Plot on Routes).
-        </p>
-      ) : null}
-
-      {open && suggestions.length > 0 ? (
-        <ul
-          id={listId}
-          role="listbox"
-          className="absolute left-0 right-0 z-[40] mt-1 max-h-48 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-md"
-        >
-          {suggestions.map((item) => {
-            const label = 'placeId' in item ? item.description : item.display_name
-            const key = 'placeId' in item ? item.placeId : `${item.lat},${item.lng},${item.display_name}`
-            return (
-              <li key={key}>
-                <button
-                  type="button"
-                  role="option"
-                  className={`w-full px-2 py-1.5 text-left leading-snug text-gray-700 hover:bg-green-50 ${
-                    compact ? 'text-[10px]' : 'text-xs'
-                  }`}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => pick(item)}
-                >
-                  {label}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
+      <div className={`mt-1 flex items-center gap-2 ${hintSize} min-h-[1rem]`}>
+        {loading ? <span className="text-gray-400">Looking up…</span> : null}
+        {!loading && pinned ? <span className="text-gray-500">Mapped</span> : null}
+        {error ? <span className="text-red-600">{error}</span> : null}
+        {!error && manualWarning ? (
+          <span className="text-amber-700">{manualAddressHint()}</span>
+        ) : null}
+      </div>
     </div>
   )
 }

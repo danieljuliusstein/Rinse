@@ -269,7 +269,6 @@ function EditRow({
                 context={businessAddress}
                 compact
                 requireStructuredManual
-                defaultMode="structured"
                 initiallyPinned={Boolean(draft.geo)}
                 onChange={(address) => setDraft({ ...draft, address, geo: null })}
                 onPickSuggestion={(hit) =>

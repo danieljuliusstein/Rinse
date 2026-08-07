@@ -208,7 +208,6 @@ export function FormModal({
                 placeholder={field.placeholder ?? 'Street address'}
                 context={field.addressContext}
                 requireStructuredManual
-                defaultMode="structured"
                 onChange={(address) =>
                   setAddressDrafts((prev) => ({
                     ...prev,
