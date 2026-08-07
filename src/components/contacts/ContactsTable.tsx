@@ -261,15 +261,15 @@ function EditRow({
           </EditField>
           <EditField label="Location">
             <div className="relative min-w-0">
-              <MapPin className="absolute left-2.5 top-2.5 h-3 w-3 text-rinse-muted z-10 pointer-events-none" />
               <AddressAutocompleteInput
-                className={`${inputCls} pl-7`}
+                className={inputCls}
                 value={draft.address}
                 aria-label="Location"
-                placeholder="Start typing an address…"
+                placeholder="Street address"
                 context={businessAddress}
                 compact
                 requireStructuredManual
+                defaultMode="structured"
                 initiallyPinned={Boolean(draft.geo)}
                 onChange={(address) => setDraft({ ...draft, address, geo: null })}
                 onPickSuggestion={(hit) =>

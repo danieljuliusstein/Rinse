@@ -205,9 +205,10 @@ export function FormModal({
               <AddressAutocompleteInput
                 className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-green-500"
                 value={addressDrafts[field.name]?.address ?? ''}
-                placeholder={field.placeholder ?? 'Start typing an address…'}
+                placeholder={field.placeholder ?? 'Street address'}
                 context={field.addressContext}
                 requireStructuredManual
+                defaultMode="structured"
                 onChange={(address) =>
                   setAddressDrafts((prev) => ({
                     ...prev,

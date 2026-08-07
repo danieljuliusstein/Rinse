@@ -11,6 +11,7 @@ import {
   readIdentifier,
   tagsWithIdentifier,
 } from '@/lib/contact-identifier'
+import { geocodeAddressOnce } from '@/lib/geocode-once'
 import { loadAppSettings } from '@/lib/settings-api'
 import {
   ContactsToolbar,
@@ -183,22 +184,38 @@ export default function Contacts() {
         notes: draft.notes.trim(),
         tags,
       }
+
+      let pinned = Boolean(draft.geo && address)
       if (draft.geo && address) {
         patch.lat = draft.geo.lat
         patch.lng = draft.geo.lng
         patch.geocoded_at = new Date().toISOString()
-      } else if (addressChanged) {
+      } else if (address && (addressChanged || !existing.lat || !existing.lng)) {
+        // Structured fields: geocode once on save (not while typing).
+        const hit = await geocodeAddressOnce(address, { context: businessAddress })
+        if (hit) {
+          patch.lat = hit.lat
+          patch.lng = hit.lng
+          patch.geocoded_at = new Date().toISOString()
+          pinned = true
+        } else if (addressChanged) {
+          patch.lat = null
+          patch.lng = null
+          patch.geocoded_at = null
+        }
+      } else if (!address && addressChanged) {
         patch.lat = null
         patch.lng = null
         patch.geocoded_at = null
       }
+
       const updated = await api.updateClient(id, patch)
       setClients((prev) =>
         prev
           .map((c) => (c.id === updated.id ? updated : c))
           .sort((a, b) => a.name.localeCompare(b.name)),
       )
-      toast(draft.geo ? 'Contact updated · address pinned' : 'Contact updated')
+      toast(pinned ? 'Contact updated · address pinned' : 'Contact updated')
       setEditingId(null)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not update contact', 'Update failed')

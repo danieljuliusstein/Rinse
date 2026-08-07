@@ -1,5 +1,6 @@
 import * as api from '@/lib/api'
 import * as platform from '@/lib/platform-api'
+import { geocodeAddressOnce } from '@/lib/geocode-once'
 import { todayISO } from '@/lib/metrics'
 import { loadAppSettings } from '@/lib/settings-api'
 import type { ActivityType, DeskActivity } from '@/lib/types'
@@ -33,7 +34,7 @@ export function useCreateActions() {
           name: 'address',
           label: 'Address',
           type: 'address',
-          placeholder: 'Start typing an address…',
+          placeholder: 'Street address',
           addressContext: businessContext,
         },
       ],
@@ -42,9 +43,19 @@ export function useCreateActions() {
 
     const address = (values.address || '').trim()
     const pinned = values.address_pinned === '1'
-    const lat = pinned ? Number(values.address_lat) : undefined
-    const lng = pinned ? Number(values.address_lng) : undefined
-    const hasPin = lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)
+    let lat = pinned ? Number(values.address_lat) : undefined
+    let lng = pinned ? Number(values.address_lng) : undefined
+    let hasPin = lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)
+
+    // Structured fields: geocode once on create (not while typing).
+    if (address && !hasPin) {
+      const hit = await geocodeAddressOnce(address, { context: businessContext })
+      if (hit) {
+        lat = hit.lat
+        lng = hit.lng
+        hasPin = true
+      }
+    }
 
     try {
       const created = await api.createClient({

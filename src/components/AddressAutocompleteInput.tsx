@@ -45,14 +45,19 @@ type Props = {
   compact?: boolean
   /** Pre-existing map pin (edit contact already has lat/lng). */
   initiallyPinned?: boolean
+  /**
+   * Default entry mode. Contacts default to structured fields (no live lookup).
+   * Use `search` for freeform autocomplete-as-you-type.
+   */
+  defaultMode?: 'structured' | 'search'
 }
 
 const DEBOUNCE_MS = 320
 const MIN_CHARS = 3
 
 /**
- * Address search (Google Places → Nominatim) or structured manual entry
- * (street / city / state / ZIP). Manual skips live suggestions.
+ * Structured street / city / state / ZIP by default (geocode on save elsewhere).
+ * Optional address search (Google Places → Nominatim) via toggle.
  */
 export default function AddressAutocompleteInput({
   value,
@@ -61,12 +66,13 @@ export default function AddressAutocompleteInput({
   context,
   near,
   className,
-  placeholder = 'Start typing an address…',
+  placeholder = 'Street address',
   disabled,
   'aria-label': ariaLabel,
   requireStructuredManual = true,
   compact = false,
   initiallyPinned = false,
+  defaultMode = 'structured',
 }: Props) {
   const listId = useId()
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -77,7 +83,7 @@ export default function AddressAutocompleteInput({
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<Array<GeocodeHit | PlaceSuggestion>>([])
   const [error, setError] = useState<string | null>(null)
-  const [manual, setManual] = useState(false)
+  const [manual, setManual] = useState(defaultMode !== 'search')
   const [parts, setParts] = useState<ManualAddressParts>(() => parseManualAddress(value))
   const [pinned, setPinned] = useState(initiallyPinned)
   const [provider, setProvider] = useState<'google' | 'nominatim' | 'none'>('none')
@@ -85,7 +91,7 @@ export default function AddressAutocompleteInput({
 
   const googleReady = isGooglePlacesConfigured() && !isPlacesDailyCapReached()
   const nominatimReady = isRouteApiConfigured()
-  const useStructuredManual = manual && !compact
+  const useStructuredManual = manual
 
   useEffect(() => {
     if (googleReady) setProvider('google')
@@ -102,6 +108,7 @@ export default function AddressAutocompleteInput({
   }, [])
 
   useEffect(() => {
+    // Live lookup only in search mode — structured fields geocode on save.
     if (manual || disabled || pinned) return
     const q = value.trim()
     if (q.length < MIN_CHARS) {
@@ -204,6 +211,7 @@ export default function AddressAutocompleteInput({
       setPinned(true)
       setSuggestions([])
       setOpen(false)
+      setManual(true)
       lastLookup.current = hit.display_name
       if (isPlacesDailyCapReached() && nominatimReady) setProvider('nominatim')
     } catch (e) {
@@ -218,6 +226,7 @@ export default function AddressAutocompleteInput({
     setParts(parseManualAddress(hit.display_name))
     onPickSuggestion?.(hit)
     setPinned(true)
+    setManual(true)
     lastLookup.current = hit.display_name
     setSuggestions([])
     setOpen(false)
@@ -234,7 +243,6 @@ export default function AddressAutocompleteInput({
     setSuggestions([])
     setOpen(false)
     setError(null)
-    // Prefer Google-resolved components when present; otherwise parse the freeform line.
     if (hasManualParts(parts)) {
       onChange(composeManualAddress(parts))
     } else if (value.trim()) {
@@ -249,7 +257,6 @@ export default function AddressAutocompleteInput({
   }
 
   function leaveManual() {
-    // Keep cached parts so re-entering manual stays pre-filled until the search field changes.
     setManual(false)
   }
 
@@ -288,7 +295,7 @@ export default function AddressAutocompleteInput({
   return (
     <div ref={wrapRef} className="relative min-w-0 w-full">
       {useStructuredManual ? (
-        <div className="space-y-2">
+        <div className={`space-y-2 ${compact ? 'space-y-1.5' : ''}`}>
           <input
             className={fieldClass}
             value={parts.street}
@@ -298,7 +305,11 @@ export default function AddressAutocompleteInput({
             autoComplete="street-address"
             onChange={(e) => updatePart('street', e.target.value)}
           />
-          <div className="grid grid-cols-[1fr_4.5rem_5.5rem] gap-2">
+          <div
+            className={`grid gap-2 ${
+              compact ? 'grid-cols-[1fr_3.5rem_4.5rem]' : 'grid-cols-[1fr_4.5rem_5.5rem]'
+            }`}
+          >
             <input
               className={fieldClass}
               value={parts.city}
@@ -335,7 +346,7 @@ export default function AddressAutocompleteInput({
           className={fieldClass}
           value={value}
           disabled={disabled}
-          placeholder={placeholder}
+          placeholder={placeholder === 'Street address' ? 'Start typing an address…' : placeholder}
           aria-label={ariaLabel}
           aria-autocomplete="list"
           aria-controls={listId}
@@ -349,17 +360,7 @@ export default function AddressAutocompleteInput({
       )}
 
       <div className={`mt-1.5 flex items-center gap-3 ${hintSize}`}>
-        {!manual && provider !== 'none' ? (
-          <button
-            type="button"
-            className="text-gray-500 hover:text-gray-800 hover:underline"
-            disabled={disabled}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={enterManual}
-          >
-            Enter manually
-          </button>
-        ) : manual ? (
+        {manual ? (
           <button
             type="button"
             className="text-green-700 hover:underline"
@@ -369,8 +370,18 @@ export default function AddressAutocompleteInput({
           >
             Use address search
           </button>
+        ) : provider !== 'none' ? (
+          <button
+            type="button"
+            className="text-gray-500 hover:text-gray-800 hover:underline"
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={enterManual}
+          >
+            Enter street, city, state, ZIP
+          </button>
         ) : null}
-        {pinned && !manual ? <span className="text-green-700">Pinned</span> : null}
+        {pinned ? <span className="text-green-700">Pinned</span> : null}
       </div>
 
       {loading ? <p className={`mt-0.5 ${hintSize} text-gray-400`}>Looking up…</p> : null}
@@ -378,8 +389,10 @@ export default function AddressAutocompleteInput({
       {manualWarning ? (
         <p className={`mt-0.5 ${hintSize} text-amber-700`}>{manualAddressHint()}</p>
       ) : null}
-      {manual && compact ? (
-        <p className={`mt-0.5 ${hintSize} text-gray-400`}>{manualAddressHint()}</p>
+      {manual && !manualWarning ? (
+        <p className={`mt-0.5 ${hintSize} text-gray-400`}>
+          Map pin is set when you save (or Plot on Routes).
+        </p>
       ) : null}
 
       {open && suggestions.length > 0 ? (

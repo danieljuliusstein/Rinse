@@ -12,6 +12,7 @@ import {
 import AddressAutocompleteInput from '@/components/AddressAutocompleteInput'
 import { CategoryColorControls } from '@/components/calendar/CategoryColorControls'
 import type { CalCategory } from '@/lib/calendar-categories'
+import { geocodeAddressOnce } from '@/lib/geocode-once'
 import type { DeskClient, DeskPackage } from '@/lib/types'
 import type { GeocodeHit } from '@/lib/route-api'
 import { colors } from '@/theme/colors'
@@ -587,8 +588,20 @@ export function EventPopover({
         await onChangeLocation({ address: trimmed, lat: geo.lat, lng: geo.lng })
         setLocationPinned(true)
       } else if (geo === null) {
-        await onChangeLocation({ address: trimmed, lat: null, lng: null })
-        setLocationPinned(false)
+        // Structured fields: geocode once on save (not while typing).
+        if (trimmed) {
+          const hit = await geocodeAddressOnce(trimmed, { context: businessAddress })
+          if (hit) {
+            await onChangeLocation({ address: trimmed, lat: hit.lat, lng: hit.lng })
+            setLocationPinned(true)
+          } else {
+            await onChangeLocation({ address: trimmed, lat: null, lng: null })
+            setLocationPinned(false)
+          }
+        } else {
+          await onChangeLocation({ address: trimmed, lat: null, lng: null })
+          setLocationPinned(false)
+        }
       } else {
         await onChangeLocation({ address: trimmed })
       }
@@ -796,7 +809,7 @@ export function EventPopover({
                   initiallyPinned={locationPinned}
                   context={businessAddress}
                   aria-label="Location"
-                  placeholder="Start typing an address…"
+                  placeholder="Street address"
                   className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-900 outline-none focus:border-green-500"
                   onChange={(address) => {
                     setLocationDraft(address)
