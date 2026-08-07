@@ -923,6 +923,33 @@ async function prepareReceiptFile(file: File): Promise<File> {
   return compressJobPhoto(file)
 }
 
+/** PocketBase `business_expenses.category` select values (mobile parity). */
+const PB_EXPENSE_CATEGORIES = [
+  'legal',
+  'licensing',
+  'taxes',
+  'insurance',
+  'vehicle',
+  'marketing',
+  'software',
+  'equipment',
+  'supplies',
+  'other',
+] as const
+
+/** Map Desk UI labels (e.g. Supplies) onto PB select values. */
+function toPbExpenseCategory(raw?: string): string {
+  const key = (raw || '').trim().toLowerCase()
+  if (!key) return 'other'
+  if ((PB_EXPENSE_CATEGORIES as readonly string[]).includes(key)) return key
+  const deskMap: Record<string, string> = {
+    chemicals: 'supplies',
+    fuel: 'vehicle',
+    tools: 'equipment',
+  }
+  return deskMap[key] ?? 'other'
+}
+
 export async function createExpense(input: {
   amount: number
   description: string
@@ -933,7 +960,7 @@ export async function createExpense(input: {
   const pb = getPocketBase()
   const name = input.description.trim()
   const date = input.date ?? new Date().toISOString().slice(0, 10)
-  const category = input.category?.trim() ?? ''
+  const category = toPbExpenseCategory(input.category)
   const orgId = requireOrganizationId()
 
   try {
@@ -942,7 +969,6 @@ export async function createExpense(input: {
       const formData = new FormData()
       formData.append('amount', String(input.amount))
       formData.append('name', name)
-      formData.append('description', name)
       formData.append('date', date)
       formData.append('category', category)
       formData.append('organization_id', orgId)
@@ -954,7 +980,6 @@ export async function createExpense(input: {
     const created = await pb.collection('business_expenses').create({
       amount: input.amount,
       name,
-      description: name,
       date,
       category,
       organization_id: orgId,
@@ -974,12 +999,10 @@ export async function updateExpense(
   if (patch.amount != null) body.amount = patch.amount
   const label = patch.name ?? patch.description
   if (label != null) {
-    const trimmed = label.trim()
-    body.name = trimmed
-    body.description = trimmed
+    body.name = label.trim()
   }
   if (patch.date != null) body.date = patch.date
-  if (patch.category != null) body.category = patch.category.trim()
+  if (patch.category != null) body.category = toPbExpenseCategory(patch.category)
   try {
     const updated = await pb.collection('business_expenses').update(id, body)
     return mapExpenseWithToken(updated as unknown as Record<string, unknown>)
