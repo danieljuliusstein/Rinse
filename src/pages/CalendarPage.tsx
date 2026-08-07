@@ -31,6 +31,7 @@ import {
   weekStartFromISO,
 } from '@/components/calendar/calendarListModel'
 import * as api from '@/lib/api'
+import { confirmUnblockDayIfNeeded } from '@/lib/confirm-unblock-day'
 import type { DeskClient, DeskJob, DeskPackage, DeskTimeBlock, JobStatus } from '@/lib/types'
 import { colors } from '@/theme/colors'
 import { todayISO } from '@/lib/metrics'
@@ -313,7 +314,7 @@ function blockToFcEvent(block: DeskTimeBlock): EventInput {
 export default function CalendarPage() {
   const now = new Date()
   const { jobs, setJobs, clients, setClients, packages } = useData()
-  const { alert, toast, promptForm } = useUi()
+  const { alert, toast, promptForm, confirm } = useUi()
   const { calendarDraft, clearCalendarDraft, setPage } = useDeskNav()
   const calendarRef = useRef<FullCalendar | null>(null)
   const calendarHostRef = useRef<HTMLDivElement | null>(null)
@@ -826,9 +827,6 @@ export default function CalendarPage() {
   async function deleteSelected() {
     if (!selected || isEphemeralEventId(selected.id)) return
     const id = selected.id
-    // #region agent log
-    fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'C',location:'CalendarPage.tsx:deleteSelected',message:'deleteSelected called (soft-cancel)',data:{jobId:id,title:selected.title??null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     setSaving(true)
     try {
       await api.deleteJob(id)
@@ -837,9 +835,6 @@ export default function CalendarPage() {
       setSelected(null)
       toast('Event deleted')
     } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'A',location:'CalendarPage.tsx:deleteSelected:catch',message:'deleteSelected UI caught error',data:{jobId:id,errMessage:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       alert(err instanceof Error ? err.message : 'Could not delete event', 'Delete failed')
     } finally {
       setSaving(false)
@@ -906,6 +901,17 @@ export default function CalendarPage() {
     package_id?: string
   }) {
     if (!selected || isEphemeralEventId(selected.id)) return
+    const nextDate = patch.date?.slice(0, 10)
+    if (nextDate && nextDate !== selected.date.slice(0, 10)) {
+      try {
+        const clear = await confirmUnblockDayIfNeeded(nextDate, confirm)
+        if (!clear) return
+        await reloadBlocks()
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Could not remove blocks', 'Day is blocked')
+        return
+      }
+    }
     setSaving(true)
     try {
       const updated = await api.updateJob(selected.id, patch)
@@ -1012,6 +1018,14 @@ export default function CalendarPage() {
       alert('Add a client and package first.', 'Cannot create event')
       return
     }
+    try {
+      const clear = await confirmUnblockDayIfNeeded(selected.date, confirm)
+      if (!clear) return
+      await reloadBlocks()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not remove blocks', 'Day is blocked')
+      return
+    }
     const draft = selected
     const allDay = draft.allDay
     const start_time = allDay ? undefined : draft.time || draft.job.start_time || '09:00'
@@ -1053,7 +1067,15 @@ export default function CalendarPage() {
   }
 
   async function persistEventTimes(jobId: string, start: Date, end: Date | null, allDay: boolean) {
-    if (isEphemeralEventId(jobId)) return
+    if (isEphemeralEventId(jobId)) return false
+    try {
+      const clear = await confirmUnblockDayIfNeeded(formatDateLocal(start), confirm)
+      if (!clear) return false
+      await reloadBlocks()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not remove blocks', 'Day is blocked')
+      return false
+    }
     try {
       const patch: Parameters<typeof api.updateJob>[1] = {
         date: formatDateLocal(start),
@@ -1069,11 +1091,13 @@ export default function CalendarPage() {
       setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)))
       if (selected?.id === jobId) select(jobToEvent(updated, categories))
       toast('Schedule updated')
+      return true
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not move event', 'Update failed')
       calendarRef.current?.getApi().refetchEvents()
       // Force remount data from jobs state
       setJobs((prev) => [...prev])
+      return false
     }
   }
 
@@ -1088,7 +1112,10 @@ export default function CalendarPage() {
       info.revert()
       return
     }
-    void persistEventTimes(info.event.id, start, info.event.end, info.event.allDay)
+    void (async () => {
+      const ok = await persistEventTimes(info.event.id, start, info.event.end, info.event.allDay)
+      if (!ok) info.revert()
+    })()
   }
 
   function onEventResize(info: EventResizeDoneArg) {
@@ -1103,7 +1130,10 @@ export default function CalendarPage() {
       info.revert()
       return
     }
-    void persistEventTimes(info.event.id, start, end, false)
+    void (async () => {
+      const ok = await persistEventTimes(info.event.id, start, end, false)
+      if (!ok) info.revert()
+    })()
   }
 
   function onEventClick(info: EventClickArg) {

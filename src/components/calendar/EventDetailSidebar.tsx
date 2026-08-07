@@ -7,6 +7,7 @@ import {
   type EventPopoverModel,
 } from '@/components/calendar/EventPopover'
 import type { CalCategory } from '@/lib/calendar-categories'
+import { geocodeAddressOnce } from '@/lib/geocode-once'
 import type { DeskClient, DeskPackage } from '@/lib/types'
 import type { GeocodeHit } from '@/lib/route-api'
 import { colors } from '@/theme/colors'
@@ -135,8 +136,19 @@ export function EventDetailSidebar({
         await onChangeLocation({ address: trimmed, lat: geo.lat, lng: geo.lng })
         setLocationPinned(true)
       } else if (geo === null) {
-        await onChangeLocation({ address: trimmed, lat: null, lng: null })
-        setLocationPinned(false)
+        if (trimmed) {
+          const hit = await geocodeAddressOnce(trimmed, { context: businessAddress })
+          if (hit) {
+            await onChangeLocation({ address: trimmed, lat: hit.lat, lng: hit.lng })
+            setLocationPinned(true)
+          } else {
+            await onChangeLocation({ address: trimmed, lat: null, lng: null })
+            setLocationPinned(false)
+          }
+        } else {
+          await onChangeLocation({ address: trimmed, lat: null, lng: null })
+          setLocationPinned(false)
+        }
       } else {
         await onChangeLocation({ address: trimmed })
       }
@@ -369,7 +381,6 @@ export function EventDetailSidebar({
             </button>
           ) : (
             <div className="relative">
-              <MapPin className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-ink-400 z-10" />
               <AddressAutocompleteInput
                 compact
                 requireStructuredManual
@@ -377,8 +388,7 @@ export function EventDetailSidebar({
                 initiallyPinned={locationPinned}
                 context={businessAddress}
                 aria-label="Location"
-                placeholder="Bay 1, On-site, …"
-                className="w-full rounded-lg border border-ink-200 bg-white py-2 pl-8 pr-3 text-sm text-ink-900 focus:outline-none focus:border-brand-500"
+                placeholder="Street address"
                 onChange={(address) => {
                   setLocationDraft(address)
                   setLocationPinned(false)

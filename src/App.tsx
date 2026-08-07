@@ -106,9 +106,6 @@ function readSidebarCollapsed(): boolean {
 }
 
 export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (id: PageId) => void }) {
-  // #region agent log
-  fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cbab19'},body:JSON.stringify({sessionId:'cbab19',runId:'pre-fix',hypothesisId:'A',location:'App.tsx:Sidebar',message:'Sidebar render ok',data:{active,hasRinseLogo:typeof RinseLogo==='function',brandMark:'RinseLogo'},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const { signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readSidebarCollapsed)

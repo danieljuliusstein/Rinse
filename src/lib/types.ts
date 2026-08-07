@@ -211,6 +211,7 @@ export interface DeskCampaignSend {
 export type CampaignSendSummary = {
   campaign: DeskCampaign
   mode: 'live' | 'mock'
+  organizationId?: string
   sent: number
   skipped: number
   errors: string[]

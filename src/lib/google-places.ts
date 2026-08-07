@@ -192,18 +192,39 @@ export async function resolvePlaceSuggestion(
   }
 
   const components = place.addressComponents ?? []
-  const getLong = (...types: string[]) =>
-    components.find((c) => types.some((t) => c.types.includes(t)))?.longText
-  const getShort = (...types: string[]) =>
-    components.find((c) => types.some((t) => c.types.includes(t)))?.shortText
+  const textOf = (c: (typeof components)[number], short: boolean) => {
+    const any = c as {
+      longText?: string
+      shortText?: string
+      longName?: string
+      shortName?: string
+      long_name?: string
+      short_name?: string
+    }
+    if (short) {
+      return any.shortText || any.shortName || any.short_name || undefined
+    }
+    return any.longText || any.longName || any.long_name || undefined
+  }
+  const getLong = (...types: string[]) => {
+    const c = components.find((x) => types.some((t) => x.types.includes(t)))
+    return c ? textOf(c, false) : undefined
+  }
+  const getShort = (...types: string[]) => {
+    const c = components.find((x) => types.some((t) => x.types.includes(t)))
+    return c ? textOf(c, true) : undefined
+  }
 
   const streetNumber = getLong('street_number')
   const route = getLong('route')
   const street = [streetNumber, route].filter(Boolean).join(' ') || undefined
   const city =
     getLong('locality') ||
-    getLong('sublocality') ||
     getLong('postal_town') ||
+    getLong('sublocality', 'sublocality_level_1') ||
+    getLong('neighborhood') ||
+    getLong('administrative_area_level_3') ||
+    getLong('administrative_area_level_2') ||
     undefined
   const state = getShort('administrative_area_level_1') || undefined
   const zip = getLong('postal_code') || undefined
@@ -212,7 +233,7 @@ export async function resolvePlaceSuggestion(
     lat,
     lng,
     display_name: place.formattedAddress || suggestion.description,
-    quality: 'house',
+    quality: 'house' as const,
     street,
     city,
     state,

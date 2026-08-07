@@ -1,8 +1,12 @@
 /** Desk → Detailing apps/api helpers for geocode + OSRM trip. */
 
+import { getPocketBase } from './pocketbase'
+
+/** Production apps/api (rinsehq.com). Override with VITE_APP_API_URL. */
+const DEFAULT_APP_API_URL = 'https://rinsehq.com'
+
 function appApiBase(): string {
-  const raw = import.meta.env.VITE_APP_API_URL?.trim()
-  if (!raw) return ''
+  const raw = import.meta.env.VITE_APP_API_URL?.trim() || DEFAULT_APP_API_URL
   return raw.replace(/\/$/, '')
 }
 
@@ -12,10 +16,16 @@ export function isRouteApiConfigured(): boolean {
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const base = appApiBase()
-  if (!base) throw new Error('VITE_APP_API_URL is not set')
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  }
+  const token = getPocketBase().authStore.token
+  if (token) headers.Authorization = `Bearer ${token}`
+
   const res = await fetch(`${base}${path}`, {
     method: 'POST',
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
   })
   const data = (await res.json().catch(() => ({}))) as T & { error?: string }

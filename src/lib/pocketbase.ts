@@ -2,9 +2,12 @@ import PocketBase from 'pocketbase'
 
 let pb: PocketBase | null = null
 
+/** PocketBase host. Still on Fly — not proxied via rinsehq.com / desk.rinsehq.com. */
+const DEFAULT_PB_URL = 'https://detailing-pb.fly.dev'
+
 export function getPbUrl(): string {
   const raw = (import.meta.env.VITE_PB_URL as string | undefined)?.trim()
-  if (!raw) return 'https://detailing-pb.fly.dev'
+  if (!raw) return DEFAULT_PB_URL
   return raw.replace(/\/$/, '')
 }
 

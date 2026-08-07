@@ -23,9 +23,11 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/pb/, ''),
       },
       // Detailing apps/api (geocode + route-trip): set VITE_APP_API_URL=/app-api
+      // Defaults to production API; override target to http://127.0.0.1:3000 for local apps/api.
       '/app-api': {
-        target: 'http://127.0.0.1:3000',
+        target: 'https://rinsehq.com',
         changeOrigin: true,
+        secure: true,
         rewrite: (p) => p.replace(/^\/app-api/, ''),
       },
       // Same-origin street tiles (preview/browsers often blank on third-party CDNs)
