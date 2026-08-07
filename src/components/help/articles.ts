@@ -308,8 +308,8 @@ export const articles: Article[] = [
         title: 'Logging an expense',
         items: [
           'Open Receipts and stay on Expenses.',
-          'Add a vendor, amount, category, and optional photo of the receipt.',
-          'Save — it shows up in Money overview and Dashboard widgets.',
+          'Add a description, amount, date, and optional receipt photo (image or PDF).',
+          'Save — it shows up in Money overview and Dashboard widgets. You can also upload or replace the receipt later from the expense edit panel.',
         ],
       },
     ],

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Save, X } from 'lucide-react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { ImagePlus, Save, Upload, X } from 'lucide-react'
 import type { DeskExpense } from '@/lib/types'
 import {
   EXPENSE_CATEGORIES,
@@ -11,6 +11,7 @@ import {
 type Props = {
   expense: DeskExpense | null
   saving?: boolean
+  uploading?: boolean
   onClose: () => void
   onSave: (values: {
     description: string
@@ -18,9 +19,20 @@ type Props = {
     date: string
     category: string
   }) => void
+  onUploadReceipt: (file: File) => void
 }
 
-export function ExpenseEditPanel({ expense, saving, onClose, onSave }: Props) {
+export function ExpenseEditPanel({
+  expense,
+  saving,
+  uploading,
+  onClose,
+  onSave,
+  onUploadReceipt,
+}: Props) {
+  const fileRef = useRef<HTMLInputElement>(null)
+  /** Ignore backdrop closes briefly after opening the file picker (ghost click). */
+  const ignoreBackdropUntilRef = useRef(0)
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState('')
@@ -70,10 +82,27 @@ export function ExpenseEditPanel({ expense, saving, onClose, onSave }: Props) {
     })
   }
 
+  function onFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) onUploadReceipt(file)
+  }
+
+  function openReceiptPicker() {
+    // File dialog can deliver a click to the backdrop when it closes.
+    ignoreBackdropUntilRef.current = Date.now() + 1000
+    fileRef.current?.click()
+  }
+
+  const busy = Boolean(saving || uploading)
+
   return (
     <div
       className="fixed inset-0 z-40 flex justify-end bg-ink-900/60 backdrop-blur-sm animate-receipts-fade-in"
-      onClick={onClose}
+      onClick={() => {
+        if (Date.now() < ignoreBackdropUntilRef.current) return
+        onClose()
+      }}
     >
       <aside
         className="flex h-full w-[400px] flex-col bg-white shadow-2xl animate-receipts-slide-in"
@@ -96,21 +125,50 @@ export function ExpenseEditPanel({ expense, saving, onClose, onSave }: Props) {
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto thin-scrollbar px-5 py-5">
-          <div className="flex items-center gap-3 rounded-xl bg-ink-100 p-3 ring-1 ring-ink-200">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-ink-200">
-              {expense.receipt_url ? (
-                <img src={expense.receipt_url} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full rounded-lg border border-dashed border-ink-300" />
-              )}
+          <div className="rounded-xl bg-ink-100 p-3 ring-1 ring-ink-200">
+            <div className="flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-ink-200">
+                {expense.receipt_url ? (
+                  <img src={expense.receipt_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-ink-300 text-ink-400">
+                    <ImagePlus className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-medium text-ink-800">
+                  {expense.receipt_url ? 'Receipt attached' : 'No receipt photo'}
+                </p>
+                <p className="mt-0.5 text-[12px] text-ink-500">
+                  {expense.receipt_url
+                    ? 'Upload a new image to replace it.'
+                    : 'Attach a photo or PDF from this desk.'}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[12px] text-ink-500">
-                {expense.receipt_url ? 'Receipt attached' : 'No receipt photo'}
-              </p>
-              <p className="mt-0.5 text-[12px] text-ink-500">
-                Receipt photos are captured on mobile — view-only here.
-              </p>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={openReceiptPicker}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-[12px] font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {uploading
+                  ? 'Uploading…'
+                  : expense.receipt_url
+                    ? 'Replace receipt'
+                    : 'Upload receipt'}
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*,.pdf,application/pdf"
+                className="sr-only"
+                tabIndex={-1}
+                onChange={onFileChange}
+              />
             </div>
           </div>
 
@@ -188,8 +246,8 @@ export function ExpenseEditPanel({ expense, saving, onClose, onSave }: Props) {
 
           <div className="rounded-xl border border-dashed border-ink-300 bg-ink-100 p-3">
             <p className="text-[11px] leading-relaxed text-ink-400">
-              Vendor and receipt photo stay on the original entry. This panel adjusts name, amount,
-              date, and category.
+              Vendor stays on the original entry. This panel adjusts name, amount, date, category,
+              and receipt photo.
             </p>
           </div>
         </div>
@@ -204,7 +262,7 @@ export function ExpenseEditPanel({ expense, saving, onClose, onSave }: Props) {
           </button>
           <button
             type="button"
-            disabled={saving}
+            disabled={busy}
             onClick={submit}
             className="ml-auto flex items-center gap-1.5 rounded-lg bg-brand-500 px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
           >

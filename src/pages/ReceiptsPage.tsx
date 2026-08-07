@@ -29,6 +29,7 @@ export default function ReceiptsPage() {
   const [editExpense, setEditExpense] = useState<DeskExpense | null>(null)
   const [peekPayment, setPeekPayment] = useState<PaymentRowModel | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [uploadingId, setUploadingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!receiptsSegment) return
@@ -110,6 +111,23 @@ export default function ReceiptsPage() {
       alert(err instanceof Error ? err.message : 'Could not update expense', 'Update failed')
     } finally {
       setSavingId(null)
+    }
+  }
+
+  async function uploadReceipt(file: File) {
+    const expense = editExpense
+    if (!expense || uploadingId) return
+    const expenseId = expense.id
+    setUploadingId(expenseId)
+    try {
+      const updated = await api.uploadExpenseReceipt(expenseId, file)
+      setExpenses((prev) => prev.map((e) => (e.id === updated.id ? updated : e)))
+      setEditExpense((current) => (current?.id === updated.id ? updated : current))
+      toast('Receipt uploaded')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not upload receipt', 'Upload failed')
+    } finally {
+      setUploadingId(null)
     }
   }
 
@@ -196,8 +214,10 @@ export default function ReceiptsPage() {
       <ExpenseEditPanel
         expense={editExpense}
         saving={savingId === editExpense?.id}
+        uploading={uploadingId === editExpense?.id}
         onClose={() => setEditExpense(null)}
         onSave={(values) => void saveExpense(values)}
+        onUploadReceipt={(file) => void uploadReceipt(file)}
       />
 
       <InvoicePeek

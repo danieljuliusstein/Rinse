@@ -31,9 +31,6 @@ export default function RoutesPage() {
   const { jobs, setJobs, setClients } = useData()
   const { toast } = useUi()
   const { createEvent } = useCreateActions()
-  // #region agent log
-  fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'cbab19'},body:JSON.stringify({sessionId:'cbab19',runId:'pre-fix',hypothesisId:'B',location:'RoutesPage.tsx:mount',message:'RoutesPage render ok',data:{hasCreateEvent:typeof createEvent==='function',navHook:'useCreateActions only',jobCount:jobs.length},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const today = todayISO()
   const [date, setDate] = useState(today)
   const [dateSeeded, setDateSeeded] = useState(false)

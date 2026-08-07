@@ -2,10 +2,12 @@ import { Resend } from 'resend'
 import type { MailEnv } from './env.js'
 import { assertSendEnv } from './env.js'
 import { authAsAdmin, authAsUser, escapeFilter, parseAudienceIds } from './pb.js'
+import { takeToken } from './rate-limit.js'
 
 export type SendSummary = {
   campaign: Record<string, unknown>
   mode: 'live'
+  organizationId: string
   sent: number
   skipped: number
   errors: string[]
@@ -65,6 +67,26 @@ export async function sendCampaign(
 
   const audienceIds = parseAudienceIds((campaign as { audience_ids?: unknown }).audience_ids)
   if (audienceIds.length === 0) throw new Error('Pick at least one contact in the audience')
+  if (audienceIds.length > env.maxAudience) {
+    throw new Error(
+      `Audience too large (${audienceIds.length}). Max ${env.maxAudience} contacts per send.`,
+    )
+  }
+
+  const orgDayKey = `org-day:${organizationId}:${new Date().toISOString().slice(0, 10)}`
+  const orgLimit = takeToken(orgDayKey, env.orgSendLimit, 24 * 60 * 60 * 1000)
+  if (!orgLimit.ok) {
+    throw new Error(
+      `Daily send limit reached for this organization (${env.orgSendLimit}). Try again tomorrow.`,
+    )
+  }
+
+  const cooldown = takeToken(`campaign:${campaignId}`, 1, env.campaignCooldownSec * 1000)
+  if (!cooldown.ok) {
+    throw new Error(
+      `Campaign was sent recently. Wait ${cooldown.retryAfterSec}s before sending again.`,
+    )
+  }
 
   const resend = new Resend(env.resendApiKey)
   const html = textToHtml(body)
@@ -149,6 +171,7 @@ export async function sendCampaign(
   return {
     campaign: updated as unknown as Record<string, unknown>,
     mode: 'live',
+    organizationId,
     sent,
     skipped,
     errors,

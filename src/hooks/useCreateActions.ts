@@ -1,5 +1,6 @@
 import * as api from '@/lib/api'
 import * as platform from '@/lib/platform-api'
+import { confirmUnblockDayIfNeeded } from '@/lib/confirm-unblock-day'
 import { geocodeAddressOnce } from '@/lib/geocode-once'
 import { todayISO } from '@/lib/metrics'
 import { loadAppSettings } from '@/lib/settings-api'
@@ -11,7 +12,7 @@ import { useUi } from '@/providers/UiProvider'
 /** Shared create flows used by Header and page CTAs. */
 export function useCreateActions() {
   const { clients, packages, setClients, setJobs, setLeads, setExpenses, setPackages } = useData()
-  const { alert, promptForm, toast } = useUi()
+  const { alert, confirm, promptForm, toast } = useUi()
   const { setPage, openContact } = useDeskNav()
 
   async function createContact(opts?: { navigate?: boolean }) {
@@ -222,6 +223,14 @@ export function useCreateActions() {
 
     if (!title) title = 'New event'
 
+    try {
+      const clear = await confirmUnblockDayIfNeeded(date, confirm)
+      if (!clear) return null
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not remove blocks', 'Day is blocked')
+      return null
+    }
+
     const tempId = `temp-${Date.now()}`
     const optimistic: import('@/lib/types').DeskJob = {
       id: tempId,
@@ -328,14 +337,29 @@ export function useCreateActions() {
       ],
     })
     if (!values?.description || !values.amount) return null
+
+    const attach = await confirm({
+      title: 'Receipt photo',
+      message: 'Attach a receipt photo or PDF to this expense?',
+      confirmLabel: 'Choose file',
+      cancelLabel: 'Skip for now',
+    })
+    let receipt: File | undefined
+    if (attach) {
+      const { pickReceiptFile } = await import('@/lib/pick-receipt-file')
+      const file = await pickReceiptFile()
+      if (file) receipt = file
+    }
+
     try {
       const created = await api.createExpense({
         description: values.description,
         amount: Number(values.amount) || 0,
         date: values.date || todayISO(),
+        receipt,
       })
       setExpenses((prev) => [created, ...prev])
-      toast('Expense logged')
+      toast(receipt ? 'Expense logged with receipt' : 'Expense logged')
       if (opts?.navigate !== false) setPage('receipts')
       return created
     } catch (err) {

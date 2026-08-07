@@ -1,6 +1,8 @@
 import { ClientResponseError } from 'pocketbase'
 import { getPocketBase } from './pocketbase'
 import { escapeFilter, formatPbError, orgFilter, requireOrganizationId } from './org'
+import { compressJobPhoto } from './job-photos'
+import { normalizeDeskInvoice } from './invoice-status'
 import type {
   DeskClient,
   DeskExpense,
@@ -178,7 +180,7 @@ function mapInvoice(record: Record<string, unknown>): DeskInvoice {
     rawStatus === 'cancelled'
       ? rawStatus
       : 'draft'
-  return {
+  return normalizeDeskInvoice({
     id: String(record.id),
     invoice_number: String(record.invoice_number ?? ''),
     job_id: String(record.job_id ?? ''),
@@ -192,7 +194,7 @@ function mapInvoice(record: Record<string, unknown>): DeskInvoice {
     paid_at: record.paid_at ? String(record.paid_at) : undefined,
     sent_at: record.sent_at ? String(record.sent_at) : undefined,
     created: record.created ? String(record.created) : undefined,
-  }
+  })
 }
 
 function expenseReceiptUrl(
@@ -716,12 +718,6 @@ export async function updateJob(
       (updated as { expand?: Record<string, unknown> }).expand,
     )
   } catch (err) {
-    // #region agent log
-    {
-      const e = err as { status?: number; message?: string; response?: { message?: string; data?: unknown } }
-      fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'pre-fix',hypothesisId:'B',location:'api.ts:updateJob:fail',message:'updateJob failed (may look like delete in Network if same id)',data:{jobId:id,patchKeys:Object.keys(patch),patch,status:e?.status??null,errMessage:e?.message??null,pbMessage:e?.response?.message??null,pbData:e?.response?.data??null},timestamp:Date.now()})}).catch(()=>{});
-    }
-    // #endregion
     throw err
   }
 }
@@ -732,16 +728,7 @@ export async function deleteJob(id: string): Promise<void> {
   const pb = getPocketBase()
   try {
     await pb.collection('jobs').update(id, { status: 'cancelled' })
-    // #region agent log
-    fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'A',location:'api.ts:deleteJob:ok',message:'deleteJob soft-cancel succeeded',data:{jobId:id},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
   } catch (err) {
-    // #region agent log
-    {
-      const e = err as { status?: number; message?: string; response?: { message?: string; data?: unknown } }
-      fetch('http://127.0.0.1:7459/ingest/ba28eed9-af8b-4e8b-819f-5876c609af86',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c3536'},body:JSON.stringify({sessionId:'1c3536',runId:'post-fix',hypothesisId:'A',location:'api.ts:deleteJob:fail',message:'deleteJob soft-cancel failed',data:{jobId:id,status:e?.status??null,errMessage:e?.message??null,pbMessage:e?.response?.message??null,pbData:e?.response?.data??null},timestamp:Date.now()})}).catch(()=>{});
-    }
-    // #endregion
     throw new Error(formatPbError(err, 'Could not delete event'))
   }
 }
@@ -841,6 +828,27 @@ export async function deleteTimeBlock(id: string): Promise<void> {
   }
 }
 
+/** Time-off blocks for a single calendar day (mobile `getTimeBlocksOnDate`). */
+export async function getTimeBlocksOnDate(date: string): Promise<DeskTimeBlock[]> {
+  const day = date.slice(0, 10)
+  return listTimeBlocks(day, day)
+}
+
+/** Deletes every time-off block on a calendar day. Returns how many were removed. */
+export async function deleteTimeBlocksOnDate(date: string): Promise<number> {
+  const blocks = await getTimeBlocksOnDate(date)
+  let removed = 0
+  for (const block of blocks) {
+    try {
+      await deleteTimeBlock(block.id)
+      removed += 1
+    } catch {
+      /* continue — remove as many as possible */
+    }
+  }
+  return removed
+}
+
 export async function saveRouteOrder(orderedJobIds: string[]): Promise<void> {
   await Promise.all(orderedJobIds.map((id, index) => updateJob(id, { route_order: index + 1 })))
 }
@@ -885,23 +893,76 @@ export async function createJob(input: {
   )
 }
 
+async function mapExpenseWithToken(record: Record<string, unknown>): Promise<DeskExpense> {
+  const pb = getPocketBase()
+  let fileToken: string | undefined
+  try {
+    fileToken = await pb.files.getToken()
+  } catch {
+    fileToken = undefined
+  }
+  return mapExpense(record, fileToken)
+}
+
+function isReceiptPdf(file: File): boolean {
+  return file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+}
+
+function isReceiptImage(file: File): boolean {
+  if (file.type.startsWith('image/')) return true
+  // Some OS pickers leave type empty — fall back to extension.
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?)$/i.test(file.name)
+}
+
+/** Compress receipt images before PB upload (reuse job-photo limits). */
+async function prepareReceiptFile(file: File): Promise<File> {
+  if (isReceiptPdf(file)) return file
+  if (!isReceiptImage(file)) {
+    throw new Error('Receipt must be an image or PDF')
+  }
+  return compressJobPhoto(file)
+}
+
 export async function createExpense(input: {
   amount: number
   description: string
   date?: string
   category?: string
+  receipt?: File
 }): Promise<DeskExpense> {
   const pb = getPocketBase()
   const name = input.description.trim()
-  const created = await pb.collection('business_expenses').create({
-    amount: input.amount,
-    name,
-    description: name,
-    date: input.date ?? new Date().toISOString().slice(0, 10),
-    category: input.category?.trim() ?? '',
-    organization_id: requireOrganizationId(),
-  })
-  return mapExpense(created as unknown as Record<string, unknown>)
+  const date = input.date ?? new Date().toISOString().slice(0, 10)
+  const category = input.category?.trim() ?? ''
+  const orgId = requireOrganizationId()
+
+  try {
+    if (input.receipt) {
+      const receipt = await prepareReceiptFile(input.receipt)
+      const formData = new FormData()
+      formData.append('amount', String(input.amount))
+      formData.append('name', name)
+      formData.append('description', name)
+      formData.append('date', date)
+      formData.append('category', category)
+      formData.append('organization_id', orgId)
+      formData.append('receipt', receipt, receipt.name)
+      const created = await pb.collection('business_expenses').create(formData)
+      return mapExpenseWithToken(created as unknown as Record<string, unknown>)
+    }
+
+    const created = await pb.collection('business_expenses').create({
+      amount: input.amount,
+      name,
+      description: name,
+      date,
+      category,
+      organization_id: orgId,
+    })
+    return mapExpense(created as unknown as Record<string, unknown>)
+  } catch (err) {
+    throw new Error(formatPbError(err, 'Could not log expense'))
+  }
 }
 
 export async function updateExpense(
@@ -919,14 +980,31 @@ export async function updateExpense(
   }
   if (patch.date != null) body.date = patch.date
   if (patch.category != null) body.category = patch.category.trim()
-  const updated = await pb.collection('business_expenses').update(id, body)
-  let fileToken: string | undefined
   try {
-    fileToken = await pb.files.getToken()
-  } catch {
-    fileToken = undefined
+    const updated = await pb.collection('business_expenses').update(id, body)
+    return mapExpenseWithToken(updated as unknown as Record<string, unknown>)
+  } catch (err) {
+    throw new Error(formatPbError(err, 'Could not update expense'))
   }
-  return mapExpense(updated as unknown as Record<string, unknown>, fileToken)
+}
+
+/** Attach or replace the receipt image on a business expense (`receipt` file field). */
+export async function uploadExpenseReceipt(id: string, file: File): Promise<DeskExpense> {
+  const pb = getPocketBase()
+  try {
+    const receipt = await prepareReceiptFile(file)
+    const formData = new FormData()
+    formData.append('receipt', receipt, receipt.name)
+    const updated = await pb.collection('business_expenses').update(id, formData)
+    const mapped = await mapExpenseWithToken(updated as unknown as Record<string, unknown>)
+    if (!mapped.receipt_url) {
+      throw new Error('Receipt uploaded but could not be loaded')
+    }
+    return mapped
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('Receipt')) throw err
+    throw new Error(formatPbError(err, 'Could not upload receipt'))
+  }
 }
 
 export async function updateInvoice(
@@ -978,8 +1056,13 @@ export async function markInvoicePaid(id: string, method = 'cash'): Promise<Desk
   const payments = [...existingPayments, payment]
   const amount_paid = payments.reduce((s, p) => s + Number(p.amount || 0), 0)
   const balance_due = Math.max(0, current.total - amount_paid)
-  const status: InvoiceStatus =
-    balance_due <= 0 ? 'paid' : amount_paid > 0 ? 'partial' : current.status
+  // Persist derived status (partial can age into overdue) — mapInvoice also normalizes on read.
+  const status = normalizeDeskInvoice({
+    ...current,
+    amount_paid,
+    balance_due,
+    status: balance_due <= 0 ? 'paid' : amount_paid > 0 ? 'partial' : current.status,
+  }).status
   const paid_at = status === 'paid' ? new Date().toISOString() : current.paid_at ?? null
 
   const updated = await pb.collection('invoices').update(id, {

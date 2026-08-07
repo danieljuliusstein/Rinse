@@ -86,7 +86,7 @@ export function EmptyExpenses({ onLog, variant = 'none', query }: Props) {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
             <p className="mt-2.5 text-[11px] text-ink-400">
-              Takes 10 seconds. Add a receipt photo from your phone right after.
+              Takes 10 seconds. Attach a receipt photo now or later from the edit panel.
             </p>
           </div>
         </div>
@@ -101,22 +101,22 @@ export function EmptyExpenses({ onLog, variant = 'none', query }: Props) {
               {
                 n: 1,
                 icon: <Smartphone className="h-4 w-4" />,
-                title: 'Field tech logs from the road',
-                body: 'Fuel, chemicals, a quick parts run — entered on mobile with an optional photo of the receipt.',
+                title: 'Log from desk or the road',
+                body: 'Fuel, chemicals, a quick parts run — entered here or on mobile with an optional photo of the receipt.',
                 muted: false,
               },
               {
                 n: 2,
                 icon: <Camera className="h-4 w-4" />,
                 title: 'Receipt photo attached',
-                body: 'Snap the paper receipt. It shows as a thumbnail here and opens in a clean lightbox for proof.',
+                body: 'Upload from Desk or snap on mobile. It shows as a thumbnail here and opens in a lightbox for proof.',
                 muted: true,
               },
               {
                 n: 3,
                 icon: <FileText className="h-4 w-4" />,
                 title: 'Desk reviews & light-edits',
-                body: 'Fix a typo, reclassify the category, adjust the amount. The proof stays attached.',
+                body: 'Fix a typo, reclassify the category, adjust the amount, or replace the receipt photo.',
                 muted: true,
               },
             ].map((step) => (

@@ -1,4 +1,5 @@
 import type { DeskInvoice, InvoiceStatus } from '@/lib/types'
+import { normalizeDeskInvoice } from '@/lib/invoice-status'
 
 export const INVOICE_STATUSES: { value: InvoiceStatus; label: string }[] = [
   { value: 'draft', label: 'Draft' },
@@ -30,14 +31,35 @@ export function buildInvoiceUpdatePatch(
   paid_at?: string | null
   sent_at?: string
 } {
-  const status = values.status as InvoiceStatus
+  const requested = values.status as InvoiceStatus
   const total = Number(values.total) || 0
   const tip = Number(values.tip) || 0
   let amount_paid = Number(values.amount_paid) || 0
   if (amount_paid < 0) amount_paid = 0
   if (amount_paid > total) amount_paid = total
-  if (status === 'paid' && amount_paid <= 0) amount_paid = total
+  if (requested === 'paid' && amount_paid <= 0) amount_paid = total
   const balance_due = Math.max(total - amount_paid, 0)
+
+  let sent_at = inv.sent_at
+  if ((requested === 'sent' || requested === 'overdue') && !sent_at) {
+    sent_at = new Date().toISOString()
+  }
+
+  const normalized = normalizeDeskInvoice({
+    ...inv,
+    status: requested,
+    total,
+    tip,
+    amount_paid,
+    balance_due: requested === 'paid' ? 0 : balance_due,
+    sent_at,
+  })
+
+  const status =
+    requested === 'void' || requested === 'cancelled' || requested === 'draft'
+      ? requested
+      : normalized.status
+
   const patch: {
     status: InvoiceStatus
     total: number
@@ -60,8 +82,8 @@ export function buildInvoiceUpdatePatch(
   } else if (inv.status === 'paid') {
     patch.paid_at = null
   }
-  if (status === 'sent' && !inv.sent_at) {
-    patch.sent_at = new Date().toISOString()
+  if (sent_at && sent_at !== inv.sent_at) {
+    patch.sent_at = sent_at
   }
   return patch
 }

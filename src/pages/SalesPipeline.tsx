@@ -19,6 +19,7 @@ import { useUi } from '@/providers/UiProvider'
 import { useDeskNav } from '@/providers/DeskNavProvider'
 import * as api from '@/lib/api'
 import * as platform from '@/lib/platform-api'
+import { confirmUnblockDayIfNeeded } from '@/lib/confirm-unblock-day'
 import type { DeskLead, LeadStage } from '@/lib/types'
 import { initials, money, todayISO } from '@/lib/metrics'
 import { colors } from '@/theme/colors'
@@ -430,6 +431,13 @@ export default function SalesPipeline() {
       ],
     })
     if (!values?.date) return
+    try {
+      const clear = await confirmUnblockDayIfNeeded(values.date, confirm)
+      if (!clear) return
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not remove blocks', 'Day is blocked')
+      return
+    }
     try {
       const result = await api.convertLeadToJob(deal.id, {
         date: values.date,

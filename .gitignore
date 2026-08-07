@@ -8,3 +8,5 @@ Untitled/
 
 # Campaign mail secrets
 server/campaign-mail/.env
+.vercel
+.env*
