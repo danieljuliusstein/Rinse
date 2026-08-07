@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react'
 import { ArrowRight, MapPin, Camera, ShieldCheck, Wrench } from 'lucide-react'
-import carTopView from '@/assets/car-top-view.png'
 import { FLEET_TYPES, TYPE_META } from '@/components/cars/VehicleTypeModels'
-import { CAR_MAP_PINS } from '@/lib/car-map-pins'
 import type { DeskJob, DeskVehicle, VehicleType } from '@/lib/types'
 import { paintHexFor } from '@/components/cars/FleetList'
 
@@ -50,8 +48,6 @@ export function FleetEmptyState({
     .sort((a, b) => (damageCounts[b.id] ?? 0) - (damageCounts[a.id] ?? 0))
     .slice(0, 3)
 
-  const sampleMarked = CAR_MAP_PINS.filter((_, i) => i % 7 === 0).slice(0, 3).map((p) => p.id)
-
   return (
     <div className="flex-1 min-h-0 h-full overflow-hidden bg-ink-100 flex flex-col">
       <div className="flex-1 min-h-0 max-w-[1080px] w-full mx-auto px-6 py-5 flex flex-col gap-4">
@@ -61,54 +57,31 @@ export function FleetEmptyState({
           <span>Fleet overview</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center shrink-0">
-          <div className="animate-cars-fade-up min-w-0">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-[11px] font-medium mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-cars-pin-pulse" />
-              {vehicles.length} vehicle{vehicles.length === 1 ? '' : 's'} ready for review
-            </div>
-            <h1 className="text-[26px] leading-[1.15] font-bold text-ink-900 tracking-tight mb-2">
-              Pick a vehicle to review its{' '}
-              <span className="text-brand-600">damage documentation.</span>
-            </h1>
-            <p className="text-[13px] text-ink-500 leading-snug max-w-[440px] mb-3">
-              Field techs tap body-area dots on mobile. Here you review pins, open photos, and fill
-              job-photo gaps from the desk.
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              {vehicles[0] ? (
-                <button
-                  type="button"
-                  onClick={() => onPick(vehicles[0]!.id)}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-ink-900 hover:bg-ink-800 text-white text-[13px] font-medium transition-colors"
-                >
-                  Open first vehicle
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : null}
-              <span className="text-[12px] text-ink-400">or pick from the list on the left</span>
-            </div>
+        <div className="animate-cars-fade-up min-w-0 shrink-0">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-[11px] font-medium mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-cars-pin-pulse" />
+            {vehicles.length} vehicle{vehicles.length === 1 ? '' : 's'} ready for review
           </div>
-
-          <div className="relative animate-cars-pop-in justify-self-center shrink-0 hidden sm:block">
-            <div className="relative w-[120px] h-[180px] bg-white rounded-xl border border-ink-200 shadow-card p-2 flex items-center justify-center overflow-hidden">
-              <img
-                src={carTopView}
-                alt=""
-                className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)] object-contain pointer-events-none"
-                draggable={false}
-              />
-              {CAR_MAP_PINS.filter((p) => sampleMarked.includes(p.id)).map((pin) => (
-                <span
-                  key={pin.id}
-                  className="absolute w-2.5 h-2.5 rounded-full bg-rust-500 border-2 border-white shadow-sm"
-                  style={{ left: `${pin.left}%`, top: `${pin.top}%`, marginLeft: -5, marginTop: -5 }}
-                />
-              ))}
-            </div>
-            <div className="mt-2 text-center text-[10px] font-medium text-ink-500">
-              Bird&apos;s-eye damage map
-            </div>
+          <h1 className="text-[26px] leading-[1.15] font-bold text-ink-900 tracking-tight mb-2">
+            Pick a vehicle to review its{' '}
+            <span className="text-brand-600">damage documentation.</span>
+          </h1>
+          <p className="text-[13px] text-ink-500 leading-snug max-w-[440px] mb-3">
+            Field techs tap body-area dots on mobile. Here you review pins, open photos, and fill
+            job-photo gaps from the desk.
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            {vehicles[0] ? (
+              <button
+                type="button"
+                onClick={() => onPick(vehicles[0]!.id)}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-ink-900 hover:bg-ink-800 text-white text-[13px] font-medium transition-colors"
+              >
+                Open first vehicle
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : null}
+            <span className="text-[12px] text-ink-400">or pick from the list on the left</span>
           </div>
         </div>
 
