@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import {
   composeManualAddress,
+  emptyManualParts,
   isManualAddressSufficient,
   isManualPartsSufficient,
   manualAddressHint,
@@ -14,6 +15,7 @@ import {
   isPlacesDailyCapReached,
   resolvePlaceSuggestion,
   type PlaceSuggestion,
+  type ResolvedPlace,
 } from '@/lib/google-places'
 import {
   isRouteApiConfigured,
@@ -47,10 +49,34 @@ type Props = {
 const DEBOUNCE_MS = 320
 const MIN_CHARS = 3
 
+/** Desk rinse inputs — matches Contacts table / primary forms. */
+const RINSE_FIELD =
+  'w-full min-w-0 h-9 px-3 rounded-md bg-white border border-rinse-border text-[13px] text-rinse-text placeholder:text-rinse-muted/80 focus:outline-none focus:ring-2 focus:ring-rinse-green/25 focus:border-rinse-green-border transition disabled:opacity-60'
+
+const RINSE_FIELD_COMPACT =
+  'w-full min-w-0 h-8 px-2.5 rounded-md bg-white border border-rinse-border text-[12.5px] text-rinse-text placeholder:text-rinse-muted/80 focus:outline-none focus:ring-2 focus:ring-rinse-green/30 focus:border-rinse-green-border transition disabled:opacity-60'
+
+function mergeParts(
+  hit: GeocodeHit & { street?: string; city?: string; state?: string; zip?: string },
+  fallbackLine?: string,
+): ManualAddressParts {
+  const fromLine = parseManualAddress(hit.display_name)
+  const fromFallback = fallbackLine ? parseManualAddress(fallbackLine) : emptyManualParts()
+  return {
+    street:
+      hit.street?.trim() ||
+      fromLine.street ||
+      fromFallback.street ||
+      hit.display_name,
+    city: hit.city?.trim() || fromLine.city || fromFallback.city,
+    state: (hit.state?.trim() || fromLine.state || fromFallback.state).toUpperCase(),
+    zip: hit.zip?.trim() || fromLine.zip || fromFallback.zip,
+  }
+}
+
 /**
- * Checkout-style address entry: street · city · ST · ZIP always visible.
- * Autocomplete attaches to the street field only (no mode toggle).
- * Full geocode still happens on save when no suggestion was picked.
+ * Checkout-style address entry: street · city · state · ZIP always visible.
+ * Autocomplete on the street field only; pick fills the rest.
  */
 export default function AddressAutocompleteInput({
   value,
@@ -68,7 +94,6 @@ export default function AddressAutocompleteInput({
 }: Props) {
   const listId = useId()
   const wrapRef = useRef<HTMLDivElement>(null)
-  const streetWrapRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -84,6 +109,8 @@ export default function AddressAutocompleteInput({
   const googleReady = isGooglePlacesConfigured() && !isPlacesDailyCapReached()
   const nominatimReady = isRouteApiConfigured()
 
+  const fieldClass = className ?? (compact ? RINSE_FIELD_COMPACT : RINSE_FIELD)
+
   useEffect(() => {
     if (googleReady) setProvider('google')
     else if (nominatimReady) setProvider('nominatim')
@@ -98,7 +125,6 @@ export default function AddressAutocompleteInput({
     return () => document.removeEventListener('mousedown', onDoc)
   }, [])
 
-  // Suggest only from the street line — not city/state/ZIP keystrokes.
   useEffect(() => {
     if (disabled || pinned || provider === 'none') return
     if (skipSuggestRef.current) {
@@ -174,7 +200,6 @@ export default function AddressAutocompleteInput({
   }
 
   async function lookupNominatim(q: string, signal?: AbortSignal) {
-    // Bias with city/state already typed when present.
     const bias = [parts.city, parts.state, parts.zip].filter(Boolean).join(', ')
     const query = bias ? `${q}, ${bias}` : q
     const result = await suggestAddress(query, {
@@ -195,9 +220,9 @@ export default function AddressAutocompleteInput({
     setLoading(true)
     setError(null)
     try {
-      const hit = await resolvePlaceSuggestion(s)
+      const hit: ResolvedPlace = await resolvePlaceSuggestion(s)
       sessionRef.current = null
-      applyHit(hit)
+      applyHit(hit, s.description)
       if (isPlacesDailyCapReached() && nominatimReady) setProvider('nominatim')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not resolve address')
@@ -206,36 +231,25 @@ export default function AddressAutocompleteInput({
     }
   }
 
-  function applyHit(hit: GeocodeHit & {
-    street?: string
-    city?: string
-    state?: string
-    zip?: string
-  }) {
+  function applyHit(
+    hit: GeocodeHit & { street?: string; city?: string; state?: string; zip?: string },
+    fallbackLine?: string,
+  ) {
     skipSuggestRef.current = true
-    const parsed = parseManualAddress(hit.display_name)
-    const next: ManualAddressParts = {
-      street: hit.street?.trim() || parsed.street || hit.display_name,
-      city: hit.city?.trim() || parsed.city,
-      state: hit.state?.trim() || parsed.state,
-      zip: hit.zip?.trim() || parsed.zip,
-    }
+    const next = mergeParts(hit, fallbackLine)
+    const line = composeManualAddress(next) || hit.display_name
     setParts(next)
-    onChange(composeManualAddress(next) || hit.display_name)
-    onPickSuggestion?.(hit)
+    onChange(line)
+    onPickSuggestion?.({ ...hit, display_name: line })
     setPinned(true)
     setSuggestions([])
     setOpen(false)
     setError(null)
   }
 
-  function pickNominatim(hit: GeocodeHit) {
-    applyHit(hit)
-  }
-
   function pick(item: GeocodeHit | PlaceSuggestion) {
     if ('placeId' in item) void pickGoogle(item)
-    else pickNominatim(item)
+    else applyHit(item, item.display_name)
   }
 
   function updatePart<K extends keyof ManualAddressParts>(key: K, next: string) {
@@ -260,15 +274,16 @@ export default function AddressAutocompleteInput({
     composed.trim() &&
     !isManualPartsSufficient(parts)
 
-  const hintSize = compact ? 'text-[10px]' : 'text-xs'
-  const fieldClass =
-    className ??
-    'w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-green-500'
+  const hintSize = compact ? 'text-[10px]' : 'text-[11px]'
+  const labelCls = compact
+    ? 'text-[10px] font-medium text-rinse-muted mb-0.5 block'
+    : 'text-[11px] font-medium text-rinse-muted mb-1 block'
 
   return (
     <div ref={wrapRef} className="relative min-w-0 w-full">
-      <div className={`space-y-2 ${compact ? 'space-y-1.5' : ''}`}>
-        <div ref={streetWrapRef} className="relative">
+      <div className={`space-y-2 ${compact ? 'space-y-1.5' : 'space-y-2.5'}`}>
+        <div className="relative">
+          {!compact ? <span className={labelCls}>Street</span> : null}
           <input
             className={fieldClass}
             value={parts.street}
@@ -289,7 +304,7 @@ export default function AddressAutocompleteInput({
             <ul
               id={listId}
               role="listbox"
-              className="absolute left-0 right-0 z-[40] mt-1 max-h-48 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-md"
+              className="absolute left-0 right-0 z-[40] mt-1 max-h-48 overflow-auto rounded-md border border-rinse-border bg-white py-1 shadow-sm"
             >
               {suggestions.map((item) => {
                 const label = 'placeId' in item ? item.description : item.display_name
@@ -302,8 +317,8 @@ export default function AddressAutocompleteInput({
                     <button
                       type="button"
                       role="option"
-                      className={`w-full px-2.5 py-1.5 text-left leading-snug text-gray-700 hover:bg-green-50 ${
-                        compact ? 'text-[11px]' : 'text-xs'
+                      className={`w-full px-3 py-2 text-left leading-snug text-rinse-text hover:bg-rinse-green-soft ${
+                        compact ? 'text-[11px]' : 'text-[12.5px]'
                       }`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => pick(item)}
@@ -319,47 +334,58 @@ export default function AddressAutocompleteInput({
 
         <div
           className={`grid gap-2 ${
-            compact ? 'grid-cols-[1fr_3.5rem_4.5rem]' : 'grid-cols-[1fr_4.5rem_5.5rem]'
+            compact ? 'grid-cols-[1fr_4.25rem_4.75rem]' : 'grid-cols-[1fr_5.5rem_6rem]'
           }`}
         >
-          <input
-            className={fieldClass}
-            value={parts.city}
-            disabled={disabled}
-            placeholder="City"
-            aria-label="City"
-            autoComplete="address-level2"
-            onChange={(e) => updatePart('city', e.target.value)}
-          />
-          <input
-            className={fieldClass}
-            value={parts.state}
-            disabled={disabled}
-            placeholder="ST"
-            aria-label="State"
-            autoComplete="address-level1"
-            maxLength={2}
-            onChange={(e) => updatePart('state', e.target.value)}
-          />
-          <input
-            className={fieldClass}
-            value={parts.zip}
-            disabled={disabled}
-            placeholder="ZIP"
-            aria-label="ZIP"
-            autoComplete="postal-code"
-            inputMode="numeric"
-            onChange={(e) => updatePart('zip', e.target.value.replace(/[^\d-]/g, '').slice(0, 10))}
-          />
+          <div className="min-w-0">
+            <span className={labelCls}>City</span>
+            <input
+              className={fieldClass}
+              value={parts.city}
+              disabled={disabled}
+              placeholder="City"
+              aria-label="City"
+              autoComplete="address-level2"
+              onChange={(e) => updatePart('city', e.target.value)}
+            />
+          </div>
+          <div className="min-w-0">
+            <span className={labelCls}>State</span>
+            <input
+              className={`${fieldClass} uppercase text-center tracking-wide`}
+              value={parts.state}
+              disabled={disabled}
+              placeholder="State"
+              aria-label="State"
+              autoComplete="address-level1"
+              maxLength={2}
+              onChange={(e) => updatePart('state', e.target.value)}
+            />
+          </div>
+          <div className="min-w-0">
+            <span className={labelCls}>ZIP</span>
+            <input
+              className={fieldClass}
+              value={parts.zip}
+              disabled={disabled}
+              placeholder="ZIP"
+              aria-label="ZIP"
+              autoComplete="postal-code"
+              inputMode="numeric"
+              onChange={(e) => updatePart('zip', e.target.value.replace(/[^\d-]/g, '').slice(0, 10))}
+            />
+          </div>
         </div>
       </div>
 
-      <div className={`mt-1 flex items-center gap-2 ${hintSize} min-h-[1rem]`}>
-        {loading ? <span className="text-gray-400">Looking up…</span> : null}
-        {!loading && pinned ? <span className="text-gray-500">Mapped</span> : null}
-        {error ? <span className="text-red-600">{error}</span> : null}
+      <div className={`mt-1.5 flex items-center gap-2 ${hintSize} min-h-[1rem]`}>
+        {loading ? <span className="text-rinse-muted">Looking up…</span> : null}
+        {!loading && pinned ? (
+          <span className="text-rinse-green-text font-medium">Mapped</span>
+        ) : null}
+        {error ? <span className="text-rinse-danger">{error}</span> : null}
         {!error && manualWarning ? (
-          <span className="text-amber-700">{manualAddressHint()}</span>
+          <span className="text-rinse-amber">{manualAddressHint()}</span>
         ) : null}
       </div>
     </div>

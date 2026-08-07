@@ -389,7 +389,6 @@ export function EventDetailSidebar({
                 context={businessAddress}
                 aria-label="Location"
                 placeholder="Street address"
-                className="w-full rounded-lg border border-ink-200 bg-white py-2 px-3 text-sm text-ink-900 focus:outline-none focus:border-brand-500"
                 onChange={(address) => {
                   setLocationDraft(address)
                   setLocationPinned(false)

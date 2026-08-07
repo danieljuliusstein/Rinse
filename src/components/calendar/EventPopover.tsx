@@ -810,7 +810,6 @@ export function EventPopover({
                   context={businessAddress}
                   aria-label="Location"
                   placeholder="Street address"
-                  className="w-full text-[13px] border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-900 outline-none focus:border-green-500"
                   onChange={(address) => {
                     setLocationDraft(address)
                     setLocationPinned(false)

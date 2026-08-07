@@ -183,16 +183,16 @@ export function FormModal({
       <form onSubmit={handleSubmit} className="space-y-3.5">
         {fields.map((field) => (
           <label key={field.name} className="block space-y-1.5">
-            <span className="text-xs font-medium text-gray-600">
+            <span className="text-xs font-medium text-rinse-muted">
               {field.label}
-              {field.required ? '' : <span className="text-xs text-gray-400 font-normal"> (optional)</span>}
+              {field.required ? '' : <span className="text-xs text-rinse-muted/70 font-normal"> (optional)</span>}
             </span>
             {field.type === 'select' ? (
               <select
                 name={field.name}
                 required={field.required}
                 defaultValue={field.defaultValue ?? ''}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-green-500 bg-white"
+                className="w-full h-9 text-[13px] border border-rinse-border rounded-md px-3 bg-white text-rinse-text focus:outline-none focus:ring-2 focus:ring-rinse-green/25 focus:border-rinse-green-border transition"
               >
                 {!field.required && <option value="">Select…</option>}
                 {(field.options ?? []).map((opt) => (
@@ -203,7 +203,6 @@ export function FormModal({
               </select>
             ) : field.type === 'address' ? (
               <AddressAutocompleteInput
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-green-500"
                 value={addressDrafts[field.name]?.address ?? ''}
                 placeholder={field.placeholder ?? 'Street address'}
                 context={field.addressContext}
@@ -211,7 +210,12 @@ export function FormModal({
                 onChange={(address) =>
                   setAddressDrafts((prev) => ({
                     ...prev,
-                    [field.name]: { address, pinned: false },
+                    [field.name]: {
+                      address,
+                      pinned: false,
+                      lat: undefined,
+                      lng: undefined,
+                    },
                   }))
                 }
                 onPickSuggestion={(hit) =>
@@ -233,13 +237,13 @@ export function FormModal({
                 required={field.required}
                 defaultValue={field.defaultValue}
                 placeholder={field.placeholder}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-green-500"
+                className="w-full h-9 text-[13px] border border-rinse-border rounded-md px-3 bg-white text-rinse-text placeholder:text-rinse-muted/80 focus:outline-none focus:ring-2 focus:ring-rinse-green/25 focus:border-rinse-green-border transition"
               />
             )}
           </label>
         ))}
         {showError && (
-          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
             {showError}
           </p>
         )}
