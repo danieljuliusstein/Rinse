@@ -14,6 +14,8 @@ type Props = {
   dateISO: string
   jobs: DeskJob[]
   blocks: DeskTimeBlock[]
+  /** Closed weekday from booking_schedule.work_days (not an explicit time_block). */
+  scheduleClosed?: boolean
   categories: CalCategory[]
   selectedId: string | null
   selectedBlockId: string | null
@@ -31,6 +33,7 @@ export function DayAmPmView({
   dateISO,
   jobs,
   blocks,
+  scheduleClosed = false,
   categories,
   selectedId,
   selectedBlockId,
@@ -54,14 +57,18 @@ export function DayAmPmView({
         return (
           <div
             key={half.label}
-            className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-ink-200 bg-white shadow-card"
+            className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-ink-200 bg-white shadow-card ${
+              scheduleClosed ? 'cal-blocked-hatch' : ''
+            }`}
           >
             <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3 shrink-0">
               <div className="flex items-center gap-2">
                 <Sun className="h-4 w-4 text-amber-500" />
                 <span className="text-sm font-semibold text-ink-900">{half.label}</span>
               </div>
-              <span className="text-[12px] text-ink-400">{half.hint}</span>
+              <span className="text-[12px] text-ink-400">
+                {scheduleClosed ? 'Closed' : half.hint}
+              </span>
             </div>
             <div
               className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-3"
@@ -69,14 +76,20 @@ export function DayAmPmView({
             >
               {halfItems.length === 0 ? (
                 <div className="flex h-full min-h-[120px] flex-col items-center justify-center text-center">
-                  <p className="text-[13px] text-ink-400">Open {half.label.toLowerCase()}</p>
-                  <button
-                    type="button"
-                    onClick={() => onDraftAt(dateISO, half.label === 'Afternoon' ? 13 : 9)}
-                    className="mt-2 text-[12px] font-medium text-brand-600 hover:text-brand-700"
-                  >
-                    + Add a job
-                  </button>
+                  <p className="text-[13px] text-ink-400">
+                    {scheduleClosed
+                      ? 'Closed on schedule'
+                      : `Open ${half.label.toLowerCase()}`}
+                  </p>
+                  {!scheduleClosed ? (
+                    <button
+                      type="button"
+                      onClick={() => onDraftAt(dateISO, half.label === 'Afternoon' ? 13 : 9)}
+                      className="mt-2 text-[12px] font-medium text-brand-600 hover:text-brand-700"
+                    >
+                      + Add a job
+                    </button>
+                  ) : null}
                 </div>
               ) : (
                 <div className="space-y-2">

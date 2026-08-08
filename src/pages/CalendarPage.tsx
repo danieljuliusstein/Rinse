@@ -31,7 +31,19 @@ import {
   weekStartFromISO,
 } from '@/components/calendar/calendarListModel'
 import * as api from '@/lib/api'
-import { confirmUnblockDayIfNeeded } from '@/lib/confirm-unblock-day'
+import {
+  computeScheduleClosedDates,
+  datesInInclusiveRange,
+} from '@/lib/booking-calendar'
+import {
+  DEFAULT_BOOKING_SCHEDULE,
+  type BookingSchedule,
+} from '@/lib/booking-schedule'
+import {
+  confirmUnblockCalendarDay,
+  confirmUnblockDayIfNeeded,
+} from '@/lib/confirm-unblock-day'
+import { loadAppSettings } from '@/lib/settings-api'
 import type { DeskClient, DeskJob, DeskPackage, DeskTimeBlock, JobStatus } from '@/lib/types'
 import { colors } from '@/theme/colors'
 import { todayISO } from '@/lib/metrics'
@@ -335,12 +347,23 @@ export default function CalendarPage() {
   const [categories, setCategories] = useState<CalCategory[]>(() => loadCategories())
   const [colorTick, setColorTick] = useState(0)
   const [timeBlocks, setTimeBlocks] = useState<DeskTimeBlock[]>([])
+  const [bookingSchedule, setBookingSchedule] = useState<BookingSchedule>(() => ({
+    ...DEFAULT_BOOKING_SCHEDULE,
+    open_dates: [],
+  }))
+  const [blocksRangeISO, setBlocksRangeISO] = useState<{ from: string; to: string } | null>(
+    null,
+  )
 
   const isDraft = Boolean(selected && isDraftEventId(selected.id))
   const panelOpen = selected !== null || selectedBlock !== null
 
   useEffect(() => {
     setCategories(loadCategories())
+  }, [])
+
+  useEffect(() => {
+    void loadAppSettings().then((s) => setBookingSchedule(s.booking_schedule))
   }, [])
 
   useEffect(() => {
@@ -394,6 +417,30 @@ export default function CalendarPage() {
     [anchorDate],
   )
 
+  const visibleDates = useMemo(() => {
+    if (blocksRangeISO) {
+      return datesInInclusiveRange(blocksRangeISO.from, blocksRangeISO.to)
+    }
+    if (view === 'day') return [anchorDate.slice(0, 10)]
+    if (view === 'month') {
+      const start = new Date(`${anchorDate.slice(0, 10)}T12:00:00`)
+      start.setDate(1)
+      start.setDate(start.getDate() - 7)
+      const end = new Date(`${anchorDate.slice(0, 10)}T12:00:00`)
+      end.setMonth(end.getMonth() + 1)
+      end.setDate(0)
+      end.setDate(end.getDate() + 7)
+      return datesInInclusiveRange(formatDateLocalFromDate(start), formatDateLocalFromDate(end))
+    }
+    return datesInInclusiveRange(weekStartISO, addDaysISO(weekStartISO, 6))
+  }, [blocksRangeISO, view, anchorDate, weekStartISO])
+
+  /** Closed weekdays from booking_schedule (not all-day time_blocks). */
+  const scheduleClosedDates = useMemo(
+    () => computeScheduleClosedDates(visibleDates, bookingSchedule),
+    [visibleDates, bookingSchedule],
+  )
+
   const weekIsEmpty = useMemo(() => {
     if (view !== 'week') return false
     const end = addDaysISO(weekStartISO, 6)
@@ -406,8 +453,12 @@ export default function CalendarPage() {
       const d = b.date.slice(0, 10)
       return d >= weekStartISO && d <= end
     })
-    return !hasJob && !hasBlock && !selected && !selectedBlock
-  }, [view, weekStartISO, jobs, timeBlocks, selected, selectedBlock])
+    const hasScheduleClosed = [...scheduleClosedDates].some(
+      (d) => d >= weekStartISO && d <= end,
+    )
+    // Schedule-closed days still need the grid (grey hatch) — don't treat as blank week.
+    return !hasJob && !hasBlock && !hasScheduleClosed && !selected && !selectedBlock
+  }, [view, weekStartISO, jobs, timeBlocks, scheduleClosedDates, selected, selectedBlock])
 
   const showFc = !useCustomSurface && !weekIsEmpty
 
@@ -528,10 +579,32 @@ export default function CalendarPage() {
       }
       return mapped
     })
+    const allDayBlockDates = new Set(
+      timeBlocks
+        .filter((b) => b.all_day || !b.start_time)
+        .map((b) => b.date.slice(0, 10)),
+    )
+    // Paint closed weekdays the same as mobile Home (work_days ∪ all-day blocks).
+    const scheduleClosed = [...scheduleClosedDates]
+      .filter((date) => !allDayBlockDates.has(date))
+      .map(
+        (date): EventInput => ({
+          id: `schedule-closed-${date}`,
+          title: 'Closed',
+          start: date,
+          allDay: true,
+          editable: false,
+          startEditable: false,
+          durationEditable: false,
+          classNames: ['fc-time-block', 'fc-schedule-closed', 'cursor-pointer'],
+          display: 'background',
+          extendedProps: { kind: 'schedule-closed' as const, date },
+        }),
+      )
     const draftEv =
       selected && isDraftEventId(selected.id) ? [draftToFcEvent(selected)] : []
-    return [...jobsMapped, ...blocks, ...draftEv]
-  }, [jobFcEvents, timeBlocks, selected, selectedBlock])
+    return [...jobsMapped, ...blocks, ...scheduleClosed, ...draftEv]
+  }, [jobFcEvents, timeBlocks, selected, selectedBlock, scheduleClosedDates])
 
   async function loadBlocksForRange(from: Date, to: Date) {
     blocksRangeRef.current = { from, to }
@@ -539,8 +612,15 @@ export default function CalendarPage() {
     // FullCalendar `end` is exclusive — subtract one day for inclusive PB filter
     const toInclusive = new Date(to.getTime() - 24 * 60 * 60 * 1000)
     const toISO = formatDateLocal(toInclusive > from ? toInclusive : to)
+    setBlocksRangeISO({ from: fromISO, to: toISO })
     const blocks = await api.listTimeBlocks(fromISO, toISO)
     setTimeBlocks(blocks)
+  }
+
+  async function refreshScheduleAndBlocks() {
+    const settings = await loadAppSettings()
+    setBookingSchedule(settings.booking_schedule)
+    await reloadBlocks()
   }
 
   async function reloadBlocks() {
@@ -1141,6 +1221,24 @@ export default function CalendarPage() {
       kind?: string
       job?: DeskJob
       block?: DeskTimeBlock
+      date?: string
+    }
+    if (props.kind === 'schedule-closed') {
+      const date =
+        props.date?.slice(0, 10) ||
+        (info.event.startStr ? info.event.startStr.slice(0, 10) : '')
+      if (!date) return
+      void (async () => {
+        try {
+          const ok = await confirmUnblockCalendarDay(date, confirm)
+          if (!ok) return
+          await refreshScheduleAndBlocks()
+          toast('Day unblocked')
+        } catch (err) {
+          alert(err instanceof Error ? err.message : 'Could not unblock day', 'Day is blocked')
+        }
+      })()
+      return
     }
     if (props.kind === 'block') {
       if (props.block) {
@@ -1352,6 +1450,7 @@ export default function CalendarPage() {
                 dateISO={anchorDate.slice(0, 10)}
                 jobs={jobs}
                 blocks={timeBlocks}
+                scheduleClosed={scheduleClosedDates.has(anchorDate.slice(0, 10))}
                 categories={categories}
                 selectedId={selected && !isDraftEventId(selected.id) ? selected.id : null}
                 selectedBlockId={selectedBlock?.id ?? null}
@@ -1362,6 +1461,21 @@ export default function CalendarPage() {
                   setSelectedBlock(block)
                 }}
                 onDraftAt={openDraftAtHour}
+                onUnblockDay={(iso) => {
+                  void (async () => {
+                    try {
+                      const ok = await confirmUnblockCalendarDay(iso, confirm)
+                      if (!ok) return
+                      await refreshScheduleAndBlocks()
+                      toast('Day unblocked')
+                    } catch (err) {
+                      alert(
+                        err instanceof Error ? err.message : 'Could not unblock day',
+                        'Day is blocked',
+                      )
+                    }
+                  })()
+                }}
               />
             ) : null}
 
@@ -1370,6 +1484,7 @@ export default function CalendarPage() {
                 dateISO={anchorDate.slice(0, 10)}
                 jobs={jobs}
                 blocks={timeBlocks}
+                scheduleClosed={scheduleClosedDates.has(anchorDate.slice(0, 10))}
                 categories={categories}
                 selectedId={selected && !isDraftEventId(selected.id) ? selected.id : null}
                 selectedBlockId={selectedBlock?.id ?? null}
@@ -1388,6 +1503,7 @@ export default function CalendarPage() {
                 anchorISO={anchorDate.slice(0, 10)}
                 jobs={jobs}
                 blocks={timeBlocks}
+                scheduleClosedDates={scheduleClosedDates}
                 categories={categories}
                 selectedId={selected && !isDraftEventId(selected.id) ? selected.id : null}
                 selectedBlockId={selectedBlock?.id ?? null}
@@ -1398,6 +1514,21 @@ export default function CalendarPage() {
                   setSelectedBlock(block)
                 }}
                 onOpenRoutes={() => setPage('routes')}
+                onUnblockDay={(iso) => {
+                  void (async () => {
+                    try {
+                      const ok = await confirmUnblockCalendarDay(iso, confirm)
+                      if (!ok) return
+                      await refreshScheduleAndBlocks()
+                      toast('Day unblocked')
+                    } catch (err) {
+                      alert(
+                        err instanceof Error ? err.message : 'Could not unblock day',
+                        'Day is blocked',
+                      )
+                    }
+                  })()
+                }}
               />
             ) : null}
 
@@ -1462,7 +1593,7 @@ export default function CalendarPage() {
               dateClick={onDateClick}
               eventClassNames={(arg) => {
                 const kind = (arg.event.extendedProps as { kind?: string }).kind
-                if (kind === 'block') return ['fc-time-block']
+                if (kind === 'block' || kind === 'schedule-closed') return ['fc-time-block']
                 const classes = ['cursor-pointer', 'fc-job-event']
                 if (selected?.id && arg.event.id === selected.id) {
                   classes.push('fc-event-selected')
@@ -1472,7 +1603,7 @@ export default function CalendarPage() {
               eventDidMount={(info) => {
                 info.el.setAttribute('data-cal-event-id', info.event.id)
                 const kind = (info.event.extendedProps as { kind?: string }).kind
-                if (kind === 'block') return
+                if (kind === 'block' || kind === 'schedule-closed') return
                 if (kind === 'draft') {
                   info.el.setAttribute('aria-label', 'Draft event, not saved')
                 }
@@ -1483,7 +1614,7 @@ export default function CalendarPage() {
               }}
               eventAllow={(_span, moving) => {
                 const kind = (moving?.extendedProps as { kind?: string } | undefined)?.kind
-                return kind !== 'block' && kind !== 'draft'
+                return kind !== 'block' && kind !== 'schedule-closed' && kind !== 'draft'
               }}
             />
             </div>

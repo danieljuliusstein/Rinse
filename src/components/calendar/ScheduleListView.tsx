@@ -15,24 +15,29 @@ type Props = {
   anchorISO: string
   jobs: DeskJob[]
   blocks: DeskTimeBlock[]
+  /** Closed weekdays from booking_schedule.work_days. */
+  scheduleClosedDates?: Set<string>
   categories: CalCategory[]
   selectedId: string | null
   selectedBlockId: string | null
   onSelectJob: (job: DeskJob) => void
   onSelectBlock: (block: DeskTimeBlock) => void
   onOpenRoutes?: () => void
+  onUnblockDay?: (dateISO: string) => void
 }
 
 export function ScheduleListView({
   anchorISO,
   jobs,
   blocks,
+  scheduleClosedDates,
   categories,
   selectedId,
   selectedBlockId,
   onSelectJob,
   onSelectBlock,
   onOpenRoutes,
+  onUnblockDay,
 }: Props) {
   const weekStart = useMemo(() => weekStartFromISO(anchorISO), [anchorISO])
   const weekStartISO = formatDateLocalFromDate(weekStart)
@@ -45,9 +50,10 @@ export function ScheduleListView({
         date,
         iso,
         items: itemsOnDate(jobs, blocks, iso, categories),
+        scheduleClosed: scheduleClosedDates?.has(iso) ?? false,
       }
     })
-  }, [weekStartISO, jobs, blocks, categories])
+  }, [weekStartISO, jobs, blocks, categories, scheduleClosedDates])
 
   const total = grouped.reduce((n, g) => n + g.items.length, 0)
 
@@ -75,16 +81,50 @@ export function ScheduleListView({
                     {g.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                   {empty ? (
-                    <span className="text-[12px] font-medium text-ink-300">· open</span>
+                    <span
+                      className={`text-[12px] font-medium ${
+                        g.scheduleClosed ? 'text-slate-500' : 'text-ink-300'
+                      }`}
+                    >
+                      · {g.scheduleClosed ? 'closed' : 'open'}
+                    </span>
                   ) : null}
                 </div>
 
                 {empty ? (
-                  <div className="rounded-lg border border-dashed border-ink-200 bg-white py-3 text-center text-[13px] text-ink-400">
-                    No jobs scheduled
-                  </div>
+                  g.scheduleClosed ? (
+                    <button
+                      type="button"
+                      onClick={() => onUnblockDay?.(g.iso)}
+                      className="cal-blocked-hatch w-full rounded-lg border border-slate-300/60 px-4 py-3 text-left"
+                    >
+                      <div className="text-[13px] font-medium text-ink-500">
+                        Closed — not a work day
+                      </div>
+                      <div className="mt-0.5 text-[11.5px] text-ink-400">
+                        Click to open this date only
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-ink-200 bg-white py-3 text-center text-[13px] text-ink-400">
+                      No jobs scheduled
+                    </div>
+                  )
                 ) : (
                   <div className="overflow-hidden rounded-lg border border-ink-100 bg-white shadow-card">
+                    {g.scheduleClosed ? (
+                      <button
+                        type="button"
+                        onClick={() => onUnblockDay?.(g.iso)}
+                        className="cal-blocked-hatch flex w-full items-center gap-3 border-b border-ink-50 px-4 py-2.5 text-left"
+                      >
+                        <CalendarOff className="h-4 w-4 shrink-0 text-ink-400" />
+                        <span className="flex-1 text-[13px] font-medium text-ink-500">
+                          Closed on schedule
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-ink-300 shrink-0" />
+                      </button>
+                    ) : null}
                     {g.items.map((it) => {
                       if (it.kind === 'block') {
                         const sel = selectedBlockId === it.id

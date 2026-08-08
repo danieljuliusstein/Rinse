@@ -12,24 +12,29 @@ type Props = {
   dateISO: string
   jobs: DeskJob[]
   blocks: DeskTimeBlock[]
+  /** Closed weekday from booking_schedule.work_days (not an explicit time_block). */
+  scheduleClosed?: boolean
   categories: CalCategory[]
   selectedId: string | null
   selectedBlockId: string | null
   onSelectJob: (job: DeskJob) => void
   onSelectBlock: (block: DeskTimeBlock) => void
   onDraftAt: (dateISO: string, startHour: number) => void
+  onUnblockDay?: (dateISO: string) => void
 }
 
 export function DayAgendaView({
   dateISO,
   jobs,
   blocks,
+  scheduleClosed = false,
   categories,
   selectedId,
   selectedBlockId,
   onSelectJob,
   onSelectBlock,
   onDraftAt,
+  onUnblockDay,
 }: Props) {
   const anchor = useMemo(() => new Date(`${dateISO}T12:00:00`), [dateISO])
   const items = useMemo(
@@ -51,16 +56,35 @@ export function DayAgendaView({
           <span className="text-[13px] text-ink-400">{items.length} items</span>
         </div>
 
+        {scheduleClosed ? (
+          <button
+            type="button"
+            onClick={() => onUnblockDay?.(dateISO)}
+            className="cal-blocked-hatch mb-4 w-full rounded-xl border border-slate-300/60 px-4 py-3 text-left"
+          >
+            <div className="text-[13.5px] font-medium text-ink-500">Closed — not a work day</div>
+            <div className="mt-0.5 text-[11.5px] text-ink-400">
+              Outside your usual schedule. Click to open this date only.
+            </div>
+          </button>
+        ) : null}
+
         {items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-ink-200 bg-white py-12 text-center">
-            <p className="text-sm text-ink-400">No jobs or blocks scheduled this day.</p>
-            <button
-              type="button"
-              onClick={() => onDraftAt(dateISO, 9)}
-              className="mt-3 text-[13px] font-medium text-brand-600 hover:text-brand-700"
-            >
-              Schedule a detail job →
-            </button>
+            <p className="text-sm text-ink-400">
+              {scheduleClosed
+                ? 'No jobs scheduled — day is closed on your schedule.'
+                : 'No jobs or blocks scheduled this day.'}
+            </p>
+            {!scheduleClosed ? (
+              <button
+                type="button"
+                onClick={() => onDraftAt(dateISO, 9)}
+                className="mt-3 text-[13px] font-medium text-brand-600 hover:text-brand-700"
+              >
+                Schedule a detail job →
+              </button>
+            ) : null}
           </div>
         ) : (
           <div className="relative">
