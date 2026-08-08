@@ -22,6 +22,7 @@ type Props = {
   onSelectJob: (job: DeskJob) => void
   onSelectBlock: (block: DeskTimeBlock) => void
   onDraftAt: (dateISO: string, startHour: number) => void
+  onUnblockDay?: (dateISO: string) => void
 }
 
 const HALVES = [
@@ -40,6 +41,7 @@ export function DayAmPmView({
   onSelectJob,
   onSelectBlock,
   onDraftAt,
+  onUnblockDay,
 }: Props) {
   const items = useMemo(
     () => itemsOnDate(jobs, blocks, dateISO, categories),
@@ -72,7 +74,13 @@ export function DayAmPmView({
             </div>
             <div
               className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-3"
-              onDoubleClick={() => onDraftAt(dateISO, half.label === 'Afternoon' ? 13 : 9)}
+              onDoubleClick={() => {
+                if (scheduleClosed) {
+                  onUnblockDay?.(dateISO)
+                  return
+                }
+                onDraftAt(dateISO, half.label === 'Afternoon' ? 13 : 9)
+              }}
             >
               {halfItems.length === 0 ? (
                 <div className="flex h-full min-h-[120px] flex-col items-center justify-center text-center">
@@ -81,7 +89,15 @@ export function DayAmPmView({
                       ? 'Closed on schedule'
                       : `Open ${half.label.toLowerCase()}`}
                   </p>
-                  {!scheduleClosed ? (
+                  {scheduleClosed ? (
+                    <button
+                      type="button"
+                      onClick={() => onUnblockDay?.(dateISO)}
+                      className="mt-2 text-[12px] font-medium text-brand-600 hover:text-brand-700"
+                    >
+                      Open this date
+                    </button>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => onDraftAt(dateISO, half.label === 'Afternoon' ? 13 : 9)}
@@ -89,7 +105,7 @@ export function DayAmPmView({
                     >
                       + Add a job
                     </button>
-                  ) : null}
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">

@@ -418,10 +418,29 @@ export default function CalendarPage() {
   )
 
   const visibleDates = useMemo(() => {
+    // Schedule / week surfaces render Mon–Sun from weekStartISO — don't trust
+    // blocksRangeISO alone (loadBlocksAround is anchor→+7, not week-aligned).
+    if (view === 'schedule' || view === 'week') {
+      const weekDates = datesInInclusiveRange(weekStartISO, addDaysISO(weekStartISO, 6))
+      if (!blocksRangeISO) return weekDates
+      const merged = new Set([
+        ...weekDates,
+        ...datesInInclusiveRange(blocksRangeISO.from, blocksRangeISO.to),
+      ])
+      return [...merged].sort()
+    }
+    if (view === 'day') {
+      const day = anchorDate.slice(0, 10)
+      if (!blocksRangeISO) return [day]
+      const merged = new Set([
+        day,
+        ...datesInInclusiveRange(blocksRangeISO.from, blocksRangeISO.to),
+      ])
+      return [...merged].sort()
+    }
     if (blocksRangeISO) {
       return datesInInclusiveRange(blocksRangeISO.from, blocksRangeISO.to)
     }
-    if (view === 'day') return [anchorDate.slice(0, 10)]
     if (view === 'month') {
       const start = new Date(`${anchorDate.slice(0, 10)}T12:00:00`)
       start.setDate(1)
@@ -1495,6 +1514,21 @@ export default function CalendarPage() {
                   setSelectedBlock(block)
                 }}
                 onDraftAt={openDraftAtHour}
+                onUnblockDay={(iso) => {
+                  void (async () => {
+                    try {
+                      const ok = await confirmUnblockCalendarDay(iso, confirm)
+                      if (!ok) return
+                      await refreshScheduleAndBlocks()
+                      toast('Day unblocked')
+                    } catch (err) {
+                      alert(
+                        err instanceof Error ? err.message : 'Could not unblock day',
+                        'Day is blocked',
+                      )
+                    }
+                  })()
+                }}
               />
             ) : null}
 
