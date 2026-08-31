@@ -6,10 +6,10 @@ export type SectionKey = 'chemicals' | 'equipment' | 'supplies' | 'wishlist'
 export type SupplyFilterChip = 'all' | 'low' | 'out'
 export type InventoryRowVariant = '' | 'warning' | 'danger'
 
-export const SUPPLY_FILTER_CHIPS: { id: SupplyFilterChip; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'low', label: 'Low' },
-  { id: 'out', label: 'Out' },
+export const SUPPLY_FILTER_CHIPS: { value: SupplyFilterChip; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'low', label: 'Low' },
+  { value: 'out', label: 'Out' },
 ]
 
 export const SECTION_CONFIG: {

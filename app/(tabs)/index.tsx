@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Linking, ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +8,7 @@ import { ArSummaryCard } from '@/src/components/home/ArSummaryCard'
 import { HomeCtaRow } from '@/src/components/home/HomeCtaRow'
 import { HomeGreetingHeader } from '@/src/components/home/HomeGreetingHeader'
 import { HomeMonthCalendar } from '@/src/components/home/HomeMonthCalendar'
+import { HomeDayJobsPanel } from '@/src/components/home/HomeDayJobsPanel'
 import { HomeRevenueChart } from '@/src/components/home/HomeRevenueChart'
 import { HomeSection } from '@/src/components/home/HomeSection'
 import { TodayJobCard } from '@/src/components/home/TodayJobCard'
@@ -49,11 +50,11 @@ import { listSupplies } from '@/src/lib/supplies-api'
 import { fetchWeatherReadiness, type WeatherReadinessResult } from '@/src/lib/weather-readiness'
 import {
   computeBlockedDates,
-  datesInMonth,
+  datesInMonthGrid,
   DEFAULT_BOOKING_SCHEDULE,
-  monthDateRange,
 } from '@/src/lib/booking-calendar'
 import { confirmUnblockCalendarDay } from '@/src/lib/confirm-unblock-day'
+import type { BookingSchedule } from '@/src/lib/booking-schedule'
 import { getTimeBlocks } from '@/src/lib/time-blocks-api'
 import { useOffline } from '@/src/providers/OfflineProvider'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
@@ -106,9 +107,11 @@ export default function HomeScreen() {
   const [weather, setWeather] = useState<WeatherReadinessResult | null>(null)
   const [weatherLoading, setWeatherLoading] = useState(true)
   const [weatherRescheduleOpen, setWeatherRescheduleOpen] = useState(false)
+  const weatherRequestId = useRef(0)
   const [profilePercent, setProfilePercent] = useState<ReturnType<typeof computeProfileCompletion> | null>(null)
   const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
-  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set())
+  const [bookingSchedule, setBookingSchedule] = useState<BookingSchedule>(DEFAULT_BOOKING_SCHEDULE)
+  const [allDayBlockDates, setAllDayBlockDates] = useState<string[]>([])
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date()
     return { year: now.getFullYear(), month: now.getMonth() }
@@ -117,10 +120,16 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const blockedDates = useMemo(() => {
+    const gridDates = datesInMonthGrid(calendarMonth.year, calendarMonth.month)
+    return computeBlockedDates(gridDates, bookingSchedule, allDayBlockDates)
+  }, [allDayBlockDates, bookingSchedule, calendarMonth.month, calendarMonth.year])
+
   const displayName = useMemo(() => displayNameFromUser(user?.name), [user?.name])
 
   useEffect(() => {
     let cancelled = false
+    const requestId = ++weatherRequestId.current
     setLoading(true)
     setWeatherLoading(true)
     setError(null)
@@ -145,7 +154,7 @@ export default function HomeScreen() {
             withTimeout(loadSettings(), 12000, null),
             withTimeout(fetchWeatherReadiness(), 12000, null),
           ])
-        if (cancelled) return
+        if (cancelled || requestId !== weatherRequestId.current) return
         setJobs(jobRows)
         setInvoices(invoiceRows)
         setPackages(packageRows)
@@ -154,12 +163,18 @@ export default function HomeScreen() {
         if (settings) {
           setProfilePercent(computeProfileCompletion(settings))
           setHomeModules(settings.home_modules ?? {})
+          setBookingSchedule(settings.booking_schedule ?? DEFAULT_BOOKING_SCHEDULE)
         }
-        setWeather(weatherResult)
+        // Timeout returns null — keep prior forecast instead of wiping the card.
+        if (weatherResult) {
+          setWeather(weatherResult)
+        }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load dashboard')
+        if (!cancelled && requestId === weatherRequestId.current) {
+          setError(e instanceof Error ? e.message : 'Failed to load dashboard')
+        }
       } finally {
-        if (!cancelled) {
+        if (!cancelled && requestId === weatherRequestId.current) {
           setLoading(false)
           setWeatherLoading(false)
         }
@@ -172,12 +187,17 @@ export default function HomeScreen() {
   }, [tick])
 
   const loadBlockedDates = useCallback(async (year: number, month: number) => {
-    const settings = await loadSettings()
-    const schedule = settings.booking_schedule ?? DEFAULT_BOOKING_SCHEDULE
-    const { from, to } = monthDateRange(year, month)
-    const blocks = await getTimeBlocks(from, to)
-    const allDay = blocks.filter((b) => b.all_day).map((b) => b.date)
-    setBlockedDates(computeBlockedDates(datesInMonth(year, month), schedule, allDay))
+    // Closed weekdays paint synchronously from bookingSchedule (see blockedDates useMemo).
+    // This only merges all-day time_blocks from PB.
+    try {
+      const gridDates = datesInMonthGrid(year, month)
+      const from = gridDates[0]!
+      const to = gridDates[gridDates.length - 1]!
+      const blocks = await getTimeBlocks(from, to)
+      setAllDayBlockDates(blocks.filter((b) => b.all_day).map((b) => b.date.slice(0, 10)))
+    } catch {
+      setAllDayBlockDates([])
+    }
   }, [])
 
   const handleViewMonthChange = useCallback((year: number, month: number) => {
@@ -189,6 +209,9 @@ export default function HomeScreen() {
       void (async () => {
         const unblocked = await confirmUnblockCalendarDay(iso)
         if (!unblocked) return
+        // Re-read schedule in case Unblock added an open_date.
+        const settings = await loadSettings()
+        setBookingSchedule(settings.booking_schedule ?? DEFAULT_BOOKING_SCHEDULE)
         await loadBlockedDates(calendarMonth.year, calendarMonth.month)
         setSelectedDate(iso)
       })()
@@ -223,6 +246,7 @@ export default function HomeScreen() {
       dateLabel={compactDateLabel()}
       avatarInitial={avatarInitial(displayName)}
       pipelineBadge={pipelineCount}
+      settingsDot={Boolean(profilePercent && !profilePercent.isComplete)}
       onSearchPress={toggleSearch}
       searchActive={searchActive}
     />
@@ -306,7 +330,7 @@ export default function HomeScreen() {
             {isHomeModuleEnabled(homeModules, 'job_readiness') ? (
               <BlockStagger index={4}>
                 <HomeSection label={t('home.jobReadiness')}>
-                  <WeatherReadinessCard result={weather} loading={weatherLoading} compact />
+                  <WeatherReadinessCard result={weather} loading={weatherLoading} />
                   {hasWeatherRisk(weather) ? (
                     <PrimaryButton
                       label="Reschedule day"
@@ -350,6 +374,13 @@ export default function HomeScreen() {
                     blockedDates={blockedDates}
                     onViewMonthChange={handleViewMonthChange}
                   />
+                  {selectedDate ? (
+                    <HomeDayJobsPanel
+                      date={selectedDate}
+                      jobs={jobs}
+                      onClear={() => setSelectedDate(null)}
+                    />
+                  ) : null}
                 </HomeSection>
               </BlockStagger>
             ) : null}

@@ -9,7 +9,7 @@ import type {
   QuickJobFormValues,
   ClientFormValues,
 } from '@rinse/core'
-import { generatePocketBaseId, mapJobStatusForDisplay, fmt } from '@rinse/core'
+import { generatePocketBaseId, mapJobStatusForDisplay, fmt, activeJobs } from '@rinse/core'
 import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
 import { executeWrite } from './write-router'
@@ -30,6 +30,14 @@ function mapClient(record: Record<string, unknown>): Client {
     phone: record.phone ? String(record.phone) : undefined,
     email: record.email ? String(record.email) : undefined,
     address: record.address ? String(record.address) : undefined,
+    lat:
+      record.lat != null && record.lat !== ''
+        ? Number(record.lat)
+        : undefined,
+    lng:
+      record.lng != null && record.lng !== ''
+        ? Number(record.lng)
+        : undefined,
     lead_source: record.lead_source ? String(record.lead_source) : undefined,
     notes: record.notes ? String(record.notes) : undefined,
     parent_client_id: record.parent_client_id ? String(record.parent_client_id) : undefined,
@@ -66,7 +74,7 @@ function mapJob(record: Record<string, unknown>, expand?: Record<string, unknown
 
   const job: JobWithRelations = {
     id: String(record.id),
-    date: String(record.date ?? ''),
+    date: String(record.date ?? '').slice(0, 10),
     start_time: record.start_time ? String(record.start_time) : undefined,
     arrival_window_end: record.arrival_window_end ? String(record.arrival_window_end) : undefined,
     hours_worked: Number(record.hours_worked ?? 0),
@@ -178,18 +186,22 @@ export async function listJobs(limit = 50): Promise<JobWithRelations[]> {
       const result = await pb.collection('jobs').getList(1, limit, {
         sort: '-date',
         expand: 'client_id,package_id,invoice_id',
+        filter: 'status != "cancelled"',
       })
       const jobs = result.items.map((item) => mapJob(item as Record<string, unknown>, item.expand))
       await cachePbList('jobs', result.items as Record<string, unknown>[], orgId)
-      return jobs
+      // Belt-and-suspenders: Desk soft-cancels deletes; never surface cancelled rows.
+      return activeJobs(jobs)
     } catch {
       // fall through
     }
   }
 
-  return listMirrorRecords<Record<string, unknown>>('jobs', limit)
-    .map((row) => mapJob(row))
-    .sort((a, b) => b.date.localeCompare(a.date))
+  return activeJobs(
+    listMirrorRecords<Record<string, unknown>>('jobs', limit)
+      .map((row) => mapJob(row))
+      .sort((a, b) => b.date.localeCompare(a.date)),
+  )
 }
 
 export async function getJob(id: string): Promise<JobWithRelations | null> {
@@ -525,30 +537,40 @@ export async function getClientJobs(clientId: string): Promise<JobWithRelations[
       const orgId = requireOrganizationId()
       const escaped = clientId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
       const result = await pb.collection('jobs').getFullList({
-        filter: `organization_id = "${orgId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}" && client_id = "${escaped}"`,
+        filter: `organization_id = "${orgId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}" && client_id = "${escaped}" && status != "cancelled"`,
         sort: '-date',
         expand: 'client_id,package_id,invoice_id',
       })
       const jobs = result.map((item) => mapJob(item as Record<string, unknown>, item.expand))
       await cachePbList('jobs', result as Record<string, unknown>[], orgId)
-      return jobs
+      return activeJobs(jobs)
     } catch {
       // fall through
     }
   }
 
-  return listMirrorRecords<Record<string, unknown>>('jobs')
-    .map((row) => mapJob(row))
-    .filter((j) => j.client_id === clientId)
-    .sort((a, b) => b.date.localeCompare(a.date))
+  return activeJobs(
+    listMirrorRecords<Record<string, unknown>>('jobs')
+      .map((row) => mapJob(row))
+      .filter((j) => j.client_id === clientId)
+      .sort((a, b) => b.date.localeCompare(a.date)),
+  )
 }
 
 export async function deleteJob(id: string): Promise<{ ok: boolean; error?: string }> {
+  // Match Desk CRM: soft-cancel so the event leaves the schedule without hard DELETE
+  // (Fly rejects hard deletes when invoice/photo relations exist).
   const online = await isOnline()
   if (online) {
     try {
       const pb = getPocketBase()
-      await pb.collection('jobs').delete(id)
+      try {
+        await pb.collection('jobs').update(id, { status: 'cancelled' })
+      } catch {
+        // Older PB schemas may not allow `cancelled` yet — hard-delete as fallback.
+        await pb.collection('jobs').delete(id)
+      }
+      // Drop from local mirror so offline lists don't keep showing a ghost appointment.
       deleteMirrorRecord('jobs', id)
       return { ok: true }
     } catch (e) {

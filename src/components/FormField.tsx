@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { StyleSheet, TextInput, View, type ViewStyle } from 'react-native'
+import { Platform, StyleSheet, TextInput, View, type ViewStyle } from 'react-native'
 import { CheckCircle } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
+
+const MULTILINE_HEIGHT = 96
 
 export function FormField({
   label,
@@ -39,13 +41,14 @@ export function FormField({
       <View
         style={[
           styles.field,
+          multiline ? styles.fieldMultiline : null,
           focused && styles.fieldFocus,
           filled && !error && styles.fieldFilled,
           error ? styles.fieldError : null,
         ]}
       >
         <TextInput
-          style={[styles.input, multiline && styles.multiline]}
+          style={[styles.input, multiline ? styles.multiline : null]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder ?? ' '}
@@ -73,8 +76,10 @@ export function FormField({
 }
 
 const styles = StyleSheet.create({
+  /** Do not use flex:1 here — it collapses stacked fields on web. FormRow supplies flex. */
   wrap: {
-    flex: 1,
+    width: '100%',
+    alignSelf: 'stretch',
     minWidth: 0,
   },
   label: {
@@ -89,6 +94,13 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
     minHeight: 48,
+  },
+  fieldMultiline: {
+    alignItems: 'stretch',
+    minHeight: MULTILINE_HEIGHT,
+    height: MULTILINE_HEIGHT,
+    overflow: 'hidden',
+    paddingVertical: 0,
   },
   fieldFocus: {
     borderColor: colors.green,
@@ -108,11 +120,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: fonts.body,
     color: colors.textPrimary,
+    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as ViewStyle) : null),
   },
   multiline: {
-    minHeight: 96,
+    flexGrow: 1,
+    alignSelf: 'stretch',
+    width: '100%',
+    minHeight: MULTILINE_HEIGHT - 4,
+    height: MULTILINE_HEIGHT - 4,
     textAlignVertical: 'top',
     paddingTop: 12,
+    paddingBottom: 12,
   },
   check: {
     marginLeft: spacing.sm,

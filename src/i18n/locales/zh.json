@@ -218,7 +218,9 @@
     "buySupplies": "采购耗材",
     "buySuppliesSub": "库存与支出一起",
     "newQuote": "新报价",
-    "newQuoteSub": "发送价格估算"
+    "newQuoteSub": "发送价格估算",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
   },
   "jobs": {
     "title": "工作",

@@ -87,10 +87,17 @@ export async function fetchWeatherReadiness(): Promise<WeatherReadinessResult> {
       method: 'POST',
       body: JSON.stringify({ today }),
     })
-    return data.readiness ?? UNRESOLVED
+    const readiness = data.readiness ?? UNRESOLVED
+    // #region agent log
+    fetch('http://127.0.0.1:7518/ingest/3eb366ac-7592-4deb-adb1-83908dfd0476',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a35195'},body:JSON.stringify({sessionId:'a35195',runId:'pre-fix',hypothesisId:'B',location:'weather-readiness.ts:fetchWeatherReadiness',message:'API readiness response',data:{today,status:readiness.status,rowCount:readiness.rows?.length??0,unresolvedCount:readiness.unresolvedCount??0,reason:readiness.reason??null,rowPrimaries:(readiness.rows??[]).map(r=>({kind:r.kind,primary:r.primary,secondary:r.secondary,statusLabel:r.statusLabel??null})),hadReadinessKey:Boolean(data.readiness)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    return readiness
   } catch (err) {
     // Unauthorized / missing API config — hide banner instead of a red error chip.
     const status = apiErrorStatus(err)
+    // #region agent log
+    fetch('http://127.0.0.1:7518/ingest/3eb366ac-7592-4deb-adb1-83908dfd0476',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a35195'},body:JSON.stringify({sessionId:'a35195',runId:'pre-fix',hypothesisId:'C',location:'weather-readiness.ts:fetchWeatherReadiness:catch',message:'Weather fetch error path',data:{httpStatus:status??null,network:isNetworkFailure(err),errMessage:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     if (status === 0 || status === 401 || status === 403 || status === 404) {
       if (status === 404) {
         console.warn('[weather-readiness] API route not found — is detailing-app dev server running on :3000?')

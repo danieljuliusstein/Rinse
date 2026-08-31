@@ -18,6 +18,7 @@ import { isLowStock } from '@/src/lib/home-dashboard'
 import { SECTION_CONFIG, type SectionKey } from '@/src/lib/inventory-utils'
 import { useSafeBack } from '@/src/lib/safe-go-back'
 import { deleteSupply, listSupplies } from '@/src/lib/supplies-api'
+import { showError } from '@/src/lib/user-message'
 import { useDataRefresh } from '@/src/providers/DataRefreshProvider'
 import { colors } from '@/src/theme/colors'
 
@@ -100,19 +101,31 @@ export default function InventoryScreen() {
   }
 
   const handleDeleteSupply = async (id: string) => {
-    await deleteSupply(id)
-    await reload(true)
+    try {
+      await deleteSupply(id)
+      await reload(true)
+    } catch (e) {
+      showError('Supply', e instanceof Error ? e.message : 'Could not delete')
+    }
   }
 
   const handleDeleteEquipment = async (id: string) => {
-    await deleteEquipment(id)
-    await reload(true)
+    try {
+      await deleteEquipment(id)
+      await reload(true)
+    } catch (e) {
+      showError('Equipment', e instanceof Error ? e.message : 'Could not delete')
+    }
   }
 
   const handleDeleteWishlist = async (id: string) => {
-    const items = await loadHomeInventory()
-    await saveHomeInventory(deleteHomeInventoryItem(items, id))
-    await reload(true)
+    try {
+      const items = await loadHomeInventory()
+      await saveHomeInventory(deleteHomeInventoryItem(items, id))
+      await reload(true)
+    } catch (e) {
+      showError('Wish list', e instanceof Error ? e.message : 'Could not delete')
+    }
   }
 
   if (loading) {

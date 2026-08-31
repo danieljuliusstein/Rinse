@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Camera, ChatCircle, Funnel, MagnifyingGlass } from 'phosphor-react-native'
+import { ChatCircle, Funnel, GearSix, MagnifyingGlass, MapTrifold } from 'phosphor-react-native'
 import { AppText, IconHeaderButton } from '@/src/components/ui'
 import { TrialPlanBadge } from '@/src/components/subscription/TrialPlanBadge'
 import { colors, layout, spacing, webInlinePressableReset } from '@/src/theme/colors'
@@ -12,6 +12,7 @@ type HomeGreetingHeaderProps = {
   dateLabel: string
   avatarInitial: string
   pipelineBadge?: number
+  settingsDot?: boolean
   onSearchPress?: () => void
   searchActive?: boolean
 }
@@ -22,6 +23,7 @@ export function HomeGreetingHeader({
   dateLabel,
   avatarInitial,
   pipelineBadge = 0,
+  settingsDot = false,
   onSearchPress,
   searchActive = false,
 }: HomeGreetingHeaderProps) {
@@ -52,6 +54,9 @@ export function HomeGreetingHeader({
 
       <View style={styles.actions}>
         <TrialPlanBadge placement="inline" />
+        <IconHeaderButton label={t('home.routes')} onPress={() => router.push('/(tabs)/routes' as never)}>
+          <MapTrifold size={18} color={colors.textSecondary} weight="duotone" />
+        </IconHeaderButton>
         <IconHeaderButton
           label={t('home.pipeline')}
           onPress={() => router.push('/(tabs)/pipeline')}
@@ -71,8 +76,8 @@ export function HomeGreetingHeader({
             />
           </IconHeaderButton>
         ) : null}
-        <IconHeaderButton label="Scan" onPress={() => router.push('/scan')}>
-          <Camera size={18} color={colors.textSecondary} weight="duotone" />
+        <IconHeaderButton label={t('home.settings')} onPress={() => router.push('/(tabs)/settings')} dot={settingsDot}>
+          <GearSix size={18} color={colors.textSecondary} weight="duotone" />
         </IconHeaderButton>
       </View>
     </View>

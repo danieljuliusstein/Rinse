@@ -218,7 +218,9 @@
     "buySupplies": "सामग्री खरीदें",
     "buySuppliesSub": "स्टॉक और खर्च साथ",
     "newQuote": "नया कोट",
-    "newQuoteSub": "मूल्य अनुमान भेजें"
+    "newQuoteSub": "मूल्य अनुमान भेजें",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
   },
   "jobs": {
     "title": "जॉब",

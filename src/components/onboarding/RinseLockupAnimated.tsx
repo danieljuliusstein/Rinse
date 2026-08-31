@@ -41,21 +41,18 @@ export function RinseLockupAnimated({
   const dashOffset = useRef(new Animated.Value(ICON_PATH_LENGTH)).current
   const dotScale = useRef(new Animated.Value(0)).current
   const textOpacity = useRef(new Animated.Value(0)).current
-  const textY = useRef(new Animated.Value(10)).current
 
   useEffect(() => {
     if (reduceMotion) {
       dashOffset.setValue(0)
       dotScale.setValue(1)
       textOpacity.setValue(1)
-      textY.setValue(0)
       return
     }
 
     dashOffset.setValue(ICON_PATH_LENGTH)
     dotScale.setValue(0)
     textOpacity.setValue(0)
-    textY.setValue(10)
 
     Animated.parallel([
       Animated.timing(dashOffset, {
@@ -88,23 +85,15 @@ export function RinseLockupAnimated({
       ]),
       Animated.sequence([
         Animated.delay(1150),
-        Animated.parallel([
-          Animated.timing(textOpacity, {
-            toValue: 1,
-            duration: 600,
-            easing: riseEase,
-            useNativeDriver: false,
-          }),
-          Animated.timing(textY, {
-            toValue: 0,
-            duration: 600,
-            easing: riseEase,
-            useNativeDriver: false,
-          }),
-        ]),
+        Animated.timing(textOpacity, {
+          toValue: 1,
+          duration: 600,
+          easing: riseEase,
+          useNativeDriver: false,
+        }),
       ]),
     ]).start()
-  }, [dashOffset, dotScale, reduceMotion, textOpacity, textY])
+  }, [dashOffset, dotScale, reduceMotion, textOpacity])
 
   const dotR = dotScale.interpolate({
     inputRange: [0, 1.35],
@@ -128,7 +117,11 @@ export function RinseLockupAnimated({
           <AnimatedCircle cx={66} cy={70} r={dotR} fill="#22c55e" />
         </G>
 
-        <AnimatedG opacity={textOpacity} translateY={textY}>
+        {/*
+          Do not pass `translateY` to SVG G — on web it becomes an invalid DOM attr.
+          Wordmark rises via opacity only (draw + fade still read as a brand moment).
+        */}
+        <AnimatedG opacity={textOpacity}>
           <G transform="translate(101.136,80.0938) scale(1,-1)">
             <Path d={WORDMARK_PATH} fill={wordmarkFill} />
           </G>

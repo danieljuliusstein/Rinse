@@ -218,7 +218,9 @@
     "buySupplies": "Malzeme al",
     "buySuppliesSub": "Stok + gider birlikte",
     "newQuote": "Yeni teklif",
-    "newQuoteSub": "Fiyat tahmini gönder"
+    "newQuoteSub": "Fiyat tahmini gönder",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
   },
   "jobs": {
     "title": "İşler",

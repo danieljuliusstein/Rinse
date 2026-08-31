@@ -1,4 +1,4 @@
-import { formatScheduledLabel } from '@rinse/core'
+import { formatScheduledLabel, activeJobs } from '@rinse/core'
 import type { JobWithRelations, Package, Supply } from '@rinse/core'
 import { normalizeJobDate } from '@/src/lib/jobs-list'
 import { sortJobsByRouteOrder } from '@/src/lib/jobs-list-logic'
@@ -60,7 +60,9 @@ export function formatStartTimeLabel(startTime?: string, arrivalWindowEnd?: stri
 }
 
 export function jobsForDate(jobs: JobWithRelations[], date: string): JobWithRelations[] {
-  return sortJobsByRouteOrder(jobs.filter((j) => normalizeJobDate(j.date) === date))
+  return sortJobsByRouteOrder(
+    activeJobs(jobs).filter((j) => normalizeJobDate(j.date) === date),
+  )
 }
 
 export function buildTodayJobCard(jobs: JobWithRelations[]): TodayJobCardData | null {
@@ -147,7 +149,7 @@ export function buildComingUpJobs(jobs: JobWithRelations[], limit = 3): ComingUp
 export function searchHomeJobs(jobs: JobWithRelations[], query: string, limit = 40): JobWithRelations[] {
   const q = query.trim().toLowerCase()
   if (!q) return []
-  return jobs
+  return activeJobs(jobs)
     .filter((job) => {
       const hay = [
         job.client?.name,
@@ -223,7 +225,7 @@ export function computeWeekDays(jobs: JobWithRelations[]) {
       label: d.toLocaleDateString('en-US', { weekday: 'short' }),
       dayNum: d.getDate(),
       isToday: dateStr === todayStr,
-      jobCount: jobs.filter((j) => j.date === dateStr).length,
+      jobCount: activeJobs(jobs).filter((j) => j.date === dateStr).length,
     })
   }
   return days

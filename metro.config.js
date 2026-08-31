@@ -58,6 +58,28 @@ config.server.enhanceMiddleware = (middleware) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
 
     const url = req.url ?? ''
+
+    // Same-origin debug ingest (browser often blocks 127.0.0.1 cross-port from localhost).
+    if (url.startsWith('/__agent-debug') && req.method === 'POST') {
+      const chunks = []
+      req.on('data', (c) => chunks.push(c))
+      req.on('end', () => {
+        try {
+          const body = Buffer.concat(chunks).toString('utf8')
+          const logPath = path.resolve(
+            '/Users/danny/Projects/Desktop-CRM/.cursor/debug-89a058.log',
+          )
+          fs.mkdirSync(path.dirname(logPath), { recursive: true })
+          fs.appendFileSync(logPath, body.trim() + '\n')
+        } catch {
+          // ignore
+        }
+        res.statusCode = 204
+        res.end()
+      })
+      return
+    }
+
     if (url.startsWith('/api-proxy')) {
       const targetPath = url.replace(/^\/api-proxy/, '') || '/'
       const target = new URL(`${API_PROXY_TARGET}${targetPath}`)

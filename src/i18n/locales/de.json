@@ -218,7 +218,9 @@
     "buySupplies": "Material kaufen",
     "buySuppliesSub": "Bestand + Ausgabe zusammen",
     "newQuote": "Neues Angebot",
-    "newQuoteSub": "Preisschätzung senden"
+    "newQuoteSub": "Preisschätzung senden",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
   },
   "jobs": {
     "title": "Aufträge",

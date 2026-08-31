@@ -1,4 +1,4 @@
-import { mapJobStatusForDisplay } from '@rinse/core'
+import { mapJobStatusForDisplay, activeJobs, isActiveJob } from '@rinse/core'
 import type { JobWithRelations, Vehicle } from '@rinse/core'
 import { normalizeJobDate } from '@/src/lib/jobs-list'
 
@@ -18,7 +18,9 @@ function isRecurringJob(cadence?: string | null): boolean {
 }
 
 export function filterJobsByDate(jobs: JobWithRelations[], date: string): JobWithRelations[] {
-  return sortJobsByRouteOrder(jobs.filter((job) => normalizeJobDate(job.date) === date))
+  return sortJobsByRouteOrder(
+    activeJobs(jobs).filter((job) => normalizeJobDate(job.date) === date),
+  )
 }
 
 /** Route order ASC (nulls last), then start_time ASC. */
@@ -112,6 +114,7 @@ export function filterJobsList(
 ): JobWithRelations[] {
   const tokens = queryTokens(query)
   return jobs.filter((job) => {
+    if (!isActiveJob(job)) return false
     if (tokens.length) {
       const hay = jobSearchHaystack(job, vehiclesByClient?.get(job.client_id) ?? [])
       if (!tokens.every((token) => hay.includes(token))) return false

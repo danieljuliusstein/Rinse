@@ -218,7 +218,9 @@
     "buySupplies": "شراء مستلزمات",
     "buySuppliesSub": "مخزون ومصروف معاً",
     "newQuote": "عرض سعر جديد",
-    "newQuoteSub": "إرسال تقدير سعر"
+    "newQuoteSub": "إرسال تقدير سعر",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
   },
   "jobs": {
     "title": "الوظائف",

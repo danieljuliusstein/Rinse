@@ -8,6 +8,8 @@ import { colors, layout, radii, webPressableReset } from '@/src/theme/colors'
 
 interface SheetSubmitButtonProps {
   label: string
+  /** Shown when `done` — defaults to "Saved". */
+  doneLabel?: string
   ready?: boolean
   done?: boolean
   loading?: boolean
@@ -18,6 +20,7 @@ interface SheetSubmitButtonProps {
 
 export function SheetSubmitButton({
   label,
+  doneLabel = 'Saved',
   ready = false,
   done = false,
   loading = false,
@@ -25,7 +28,7 @@ export function SheetSubmitButton({
   onPress,
   style,
 }: SheetSubmitButtonProps) {
-  const isDisabled = disabled || loading || (!ready && !done)
+  const isDisabled = disabled || loading || !ready
   const [rippleTick, setRippleTick] = useState(0)
   const popStyle = useSuccessPopScale(done)
   const rippleStyle = useSubmitRipple(rippleTick)
@@ -37,8 +40,9 @@ export function SheetSubmitButton({
   return (
     <Pressable
       onPress={() => {
+        if (!ready || done || loading || disabled) return
         lightHaptic()
-        if (ready && !done) setRippleTick((n) => n + 1)
+        setRippleTick((n) => n + 1)
         onPress()
       }}
       disabled={isDisabled}
@@ -63,7 +67,7 @@ export function SheetSubmitButton({
             variant="bodySemiBold"
             style={[styles.label, ready && !done && styles.labelOn, done && styles.labelDone]}
           >
-            {done ? 'Saved' : label}
+            {done ? doneLabel : label}
           </AppText>
         )}
       </Animated.View>

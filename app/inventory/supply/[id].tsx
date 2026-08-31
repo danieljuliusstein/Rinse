@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Alert, ScrollView, StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import type { SupplyKind } from '@rinse/core'
-import { SubScreen } from '@/src/components/SubScreen'
 import { FormField } from '@/src/components/FormField'
-import { PillGroup, PrimaryButton, SecondaryButton } from '@/src/components/ui'
+import { AppSheet } from '@/src/components/ui/AppSheet'
+import {
+  AppText,
+  Button,
+  PillGroup,
+  PrimaryButton,
+  ScreenLoading,
+  SecondaryButton,
+  SheetSubmitButton,
+} from '@/src/components/ui'
 import {
   createSupply,
   deleteSupply,
@@ -12,7 +20,8 @@ import {
   restockSupply,
   updateSupply,
 } from '@/src/lib/supplies-api'
-import { spacing } from '@/src/theme/colors'
+import { useDataRefresh } from '@/src/providers/DataRefreshProvider'
+import { colors, radii, spacing } from '@/src/theme/colors'
 
 const CHEMICAL_UNITS = [
   { value: 'oz', label: 'oz' },
@@ -27,14 +36,29 @@ const CONSUMABLE_UNITS = [
   { value: 'pack', label: 'pack' },
 ]
 
+function paramString(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? ''
+  return value ?? ''
+}
+
+type Feedback = { tone: 'success' | 'error'; message: string } | null
+
 export default function SupplyEditorScreen() {
   const router = useRouter()
-  const { id, kind: kindParam } = useLocalSearchParams<{ id: string; kind?: string }>()
+  const { bump } = useDataRefresh()
+  const params = useLocalSearchParams<{ id: string; kind?: string }>()
+  const id = paramString(params.id)
+  const kindParam = paramString(params.kind)
   const isNew = id === 'new'
   const kind: SupplyKind = kindParam === 'consumable' ? 'consumable' : 'chemical'
 
   const [loading, setLoading] = useState(!isNew)
-  const [busy, setBusy] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [restocking, setRestocking] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [restockDone, setRestockDone] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [feedback, setFeedback] = useState<Feedback>(null)
   const [name, setName] = useState('')
   const [unit, setUnit] = useState(kind === 'consumable' ? 'each' : 'oz')
   const [qty, setQty] = useState('0')
@@ -43,6 +67,9 @@ export default function SupplyEditorScreen() {
   const [notes, setNotes] = useState('')
   const [restockQty, setRestockQty] = useState('')
   const [restockCost, setRestockCost] = useState('')
+
+  const restockReady = Number(restockQty) > 0 && Number.isFinite(Number(restockQty))
+  const busy = saving || restocking || deleting
 
   useEffect(() => {
     if (isNew) return
@@ -56,16 +83,28 @@ export default function SupplyEditorScreen() {
         setSupplier(supply.supplier ?? '')
         setNotes(supply.notes ?? '')
       })
-      .catch((e) => Alert.alert('Supply', e instanceof Error ? e.message : 'Could not load'))
+      .catch((e) =>
+        setFeedback({
+          tone: 'error',
+          message: e instanceof Error ? e.message : 'Could not load',
+        }),
+      )
       .finally(() => setLoading(false))
   }, [id, isNew])
 
+  useEffect(() => {
+    if (!restockDone) return
+    const t = setTimeout(() => setRestockDone(false), 1800)
+    return () => clearTimeout(t)
+  }, [restockDone])
+
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Supply', 'Name is required')
+      setFeedback({ tone: 'error', message: 'Name is required' })
       return
     }
-    setBusy(true)
+    setSaving(true)
+    setFeedback(null)
     try {
       if (isNew) {
         await createSupply({
@@ -88,101 +127,260 @@ export default function SupplyEditorScreen() {
           kind,
         })
       }
+      bump()
       router.back()
     } catch (e) {
-      Alert.alert('Supply', e instanceof Error ? e.message : 'Could not save')
+      setFeedback({
+        tone: 'error',
+        message: e instanceof Error ? e.message : 'Could not save',
+      })
     } finally {
-      setBusy(false)
+      setSaving(false)
     }
   }
 
   const handleRestock = async () => {
-    const quantity = Number(restockQty) || 0
-    if (quantity <= 0) {
-      Alert.alert('Restock', 'Enter a quantity to add')
+    const quantity = Number(restockQty)
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setFeedback({ tone: 'error', message: 'Enter a quantity to add' })
       return
     }
-    setBusy(true)
+    const costRaw = restockCost.trim()
+    const totalCost = costRaw ? Number(costRaw) : undefined
+    if (totalCost != null && !Number.isFinite(totalCost)) {
+      setFeedback({ tone: 'error', message: 'Enter a valid restock cost' })
+      return
+    }
+    setRestocking(true)
+    setFeedback(null)
     try {
-      await restockSupply(id, {
+      const updated = await restockSupply(id, {
         quantity,
-        total_cost: restockCost ? Number(restockCost) : undefined,
+        total_cost: totalCost,
       })
-      const updated = await getSupply(id)
-      if (updated) setQty(String(updated.quantity_on_hand))
+      setQty(String(updated.quantity_on_hand))
       setRestockQty('')
       setRestockCost('')
-      Alert.alert('Restocked', `Added ${quantity} ${unit}`)
+      setRestockDone(true)
+      setFeedback({
+        tone: 'success',
+        message: `Added ${quantity} ${unit} · ${updated.quantity_on_hand} ${unit} on hand`,
+      })
+      bump()
     } catch (e) {
-      Alert.alert('Restock', e instanceof Error ? e.message : 'Could not restock')
+      setFeedback({
+        tone: 'error',
+        message: e instanceof Error ? e.message : 'Could not restock',
+      })
     } finally {
-      setBusy(false)
+      setRestocking(false)
     }
   }
 
-  const handleDelete = () => {
-    Alert.alert('Delete supply?', `Delete "${name}" from inventory?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            setBusy(true)
-            try {
-              await deleteSupply(id)
-              router.back()
-            } catch (e) {
-              Alert.alert('Supply', e instanceof Error ? e.message : 'Could not delete')
-            } finally {
-              setBusy(false)
-            }
-          })()
-        },
-      },
-    ])
+  const handleDelete = async () => {
+    setDeleting(true)
+    setFeedback(null)
+    try {
+      await deleteSupply(id)
+      bump()
+      setDeleteOpen(false)
+      router.back()
+    } catch (e) {
+      setDeleteOpen(false)
+      setFeedback({
+        tone: 'error',
+        message: e instanceof Error ? e.message : 'Could not delete',
+      })
+      setDeleting(false)
+    }
   }
 
   const title = isNew ? `Add ${kind === 'consumable' ? 'supply' : 'chemical'}` : 'Edit supply'
 
-  return (
-    <SubScreen title={title} tabDock={false}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {loading ? null : (
-          <>
-            <FormField label="Name" value={name} onChangeText={setName} />
-            <PillGroup
-              label="Unit"
-              options={kind === 'consumable' ? CONSUMABLE_UNITS : CHEMICAL_UNITS}
-              value={unit}
-              onChange={setUnit}
-            />
-            <FormField label="Quantity on hand" value={qty} onChangeText={setQty} keyboardType="decimal-pad" />
-            <FormField label="Reorder at" value={threshold} onChangeText={setThreshold} keyboardType="decimal-pad" />
-            <FormField label="Supplier" value={supplier} onChangeText={setSupplier} />
-            <FormField label="Notes" value={notes} onChangeText={setNotes} multiline />
-            <PrimaryButton label={isNew ? 'Save' : 'Save changes'} loading={busy} onPress={() => void handleSave()} />
+  if (loading) {
+    return (
+      <AppSheet title={title}>
+        <ScreenLoading label="Loading supply…" />
+      </AppSheet>
+    )
+  }
 
+  return (
+    <>
+      <AppSheet
+        title={title}
+        footer={
+          <View style={styles.footer}>
+            <PrimaryButton
+              label={isNew ? 'Save' : 'Save changes'}
+              loading={saving}
+              onPress={() => void handleSave()}
+              disabled={busy}
+            />
             {!isNew ? (
               <>
-                <FormField label="Restock quantity" value={restockQty} onChangeText={setRestockQty} keyboardType="decimal-pad" />
-                <FormField label="Restock cost ($)" value={restockCost} onChangeText={setRestockCost} keyboardType="decimal-pad" />
-                <SecondaryButton label="Restock" onPress={() => void handleRestock()} disabled={busy} />
-                <SecondaryButton label="Delete supply" onPress={handleDelete} disabled={busy} />
+                <SheetSubmitButton
+                  label="Restock"
+                  doneLabel="Restocked"
+                  ready={restockReady}
+                  done={restockDone}
+                  loading={restocking}
+                  disabled={busy && !restocking}
+                  onPress={() => void handleRestock()}
+                />
+                <SecondaryButton
+                  label="Delete supply"
+                  onPress={() => setDeleteOpen(true)}
+                  disabled={busy}
+                />
               </>
             ) : null}
+            <SecondaryButton label="Cancel" onPress={() => router.back()} disabled={busy} />
+          </View>
+        }
+      >
+        {feedback ? (
+          <View
+            style={[styles.banner, feedback.tone === 'success' ? styles.bannerOk : styles.bannerErr]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            <AppText
+              variant="bodyMedium"
+              style={feedback.tone === 'success' ? styles.bannerOkText : styles.bannerErrText}
+            >
+              {feedback.message}
+            </AppText>
+          </View>
+        ) : null}
 
-            <SecondaryButton label="Cancel" onPress={() => router.back()} />
-          </>
-        )}
-      </ScrollView>
-    </SubScreen>
+        <FormField label="Name" value={name} onChangeText={setName} />
+        <PillGroup
+          label="Unit"
+          options={kind === 'consumable' ? CONSUMABLE_UNITS : CHEMICAL_UNITS}
+          value={unit}
+          onChange={setUnit}
+        />
+        <FormField
+          label="Quantity on hand"
+          value={qty}
+          onChangeText={setQty}
+          keyboardType="decimal-pad"
+        />
+        <FormField
+          label="Reorder at"
+          value={threshold}
+          onChangeText={setThreshold}
+          keyboardType="decimal-pad"
+        />
+        <FormField label="Supplier" value={supplier} onChangeText={setSupplier} />
+        <FormField label="Notes" value={notes} onChangeText={setNotes} multiline />
+        {!isNew ? (
+          <View style={styles.restockBlock}>
+            <AppText variant="sectionLabel" style={styles.restockLabel}>
+              Restock
+            </AppText>
+            <FormField
+              label="Quantity to add"
+              value={restockQty}
+              onChangeText={(v) => {
+                setRestockQty(v)
+                if (restockDone) setRestockDone(false)
+                if (feedback?.tone === 'success') setFeedback(null)
+              }}
+              keyboardType="decimal-pad"
+            />
+            <FormField
+              label="Cost ($)"
+              value={restockCost}
+              onChangeText={setRestockCost}
+              keyboardType="decimal-pad"
+            />
+          </View>
+        ) : null}
+      </AppSheet>
+
+      <AppSheet
+        presentation="modal"
+        visible={deleteOpen}
+        title="Delete supply?"
+        subtitle={`Remove "${name}" from inventory. This can’t be undone.`}
+        onClose={() => {
+          if (!deleting) setDeleteOpen(false)
+        }}
+        footer={
+          <View style={styles.footer}>
+            <Button
+              variant="danger"
+              label="Delete supply"
+              loading={deleting}
+              onPress={() => void handleDelete()}
+            />
+            <SecondaryButton
+              label="Keep supply"
+              onPress={() => setDeleteOpen(false)}
+              disabled={deleting}
+            />
+          </View>
+        }
+      >
+        <View style={styles.deleteCard}>
+          <AppText variant="body" style={styles.deleteCopy}>
+            Stock history for this item will no longer appear in inventory lists.
+          </AppText>
+        </View>
+      </AppSheet>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
+  footer: {
+    gap: spacing.sm,
+  },
+  restockBlock: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    gap: spacing.sm,
+    width: '100%',
+    alignSelf: 'stretch',
+    zIndex: 0,
+  },
+  restockLabel: {
+    color: colors.textMuted,
+    marginBottom: spacing.xs,
+  },
+  banner: {
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderWidth: 1,
+    marginBottom: spacing.xs,
+  },
+  bannerOk: {
+    backgroundColor: colors.greenSoft,
+    borderColor: colors.greenBorder,
+  },
+  bannerErr: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  bannerOkText: {
+    color: colors.greenText,
+  },
+  bannerErrText: {
+    color: '#b91c1c',
+  },
+  deleteCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  deleteCopy: {
+    color: colors.textSecondary,
   },
 })

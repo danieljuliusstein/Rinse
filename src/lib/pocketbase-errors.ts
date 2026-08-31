@@ -6,7 +6,8 @@ const VAULT_MSG = 'Read-only vault — resubscribe to make changes'
 
 export function isSubscriptionGuardError(err: unknown): boolean {
   if (!(err instanceof ClientResponseError)) return false
-  if (err.status !== 403) return false
+  // PB subscription hook uses BadRequestError (400); some paths surface 403.
+  if (err.status !== 400 && err.status !== 403) return false
   const msg = `${err.message} ${String((err.response as { message?: string } | undefined)?.message ?? '')}`.toLowerCase()
   return (
     msg.includes('active subscription required') ||

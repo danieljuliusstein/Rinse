@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Car, MapTrifold, Plus, UserPlus } from 'phosphor-react-native'
+import { Car, MapTrifold, Plus } from 'phosphor-react-native'
 import type { TechRosterEntry } from '@rinse/core'
 import { deleteJob, listJobs, updateJob } from '@/src/lib/api'
 import type { JobWithRelations, Vehicle } from '@rinse/core'
@@ -158,14 +158,22 @@ export default function JobsScreen() {
       ? t('jobs.shown', { count: filtered.length })
       : t('jobs.totalPeriod', { count: jobCount, period: jobsPeriodLabel() })
 
+  // Tech filter chips — All / You / roster.
+  // TODO(team-filter): restore multi-tech assignment filters when jobs list supports them.
+  // - "You" → jobs with no assignee_id (operator’s own unassigned/solo jobs)
+  // - roster chips → filter by job.assignee_id matching that tech
+  // - "Team" CTA below → Settings → Team to add techs (UserPlus), not a filter itself
   const techChipOptions = useMemo(
     () => [
-      { value: 'all', label: 'All' },
-      { value: 'you', label: 'You' },
-      ...techRoster.map((tech) => ({ value: tech.id, label: tech.name })),
+      { value: 'all' as const, label: 'All' },
+      // { value: 'you', label: 'You' },
+      // ...techRoster.map((tech) => ({ value: tech.id, label: tech.name })),
     ],
+    // techRoster intentionally kept in deps for when chips are restored
     [techRoster],
   )
+
+  const showTechFilterChips = false // was: techChipOptions.length > 1 once You/roster return
 
   const jobSubtitle = (job: JobWithRelations) => {
     if (!searching) return jobListRowSubtitle(job)
@@ -364,20 +372,34 @@ export default function JobsScreen() {
       ) : null}
 
       <View style={styles.techRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.techChips}>
-          <PillGroup options={techChipOptions} value={techFilter} onChange={setTechFilter} />
-          <Pressable
-            onPress={() => router.push('/settings/team')}
-            style={styles.addTech}
-            accessibilityRole="button"
-            accessibilityLabel="Add technicians"
+        {showTechFilterChips ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.techChipsScroll}
+            contentContainerStyle={styles.techChips}
           >
-            <UserPlus size={16} color={colors.greenText} weight="bold" />
-            <AppText variant="caption" style={styles.addTechText}>
-              Team
-            </AppText>
-          </Pressable>
-        </ScrollView>
+            <PillGroup inline options={techChipOptions} value={techFilter} onChange={setTechFilter} />
+              {/*
+              TODO(team-filter): Team CTA — opens Settings → Team to manage tech roster.
+              Shown beside assignee filter chips; not itself a filter value.
+              Needs: import { UserPlus } from 'phosphor-react-native'
+              <Pressable
+                onPress={() => router.push('/settings/team')}
+                style={styles.addTech}
+                accessibilityRole="button"
+                accessibilityLabel="Add technicians"
+              >
+                <UserPlus size={16} color={colors.greenText} weight="bold" />
+                <AppText variant="caption" style={styles.addTechText}>
+                  Team
+                </AppText>
+              </Pressable>
+            */}
+          </ScrollView>
+        ) : (
+          <View style={styles.techChipsSpacer} />
+        )}
         <Pressable
           onPress={() => {
             if (!dateFilter) {
@@ -485,9 +507,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
+  techChipsScroll: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 44,
+  },
+  techChipsSpacer: {
+    flex: 1,
+  },
   techChips: {
     alignItems: 'center',
     gap: spacing.xs,
+    paddingVertical: 8,
     paddingRight: spacing.sm,
   },
   addTech: {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Image, StyleSheet, View } from 'react-native'
+import { Image, Linking, Pressable, StyleSheet, View } from 'react-native'
 import { InvoiceLayoutDocument } from '@/src/components/invoice/InvoiceLayoutDocument'
 import { AppText } from '@/src/components/ui'
 import { accentTint } from '@/src/lib/brand-color'
@@ -10,7 +10,7 @@ import {
   INVOICE_STATUS_COLORS,
   type InvoiceViewModel,
 } from '@/src/lib/invoice-layout'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors, radii, spacing, webInlinePressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
 /** Live invoice document — custom layout when saved; else template flow layout. */
@@ -196,9 +196,14 @@ function InvoiceDocumentFlow({
         <AppText style={styles.footerText}>{model.termsFooter}</AppText>
         {model.questionsLine ? <AppText style={styles.footerText}>{model.questionsLine}</AppText> : null}
         {model.portalUrl ? (
-          <View style={[styles.viewBtn, { backgroundColor: accent }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="View invoice online"
+            onPress={() => void Linking.openURL(model.portalUrl!)}
+            style={[styles.viewBtn, webInlinePressableReset, { backgroundColor: accent }]}
+          >
             <AppText style={styles.viewBtnText}>View invoice online</AppText>
-          </View>
+          </Pressable>
         ) : null}
         {template !== 'minimal' ? <View style={[styles.accentBar, { backgroundColor: accent }]} /> : null}
       </View>

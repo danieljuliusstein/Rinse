@@ -1,22 +1,22 @@
-import { useRef, useState, forwardRef, useImperativeHandle } from 'react'
-import {
-  Alert,
-  Dimensions,
-  Linking,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-  type LayoutRectangle,
-} from 'react-native'
-import { useRouter } from 'expo-router'
-import { CalendarPlus, ChatCircle, DotsThreeVertical, Phone, Trash } from 'phosphor-react-native'
-import type { ClientWithStats } from '@rinse/core'
+import { AppText } from '@/src/components/ui'
 import { deleteClient, openPhone } from '@/src/lib/api'
 import { buildSmsComposeUrl } from '@/src/lib/sms-compose'
-import { AppText } from '@/src/components/ui'
 import { colors, spacing, webInlinePressableReset } from '@/src/theme/colors'
+import type { ClientWithStats } from '@rinse/core'
+import { useRouter } from 'expo-router'
+import { CalendarPlus, ChatCircle, DotsThreeVertical, Phone, Trash } from 'phosphor-react-native'
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
+import {
+    Alert,
+    Dimensions,
+    Linking,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    View,
+    type LayoutRectangle,
+} from 'react-native'
 
 interface ClientCardMenuProps {
   client: ClientWithStats
@@ -88,7 +88,11 @@ export const ClientCardMenu = forwardRef<ClientCardMenuHandle, ClientCardMenuPro
     : { top: '40%' as const, right: spacing.md }
 
   return (
-    <View ref={triggerRef} style={styles.root} collapsable={false}>
+    <View
+      ref={triggerRef}
+      style={styles.root}
+      {...(Platform.OS !== 'web' ? { collapsable: false } : {})}
+    >
       <Pressable
         style={({ pressed }) => [styles.trigger, webInlinePressableReset, pressed && styles.pressed]}
         onPress={openMenu}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import type { Equipment, Supply } from '@rinse/core'
 import {
   EquipmentInventoryRow,
@@ -7,7 +7,6 @@ import {
   WishlistInventoryRow,
 } from '@/src/components/inventory/InventoryRows'
 import {
-  AppText,
   EmptyState,
   PillGroup,
   PrimaryButton,
@@ -25,6 +24,7 @@ import {
   type SectionKey,
   type SupplyFilterChip,
 } from '@/src/lib/inventory-utils'
+import { confirmNativeAction } from '@/src/lib/native-dialogs'
 import { colors, spacing } from '@/src/theme/colors'
 import { useTabDockPadding } from '@/src/hooks/useTabDockPadding'
 
@@ -92,10 +92,13 @@ export function InventoryCategoryView({
     (section.isWishlist && !wishlistTrueEmpty && !wishlistFilteredEmpty)
 
   const confirmDelete = (title: string, message: string, onConfirm: () => void) => {
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: onConfirm },
-    ])
+    confirmNativeAction({
+      title,
+      message,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm,
+    })
   }
 
   return (

@@ -21,21 +21,47 @@ export function WaterfallChart({ data }: WaterfallChartProps) {
   const innerH = chartHeight - padTop - padBottom
   const barGap = 8
   const barW = Math.max(24, (innerW - barGap * (data.labels.length - 1)) / data.labels.length)
+  const yMin = data.yMin ?? 0
   const yMax = data.yMax || 1
+  const span = Math.max(yMax - yMin, 1)
+
+  const yFor = (v: number) => padTop + innerH - ((v - yMin) / span) * innerH
+
+  // #region agent log
+  fetch('http://127.0.0.1:7518/ingest/3eb366ac-7592-4deb-adb1-83908dfd0476',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5e97ca'},body:JSON.stringify({sessionId:'5e97ca',runId:'post-fix',hypothesisId:'WF1',location:'WaterfallChart.tsx',message:'Waterfall scale',data:{yMin,yMax,span,labels:data.labels,ranges:data.ranges,vals:data.vals},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
   return (
     <View style={styles.wrap}>
       <Svg width="100%" height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+        {yMin < 0 && yMax > 0 ? (
+          <Line
+            x1={padLeft}
+            y1={yFor(0)}
+            x2={chartWidth - padRight}
+            y2={yFor(0)}
+            stroke={colors.border}
+            strokeWidth={1}
+            strokeDasharray="4 4"
+          />
+        ) : null}
         {data.labels.map((label, i) => {
-          const [bottom, top] = data.ranges[i]
+          const [lo, hi] = data.ranges[i]
           const x = padLeft + i * (barW + barGap)
-          const yTop = padTop + innerH - (top / yMax) * innerH
-          const yBottom = padTop + innerH - (bottom / yMax) * innerH
-          const h = Math.max(2, yBottom - yTop)
+          const yTop = yFor(hi)
+          const yBottom = yFor(lo)
+          const h = Math.max(3, Math.abs(yBottom - yTop))
 
           return (
-            <React.Fragment key={label}>
-              <Rect x={x} y={yTop} width={barW} height={h} fill={data.colors[i]} rx={label === 'Revenue' || label === 'Profit' ? 4 : 2} />
+            <React.Fragment key={`${label}-${i}`}>
+              <Rect
+                x={x}
+                y={Math.min(yTop, yBottom)}
+                width={barW}
+                height={h}
+                fill={data.colors[i]}
+                rx={4}
+              />
               <SvgText
                 x={x + barW / 2}
                 y={chartHeight - 6}
@@ -48,9 +74,9 @@ export function WaterfallChart({ data }: WaterfallChartProps) {
               {i < data.labels.length - 1 ? (
                 <Line
                   x1={x + barW}
-                  y1={yTop}
+                  y1={yFor(hi)}
                   x2={x + barW + barGap}
-                  y2={yTop}
+                  y2={yFor(data.ranges[i + 1][1])}
                   stroke={colors.border}
                   strokeWidth={1}
                 />
@@ -61,7 +87,7 @@ export function WaterfallChart({ data }: WaterfallChartProps) {
       </Svg>
       <View style={styles.legend}>
         {data.labels.map((label, i) => (
-          <View key={label} style={styles.legendRow}>
+          <View key={`${label}-legend-${i}`} style={styles.legendRow}>
             <View style={[styles.swatch, { backgroundColor: data.colors[i] }]} />
             <AppText variant="caption" style={styles.legendLabel}>
               {label}

@@ -9,7 +9,10 @@ interface ConfirmOptions {
   onConfirm: () => void
 }
 
-/** iOS ActionSheet / Android Alert — use for subscribe, destructive, and branch choices. */
+/**
+ * Confirm dialog that works on iOS / Android / web.
+ * Note: react-native-web's `Alert.alert` is a no-op — never use it for confirms on web.
+ */
 export function confirmNativeAction({
   title,
   message,
@@ -18,6 +21,12 @@ export function confirmNativeAction({
   destructive = false,
   onConfirm,
 }: ConfirmOptions): void {
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.confirm === 'function') {
+    const body = message ? `${title}\n\n${message}` : title
+    if (window.confirm(body)) onConfirm()
+    return
+  }
+
   if (Platform.OS === 'ios') {
     ActionSheetIOS.showActionSheetWithOptions(
       {

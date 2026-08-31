@@ -13,7 +13,10 @@ export interface WaterfallData {
   vals: number[]
   colors: string[]
   labels: string[]
+  /** Inclusive top of scale (may equal max positive peak). */
   yMax: number
+  /** Inclusive bottom of scale (0 or lowest negative). */
+  yMin: number
 }
 
 const WATERFALL_OTHER_KEYS: (keyof PLReport['expenses'])[] = [
@@ -44,13 +47,17 @@ export function buildComparisonBars(report: PLReport): ComparisonBarRow[] {
   ]
 }
 
+/**
+ * Waterfall from revenue → expense steps → ending net.
+ * Supports zero-revenue / loss periods (negative running totals).
+ */
 export function buildWaterfallData(report: PLReport): WaterfallData {
   const { revenue, expenses } = report
-  const ranges: [number, number][] = [[0, revenue]]
-  const starts: number[] = [0]
-  const vals: number[] = [revenue]
-  const colors: string[] = ['#22c55e']
-  const labels: string[] = ['Revenue']
+  const ranges: [number, number][] = []
+  const starts: number[] = []
+  const vals: number[] = []
+  const colors: string[] = []
+  const labels: string[] = []
 
   const otherExpenses = WATERFALL_OTHER_KEYS.reduce((sum, key) => sum + expenses[key], 0)
   const overhead = expenses.overhead
@@ -58,45 +65,42 @@ export function buildWaterfallData(report: PLReport): WaterfallData {
 
   let running = revenue
 
-  if (otherExpenses > 0) {
-    const afterOther = running - otherExpenses
-    starts.push(afterOther)
-    vals.push(otherExpenses)
-    ranges.push([afterOther, running])
+  // Opening revenue (or zero baseline)
+  starts.push(0)
+  vals.push(revenue)
+  ranges.push([0, revenue])
+  colors.push('#22c55e')
+  labels.push('Revenue')
+
+  const pushDown = (amount: number, label: string) => {
+    if (amount <= 0) return
+    const after = running - amount
+    starts.push(Math.min(running, after))
+    vals.push(amount)
+    ranges.push([Math.min(running, after), Math.max(running, after)])
     colors.push('#e06060')
-    labels.push('Other exp.')
-    running = afterOther
+    labels.push(label)
+    running = after
   }
 
-  if (overhead > 0) {
-    const afterOver = running - overhead
-    starts.push(afterOver)
-    vals.push(overhead)
-    ranges.push([afterOver, running])
-    colors.push('#e06060')
-    labels.push('Overhead')
-    running = afterOver
-  }
-
-  if (business > 0) {
-    const afterBusiness = running - business
-    starts.push(afterBusiness)
-    vals.push(business)
-    ranges.push([afterBusiness, running])
-    colors.push('#e06060')
-    labels.push('Business exp.')
-    running = afterBusiness
-  }
+  pushDown(otherExpenses, 'Other exp.')
+  pushDown(overhead, 'Overhead')
+  pushDown(business, 'Business exp.')
 
   const profit = running
-  starts.push(0)
+  starts.push(Math.min(0, profit))
   vals.push(profit)
-  ranges.push([0, profit])
-  colors.push('#22c55e')
-  labels.push('Profit')
+  ranges.push([Math.min(0, profit), Math.max(0, profit)])
+  colors.push(profit >= 0 ? '#22c55e' : '#e06060')
+  labels.push(profit >= 0 ? 'Profit' : 'Loss')
 
-  const peak = Math.max(revenue, ...ranges.map(([, top]) => top))
-  const yMax = peak > 0 ? Math.ceil((peak * 1.1) / 100) * 100 : 100
+  const flat = ranges.flatMap(([a, b]) => [a, b])
+  const rawMin = Math.min(0, ...flat)
+  const rawMax = Math.max(0, ...flat)
+  const span = Math.max(rawMax - rawMin, 1)
+  const pad = span * 0.1
+  const yMin = rawMin - (rawMin < 0 ? pad : 0)
+  const yMax = rawMax + pad
 
-  return { ranges, starts, vals, colors, labels, yMax }
+  return { ranges, starts, vals, colors, labels, yMax, yMin }
 }

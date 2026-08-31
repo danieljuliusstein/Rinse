@@ -92,42 +92,41 @@ export async function createSupply(input: SupplyInput): Promise<Supply> {
   }
 }
 
-export async function updateSupply(id: string, input: Partial<SupplyInput>): Promise<Supply | null> {
+export async function updateSupply(id: string, input: Partial<SupplyInput>): Promise<Supply> {
+  await requireOrganizationIdForWrite()
   try {
     const record = await pb().collection('supplies').update(id, toPb(input))
     return mapSupply(record as Record<string, unknown>)
-  } catch {
-    return null
+  } catch (err) {
+    throw new Error(formatPocketBaseError(err, 'Could not update supply'))
   }
 }
 
-export async function deleteSupply(id: string): Promise<boolean> {
+export async function deleteSupply(id: string): Promise<void> {
+  await requireOrganizationIdForWrite()
   try {
     await pb().collection('supplies').delete(id)
-    return true
-  } catch {
-    return false
+  } catch (err) {
+    throw new Error(formatPocketBaseError(err, 'Could not delete supply'))
   }
 }
 
-export async function restockSupply(id: string, input: RestockInput): Promise<Supply | null> {
-  const current = await getSupply(id)
-  if (!current) return null
+export async function restockSupply(id: string, input: RestockInput): Promise<Supply> {
   const qty = input.quantity ?? 0
+  if (qty <= 0) throw new Error('Enter a quantity to add')
+  const current = await getSupply(id)
+  if (!current) throw new Error('Supply not found — check your connection and try again')
   const nextQty = current.quantity_on_hand + qty
-  let cost = current.cost_per_unit
-  if (input.total_cost != null && qty > 0) {
+  const updates: Partial<SupplyInput> = { quantity_on_hand: nextQty }
+  if (input.total_cost != null && Number.isFinite(input.total_cost) && qty > 0) {
     const priorValue = (current.cost_per_unit ?? 0) * current.quantity_on_hand
-    cost = (priorValue + input.total_cost) / nextQty
+    updates.cost_per_unit = (priorValue + input.total_cost) / nextQty
   }
-  return updateSupply(id, {
-    quantity_on_hand: nextQty,
-    cost_per_unit: cost,
-  })
+  return updateSupply(id, updates)
 }
 
-export async function adjustSupplyQty(id: string, delta: number): Promise<Supply | null> {
+export async function adjustSupplyQty(id: string, delta: number): Promise<Supply> {
   const current = await getSupply(id)
-  if (!current) return null
+  if (!current) throw new Error('Supply not found — check your connection and try again')
   return updateSupply(id, { quantity_on_hand: Math.max(0, current.quantity_on_hand + delta) })
 }

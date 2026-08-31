@@ -61,7 +61,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    alignItems: 'center',
     gap: spacing.sm,
+    // Room for pill borders + scale pop inside clipping parents (horizontal ScrollView).
+    paddingVertical: 4,
   },
   rowInline: {
     flexWrap: 'nowrap',

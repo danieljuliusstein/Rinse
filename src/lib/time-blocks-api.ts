@@ -30,8 +30,9 @@ export async function getTimeBlocks(fromDate: string, toDate: string): Promise<T
   try {
     const orgId = requireOrganizationId()
     const escaped = orgId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+    const filter = `organization_id = "${escaped}" && date >= "${fromDate}" && date <= "${toDate}"`
     const records = await pb().collection('time_blocks').getFullList({
-      filter: `organization_id = "${escaped}" && date >= "${fromDate}" && date <= "${toDate}"`,
+      filter,
       sort: 'date,start_time',
     })
     return records.map((r) => {
@@ -58,14 +59,15 @@ export async function getTimeBlocksOnDate(date: string): Promise<TimeBlock[]> {
 export async function createTimeBlock(input: TimeBlockInput): Promise<TimeBlock> {
   if (!(await isOnline())) throw new Error('You are offline')
   const orgId = requireOrganizationId()
-  const created = await pb().collection('time_blocks').create({
+  const payload = {
     organization_id: orgId,
     date: input.date,
     start_time: input.all_day ? '' : (input.start_time?.trim() ?? ''),
     end_time: input.all_day ? '' : (input.end_time?.trim() ?? ''),
     all_day: input.all_day === true,
     label: input.label?.trim() ?? '',
-  })
+  }
+  const created = await pb().collection('time_blocks').create(payload)
   const row = created as Record<string, unknown>
   return {
     id: String(row.id),

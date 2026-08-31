@@ -13,6 +13,7 @@ export function InvoiceSendSheet({
   visible,
   onClose,
   onEmail,
+  onSms,
   onCopyLink,
   onPdf,
   onTransformationPdf,
@@ -24,6 +25,7 @@ export function InvoiceSendSheet({
   visible: boolean
   onClose: () => void
   onEmail: () => void
+  onSms: () => void
   onCopyLink: () => void
   onPdf: () => void
   onTransformationPdf?: () => void
@@ -47,6 +49,7 @@ export function InvoiceSendSheet({
           Add a client email on their profile to send from here.
         </AppText>
       )}
+      <PrimaryButton label="Send via SMS" loading={busy} onPress={onSms ?? (() => {})} />
       <SecondaryButton
         label={linkCopied ? 'Link copied' : 'Copy payment link'}
         loading={busy}

@@ -66,6 +66,7 @@ export default function TabLayout() {
           <Tabs.Screen name="settings" options={hiddenTab} />
           <Tabs.Screen name="invoices" options={hiddenTab} />
           <Tabs.Screen name="pipeline" options={hiddenTab} />
+          <Tabs.Screen name="routes" options={hiddenTab} />
           <Tabs.Screen name="messages" options={hiddenTab} />
           <Tabs.Screen name="inventory" options={hiddenTab} />
           <Tabs.Screen name="tools" options={hiddenTab} />

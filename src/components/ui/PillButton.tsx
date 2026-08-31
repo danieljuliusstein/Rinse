@@ -3,7 +3,7 @@ import Animated from 'react-native-reanimated'
 import { AppText } from '@/src/components/ui/AppText'
 import { usePillPopScale } from '@/src/hooks/useMotionArchetypes'
 import { selectionHaptic } from '@/src/lib/haptics'
-import { colors, radii } from '@/src/theme/colors'
+import { colors, radii, webInlinePressableReset } from '@/src/theme/colors'
 import type { PillOption } from './PillGroup'
 
 interface PillButtonProps<T extends string> {
@@ -23,6 +23,7 @@ export function PillButton<T extends string>({ option, selected, onSelect }: Pil
       }}
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      style={webInlinePressableReset}
     >
       <Animated.View style={[styles.pill, selected && styles.pillOn, popStyle]}>
         <AppText variant="bodyMedium" style={[styles.pillLabel, selected && styles.pillLabelOn]}>
@@ -41,6 +42,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+    // Keep border fully visible inside horizontal ScrollViews (overflow:hidden).
+    marginVertical: 2,
   },
   pillOn: {
     backgroundColor: colors.greenSoft,

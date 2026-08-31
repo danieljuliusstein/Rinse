@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { FileText, PaperPlaneTilt, Plus } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors, radii, spacing, webPressableReset } from '@/src/theme/colors'
 
 export function HomeCtaRow() {
   const router = useRouter()
@@ -12,7 +12,7 @@ export function HomeCtaRow() {
   return (
     <View style={styles.wrap}>
       <Pressable
-        style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
+        style={({ pressed }) => [webPressableReset, styles.primary, pressed && styles.pressed]}
         onPress={() => router.push('/invoices/new')}
         accessibilityRole="button"
         accessibilityLabel={t('home.sendInvoice')}
@@ -25,7 +25,7 @@ export function HomeCtaRow() {
 
       <View style={styles.secondaryRow}>
         <Pressable
-          style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+          style={({ pressed }) => [webPressableReset, styles.secondary, pressed && styles.pressed]}
           onPress={() => router.push('/jobs/new')}
           accessibilityRole="button"
           accessibilityLabel={t('home.newJob')}
@@ -36,7 +36,7 @@ export function HomeCtaRow() {
           </View>
         </Pressable>
         <Pressable
-          style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+          style={({ pressed }) => [webPressableReset, styles.secondary, pressed && styles.pressed]}
           onPress={() => router.push('/quotes/new')}
           accessibilityRole="button"
           accessibilityLabel={t('home.newQuote')}
@@ -54,18 +54,23 @@ export function HomeCtaRow() {
 const styles = StyleSheet.create({
   wrap: {
     gap: 10,
+    width: '100%',
+    alignSelf: 'stretch',
   },
   primary: {
     backgroundColor: colors.green,
     borderRadius: radii.sheet,
     paddingVertical: 15,
     paddingHorizontal: spacing.md,
+    width: '100%',
+    alignSelf: 'stretch',
   },
   ctaInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    pointerEvents: 'none',
   },
   primaryLabel: {
     fontSize: 16,
@@ -75,6 +80,7 @@ const styles = StyleSheet.create({
   secondaryRow: {
     flexDirection: 'row',
     gap: 10,
+    width: '100%',
   },
   secondary: {
     flex: 1,

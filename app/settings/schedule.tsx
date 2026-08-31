@@ -86,7 +86,8 @@ export default function SettingsScheduleScreen() {
     try {
       const from = todayIso()
       const to = addDays(from, 30)
-      setBlocks(await getTimeBlocks(from, to))
+      const rows = await getTimeBlocks(from, to)
+      setBlocks(rows)
     } finally {
       setBlocksLoading(false)
     }

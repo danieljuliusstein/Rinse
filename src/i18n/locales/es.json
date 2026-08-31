@@ -222,7 +222,9 @@
     "buySupplies": "Comprar insumos",
     "buySuppliesSub": "Stock y gasto juntos",
     "newQuote": "Nueva cotización",
-    "newQuoteSub": "Enviar un estimado"
+    "newQuoteSub": "Enviar un estimado",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
   },
   "jobs": {
     "title": "Trabajos",

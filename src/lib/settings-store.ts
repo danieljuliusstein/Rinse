@@ -184,9 +184,7 @@ function recordToSettings(record: Record<string, unknown>, logoUrl?: string): Ap
     last_backup_at: record.last_backup_at ? String(record.last_backup_at) : undefined,
     logo_url: logoUrl ?? DEFAULT_BUSINESS_LOGO_PATH,
     accent_color: record.accent_color ? String(record.accent_color) : null,
-    booking_schedule: record.booking_schedule
-      ? normalizeBookingSchedule(record.booking_schedule)
-      : undefined,
+    booking_schedule: normalizeBookingSchedule(record.booking_schedule),
     travel_rate_per_mile:
       typeof record.travel_rate_per_mile === 'number' ? record.travel_rate_per_mile : undefined,
     track_job_supplies: record.track_job_supplies === true,
@@ -261,6 +259,7 @@ export async function loadSettings(): Promise<AppSettings> {
     const escaped = orgId.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
     const records = await pb.collection('app_settings').getFullList({
       filter: `organization_id = "${escaped}"`,
+      sort: '-id',
       limit: 1,
     })
     if (records.length === 0) return { ...DEFAULTS }

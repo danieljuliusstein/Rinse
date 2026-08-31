@@ -219,6 +219,7 @@ async function processQueueItem(item: QueueItem): Promise<void> {
       if (patch.inspection_vehicle_id !== undefined) {
         data.inspection_vehicle_id = patch.inspection_vehicle_id
       }
+      if (patch.route_order !== undefined) data.route_order = patch.route_order
       const updated = await pb.collection('jobs').update(op.params.id, data)
       const orgId = String(updated.organization_id ?? '')
       if (orgId) upsertMirrorRecord('jobs', op.params.id, orgId, updated as Record<string, unknown>)
@@ -226,9 +227,15 @@ async function processQueueItem(item: QueueItem): Promise<void> {
     }
     case 'deleteJob': {
       try {
-        await pb.collection('jobs').delete(op.params.id)
+        // Soft-cancel to match Desk CRM (hard DELETE fails with relation constraints).
+        await pb.collection('jobs').update(op.params.id, { status: 'cancelled' })
       } catch (err) {
-        if (!(err instanceof ClientResponseError && err.status === 404)) throw err
+        if (err instanceof ClientResponseError && err.status === 404) break
+        try {
+          await pb.collection('jobs').delete(op.params.id)
+        } catch (deleteErr) {
+          if (!(deleteErr instanceof ClientResponseError && deleteErr.status === 404)) throw deleteErr
+        }
       }
       break
     }

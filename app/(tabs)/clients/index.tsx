@@ -298,13 +298,14 @@ const styles = StyleSheet.create({
   chipsScroll: {
     flexGrow: 0,
     marginBottom: spacing.sm,
+    minHeight: 44,
   },
   chipsContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingRight: spacing.lg,
-    paddingVertical: 4,
+    paddingVertical: 8,
   },
   sortChip: {
     paddingHorizontal: 12,
@@ -314,6 +315,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
     flexShrink: 0,
+    marginVertical: 2,
   },
   sortChipInner: {
     flexDirection: 'row',

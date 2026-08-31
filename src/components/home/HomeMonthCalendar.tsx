@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native'
 import { CaretLeft, CaretRight } from 'phosphor-react-native'
-import type { JobWithRelations } from '@rinse/core'
+import { activeJobs, type JobWithRelations } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
 import { selectionHaptic } from '@/src/lib/haptics'
 import { normalizeJobDate } from '@/src/lib/jobs-list'
@@ -54,7 +54,10 @@ export function HomeMonthCalendar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewYear, viewMonth])
 
-  const jobDates = useMemo(() => new Set(jobs.map((j) => normalizeJobDate(j.date))), [jobs])
+  const jobDates = useMemo(
+    () => new Set(activeJobs(jobs).map((j) => normalizeJobDate(j.date))),
+    [jobs],
+  )
   const rainDates = useMemo(() => rainRiskDates(weatherReadiness), [weatherReadiness])
 
   const monthLabel = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -271,7 +274,9 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
   },
   dayBubbleBlocked: {
-    opacity: 0.45,
+    backgroundColor: 'rgba(142, 142, 147, 0.35)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(142, 142, 147, 0.65)',
   },
   dayNum: {
     color: colors.textPrimary,
@@ -294,6 +299,7 @@ const styles = StyleSheet.create({
   dayBlocked: {
     textDecorationLine: 'line-through',
     color: colors.textMuted,
+    opacity: 0.9,
   },
   dots: {
     flexDirection: 'row',

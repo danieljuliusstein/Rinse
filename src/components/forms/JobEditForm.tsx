@@ -44,7 +44,9 @@ export function JobEditForm({ job, onSubmit }: JobEditFormProps) {
       hours_worked: job.hours_worked,
       start_time: job.start_time ?? '',
       notes: job.notes ?? '',
-      status: job.status,
+      status: (JOB_STATUSES.some((s) => s.value === job.status)
+        ? job.status
+        : 'scheduled') as (typeof JOB_STATUSES)[number]['value'],
     },
     mode: 'onChange',
   })

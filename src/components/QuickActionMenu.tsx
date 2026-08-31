@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Briefcase, FileText, Flask, Funnel, Receipt, Wallet, type Icon } from 'phosphor-react-native'
+import { Briefcase, FileText, Flask, Receipt, Scan, Wallet, type Icon } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui/AppText'
 import { useSheetDismissGesture } from '@/src/hooks/useSheetDismissGesture'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
@@ -112,13 +112,13 @@ export function QuickActionMenu() {
   const actions = useMemo<ActionItem[]>(
     () => [
       {
-        id: 'new-lead',
-        label: t('quickActions.newLead'),
-        subtitle: t('quickActions.newLeadSub'),
-        Icon: Funnel,
+        id: 'scan',
+        label: t('quickActions.scan', { defaultValue: 'Scan' }),
+        subtitle: t('quickActions.scanSub', { defaultValue: 'Receipt or VIN' }),
+        Icon: Scan,
         onSelect: () => {
           closeMenu()
-          router.push('/leads/new')
+          router.push('/scan' as never)
         },
       },
       {

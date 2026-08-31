@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import type { Invoice, JobPhoto, JobWithRelations } from '@rinse/core'
@@ -27,6 +27,9 @@ import {
   sharePortalUrl,
   shareTransformationPdf,
 } from '@/src/lib/share'
+import { openSms } from '@/src/lib/api'
+import { openExternalUrl } from '@/src/lib/open-external-url'
+import { useSafeBack } from '@/src/lib/safe-go-back'
 import {
   InvoiceAdjustmentsSheet,
   InvoicePaymentSheet,
@@ -50,6 +53,27 @@ export default function InvoiceDetailScreen() {
   const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
+  const goBack = useSafeBack('/(tabs)/invoices')
+  const handleBack = () => {
+    // #region agent log
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      fetch(`${window.location.origin}/__agent-debug`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '89a058' },
+        body: JSON.stringify({
+          sessionId: '89a058',
+          runId: 'post-fix',
+          hypothesisId: 'GO_BACK',
+          location: 'invoices/[id].tsx:handleBack',
+          message: 'Invoice back pressed (safeGoBack)',
+          data: { path: window.location.pathname },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {})
+    }
+    // #endregion
+    goBack()
+  }
   const { openJob } = useDetailNavigation()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [job, setJob] = useState<JobWithRelations | null>(null)
@@ -150,18 +174,39 @@ export default function InvoiceDetailScreen() {
 
   const ensureSent = async () => {
     if (!invoice) throw new Error('No invoice')
-    if (!requireTransformationPhotos()) return
     if (invoice.status === 'draft') {
       const gate = await checkPremiumGate('send_invoice')
       if (!gate.allowed) return
-      await markInvoiceSent(invoice.id)
-      await load()
+      try {
+        await markInvoiceSent(invoice.id)
+        await load()
+      } catch (e) {
+        // #region agent log
+        const payload = JSON.stringify({
+          sessionId: '89a058',
+          runId: 'post-fix',
+          hypothesisId: 'EMAIL-SMS',
+          location: 'invoices/[id].tsx:ensureSent',
+          message: 'markInvoiceSent failed; continuing share',
+          data: { err: e instanceof Error ? e.message : String(e) },
+          timestamp: Date.now(),
+        })
+        console.warn('[debug-89a058] markInvoiceSent failed; continuing share', e)
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          fetch(`${window.location.origin}/__agent-debug`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '89a058' },
+            body: payload,
+          }).catch(() => {})
+        }
+        // #endregion
+        // Remote PB may still gate status=sent on photos; payment-link share must still work.
+      }
     }
   }
 
   const openSendFlow = () => {
     if (!invoice) return
-    if (!requireTransformationPhotos()) return
     if (invoice.status === 'draft') {
       setPendingSendAfterCustomize(true)
       setCustomizeOpen(true)
@@ -186,22 +231,73 @@ export default function InvoiceDetailScreen() {
   }
 
   const handleEmailSend = async () => {
-    if (!invoice || !job?.client?.email || !settings) return
-    await ensureSent()
-    const link = await createPortalLink({
-      clientId: invoice.client_id,
-      scope: 'invoice',
-      jobId: invoice.job_id,
+    // #region agent log
+    const dbg = (message: string, data: Record<string, unknown>) => {
+      const payload = JSON.stringify({
+        sessionId: '89a058',
+        runId: 'post-fix',
+        hypothesisId: 'EMAIL-SMS',
+        location: 'invoices/[id].tsx:handleEmailSend',
+        message,
+        data,
+        timestamp: Date.now(),
+      })
+      console.warn('[debug-89a058]', message, data)
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        fetch(`${window.location.origin}/__agent-debug`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '89a058' },
+          body: payload,
+        }).catch(() => {})
+      }
+    }
+    dbg('email send start', {
+      hasInvoice: Boolean(invoice),
+      hasEmail: Boolean(job?.client?.email),
+      hasSettings: Boolean(settings),
+      platform: Platform.OS,
     })
+    // #endregion
+    if (!invoice) return
+    if (!settings) {
+      Alert.alert('Share invoice', 'Settings are still loading — try again in a moment.')
+      return
+    }
+    if (!job?.client?.email) {
+      Alert.alert('Share invoice', 'Add a client email on their profile to send from here.')
+      return
+    }
+    await ensureSent()
+    let linkUrl = ''
+    try {
+      const link = await createPortalLink({
+        clientId: invoice.client_id,
+        scope: 'invoice',
+        jobId: invoice.job_id,
+      })
+      linkUrl = link.url
+      // #region agent log
+      dbg('portal link ok', { hasUrl: Boolean(linkUrl) })
+      // #endregion
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Could not create payment link'
+      // #region agent log
+      dbg('portal link failed', { message })
+      // #endregion
+      Alert.alert('Share invoice', message)
+      return
+    }
     const copy = getShareEmailCopy('invoice', settings.document_locale)
     const subject = copy.subject({
       businessName: settings.business_name,
       invoiceNumber: invoice.invoice_number,
     })
-    const body = formatShareEmailBody(copy.bodyIntro, link.url)
-    await Linking.openURL(
-      `mailto:${encodeURIComponent(job.client.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
-    )
+    const body = formatShareEmailBody(copy.bodyIntro, linkUrl)
+    const mailto = `mailto:${encodeURIComponent(job.client.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    // #region agent log
+    dbg('opening mailto via openExternalUrl', { scheme: 'mailto' })
+    // #endregion
+    await openExternalUrl(mailto)
     if (invoice.job_id) {
       try {
         await shareTransformationPdf(invoice.job_id)
@@ -214,17 +310,84 @@ export default function InvoiceDetailScreen() {
 
   const handleCopyLink = async () => {
     if (!invoice) return
-    const link = await createPortalLink({
-      clientId: invoice.client_id,
-      scope: 'invoice',
-      jobId: invoice.job_id,
-    })
+    let linkUrl = ''
+    try {
+      const link = await createPortalLink({
+        clientId: invoice.client_id,
+        scope: 'invoice',
+        jobId: invoice.job_id,
+      })
+      linkUrl = link.url
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Could not create payment link'
+      Alert.alert('Copy link', message)
+      return
+    }
     if (Platform.OS === 'web' && navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(link.url)
+      await navigator.clipboard.writeText(linkUrl)
     } else {
-      await sharePortalUrl(link.url)
+      await sharePortalUrl(linkUrl)
     }
     setLinkCopied(true)
+  }
+
+  const handleSms = async () => {
+    // #region agent log
+    const dbg = (message: string, data: Record<string, unknown>) => {
+      const payload = JSON.stringify({
+        sessionId: '89a058',
+        runId: 'post-fix',
+        hypothesisId: 'EMAIL-SMS',
+        location: 'invoices/[id].tsx:handleSms',
+        message,
+        data,
+        timestamp: Date.now(),
+      })
+      console.warn('[debug-89a058]', message, data)
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        fetch(`${window.location.origin}/__agent-debug`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '89a058' },
+          body: payload,
+        }).catch(() => {})
+      }
+    }
+    dbg('sms send start', {
+      hasInvoice: Boolean(invoice),
+      hasPhone: Boolean(job?.client?.phone),
+      platform: Platform.OS,
+    })
+    // #endregion
+    if (!invoice || !job) return
+    const phone = job.client?.phone
+    if (!phone) {
+      Alert.alert('SMS', 'Add a client phone number to send the invoice.')
+      return
+    }
+    await ensureSent()
+    try {
+      const link = await createPortalLink({
+        clientId: invoice.client_id,
+        scope: 'invoice',
+        jobId: invoice.job_id,
+      })
+      const body = `Pay invoice ${invoice.invoice_number}: ${link.url}`
+      const smsUrl = openSms(phone, body)
+      if (!smsUrl) {
+        Alert.alert('SMS', 'Add a valid phone number to send the invoice.')
+        return
+      }
+      // #region agent log
+      dbg('opening sms via openExternalUrl', { scheme: 'sms' })
+      // #endregion
+      await openExternalUrl(smsUrl)
+      setSendOpen(false)
+    } catch (e) {
+      // #region agent log
+      dbg('sms failed', { err: e instanceof Error ? e.message : String(e) })
+      // #endregion
+      Alert.alert('SMS', e instanceof Error ? e.message : 'Could not send SMS')
+    }
   }
 
   const handlePdf = async () => {
@@ -257,7 +420,7 @@ export default function InvoiceDetailScreen() {
 
   if (error || !invoice || !model || !settings || !job) {
     return (
-      <ScreenShell title={t('invoices.detail.title')} headerRight={<DetailHeaderActions onBack={() => router.back()} />}>
+      <ScreenShell title={t('invoices.detail.title')} headerRight={<DetailHeaderActions onBack={handleBack} />}>
         <AppText variant="body" style={styles.error}>
           {error ?? t('invoices.detail.notFound')}
         </AppText>
@@ -271,7 +434,7 @@ export default function InvoiceDetailScreen() {
     <ScreenShell
       title={invoice.invoice_number}
       subtitle={model.billToName}
-      headerRight={<DetailHeaderActions onBack={() => router.back()} />}
+      headerRight={<DetailHeaderActions onBack={handleBack} />}
     >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <InvoiceDocumentBody model={model} />
@@ -317,6 +480,7 @@ export default function InvoiceDetailScreen() {
         busy={busy}
         linkCopied={linkCopied}
         onEmail={() => void runAction('Send', handleEmailSend)}
+        onSms={() => void runAction('Send SMS', handleSms)}
         onCopyLink={() => void runAction('Copy link', handleCopyLink)}
         onPdf={() => void runAction('PDF', handlePdf)}
         onTransformationPdf={() => void runAction('Before/after PDF', handleTransformationPdf)}

@@ -1,6 +1,6 @@
-import { netProfit } from '@rinse/core'
 import type { JobWithRelations } from '@rinse/core'
-import { rangeFor, type DateRangeKey } from './reports'
+import { activeJobs, netProfit } from '@rinse/core'
+import { rangeFor, jobInRange as reportJobInRange, type DateRangeKey } from './reports'
 
 export const SERVICE_COLORS: Record<string, string> = {
   'Paint Correction': '#5b9cf6',
@@ -26,18 +26,15 @@ export interface JobsRevenueStats {
   services: ServiceSlice[]
 }
 
-function jobInRange(job: JobWithRelations, start: Date, end: Date): boolean {
-  const d = new Date(job.date + 'T12:00:00')
-  return d >= start && d <= end
-}
-
 function colorForService(label: string, index: number): string {
   return SERVICE_COLORS[label] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
 }
 
 export function filterJobsByRange(jobs: JobWithRelations[], range: DateRangeKey): JobWithRelations[] {
   const { start, end } = rangeFor(range)
-  return jobs.filter((j) => jobInRange(j, start, end))
+  // Exclude cancelled jobs so job-based revenue never counts cancelled work
+  // (Requirements 1.1/1.2). activeJobs is the shared @rinse/core guard.
+  return activeJobs(jobs).filter((j) => reportJobInRange(j, start, end))
 }
 
 export function aggregateJobsRevenue(jobs: JobWithRelations[]): JobsRevenueStats {
@@ -45,7 +42,10 @@ export function aggregateJobsRevenue(jobs: JobWithRelations[]): JobsRevenueStats
   let totalRevenue = 0
   let totalProfit = 0
 
-  for (const job of jobs) {
+  // Authoritative cancelled-job exclusion for job-based revenue: sum
+  // `revenue + tip` over non-cancelled jobs only (Requirements 1.1/3.1).
+  const active = activeJobs(jobs)
+  for (const job of active) {
     const amount = job.revenue + job.tip
     const label = job.package?.name?.trim() || 'Other'
     byService.set(label, (byService.get(label) ?? 0) + amount)
@@ -61,7 +61,7 @@ export function aggregateJobsRevenue(jobs: JobWithRelations[]): JobsRevenueStats
     }))
     .sort((a, b) => b.amount - a.amount)
 
-  const jobCount = jobs.length
+  const jobCount = active.length
   const avgJobValue = jobCount > 0 ? Math.round(totalRevenue / jobCount) : 0
   const margin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0
 

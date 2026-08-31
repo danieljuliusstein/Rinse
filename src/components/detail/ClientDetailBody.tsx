@@ -177,7 +177,12 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
   const totalRevenue = jobs.reduce((s, j) => s + j.revenue + j.tip, 0)
   const avgJob = jobs.length > 0 ? totalRevenue / jobs.length : 0
   const upcomingJobs = jobs.filter((j) => j.status === 'scheduled' || j.status === 'in_progress')
-  const pastJobs = jobs.filter((j) => j.status !== 'scheduled' && j.status !== 'in_progress')
+  const pastJobs = jobs.filter(
+    (j) =>
+      j.status !== 'scheduled' &&
+      j.status !== 'in_progress' &&
+      j.status !== 'cancelled',
+  )
   const billableJobs = jobs.filter(
     (j) => (j.status === 'completed' || j.status === 'paid') && !j.invoice_id,
   )
