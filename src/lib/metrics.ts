@@ -148,6 +148,343 @@ export function buildMonthSeries(
     .map(([, v]) => v)
 }
 
+/** Mobile Business tab period keys (Desk Money parity). */
+export type MoneyRangeKey = 'this_week' | 'this_month' | 'last_month' | 'this_year' | 'lifetime'
+
+export const MONEY_RANGE_CHIPS: { key: MoneyRangeKey; label: string }[] = [
+  { key: 'this_week', label: 'This week' },
+  { key: 'this_month', label: 'This month' },
+  { key: 'last_month', label: 'Last month' },
+  { key: 'this_year', label: 'This year' },
+  { key: 'lifetime', label: 'Lifetime' },
+]
+
+function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1)
+}
+
+function endOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59)
+}
+
+function startOfWeek(d: Date): Date {
+  const day = d.getDay()
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() - day)
+}
+
+function endOfWeek(d: Date): Date {
+  const start = startOfWeek(d)
+  return new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6, 23, 59, 59)
+}
+
+function toIsoLocal(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function addDays(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
+}
+
+export function moneyRangeFor(key: MoneyRangeKey, now = new Date()): { start: Date; end: Date } {
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  switch (key) {
+    case 'this_week':
+      return { start: startOfWeek(now), end: endOfWeek(now) }
+    case 'this_month':
+      return { start: new Date(y, m, 1), end: endOfMonth(now) }
+    case 'last_month':
+      return { start: new Date(y, m - 1, 1), end: new Date(y, m, 0, 23, 59, 59) }
+    case 'this_year':
+      return { start: new Date(y, 0, 1), end: new Date(y, 11, 31, 23, 59, 59) }
+    case 'lifetime': {
+      return { start: new Date(2000, 0, 1), end: now }
+    }
+  }
+}
+
+/** Clamp lifetime to first…last job/expense day (include future scheduled jobs). */
+export function moneyBoundsFor(
+  key: MoneyRangeKey,
+  jobs: DeskJob[],
+  expenses: DeskExpense[],
+  now = new Date(),
+): { start: Date; end: Date } {
+  const base = moneyRangeFor(key, now)
+  if (key !== 'lifetime') return base
+  let earliest: string | null = null
+  let latest: string | null = null
+  const consider = (raw: string) => {
+    const day = (raw || '').slice(0, 10)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return
+    if (earliest == null || day < earliest) earliest = day
+    if (latest == null || day > latest) latest = day
+  }
+  for (const j of jobs) {
+    if (j.status === 'cancelled') continue
+    consider(j.date)
+  }
+  for (const e of expenses) consider(e.date)
+  const today = toIsoLocal(now)
+  if (latest == null || latest < today) latest = today
+  return {
+    start: earliest ? new Date(`${earliest}T00:00:00`) : startOfMonth(now),
+    end: new Date(`${latest}T23:59:59`),
+  }
+}
+
+export function priorMoneyBoundsFor(
+  key: MoneyRangeKey,
+  jobs: DeskJob[],
+  expenses: DeskExpense[],
+  now = new Date(),
+): { start: Date; end: Date } {
+  const { start, end } = moneyBoundsFor(key, jobs, expenses, now)
+  const span = end.getTime() - start.getTime()
+  const priorEnd = new Date(start.getTime() - 1)
+  const priorStart = new Date(priorEnd.getTime() - span)
+  return { start: priorStart, end: priorEnd }
+}
+
+function jobDayCosts(job: DeskJob): number {
+  let total =
+    Number(job.travel_cost ?? 0) +
+    Number(job.equipment_depreciation ?? 0) +
+    Number(job.marketing_cost ?? 0)
+  for (const e of job.expenses ?? []) total += Number(e.amount ?? 0)
+  return total
+}
+
+function inDateWindow(isoDay: string, start: Date, end: Date): boolean {
+  const d = new Date(`${isoDay.slice(0, 10)}T12:00:00`)
+  return d >= start && d <= end
+}
+
+export type MoneyPlSummary = {
+  revenue: number
+  expenses: number
+  netProfit: number
+  jobCount: number
+  avgJob: number
+  receiptExpenseCount: number
+}
+
+/** Job P&L for a window — matches mobile Business (jobs revenue+tip − job costs − receipts). */
+export function computeMoneyPl(
+  jobs: DeskJob[],
+  expenses: DeskExpense[],
+  start: Date,
+  end: Date,
+): MoneyPlSummary {
+  let revenue = 0
+  let jobCosts = 0
+  let jobCount = 0
+  for (const job of jobs) {
+    if (job.status === 'cancelled') continue
+    if (!inDateWindow(job.date, start, end)) continue
+    jobCount += 1
+    revenue += job.revenue + job.tip
+    jobCosts += jobDayCosts(job)
+  }
+  let receiptTotal = 0
+  let receiptExpenseCount = 0
+  for (const exp of expenses) {
+    if (!inDateWindow(exp.date, start, end)) continue
+    receiptTotal += exp.amount
+    receiptExpenseCount += 1
+  }
+  const totalExpenses = jobCosts + receiptTotal
+  return {
+    revenue,
+    expenses: totalExpenses,
+    netProfit: revenue - totalExpenses,
+    jobCount,
+    avgJob: jobCount > 0 ? Math.round(revenue / jobCount) : 0,
+    receiptExpenseCount,
+  }
+}
+
+export type MoneyChartPoint = {
+  label: string
+  revenue: number
+  expenses: number
+  net: number
+  tip?: number
+}
+
+function emptyPoint(label: string): MoneyChartPoint {
+  return { label, revenue: 0, expenses: 0, net: 0 }
+}
+
+/**
+ * Chart buckets sized so labels stay readable and match KPI window:
+ * week → daily (full Sun–Sat); month → weekly (full month);
+ * year/lifetime → monthly (identical when all activity is in the current year).
+ */
+export function buildMoneyChartSeries(
+  jobs: DeskJob[],
+  expenses: DeskExpense[],
+  range: MoneyRangeKey,
+  start: Date,
+  end: Date,
+): MoneyChartPoint[] {
+  const from = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+  const to = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+  if (to < from) return []
+
+  const days = Math.floor((to.getTime() - from.getTime()) / 86_400_000) + 1
+
+  if (range === 'this_week') {
+    const map = new Map<string, MoneyChartPoint>()
+    // Always 7 days for the selected week — do not clip to "today"
+    // (that collapsed the chart to a single Sunday while KPIs still counted Mon–Sat jobs).
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(from, i)
+      map.set(toIsoLocal(d), emptyPoint(d.toLocaleDateString('en-US', { weekday: 'short' })))
+    }
+    fillDayBuckets(map, jobs, expenses, start, end)
+    return finalizeMap(map)
+  }
+
+  if (range === 'this_month' || range === 'last_month') {
+    // Calendar weeks overlapping the month (readable W1… labels, full KPI window)
+    const buckets: MoneyChartPoint[] = []
+    let cursor = new Date(from)
+    // Align back to week start (Sunday) but only accumulate days inside [from, to]
+    cursor = startOfWeek(cursor)
+    let weekIndex = 0
+    while (cursor <= to) {
+      const weekStart = new Date(cursor)
+      const weekEnd = endOfWeek(cursor)
+      const sliceStart = weekStart < from ? from : weekStart
+      const sliceEnd = weekEnd > to ? to : weekEnd
+      if (sliceStart <= to && sliceEnd >= from) {
+        weekIndex += 1
+        const label =
+          range === 'last_month'
+            ? `${sliceStart.getMonth() + 1}/${sliceStart.getDate()}`
+            : `W${weekIndex}`
+        const point = emptyPoint(label)
+        const sliceEndInclusive = new Date(
+          sliceEnd.getFullYear(),
+          sliceEnd.getMonth(),
+          sliceEnd.getDate(),
+          23,
+          59,
+          59,
+        )
+        for (const job of jobs) {
+          if (job.status === 'cancelled') continue
+          const day = job.date.slice(0, 10)
+          if (!inDateWindow(day, sliceStart, sliceEndInclusive)) continue
+          if (!inDateWindow(day, start, end)) continue
+          point.revenue += job.revenue + job.tip
+          point.expenses += jobDayCosts(job)
+        }
+        for (const exp of expenses) {
+          const day = exp.date.slice(0, 10)
+          if (!inDateWindow(day, sliceStart, sliceEndInclusive)) continue
+          if (!inDateWindow(day, start, end)) continue
+          point.expenses += exp.amount
+        }
+        point.net = point.revenue - point.expenses
+        buckets.push(point)
+      }
+      cursor = addDays(weekEnd, 1)
+      if (weekIndex > 6) break // safety
+    }
+    return buckets.length > 0 ? buckets : [emptyPoint('—')]
+  }
+
+  // this_year / lifetime → monthly
+  // (Same shape when all activity is in the current year — expected.)
+  const now = new Date()
+  const seriesEnd =
+    range === 'this_year' && end > now
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      : to
+  const map = new Map<string, MoneyChartPoint>()
+  const cursor = new Date(from.getFullYear(), from.getMonth(), 1)
+  const last = new Date(seriesEnd.getFullYear(), seriesEnd.getMonth(), 1)
+  while (cursor <= last) {
+    const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`
+    const label =
+      range === 'lifetime' && from.getFullYear() !== seriesEnd.getFullYear()
+        ? cursor.toLocaleString('en-US', { month: 'short', year: '2-digit' })
+        : cursor.toLocaleString('en-US', { month: 'short' })
+    map.set(key, emptyPoint(label))
+    cursor.setMonth(cursor.getMonth() + 1)
+  }
+  for (const job of jobs) {
+    if (job.status === 'cancelled') continue
+    if (!inDateWindow(job.date, start, end)) continue
+    const key = job.date.slice(0, 7)
+    const row = map.get(key)
+    if (!row) continue
+    row.revenue += job.revenue + job.tip
+    row.expenses += jobDayCosts(job)
+  }
+  for (const exp of expenses) {
+    if (!inDateWindow(exp.date, start, end)) continue
+    const key = exp.date.slice(0, 7)
+    const row = map.get(key)
+    if (row) row.expenses += exp.amount
+  }
+  const rows = finalizeMap(map)
+  const firstActive = rows.findIndex((r) => r.revenue > 0 || r.expenses > 0)
+  if (firstActive <= 0) return rows
+  return rows.slice(firstActive)
+}
+
+function fillDayBuckets(
+  map: Map<string, MoneyChartPoint>,
+  jobs: DeskJob[],
+  expenses: DeskExpense[],
+  start: Date,
+  end: Date,
+) {
+  for (const job of jobs) {
+    if (job.status === 'cancelled') continue
+    if (!inDateWindow(job.date, start, end)) continue
+    const row = map.get(job.date.slice(0, 10))
+    if (!row) continue
+    row.revenue += job.revenue + job.tip
+    row.expenses += jobDayCosts(job)
+  }
+  for (const exp of expenses) {
+    if (!inDateWindow(exp.date, start, end)) continue
+    const row = map.get(exp.date.slice(0, 10))
+    if (row) row.expenses += exp.amount
+  }
+}
+
+function finalizeMap(map: Map<string, MoneyChartPoint>): MoneyChartPoint[] {
+  return [...map.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, r]) => ({ ...r, net: r.revenue - r.expenses }))
+}
+
+/** KPI / axis money — keep dollars readable (avoid $3.2K next to $264.65). */
+export function moneyAxis(n: number): string {
+  const abs = Math.abs(n)
+  if (abs >= 10_000) return moneyCompact(n)
+  if (abs >= 1000) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(n)
+  }
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: abs % 1 === 0 ? 0 : 2,
+  }).format(n)
+}
+
 export function sortJobsByRoute(jobs: DeskJob[]): DeskJob[] {
   return [...jobs].sort((a, b) => {
     const ao = a.route_order

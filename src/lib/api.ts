@@ -116,6 +116,16 @@ function mapJob(record: Record<string, unknown>, expand?: Record<string, unknown
     status,
     revenue: Number(record.revenue ?? 0),
     tip: Number(record.tip ?? 0),
+    expenses: Array.isArray(record.expenses)
+      ? (record.expenses as { amount?: unknown; category?: unknown; description?: unknown }[]).map((e) => ({
+          amount: Number(e?.amount ?? 0),
+          category: e?.category != null ? String(e.category) : undefined,
+          description: e?.description != null ? String(e.description) : undefined,
+        }))
+      : [],
+    travel_cost: Number(record.travel_cost ?? 0),
+    marketing_cost: Number(record.marketing_cost ?? 0),
+    equipment_depreciation: Number(record.equipment_depreciation ?? 0),
     client_id: String(record.client_id ?? ''),
     package_id: String(record.package_id ?? ''),
     notes: record.notes ? String(record.notes) : undefined,

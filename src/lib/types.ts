@@ -68,6 +68,11 @@ export interface DeskJob {
   status: JobStatus
   revenue: number
   tip: number
+  /** Per-job cost lines (PocketBase JSON) — used for Money P&L parity with mobile. */
+  expenses?: { amount: number; category?: string; description?: string }[]
+  travel_cost?: number
+  marketing_cost?: number
+  equipment_depreciation?: number
   client_id: string
   package_id: string
   notes?: string

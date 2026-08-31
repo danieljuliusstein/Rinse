@@ -13,9 +13,21 @@ import { Header } from '../App'
 import { useData } from '@/providers/DataProvider'
 import { useCreateActions } from '@/hooks/useCreateActions'
 import { useDeskNav } from '@/providers/DeskNavProvider'
-import { buildMonthSeries, moneyCompact, unpaidAr } from '@/lib/metrics'
+import {
+  MONEY_RANGE_CHIPS,
+  buildMoneyChartSeries,
+  computeMoneyPl,
+  moneyAxis,
+  moneyBoundsFor,
+  priorMoneyBoundsFor,
+  unpaidAr,
+  type MoneyRangeKey,
+} from '@/lib/metrics'
 import { colors } from '@/theme/colors'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { getOrganizationId } from '@/lib/org'
+import { getPbUrl } from '@/lib/pocketbase'
+import { loadAppSettings } from '@/lib/settings-api'
 import {
   IconAlert,
   IconArrowDownLeft,
@@ -78,52 +90,102 @@ export default function MoneyOverview() {
   const { invoices, expenses, jobs } = useData()
   const { createExpense } = useCreateActions()
   const { setPage, openReceipts } = useDeskNav()
+  const [range, setRange] = useState<MoneyRangeKey>('this_month')
 
-  const revenueData = useMemo(
-    () => buildMonthSeries(invoices, expenses, jobs),
-    [invoices, expenses, jobs],
+  const bounds = useMemo(
+    () => moneyBoundsFor(range, jobs, expenses),
+    [range, jobs, expenses],
+  )
+  const priorBounds = useMemo(
+    () => priorMoneyBoundsFor(range, jobs, expenses),
+    [range, jobs, expenses],
   )
 
-  const last6 = revenueData.slice(-6)
-  const prev6 = revenueData.slice(-12, -6)
-  const paidRevenue6 = last6.reduce((s, r) => s + r.revenue, 0)
-  const prevPaidRevenue6 = prev6.reduce((s, r) => s + r.revenue, 0)
-  const expenses6 = last6.reduce((s, r) => s + r.expenses, 0)
-  const prevExpenses6 = prev6.reduce((s, r) => s + r.expenses, 0)
-  const netProfit = paidRevenue6 - expenses6
-  const prevNet = prevPaidRevenue6 - prevExpenses6
+  const pl = useMemo(
+    () => computeMoneyPl(jobs, expenses, bounds.start, bounds.end),
+    [jobs, expenses, bounds],
+  )
+  const priorPl = useMemo(
+    () => computeMoneyPl(jobs, expenses, priorBounds.start, priorBounds.end),
+    [jobs, expenses, priorBounds],
+  )
+
+  const chartData = useMemo(() => {
+    const rows = buildMoneyChartSeries(jobs, expenses, range, bounds.start, bounds.end)
+    return rows.length
+      ? rows
+      : [
+          { label: '—', revenue: 0, expenses: 0, net: 0 },
+          { label: '—', revenue: 0, expenses: 0, net: 0 },
+        ]
+  }, [jobs, expenses, range, bounds])
+
   const ar = unpaidAr(invoices)
   const unpaidInvoices = useMemo(
     () =>
       invoices.filter(
-        (i) => i.status === 'sent' || i.status === 'overdue' || (i.balance_due > 0 && i.status !== 'paid' && i.status !== 'void' && i.status !== 'cancelled'),
+        (i) =>
+          i.status === 'sent' ||
+          i.status === 'overdue' ||
+          (i.balance_due > 0 && i.status !== 'paid' && i.status !== 'void' && i.status !== 'cancelled'),
       ),
     [invoices],
   )
 
-  const revBadge = formatMomBadge(momPct(paidRevenue6, prevPaidRevenue6))
-  const expBadge = formatMomBadge(momPct(expenses6, prevExpenses6))
-  const netBadge = formatMomBadge(momPct(netProfit, prevNet))
-  const arClear = unpaidInvoices.length === 0
+  const rangeLabel = MONEY_RANGE_CHIPS.find((c) => c.key === range)?.label ?? 'This month'
+  const chartGrain =
+    range === 'this_week'
+      ? 'daily'
+      : range === 'this_month' || range === 'last_month'
+        ? 'weekly'
+        : 'monthly'
 
-  const chartData = useMemo(() => {
-    const rows = revenueData.length
-      ? revenueData
-      : [
-          { month: 'Jan', revenue: 0, expenses: 0, tips: 0 },
-          { month: 'Feb', revenue: 0, expenses: 0, tips: 0 },
-        ]
-    return rows.map((r) => ({
-      ...r,
-      net: r.revenue - r.expenses,
-    }))
-  }, [revenueData])
+  // #region agent log
+  useEffect(() => {
+    void loadAppSettings().then((settings) => {
+      fetch('http://127.0.0.1:7331/ingest/d6516ddf-d931-4f17-aa0a-2f20292cab5c', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '89a058' },
+        body: JSON.stringify({
+          sessionId: '89a058',
+          runId: 'post-fix',
+          hypothesisId: 'ALIGN',
+          location: 'MoneyOverview.tsx',
+          message: 'Desktop Money period-aligned snapshot',
+          data: {
+            surface: 'desktop_money',
+            range,
+            pbHost: getPbUrl().replace(/^https?:\/\//, '').split('/')[0] ?? '',
+            orgIdSuffix: (getOrganizationId() ?? '').slice(-6),
+            jobCountLoaded: jobs.length,
+            invoiceCountLoaded: invoices.length,
+            expenseCountLoaded: expenses.length,
+            plRevenue: pl.revenue,
+            plExpenses: pl.expenses,
+            plNet: pl.netProfit,
+            plJobCount: pl.jobCount,
+            unpaidArDesk: ar,
+            chartPoints: chartData.length,
+            chartLabels: chartData.map((d) => d.label),
+            businessName: settings.business_name?.trim()?.slice(0, 40) ?? '',
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {})
+    })
+  }, [range, jobs.length, invoices.length, expenses.length, pl, ar, chartData.length])
+  // #endregion
+
+  const revBadge = formatMomBadge(momPct(pl.revenue, priorPl.revenue))
+  const expBadge = formatMomBadge(momPct(pl.expenses, priorPl.expenses))
+  const netBadge = formatMomBadge(momPct(pl.netProfit, priorPl.netProfit))
+  const arClear = unpaidInvoices.length === 0
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <Header
         title="Money dashboard"
-        subtitle="Finance overview"
+        subtitle={`${rangeLabel} · ${pl.jobCount} ${pl.jobCount === 1 ? 'job' : 'jobs'}`}
         actions={
           <button
             type="button"
@@ -138,6 +200,27 @@ export default function MoneyOverview() {
       />
 
       <div className="flex-1 overflow-y-auto p-5 space-y-5" style={{ background: colors.bg }}>
+        <div className="flex flex-wrap gap-2">
+          {MONEY_RANGE_CHIPS.map((chip) => {
+            const active = chip.key === range
+            return (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => setRange(chip.key)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors"
+                style={{
+                  background: active ? colors.green : '#fff',
+                  color: active ? '#fff' : colors.text,
+                  borderColor: active ? colors.green : colors.border,
+                }}
+              >
+                {chip.label}
+              </button>
+            )
+          })}
+        </div>
+
         <div className="grid grid-cols-4 gap-3">
           <button
             type="button"
@@ -154,9 +237,13 @@ export default function MoneyOverview() {
               </div>
               <TrendBadge badge={revBadge} />
             </div>
-            <p className="text-xs text-gray-500 mt-2.5">Paid revenue</p>
-            <p className="text-[22px] font-medium text-gray-900 tracking-tight">{moneyCompact(paidRevenue6)}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Collected · last 6 mo · open Invoices</p>
+            <p className="text-xs text-gray-500 mt-2.5">Revenue</p>
+            <p className="text-[22px] font-medium text-gray-900 tracking-tight">
+              {moneyAxis(pl.revenue)}
+            </p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Job revenue + tips · {rangeLabel.toLowerCase()}
+            </p>
           </button>
 
           <button
@@ -175,8 +262,12 @@ export default function MoneyOverview() {
               <TrendBadge badge={expBadge} invert />
             </div>
             <p className="text-xs text-gray-500 mt-2.5">Total expenses</p>
-            <p className="text-[22px] font-medium text-gray-900 tracking-tight">{moneyCompact(expenses6)}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">{expenses.length} logged · open Receipts</p>
+            <p className="text-[22px] font-medium text-gray-900 tracking-tight">
+              {moneyAxis(pl.expenses)}
+            </p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Job costs + {pl.receiptExpenseCount} receipts · open Receipts
+            </p>
           </button>
 
           <div className="bg-white rounded-xl p-4 border" style={{ borderColor: colors.border }}>
@@ -184,22 +275,24 @@ export default function MoneyOverview() {
               <div
                 className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
                 style={{
-                  background: netProfit >= 0 ? colors.greenSoft : '#FEE2E2',
-                  color: netProfit >= 0 ? colors.greenText : '#991B1B',
+                  background: pl.netProfit >= 0 ? colors.greenSoft : '#FEE2E2',
+                  color: pl.netProfit >= 0 ? colors.greenText : '#991B1B',
                 }}
               >
-                {netProfit >= 0 ? <IconTrendingUp /> : <IconTrendingDown />}
+                {pl.netProfit >= 0 ? <IconTrendingUp /> : <IconTrendingDown />}
               </div>
               <TrendBadge badge={netBadge} />
             </div>
             <p className="text-xs text-gray-500 mt-2.5">Net profit</p>
             <p
               className="text-[22px] font-medium tracking-tight"
-              style={{ color: netProfit >= 0 ? colors.text : '#991B1B' }}
+              style={{ color: pl.netProfit >= 0 ? colors.text : '#991B1B' }}
             >
-              {moneyCompact(netProfit)}
+              {moneyAxis(pl.netProfit)}
             </p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Revenue minus expenses</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Job revenue minus expenses · avg {moneyAxis(pl.avgJob)}
+            </p>
           </div>
 
           <button
@@ -235,7 +328,7 @@ export default function MoneyOverview() {
               className="text-[22px] font-medium tracking-tight"
               style={{ color: arClear ? '#173404' : '#78350F' }}
             >
-              {moneyCompact(ar)}
+              {moneyAxis(ar)}
             </p>
             <p className="text-[11px] mt-0.5" style={{ color: arClear ? '#3B6D11' : '#A16207' }}>
               {arClear
@@ -269,62 +362,77 @@ export default function MoneyOverview() {
               Income, Expenses &amp; Profit
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Trailing 12 months · bars = cash · red line = profit
+              {rangeLabel} · {chartGrain} buckets · green = revenue · blue = expenses · red = profit
             </p>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart
-              data={chartData}
-              margin={{ top: 28, right: 8, left: 4, bottom: 4 }}
-              barGap={2}
-              barCategoryGap="22%"
-            >
-              <CartesianGrid stroke="#eef2f7" strokeDasharray="0" vertical={false} />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                yAxisId="cash"
-                tickFormatter={(v) => moneyCompact(Number(v))}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
-                axisLine={false}
-                tickLine={false}
-                width={52}
-              />
-              <YAxis yAxisId="profit" orientation="right" hide />
-              <Tooltip formatter={(v) => moneyCompact(Number(v))} />
-              <Legend />
-              <Bar
-                yAxisId="cash"
-                dataKey="revenue"
-                name="Revenue"
-                fill={colors.green}
-                radius={[2, 2, 0, 0]}
-                maxBarSize={28}
-              />
-              <Bar
-                yAxisId="cash"
-                dataKey="expenses"
-                name="Expenses"
-                fill="#3b82f6"
-                radius={[2, 2, 0, 0]}
-                maxBarSize={28}
-              />
-              <Line
-                yAxisId="profit"
-                type="monotone"
-                dataKey="net"
-                name="Profit"
-                stroke="#ef4444"
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: '#ef4444', strokeWidth: 0 }}
-                activeDot={{ r: 5, strokeWidth: 0 }}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div className="w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart
+                data={chartData}
+                // Extra right margin: grouped expense bars sit to the right of
+                // each category center and were clipping on short series (year).
+                margin={{ top: 28, right: 36, left: 12, bottom: 12 }}
+                barGap={3}
+                barCategoryGap={chartData.length <= 3 ? '35%' : chartData.length <= 5 ? '38%' : '42%'}
+              >
+                <CartesianGrid stroke="#eef2f7" strokeDasharray="0" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                  minTickGap={4}
+                  padding={{ left: 20, right: 20 }}
+                />
+                <YAxis
+                  yAxisId="cash"
+                  tickFormatter={(v) => moneyAxis(Number(v))}
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={56}
+                  // Allow a little room below 0 when a week is net-negative
+                  domain={[
+                    (dataMin: number) => (dataMin < 0 ? Math.floor(dataMin * 1.2) : 0),
+                    (dataMax: number) => Math.ceil(dataMax * 1.08),
+                  ]}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  formatter={(v) => moneyAxis(Number(v))}
+                  labelFormatter={(label) => String(label)}
+                />
+                <Legend />
+                <Bar
+                  yAxisId="cash"
+                  dataKey="revenue"
+                  name="Revenue"
+                  fill={colors.green}
+                  radius={[2, 2, 0, 0]}
+                  maxBarSize={28}
+                />
+                <Bar
+                  yAxisId="cash"
+                  dataKey="expenses"
+                  name="Expenses"
+                  fill="#3b82f6"
+                  radius={[2, 2, 0, 0]}
+                  maxBarSize={28}
+                />
+                <Line
+                  yAxisId="cash"
+                  type="monotone"
+                  dataKey="net"
+                  name="Profit"
+                  stroke="#ef4444"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#ef4444', strokeWidth: 0 }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
     </div>
