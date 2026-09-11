@@ -160,9 +160,9 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <Header title="Dashboard" subtitle={subtitle} />
-      <div className="flex-1 min-h-0 overflow-hidden p-3 relative">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 relative flex flex-col gap-2.5">
         <SoftBlobBackdrop className="pointer-events-none absolute -top-4 right-0 w-[420px] h-[200px] opacity-90" />
-        <div className="grid grid-cols-3 grid-rows-4 gap-2.5 relative h-full min-h-0 min-w-0 overflow-hidden [&>*]:min-h-0 [&>*]:min-w-0">
+        <div className="grid grid-cols-3 grid-rows-4 gap-2.5 relative flex-1 min-h-0 min-w-0 overflow-hidden [&>*]:min-h-0 [&>*]:min-w-0">
           <NewContactsCard clients={clients} onOpen={() => setPage('contacts')} />
 
           <div className="row-span-2 min-h-0">

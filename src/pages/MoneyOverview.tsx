@@ -9,6 +9,7 @@ import {
   ComposedChart,
   Line,
 } from 'recharts'
+import { priorRangeFor } from '@/lib/rinse-core'
 import { Header } from '../App'
 import { useData } from '@/providers/DataProvider'
 import { useCreateActions } from '@/hooks/useCreateActions'
@@ -16,18 +17,14 @@ import { useDeskNav } from '@/providers/DeskNavProvider'
 import {
   MONEY_RANGE_CHIPS,
   buildMoneyChartSeries,
-  computeMoneyPl,
+  getDeskMoneyBundle,
   moneyAxis,
-  moneyBoundsFor,
-  priorMoneyBoundsFor,
+  plToSummary,
   unpaidAr,
   type MoneyRangeKey,
 } from '@/lib/metrics'
 import { colors } from '@/theme/colors'
-import { useEffect, useMemo, useState } from 'react'
-import { getOrganizationId } from '@/lib/org'
-import { getPbUrl } from '@/lib/pocketbase'
-import { loadAppSettings } from '@/lib/settings-api'
+import { useMemo, useState } from 'react'
 import {
   IconAlert,
   IconArrowDownLeft,
@@ -87,38 +84,41 @@ function TrendBadge({
 }
 
 export default function MoneyOverview() {
-  const { invoices, expenses, jobs } = useData()
+  const { invoices, expenses, overhead, jobs } = useData()
   const { createExpense } = useCreateActions()
   const { setPage, openReceipts } = useDeskNav()
   const [range, setRange] = useState<MoneyRangeKey>('this_month')
 
-  const bounds = useMemo(
-    () => moneyBoundsFor(range, jobs, expenses),
-    [range, jobs, expenses],
-  )
-  const priorBounds = useMemo(
-    () => priorMoneyBoundsFor(range, jobs, expenses),
-    [range, jobs, expenses],
+  const bundle = useMemo(
+    () => getDeskMoneyBundle(jobs, expenses, overhead, range),
+    [jobs, expenses, overhead, range],
   )
 
   const pl = useMemo(
-    () => computeMoneyPl(jobs, expenses, bounds.start, bounds.end),
-    [jobs, expenses, bounds],
+    () => plToSummary(bundle.current, expenses, bundle.bounds.start, bundle.bounds.end),
+    [bundle, expenses],
   )
-  const priorPl = useMemo(
-    () => computeMoneyPl(jobs, expenses, priorBounds.start, priorBounds.end),
-    [jobs, expenses, priorBounds],
-  )
+  const priorPl = useMemo(() => {
+    const priorBounds = priorRangeFor(range)
+    return plToSummary(bundle.prior, expenses, priorBounds.start, priorBounds.end)
+  }, [bundle.prior, expenses, range])
 
   const chartData = useMemo(() => {
-    const rows = buildMoneyChartSeries(jobs, expenses, range, bounds.start, bounds.end)
+    const rows = buildMoneyChartSeries(
+      jobs,
+      expenses,
+      overhead,
+      range,
+      bundle.bounds.start,
+      bundle.bounds.end,
+    )
     return rows.length
       ? rows
       : [
           { label: '—', revenue: 0, expenses: 0, net: 0 },
           { label: '—', revenue: 0, expenses: 0, net: 0 },
         ]
-  }, [jobs, expenses, range, bounds])
+  }, [jobs, expenses, overhead, range, bundle.bounds])
 
   const ar = unpaidAr(invoices)
   const unpaidInvoices = useMemo(
@@ -140,46 +140,11 @@ export default function MoneyOverview() {
         ? 'weekly'
         : 'monthly'
 
-  // #region agent log
-  useEffect(() => {
-    void loadAppSettings().then((settings) => {
-      fetch('http://127.0.0.1:7331/ingest/d6516ddf-d931-4f17-aa0a-2f20292cab5c', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '89a058' },
-        body: JSON.stringify({
-          sessionId: '89a058',
-          runId: 'post-fix',
-          hypothesisId: 'ALIGN',
-          location: 'MoneyOverview.tsx',
-          message: 'Desktop Money period-aligned snapshot',
-          data: {
-            surface: 'desktop_money',
-            range,
-            pbHost: getPbUrl().replace(/^https?:\/\//, '').split('/')[0] ?? '',
-            orgIdSuffix: (getOrganizationId() ?? '').slice(-6),
-            jobCountLoaded: jobs.length,
-            invoiceCountLoaded: invoices.length,
-            expenseCountLoaded: expenses.length,
-            plRevenue: pl.revenue,
-            plExpenses: pl.expenses,
-            plNet: pl.netProfit,
-            plJobCount: pl.jobCount,
-            unpaidArDesk: ar,
-            chartPoints: chartData.length,
-            chartLabels: chartData.map((d) => d.label),
-            businessName: settings.business_name?.trim()?.slice(0, 40) ?? '',
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {})
-    })
-  }, [range, jobs.length, invoices.length, expenses.length, pl, ar, chartData.length])
-  // #endregion
-
   const revBadge = formatMomBadge(momPct(pl.revenue, priorPl.revenue))
   const expBadge = formatMomBadge(momPct(pl.expenses, priorPl.expenses))
   const netBadge = formatMomBadge(momPct(pl.netProfit, priorPl.netProfit))
   const arClear = unpaidInvoices.length === 0
+  const netLoss = pl.netProfit < 0
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -266,7 +231,7 @@ export default function MoneyOverview() {
               {moneyAxis(pl.expenses)}
             </p>
             <p className="text-[11px] text-gray-400 mt-0.5">
-              Job costs + {pl.receiptExpenseCount} receipts · open Receipts
+              Job costs + receipts + overhead · open Receipts
             </p>
           </button>
 
@@ -283,7 +248,7 @@ export default function MoneyOverview() {
               </div>
               <TrendBadge badge={netBadge} />
             </div>
-            <p className="text-xs text-gray-500 mt-2.5">Net profit</p>
+            <p className="text-xs text-gray-500 mt-2.5">{netLoss ? 'Net loss' : 'Net profit'}</p>
             <p
               className="text-[22px] font-medium tracking-tight"
               style={{ color: pl.netProfit >= 0 ? colors.text : '#991B1B' }}
@@ -369,8 +334,6 @@ export default function MoneyOverview() {
             <ResponsiveContainer width="100%" height={300}>
               <ComposedChart
                 data={chartData}
-                // Extra right margin: grouped expense bars sit to the right of
-                // each category center and were clipping on short series (year).
                 margin={{ top: 28, right: 36, left: 12, bottom: 12 }}
                 barGap={3}
                 barCategoryGap={chartData.length <= 3 ? '35%' : chartData.length <= 5 ? '38%' : '42%'}
@@ -392,7 +355,6 @@ export default function MoneyOverview() {
                   axisLine={false}
                   tickLine={false}
                   width={56}
-                  // Allow a little room below 0 when a week is net-negative
                   domain={[
                     (dataMin: number) => (dataMin < 0 ? Math.floor(dataMin * 1.2) : 0),
                     (dataMax: number) => Math.ceil(dataMax * 1.08),

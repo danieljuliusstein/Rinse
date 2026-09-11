@@ -3,6 +3,7 @@ import { getPocketBase } from './pocketbase'
 import { escapeFilter, formatPbError, orgFilter, requireOrganizationId } from './org'
 import { compressJobPhoto } from './job-photos'
 import { normalizeDeskInvoice } from './invoice-status'
+import type { OverheadExpense } from '@/lib/rinse-core'
 import type {
   DeskClient,
   DeskExpense,
@@ -413,6 +414,27 @@ export async function listExpenses(): Promise<DeskExpense[]> {
       }
     }
     return items.map((r) => mapExpense(r as unknown as Record<string, unknown>, fileToken))
+  } catch {
+    return []
+  }
+}
+
+function mapOverhead(record: Record<string, unknown>): OverheadExpense {
+  return {
+    id: String(record.id),
+    name: String(record.name ?? ''),
+    amount: Number(record.amount ?? 0),
+    category: record.category as OverheadExpense['category'],
+    billing_cycle: record.billing_cycle as OverheadExpense['billing_cycle'],
+    next_due: record.next_due ? String(record.next_due) : undefined,
+    notes: record.notes ? String(record.notes) : undefined,
+  }
+}
+
+export async function listOverheadExpenses(): Promise<OverheadExpense[]> {
+  try {
+    const items = await listOrgRecords('overhead_expenses', { sort: 'name', limit: 200 })
+    return items.map((r) => mapOverhead(r as unknown as Record<string, unknown>))
   } catch {
     return []
   }
@@ -1077,9 +1099,10 @@ export async function markInvoicePaid(id: string, method = 'cash'): Promise<Desk
   const current = mapInvoice(record as unknown as Record<string, unknown>)
   if (current.balance_due <= 0) return current
 
-  const existingPayments = Array.isArray((record as { payments?: unknown }).payments)
-    ? ((record as { payments: Array<{ amount: number; method: string; date: string; note?: string }> })
-        .payments)
+  const existingPayments = Array.isArray((record as unknown as { payments?: unknown }).payments)
+    ? ((record as unknown as {
+        payments: Array<{ amount: number; method: string; date: string; note?: string }>
+      }).payments)
     : []
   const payment = {
     amount: current.balance_due,

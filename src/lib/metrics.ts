@@ -1,4 +1,8 @@
+import type { OverheadExpense } from '@/lib/rinse-core'
 import { isOutboundEmailActivity } from '@/lib/activity-meta'
+import type { MoneyRangeKey } from '@/lib/desk-money'
+import { reportBoundsForDesk } from '@/lib/desk-money'
+import { overheadForDateRange } from '@/lib/expense-totals'
 import type {
   DeskActivity,
   DeskCampaign,
@@ -9,6 +13,9 @@ import type {
   DeskLead,
   DeskPackage,
 } from '@/lib/types'
+
+export type { MoneyPlSummary, MoneyRangeKey } from '@/lib/desk-money'
+export { getDeskMoneyBundle, plToSummary, reportBoundsForDesk } from '@/lib/desk-money'
 
 export function money(n: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -148,9 +155,6 @@ export function buildMonthSeries(
     .map(([, v]) => v)
 }
 
-/** Mobile Business tab period keys (Desk Money parity). */
-export type MoneyRangeKey = 'this_week' | 'this_month' | 'last_month' | 'this_year' | 'lifetime'
-
 export const MONEY_RANGE_CHIPS: { key: MoneyRangeKey; label: string }[] = [
   { key: 'this_week', label: 'This week' },
   { key: 'this_month', label: 'This month' },
@@ -158,10 +162,6 @@ export const MONEY_RANGE_CHIPS: { key: MoneyRangeKey; label: string }[] = [
   { key: 'this_year', label: 'This year' },
   { key: 'lifetime', label: 'Lifetime' },
 ]
-
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1)
-}
 
 function endOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59)
@@ -206,47 +206,14 @@ export function moneyRangeFor(key: MoneyRangeKey, now = new Date()): { start: Da
   }
 }
 
-/** Clamp lifetime to first…last job/expense day (include future scheduled jobs). */
+/** @deprecated Use `reportBoundsForDesk`. */
 export function moneyBoundsFor(
   key: MoneyRangeKey,
   jobs: DeskJob[],
   expenses: DeskExpense[],
   now = new Date(),
 ): { start: Date; end: Date } {
-  const base = moneyRangeFor(key, now)
-  if (key !== 'lifetime') return base
-  let earliest: string | null = null
-  let latest: string | null = null
-  const consider = (raw: string) => {
-    const day = (raw || '').slice(0, 10)
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return
-    if (earliest == null || day < earliest) earliest = day
-    if (latest == null || day > latest) latest = day
-  }
-  for (const j of jobs) {
-    if (j.status === 'cancelled') continue
-    consider(j.date)
-  }
-  for (const e of expenses) consider(e.date)
-  const today = toIsoLocal(now)
-  if (latest == null || latest < today) latest = today
-  return {
-    start: earliest ? new Date(`${earliest}T00:00:00`) : startOfMonth(now),
-    end: new Date(`${latest}T23:59:59`),
-  }
-}
-
-export function priorMoneyBoundsFor(
-  key: MoneyRangeKey,
-  jobs: DeskJob[],
-  expenses: DeskExpense[],
-  now = new Date(),
-): { start: Date; end: Date } {
-  const { start, end } = moneyBoundsFor(key, jobs, expenses, now)
-  const span = end.getTime() - start.getTime()
-  const priorEnd = new Date(start.getTime() - 1)
-  const priorStart = new Date(priorEnd.getTime() - span)
-  return { start: priorStart, end: priorEnd }
+  return reportBoundsForDesk(key, jobs, expenses, now)
 }
 
 function jobDayCosts(job: DeskJob): number {
@@ -261,50 +228,6 @@ function jobDayCosts(job: DeskJob): number {
 function inDateWindow(isoDay: string, start: Date, end: Date): boolean {
   const d = new Date(`${isoDay.slice(0, 10)}T12:00:00`)
   return d >= start && d <= end
-}
-
-export type MoneyPlSummary = {
-  revenue: number
-  expenses: number
-  netProfit: number
-  jobCount: number
-  avgJob: number
-  receiptExpenseCount: number
-}
-
-/** Job P&L for a window — matches mobile Business (jobs revenue+tip − job costs − receipts). */
-export function computeMoneyPl(
-  jobs: DeskJob[],
-  expenses: DeskExpense[],
-  start: Date,
-  end: Date,
-): MoneyPlSummary {
-  let revenue = 0
-  let jobCosts = 0
-  let jobCount = 0
-  for (const job of jobs) {
-    if (job.status === 'cancelled') continue
-    if (!inDateWindow(job.date, start, end)) continue
-    jobCount += 1
-    revenue += job.revenue + job.tip
-    jobCosts += jobDayCosts(job)
-  }
-  let receiptTotal = 0
-  let receiptExpenseCount = 0
-  for (const exp of expenses) {
-    if (!inDateWindow(exp.date, start, end)) continue
-    receiptTotal += exp.amount
-    receiptExpenseCount += 1
-  }
-  const totalExpenses = jobCosts + receiptTotal
-  return {
-    revenue,
-    expenses: totalExpenses,
-    netProfit: revenue - totalExpenses,
-    jobCount,
-    avgJob: jobCount > 0 ? Math.round(revenue / jobCount) : 0,
-    receiptExpenseCount,
-  }
 }
 
 export type MoneyChartPoint = {
@@ -327,6 +250,7 @@ function emptyPoint(label: string): MoneyChartPoint {
 export function buildMoneyChartSeries(
   jobs: DeskJob[],
   expenses: DeskExpense[],
+  overheadItems: OverheadExpense[],
   range: MoneyRangeKey,
   start: Date,
   end: Date,
@@ -334,8 +258,6 @@ export function buildMoneyChartSeries(
   const from = new Date(start.getFullYear(), start.getMonth(), start.getDate())
   const to = new Date(end.getFullYear(), end.getMonth(), end.getDate())
   if (to < from) return []
-
-  const days = Math.floor((to.getTime() - from.getTime()) / 86_400_000) + 1
 
   if (range === 'this_week') {
     const map = new Map<string, MoneyChartPoint>()
@@ -346,7 +268,7 @@ export function buildMoneyChartSeries(
       map.set(toIsoLocal(d), emptyPoint(d.toLocaleDateString('en-US', { weekday: 'short' })))
     }
     fillDayBuckets(map, jobs, expenses, start, end)
-    return finalizeMap(map)
+    return spreadOverheadAcrossSeries(finalizeMap(map), overheadItems, start, end)
   }
 
   if (range === 'this_month' || range === 'last_month') {
@@ -396,7 +318,12 @@ export function buildMoneyChartSeries(
       cursor = addDays(weekEnd, 1)
       if (weekIndex > 6) break // safety
     }
-    return buckets.length > 0 ? buckets : [emptyPoint('—')]
+    return spreadOverheadAcrossSeries(
+      buckets.length > 0 ? buckets : [emptyPoint('—')],
+      overheadItems,
+      start,
+      end,
+    )
   }
 
   // this_year / lifetime → monthly
@@ -435,8 +362,8 @@ export function buildMoneyChartSeries(
   }
   const rows = finalizeMap(map)
   const firstActive = rows.findIndex((r) => r.revenue > 0 || r.expenses > 0)
-  if (firstActive <= 0) return rows
-  return rows.slice(firstActive)
+  const series = firstActive <= 0 ? rows : rows.slice(firstActive)
+  return spreadOverheadAcrossSeries(series, overheadItems, start, end)
 }
 
 function fillDayBuckets(
@@ -459,6 +386,23 @@ function fillDayBuckets(
     const row = map.get(exp.date.slice(0, 10))
     if (row) row.expenses += exp.amount
   }
+}
+
+function spreadOverheadAcrossSeries(
+  rows: MoneyChartPoint[],
+  overheadItems: OverheadExpense[],
+  start: Date,
+  end: Date,
+): MoneyChartPoint[] {
+  if (rows.length === 0) return rows
+  const overhead = overheadForDateRange(overheadItems, start, end)
+  if (overhead <= 0) return rows
+  const share = overhead / rows.length
+  return rows.map((row) => ({
+    ...row,
+    expenses: row.expenses + share,
+    net: row.revenue - (row.expenses + share),
+  }))
 }
 
 function finalizeMap(map: Map<string, MoneyChartPoint>): MoneyChartPoint[] {

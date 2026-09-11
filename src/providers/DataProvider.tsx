@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react'
+import type { OverheadExpense } from '@/lib/rinse-core'
 import * as api from '@/lib/api'
 import { getOrganizationId } from '@/lib/org'
 import type {
@@ -31,6 +32,7 @@ interface DataContextValue {
   leads: DeskLead[]
   invoices: DeskInvoice[]
   expenses: DeskExpense[]
+  overhead: OverheadExpense[]
   packages: DeskPackage[]
   refresh: () => Promise<void>
   setClients: Dispatch<SetStateAction<DeskClient[]>>
@@ -39,6 +41,7 @@ interface DataContextValue {
   setLeads: Dispatch<SetStateAction<DeskLead[]>>
   setInvoices: Dispatch<SetStateAction<DeskInvoice[]>>
   setExpenses: Dispatch<SetStateAction<DeskExpense[]>>
+  setOverhead: Dispatch<SetStateAction<OverheadExpense[]>>
   setPackages: Dispatch<SetStateAction<DeskPackage[]>>
 }
 
@@ -54,6 +57,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [leads, setLeads] = useState<DeskLead[]>([])
   const [invoices, setInvoices] = useState<DeskInvoice[]>([])
   const [expenses, setExpenses] = useState<DeskExpense[]>([])
+  const [overhead, setOverhead] = useState<OverheadExpense[]>([])
   const [packages, setPackages] = useState<DeskPackage[]>([])
 
   const refresh = useCallback(async () => {
@@ -64,6 +68,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setLeads([])
       setInvoices([])
       setExpenses([])
+      setOverhead([])
       setPackages([])
       setError(null)
       return
@@ -77,6 +82,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setLeads([])
       setInvoices([])
       setExpenses([])
+      setOverhead([])
       setPackages([])
       return
     }
@@ -91,6 +97,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.listLeads(),
         api.listInvoices(),
         api.listExpenses(),
+        api.listOverheadExpenses(),
         api.listPackages(),
       ])
 
@@ -103,12 +110,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setLeads(value(settled[3], []))
       setInvoices(value(settled[4], []))
       setExpenses(value(settled[5], []))
-      setPackages(value(settled[6], []))
+      setOverhead(value(settled[6], []))
+      setPackages(value(settled[7], []))
 
       const failed = settled
         .map((r, i) => ({
           r,
-          name: ['clients', 'vehicles', 'jobs', 'leads', 'invoices', 'expenses', 'packages'][i]!,
+          name: ['clients', 'vehicles', 'jobs', 'leads', 'invoices', 'expenses', 'overhead', 'packages'][i]!,
         }))
         .filter((x) => x.r.status === 'rejected')
 
@@ -146,6 +154,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       leads,
       invoices,
       expenses,
+      overhead,
       packages,
       refresh,
       setClients,
@@ -154,6 +163,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setLeads,
       setInvoices,
       setExpenses,
+      setOverhead,
       setPackages,
     }),
     [
@@ -165,6 +175,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       leads,
       invoices,
       expenses,
+      overhead,
       packages,
       refresh,
     ],

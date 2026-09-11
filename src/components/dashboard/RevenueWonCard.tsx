@@ -91,7 +91,7 @@ export function RevenueWonCard({ jobs, invoices, invoicesSent, onOpenInvoices }:
       style={{ borderLeft: `3px solid ${colors.green}` }}
     >
       <div className="flex items-center justify-between gap-2 mb-1 shrink-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Revenue Won</p>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Gross revenue</p>
         <div
           role="group"
           aria-label="Revenue time range"
@@ -143,7 +143,7 @@ export function RevenueWonCard({ jobs, invoices, invoicesSent, onOpenInvoices }:
 
       <div className="flex flex-wrap gap-1.5 my-2.5 shrink-0" onClick={stopClick}>
         <StatChip icon={<span style={{ color: colors.greenText }} className="inline-flex"><IconCheck size={13} /></span>}>
-          {period.jobCount} paid job{period.jobCount === 1 ? '' : 's'}
+          {period.jobCount} paid/completed job{period.jobCount === 1 ? '' : 's'}
         </StatChip>
         <StatChip
           icon={
@@ -222,8 +222,8 @@ export function RevenueWonCard({ jobs, invoices, invoicesSent, onOpenInvoices }:
           </ResponsiveContainer>
         ) : (
           <div className="h-full flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white">
-            <p className="text-sm text-gray-500 font-medium">No revenue in this period</p>
-            <p className="text-xs text-gray-400 mt-1">Paid jobs will show as daily bars</p>
+            <p className="text-sm text-gray-500 font-medium">No gross revenue in this period</p>
+            <p className="text-xs text-gray-400 mt-1">Paid, completed &amp; invoiced jobs show as daily bars</p>
           </div>
         )}
       </div>
