@@ -27,8 +27,8 @@
     "design:scrape": "node scripts/scrape-saas-design.mjs"
   },
   "dependencies": {
-    "@expo-google-fonts/dm-sans": "^0.4.1",
-    "@expo-google-fonts/syne": "^0.4.1",
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/syne": "^0.4.2",
     "@expo/ui": "~57.0.4",
     "@hookform/resolvers": "^5.4.0",
     "@rinse/core": "file:../../packages/core",
