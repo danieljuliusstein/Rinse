@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react'
-import { Alert, RefreshControl, ScrollView, StyleSheet } from 'react-native'
+import { Alert, StyleSheet } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import type { JobWithRelations } from '@rinse/core'
 import { fmt } from '@rinse/core'
-import { SubScreen } from '@/src/components/SubScreen'
+import { AppSheet } from '@/src/components/ui/AppSheet'
 import { AppText, EmptyState, ListRow, ScreenLoading, SectionGroup } from '@/src/components/ui'
 import { listJobs } from '@/src/lib/api'
 import { createInvoiceForJob } from '@/src/lib/invoices-api'
@@ -25,12 +25,11 @@ export default function InvoicesNewScreen() {
   const router = useRouter()
   const [jobs, setJobs] = useState<JobWithRelations[]>([])
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true)
-    else setLoading(true)
+
+  const load = useCallback(async () => {
+    setLoading(true)
     setError(null)
     try {
       const rows = await listJobs(200)
@@ -42,7 +41,6 @@ export default function InvoicesNewScreen() {
       setError(e instanceof Error ? e.message : 'Failed to load jobs')
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }, [])
 
@@ -71,58 +69,46 @@ export default function InvoicesNewScreen() {
   }
 
   return (
-    <SubScreen title="Create invoice" subtitle="Pick a job without an invoice" tabDock={false}>
+    <AppSheet title="Create invoice" subtitle="Pick a job without an invoice">
       {loading ? (
         <ScreenLoading variant="list" />
       ) : error ? (
         <AppText variant="body" style={styles.error}>
           {error}
         </AppText>
+      ) : jobs.length === 0 ? (
+        <EmptyState
+          illustration="jobs"
+          title="No jobs to invoice"
+          description="Complete a job first, then create an invoice from it."
+          actionLabel="Open jobs"
+          onAction={() => router.push('/(tabs)/jobs')}
+        />
       ) : (
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />
-          }
-        >
-          {jobs.length === 0 ? (
-            <EmptyState
-              illustration="jobs"
-              title="No jobs to invoice"
-              description="Complete a job first, then create an invoice from it."
-              actionLabel="Open jobs"
-              onAction={() => router.push('/(tabs)/jobs')}
+        <SectionGroup title={`${jobs.length} ready`}>
+          {jobs.map((job, index) => (
+            <ListRow
+              key={job.id}
+              title={job.client?.name ?? 'Client'}
+              subtitle={jobSubtitle(job)}
+              meta={busyId === job.id ? 'Creating…' : fmt(jobAmount(job))}
+              showChevron={busyId !== job.id}
+              isLast={index === jobs.length - 1}
+              onPress={() => {
+                if (busyId) return
+                void createForJob(job)
+              }}
             />
-          ) : (
-            <SectionGroup title={`${jobs.length} ready`}>
-              {jobs.map((job, index) => (
-                <ListRow
-                  key={job.id}
-                  title={job.client?.name ?? 'Client'}
-                  subtitle={jobSubtitle(job)}
-                  meta={busyId === job.id ? 'Creating…' : fmt(jobAmount(job))}
-                  showChevron={busyId !== job.id}
-                  isLast={index === jobs.length - 1}
-                  onPress={() => {
-                    if (busyId) return
-                    void createForJob(job)
-                  }}
-                />
-              ))}
-            </SectionGroup>
-          )}
-        </ScrollView>
+          ))}
+        </SectionGroup>
       )}
-    </SubScreen>
+    </AppSheet>
   )
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: spacing.xl,
-  },
   error: {
     color: colors.danger,
-    padding: spacing.md,
+    paddingVertical: spacing.sm,
   },
 })

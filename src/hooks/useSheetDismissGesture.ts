@@ -39,12 +39,12 @@ export function useSheetDismissGesture(
     }
 
     const responder = PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
+      // Claim the handle immediately so tab RefreshControls never win the gesture.
+      onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_evt, gesture) =>
         gesture.dy > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx) * 1.2,
-      // Never capture — capturing was stealing the close button / page gestures
-      // and left the sheet transform fighting the modal stack.
-      onPanResponderTerminationRequest: () => true,
+      // Keep the dismiss pan — yielding let underlying pull-to-refresh steal the drag.
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
         cancelAnimation(translateY)
         cancelAnimation(scrimOpacity)

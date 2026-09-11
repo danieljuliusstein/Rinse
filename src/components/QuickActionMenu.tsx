@@ -9,6 +9,7 @@ import { AppText } from '@/src/components/ui/AppText'
 import { useSheetDismissGesture } from '@/src/hooks/useSheetDismissGesture'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
 import { lightHaptic, mediumHaptic } from '@/src/lib/haptics'
+import { navigateAfterClose } from '@/src/lib/navigate-after-close'
 import { closeSheetSpring, openSheetSpring } from '@/src/lib/sheet-motion'
 import { quickActionRowEntering } from '@/src/lib/motion-presets'
 import { useQuickAction } from '@/src/providers/QuickActionProvider'
@@ -23,13 +24,15 @@ interface ActionItem {
   onSelect: () => void
 }
 
-const SHEET_OFFSCREEN = 480
+const SHEET_OFFSCREEN_FALLBACK = 640
 
 export function QuickActionMenu() {
   const router = useRouter()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
-  const { width: windowWidth } = useWindowDimensions()
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions()
+  const sheetOffscreen = Math.max(windowHeight + 48, SHEET_OFFSCREEN_FALLBACK)
+
   const reduceMotion = useReduceMotion()
   const { menuOpen, closeMenu } = useQuickAction()
   const [mounted, setMounted] = useState(menuOpen)
@@ -39,7 +42,7 @@ export function QuickActionMenu() {
     Platform.OS === 'web' ? Math.min(windowWidth, layout.phoneColumnWidth) : windowWidth
 
   const scrimOpacity = useSharedValue(0)
-  const sheetTranslateY = useSharedValue(SHEET_OFFSCREEN)
+  const sheetTranslateY = useSharedValue(sheetOffscreen)
 
   const finishUnmount = useCallback(() => {
     setMounted(false)
@@ -58,12 +61,12 @@ export function QuickActionMenu() {
   const animateClose = useCallback(() => {
     if (reduceMotion) {
       scrimOpacity.value = 0
-      sheetTranslateY.value = SHEET_OFFSCREEN
+      sheetTranslateY.value = sheetOffscreen
       finishUnmount()
       return
     }
-    closeSheetSpring(sheetTranslateY, scrimOpacity, SHEET_OFFSCREEN, finishUnmount)
-  }, [finishUnmount, reduceMotion, scrimOpacity, sheetTranslateY])
+    closeSheetSpring(sheetTranslateY, scrimOpacity, sheetOffscreen, finishUnmount)
+  }, [finishUnmount, reduceMotion, scrimOpacity, sheetOffscreen, sheetTranslateY])
 
   const requestClose = useCallback(() => {
     lightHaptic()
@@ -73,7 +76,7 @@ export function QuickActionMenu() {
   const dismissPanHandlers = useSheetDismissGesture(
     sheetTranslateY,
     scrimOpacity,
-    SHEET_OFFSCREEN,
+    sheetOffscreen,
     finishPanDismiss,
     !reduceMotion,
   )
@@ -87,7 +90,7 @@ export function QuickActionMenu() {
         sheetTranslateY.value = 0
       } else {
         scrimOpacity.value = 0
-        sheetTranslateY.value = SHEET_OFFSCREEN
+        sheetTranslateY.value = sheetOffscreen
         requestAnimationFrame(() => animateOpen())
       }
       return
@@ -99,7 +102,7 @@ export function QuickActionMenu() {
       }
       animateClose()
     }
-  }, [animateClose, animateOpen, menuOpen, mounted, reduceMotion, scrimOpacity, sheetTranslateY])
+  }, [animateClose, animateOpen, menuOpen, mounted, reduceMotion, scrimOpacity, sheetOffscreen, sheetTranslateY])
 
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: scrimOpacity.value,
@@ -117,8 +120,7 @@ export function QuickActionMenu() {
         subtitle: t('quickActions.scanSub', { defaultValue: 'Receipt or VIN' }),
         Icon: Scan,
         onSelect: () => {
-          closeMenu()
-          router.push('/scan' as never)
+          navigateAfterClose(closeMenu, () => router.push('/scan' as never))
         },
       },
       {
@@ -127,8 +129,7 @@ export function QuickActionMenu() {
         subtitle: t('quickActions.newJobSub'),
         Icon: Briefcase,
         onSelect: () => {
-          closeMenu()
-          router.push('/jobs/new')
+          navigateAfterClose(closeMenu, () => router.push('/jobs/new'))
         },
       },
       {
@@ -137,8 +138,7 @@ export function QuickActionMenu() {
         subtitle: t('quickActions.createInvoiceSub'),
         Icon: Receipt,
         onSelect: () => {
-          closeMenu()
-          router.push('/invoices/new')
+          navigateAfterClose(closeMenu, () => router.push('/invoices/new'))
         },
       },
       {
@@ -147,8 +147,7 @@ export function QuickActionMenu() {
         subtitle: t('quickActions.logExpenseSub'),
         Icon: Wallet,
         onSelect: () => {
-          closeMenu()
-          router.push('/expenses/new' as never)
+          navigateAfterClose(closeMenu, () => router.push('/expenses/new' as never))
         },
       },
       {
@@ -157,8 +156,7 @@ export function QuickActionMenu() {
         subtitle: t('quickActions.buySuppliesSub'),
         Icon: Flask,
         onSelect: () => {
-          closeMenu()
-          router.push('/inventory/buy' as never)
+          navigateAfterClose(closeMenu, () => router.push('/inventory/buy' as never))
         },
       },
       {
@@ -167,8 +165,7 @@ export function QuickActionMenu() {
         subtitle: t('quickActions.newQuoteSub'),
         Icon: FileText,
         onSelect: () => {
-          closeMenu()
-          router.push('/quotes/new')
+          navigateAfterClose(closeMenu, () => router.push('/quotes/new'))
         },
       },
     ],

@@ -18,6 +18,7 @@ export function openSheetSpring(
 /**
  * Close: panel springs off-screen; scrim fades out.
  * Invokes `onFinished` on the JS thread when the panel spring completes.
+ * Uses a slightly snappier spring than open so dismiss doesn't linger at the end.
  */
 export function closeSheetSpring(
   translateY: SharedValue<number>,
@@ -26,7 +27,7 @@ export function closeSheetSpring(
   onFinished?: () => void,
 ): void {
   scrimOpacity.value = withTiming(0, { duration: motion.fastMs })
-  translateY.value = withSpring(offscreen, motion.sheet, (finished) => {
+  translateY.value = withSpring(offscreen, motion.snappy, (finished) => {
     'worklet'
     if (finished && onFinished) {
       runOnJS(onFinished)()

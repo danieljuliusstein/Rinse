@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useCallback, useEffect } from 'react'
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { useNavigation } from 'expo-router'
 import { initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -30,7 +30,7 @@ interface AppSheetProps {
   visible?: boolean
 }
 
-const SHEET_OFFSCREEN = 420
+const SHEET_OFFSCREEN_FALLBACK = 640
 const SHEET_MAX_HEIGHT = Platform.OS === 'web' ? ('92%' as unknown as number) : '92%'
 
 export function AppSheet({
@@ -46,9 +46,11 @@ export function AppSheet({
   const reduceMotion = useReduceMotion()
   const safeBottom = useSheetSafeBottom()
   const isModal = presentation === 'modal'
+  const { height: windowHeight } = useWindowDimensions()
+  const sheetOffscreen = Math.max(windowHeight + 48, SHEET_OFFSCREEN_FALLBACK)
 
   const scrimOpacity = useSharedValue(0)
-  const sheetTranslateY = useSharedValue(SHEET_OFFSCREEN)
+  const sheetTranslateY = useSharedValue(sheetOffscreen)
 
   const finishClose = useCallback(() => {
     if (onClose) onClose()
@@ -72,13 +74,13 @@ export function AppSheet({
       finishClose()
       return
     }
-    closeSheetSpring(sheetTranslateY, scrimOpacity, SHEET_OFFSCREEN, finishClose)
-  }, [finishClose, reduceMotion, scrimOpacity, sheetTranslateY])
+    closeSheetSpring(sheetTranslateY, scrimOpacity, sheetOffscreen, finishClose)
+  }, [finishClose, reduceMotion, scrimOpacity, sheetOffscreen, sheetTranslateY])
 
   const dismissPanHandlers = useSheetDismissGesture(
     sheetTranslateY,
     scrimOpacity,
-    SHEET_OFFSCREEN,
+    sheetOffscreen,
     finishClose,
     !reduceMotion,
   )

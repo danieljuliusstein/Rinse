@@ -101,7 +101,7 @@ function RootLayout() {
                   <Stack.Screen name="inventory/wishlist/[id]" options={sheetScreenOptions} />
                   <Stack.Screen name="expenses/new" options={sheetScreenOptions} />
                   <Stack.Screen name="expenses/receipt-review" options={sheetScreenOptions} />
-                  <Stack.Screen name="scan" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="scan" options={sheetScreenOptions} />
                   <Stack.Screen name="invoices/[id]" options={{ presentation: 'card' }} />
                   <Stack.Screen name="invoices/new" options={sheetScreenOptions} />
                   <Stack.Screen name="quotes/new" options={sheetScreenOptions} />

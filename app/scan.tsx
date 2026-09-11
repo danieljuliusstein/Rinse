@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, StyleSheet, TextInput, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Barcode, MagnifyingGlass, Receipt } from 'phosphor-react-native'
+import { Barcode, MagnifyingGlass, Receipt } from '@/src/icons'
 import type { Client } from '@rinse/core'
-import { OperatorScreen } from '@/src/components/OperatorScreen'
+import { AppSheet } from '@/src/components/ui/AppSheet'
 import { AppText, ListRow, ScreenLoading, SectionGroup, SecondaryButton } from '@/src/components/ui'
 import { VehiclePhotoScanner } from '@/src/components/vehicles/VehiclePhotoScanner'
 import { VinBarcodeScanner } from '@/src/components/vehicles/VinBarcodeScanner'
 import { usePremiumGate } from '@/src/hooks/usePremiumGate'
 import { listClients } from '@/src/lib/api'
 import { deriveInitials } from '@/src/lib/client-relationship-logic'
-import { useSafeBack } from '@/src/lib/safe-go-back'
 import { decodeVin } from '@/src/lib/vin-decode'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
@@ -26,7 +25,6 @@ type DecodedVehicle = {
 
 export default function ScanHubScreen() {
   const router = useRouter()
-  const goBack = useSafeBack('/(tabs)')
   const params = useLocalSearchParams<{ mode?: string }>()
   const { runGated } = usePremiumGate('receipt_ocr')
 
@@ -110,104 +108,101 @@ export default function ScanHubScreen() {
   }
 
   return (
-    <OperatorScreen
-      title="Scan"
-      subtitle={step === 'assign' ? 'Assign VIN to a client' : 'Receipt or VIN'}
-      tabDock={false}
-      onBack={() => {
-        if (step === 'assign') resetToChoice()
-        else goBack()
-      }}
-    >
-      {step === 'choice' ? (
-        <View style={styles.body}>
-          <SectionGroup title="What are you scanning?" inset>
-            <ListRow
-              title="Receipt"
-              subtitle="Log a business expense from a photo"
-              icon={<Receipt size={20} color={colors.greenText} weight="duotone" />}
-              iconTone="green"
-              grouped
-              onPress={openReceipt}
-            />
-            <ListRow
-              title="VIN"
-              subtitle="Scan a barcode or photo, then add a vehicle"
-              icon={<Barcode size={20} color={colors.blue} weight="duotone" />}
-              iconTone="blue"
-              grouped
-              isLast
-              onPress={startVinScan}
-            />
-          </SectionGroup>
-          {decoding ? (
-            <AppText variant="caption" style={styles.decoding}>
-              Decoding VIN…
-            </AppText>
-          ) : null}
-        </View>
-      ) : (
-        <View style={styles.body}>
-          {decoded ? (
-            <View style={styles.vinCard}>
-              <AppText variant="sectionLabel">Scanned VIN</AppText>
-              <AppText style={styles.vinValue}>{decoded.vin}</AppText>
-              <AppText variant="caption" style={styles.vinMeta}>
-                {[decoded.year, decoded.make, decoded.model].filter(Boolean).join(' ') || 'Make/model unknown'}
-              </AppText>
-              <SecondaryButton label="Scan again" onPress={() => { resetToChoice(); startVinScan() }} />
-            </View>
-          ) : null}
-
-          <AppText variant="sectionLabel" style={styles.sectionLabel}>
-            Assign to client
-          </AppText>
-
-          <View style={styles.searchWrap}>
-            <View style={styles.searchIcon}>
-              <MagnifyingGlass size={16} color={colors.textMuted} />
-            </View>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search clients…"
-              placeholderTextColor={colors.textDim}
-              value={clientSearch}
-              onChangeText={setClientSearch}
-              autoCorrect={false}
-              autoCapitalize="none"
-              autoFocus
-            />
-          </View>
-
-          {clientsLoading ? (
-            <ScreenLoading label="Loading clients…" />
-          ) : clients.length === 0 ? (
-            <View style={styles.empty}>
-              <AppText variant="body" style={styles.emptyText}>
-                Add a client first, then assign this VIN.
-              </AppText>
-              <SecondaryButton label="New client" onPress={() => router.push('/clients/new')} />
-            </View>
-          ) : (
-            <SectionGroup inset>
-              {filteredClients.map((c, index) => (
-                <ListRow
-                  key={c.id}
-                  title={c.name}
-                  subtitle={c.phone || c.email || undefined}
-                  icon={
-                    <AppText style={styles.avatarText}>{deriveInitials(c.name)}</AppText>
-                  }
-                  iconTone="purple"
-                  grouped
-                  isLast={index === filteredClients.length - 1}
-                  onPress={() => assignToClient(c)}
-                />
-              ))}
+    <>
+      <AppSheet
+        title="Scan"
+        subtitle={step === 'assign' ? 'Assign VIN to a client' : 'Receipt or VIN'}
+      >
+        {step === 'choice' ? (
+          <View style={styles.body}>
+            <SectionGroup title="What are you scanning?" inset>
+              <ListRow
+                title="Receipt"
+                subtitle="Log a business expense from a photo"
+                icon={<Receipt size={20} color={colors.greenText} weight="duotone" />}
+                iconTone="green"
+                grouped
+                onPress={openReceipt}
+              />
+              <ListRow
+                title="VIN"
+                subtitle="Scan a barcode or photo, then add a vehicle"
+                icon={<Barcode size={20} color={colors.blue} weight="duotone" />}
+                iconTone="blue"
+                grouped
+                isLast
+                onPress={startVinScan}
+              />
             </SectionGroup>
-          )}
-        </View>
-      )}
+            {decoding ? (
+              <AppText variant="caption" style={styles.decoding}>
+                Decoding VIN…
+              </AppText>
+            ) : null}
+          </View>
+        ) : (
+          <View style={styles.body}>
+            {decoded ? (
+              <View style={styles.vinCard}>
+                <AppText variant="sectionLabel">Scanned VIN</AppText>
+                <AppText style={styles.vinValue}>{decoded.vin}</AppText>
+                <AppText variant="caption" style={styles.vinMeta}>
+                  {[decoded.year, decoded.make, decoded.model].filter(Boolean).join(' ') || 'Make/model unknown'}
+                </AppText>
+                <SecondaryButton label="Scan again" onPress={() => { resetToChoice(); startVinScan() }} />
+              </View>
+            ) : null}
+
+            <AppText variant="sectionLabel" style={styles.sectionLabel}>
+              Assign to client
+            </AppText>
+
+            <View style={styles.searchWrap}>
+              <View style={styles.searchIcon}>
+                <MagnifyingGlass size={16} color={colors.textMuted} />
+              </View>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search clients…"
+                placeholderTextColor={colors.textDim}
+                value={clientSearch}
+                onChangeText={setClientSearch}
+                autoCorrect={false}
+                autoCapitalize="none"
+                autoFocus
+              />
+            </View>
+
+            {clientsLoading ? (
+              <ScreenLoading label="Loading clients…" />
+            ) : clients.length === 0 ? (
+              <View style={styles.empty}>
+                <AppText variant="body" style={styles.emptyText}>
+                  Add a client first, then assign this VIN.
+                </AppText>
+                <SecondaryButton label="New client" onPress={() => router.push('/clients/new')} />
+              </View>
+            ) : (
+              <SectionGroup inset>
+                {filteredClients.map((c, index) => (
+                  <ListRow
+                    key={c.id}
+                    title={c.name}
+                    subtitle={c.phone || c.email || undefined}
+                    icon={
+                      <AppText style={styles.avatarText}>{deriveInitials(c.name)}</AppText>
+                    }
+                    iconTone="purple"
+                    grouped
+                    isLast={index === filteredClients.length - 1}
+                    onPress={() => assignToClient(c)}
+                  />
+                ))}
+              </SectionGroup>
+            )}
+          </View>
+        )}
+      </AppSheet>
 
       <VinBarcodeScanner
         visible={barcodeOpen}
@@ -226,14 +221,12 @@ export default function ScanHubScreen() {
           else Alert.alert('VIN', 'Could not read a VIN from that photo')
         }}
       />
-    </OperatorScreen>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
   body: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
     gap: spacing.md,
   },
   decoding: {
