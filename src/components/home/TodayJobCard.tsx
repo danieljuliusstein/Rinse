@@ -4,7 +4,8 @@ import { CalendarBlank, MapPin } from 'phosphor-react-native'
 import { AppText, SecondaryButton } from '@/src/components/ui'
 import type { TodayJobCardData } from '@/src/lib/home-dashboard'
 import { todayJobDetailsLine } from '@/src/lib/home-dashboard'
-import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
+import { colors, iconTonePalette, radii, spacing } from '@/src/theme/colors'
+import { homeCardStyles } from './homeCardStyles'
 
 interface TodayJobCardProps {
   job: TodayJobCardData | null
@@ -17,13 +18,18 @@ export function TodayJobCard({ job, onDirections, onOpenJob, onSchedule }: Today
   const { t } = useTranslation()
   if (!job) {
     return (
-      <View style={styles.emptyCard}>
+      <View style={[homeCardStyles.card, styles.emptyCard]}>
         <CalendarBlank size={28} color={colors.textMuted} weight="duotone" />
         <AppText variant="body" style={styles.emptyText}>
           {t('home.noJobsToday')}
         </AppText>
-        <Pressable style={styles.scheduleBtn} onPress={onSchedule} accessibilityRole="button">
-          <AppText variant="bodyMedium" style={styles.scheduleBtnText}>
+        <Pressable
+          style={({ pressed }) => [styles.scheduleBtn, pressed && styles.scheduleBtnPressed]}
+          onPress={onSchedule}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.scheduleJob')}
+        >
+          <AppText variant="bodySemiBold" style={styles.scheduleBtnText}>
             {t('home.scheduleJob')}
           </AppText>
         </Pressable>
@@ -34,7 +40,7 @@ export function TodayJobCard({ job, onDirections, onOpenJob, onSchedule }: Today
   const hasAddress = Boolean(job.address?.trim())
 
   return (
-    <View style={styles.card}>
+    <View style={homeCardStyles.card}>
       <View style={styles.top}>
         <View style={styles.topText}>
           <AppText variant="bodyMedium" style={styles.client}>
@@ -81,21 +87,10 @@ export function TodayJobCard({ job, onDirections, onOpenJob, onSchedule }: Today
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
   emptyCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 24,
     alignItems: 'center',
     gap: spacing.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    paddingVertical: spacing.lg,
   },
   emptyText: {
     color: colors.textSecondary,
@@ -103,13 +98,20 @@ const styles = StyleSheet.create({
   },
   scheduleBtn: {
     marginTop: spacing.xs,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: iconTonePalette.green.bg,
+    minHeight: 44,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    borderRadius: radii.md,
+    backgroundColor: colors.green,
+  },
+  scheduleBtnPressed: {
+    opacity: 0.9,
   },
   scheduleBtnText: {
-    color: colors.green,
+    color: '#ffffff',
   },
   top: {
     flexDirection: 'row',

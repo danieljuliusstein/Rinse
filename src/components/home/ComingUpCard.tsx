@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { AppText } from '@/src/components/ui'
 import type { ComingUpJobData } from '@/src/lib/home-dashboard'
 import { colors, spacing } from '@/src/theme/colors'
+import { homeCardStyles } from './homeCardStyles'
 
 interface ComingUpCardProps {
   job: ComingUpJobData
@@ -10,7 +11,7 @@ interface ComingUpCardProps {
 
 export function ComingUpCard({ job, onPress }: ComingUpCardProps) {
   return (
-    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
+    <Pressable style={({ pressed }) => [homeCardStyles.card, styles.card, pressed && homeCardStyles.cardPressed]} onPress={onPress} accessibilityRole="button">
       <View style={styles.date}>
         <AppText variant="caption" style={styles.month}>
           {job.monthLabel}
@@ -40,11 +41,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
   },
   date: {
     alignItems: 'center',

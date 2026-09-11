@@ -60,29 +60,17 @@ export function ListScreenSkeleton({ rows = 6 }: { rows?: number }) {
   )
 }
 
-/** Home tab — greeting, CTAs, AR card, calendar block. */
+/** Home tab body — CTAs, today card, readiness/AR, calendar, list (header is real greeting). */
 export function HomeScreenSkeleton() {
   return (
     <View style={styles.home} accessibilityRole="progressbar" accessibilityLabel="Loading">
-      <View style={styles.homeHeader}>
-        <SkeletonBox width={44} height={44} radius={22} />
-        <View style={styles.homeHeaderText}>
-          <SkeletonBox width="48%" height={16} />
-          <SkeletonBox width="32%" height={12} style={styles.rowSub} />
-        </View>
-        <View style={styles.homeHeaderActions}>
-          <SkeletonBox width={36} height={36} radius={18} />
-          <SkeletonBox width={36} height={36} radius={18} />
-        </View>
-      </View>
-
       <View style={styles.ctaRow}>
         <SkeletonBox height={48} style={styles.cta} />
         <SkeletonBox height={48} style={styles.cta} />
         <SkeletonBox width={72} height={48} />
       </View>
 
-      <SkeletonBox height={112} radius={radii.lg} />
+      <SkeletonBox height={132} radius={radii.lg} />
       <SkeletonBox height={88} radius={radii.lg} />
       <SkeletonBox height={220} radius={radii.lg} />
       <ListScreenSkeleton rows={2} />
@@ -117,20 +105,6 @@ const styles = StyleSheet.create({
   },
   home: {
     gap: spacing.md,
-  },
-  homeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  homeHeaderText: {
-    flex: 1,
-    gap: 8,
-  },
-  homeHeaderActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
   },
   ctaRow: {
     flexDirection: 'row',

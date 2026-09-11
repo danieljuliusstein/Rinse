@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: spacing.sm,
     minWidth: 0,
   },
   avatar: {
@@ -129,12 +129,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    lineHeight: 21,
+    lineHeight: 20,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.xs,
     flexShrink: 0,
   },
 })

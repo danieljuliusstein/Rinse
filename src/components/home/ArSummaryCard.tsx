@@ -5,8 +5,9 @@ import { Receipt } from 'phosphor-react-native'
 import { AppText } from '@/src/components/ui'
 import { formatMoney } from '@/src/lib/inventory-utils'
 import type { ArSummary } from '@/src/lib/ar-metrics'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
+import { homeCardStyles } from './homeCardStyles'
 
 type ArSummaryCardProps = {
   summary: ArSummary
@@ -18,7 +19,7 @@ export function ArSummaryCard({ summary }: ArSummaryCardProps) {
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [homeCardStyles.card, pressed && homeCardStyles.cardPressed]}
       onPress={() => router.push('/(tabs)/invoices')}
       accessibilityRole="button"
       accessibilityLabel={t('home.viewInvoices')}
@@ -65,20 +66,10 @@ export function ArSummaryCard({ summary }: ArSummaryCardProps) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.sheet,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    padding: spacing.md,
-  },
   cardInner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-  },
-  pressed: {
-    opacity: 0.92,
   },
   iconWrap: {
     width: 44,

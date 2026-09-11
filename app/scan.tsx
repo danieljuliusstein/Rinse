@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, StyleSheet, TextInput, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Barcode, MagnifyingGlass, Receipt } from '@/src/icons'
+import { Barcode, MagnifyingGlass, Receipt } from 'phosphor-react-native'
 import type { Client } from '@rinse/core'
 import { AppSheet } from '@/src/components/ui/AppSheet'
 import { AppText, ListRow, ScreenLoading, SectionGroup, SecondaryButton } from '@/src/components/ui'

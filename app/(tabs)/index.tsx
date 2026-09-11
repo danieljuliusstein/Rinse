@@ -18,14 +18,12 @@ import { InventoryAlertCard } from '@/src/components/home/InventoryAlertCard'
 import { ProfileCompleteCard } from '@/src/components/home/ProfileCompleteCard'
 import { WeatherReadinessCard } from '@/src/components/home/WeatherReadinessCard'
 import { WeatherRescheduleSheet } from '@/src/components/home/WeatherRescheduleSheet'
-import { hasWeatherRisk } from '@/src/lib/weather-readiness'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import {
   AppText,
   Badge,
   BlockStagger,
   ListRow,
-  PrimaryButton,
   ScreenLoading,
   SearchField,
   SectionGroup,
@@ -330,14 +328,11 @@ export default function HomeScreen() {
             {isHomeModuleEnabled(homeModules, 'job_readiness') ? (
               <BlockStagger index={4}>
                 <HomeSection label={t('home.jobReadiness')}>
-                  <WeatherReadinessCard result={weather} loading={weatherLoading} />
-                  {hasWeatherRisk(weather) ? (
-                    <PrimaryButton
-                      label="Reschedule day"
-                      onPress={() => setWeatherRescheduleOpen(true)}
-                      style={{ marginTop: spacing.sm }}
-                    />
-                  ) : null}
+                  <WeatherReadinessCard
+                    result={weather}
+                    loading={weatherLoading}
+                    onReschedule={() => setWeatherRescheduleOpen(true)}
+                  />
                 </HomeSection>
               </BlockStagger>
             ) : null}

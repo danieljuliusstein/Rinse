@@ -55,6 +55,7 @@ export function CarDamageMap({
   const [savingPins, setSavingPins] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [tapProbe, setTapProbe] = useState<{ left: number; top: number } | null>(null)
+  const [mapLayout, setMapLayout] = useState({ width: 0, height: 0 })
   const mapSize = useRef({ w: 0, h: 0 })
   const dragStart = useRef({ left: 0, top: 0 })
   const dragIdRef = useRef<string | null>(null)
@@ -81,6 +82,9 @@ export function CarDamageMap({
   const onMapLayout = useCallback((e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout
     mapSize.current = { w: width, h: height }
+    setMapLayout((prev) =>
+      prev.width === width && prev.height === height ? prev : { width, height },
+    )
   }, [])
 
   const movePin = useCallback((id: string, left: number, top: number) => {
@@ -209,13 +213,19 @@ export function CarDamageMap({
         onLayout={onMapLayout}
         {...(calibrate ? mapPan.panHandlers : {})}
       >
-        <Image
-          source={carTopView}
-          style={[styles.carImage, !pinsReady ? styles.carImageLoading : null]}
-          resizeMode="contain"
-          accessibilityLabel="Car body map"
-          pointerEvents="none"
-        />
+        {mapLayout.width > 0 ? (
+          <Image
+            source={carTopView}
+            style={[
+              styles.carImage,
+              { width: mapLayout.width, height: mapLayout.height },
+              !pinsReady ? styles.carImageLoading : null,
+            ]}
+            resizeMode="contain"
+            accessibilityLabel="Car body map"
+            pointerEvents="none"
+          />
+        ) : null}
 
         {calibrate && tapProbe ? (
           <View
@@ -370,8 +380,9 @@ const styles = StyleSheet.create({
         } as object)
       : {},
   carImage: {
-    width: '100%',
-    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   carImageLoading: {
     opacity: 0.85,

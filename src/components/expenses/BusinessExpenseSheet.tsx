@@ -3,16 +3,22 @@ import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-nat
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BusinessExpense, BusinessExpenseCategory, BusinessExpenseInput, ExpenseLine } from '@rinse/core'
+import { Check, Receipt, X } from 'phosphor-react-native'
 import { FormField } from '@/src/components/FormField'
 import { FormRow } from '@/src/components/forms/FormRow'
-import { AffixField, AppText, PillGroup, PrimaryButton, SecondaryButton } from '@/src/components/ui'
+import { AffixField, AppText, PillGroup, SecondaryButton } from '@/src/components/ui'
+import { DatePickerSheet } from '@/src/components/ui/DatePickerSheet'
+import { SheetSubmitButton } from '@/src/components/ui/SheetSubmitButton'
 import { usePremiumGate } from '@/src/hooks/usePremiumGate'
 import type { ReceiptImageAsset } from '@/src/lib/business-expenses-api'
 import { todayIso } from '@/src/lib/expense-format'
+import { selectionHaptic } from '@/src/lib/haptics'
 import { receiptLinesToNotes } from '@/src/lib/receipt-parse'
 import { consumeReceiptReviewDraft } from '@/src/lib/receipt-review-draft'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors, radii, spacing, webInlinePressableReset, webPressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
+
+const GREEN_SOFT = '#E8F8EE'
 
 const CATEGORY_PILLS: { value: BusinessExpenseCategory; label: string }[] = [
   { value: 'supplies', label: 'Supplies' },
@@ -28,6 +34,13 @@ const CATEGORY_PILLS: { value: BusinessExpenseCategory; label: string }[] = [
 ]
 
 const EMPTY_LINE: ExpenseLine = { category: 'supplies', description: '', amount: 0 }
+
+function formatCardDate(iso: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
+  const d = new Date(`${iso}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
 
 export function BusinessExpenseSheet({
   visible,
@@ -49,6 +62,7 @@ export function BusinessExpenseSheet({
   const isEdit = Boolean(expense)
   const { runGated } = usePremiumGate('receipt_ocr')
   const awaitingReview = useRef(false)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [date, setDate] = useState(todayIso())
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
@@ -103,7 +117,9 @@ export function BusinessExpenseSheet({
   )
 
   const parsedAmount = Number(amount) || 0
-  const canSave = name.trim().length > 0 && parsedAmount > 0 && date.length > 0
+  const amountValid = parsedAmount > 0
+  const dateValid = /^\d{4}-\d{2}-\d{2}$/.test(date)
+  const canSave = name.trim().length > 0 && amountValid && dateValid && Boolean(category)
 
   const openReceiptReview = () => {
     runGated(() => {
@@ -123,6 +139,7 @@ export function BusinessExpenseSheet({
   }
 
   const handleSave = () => {
+    if (!canSave || saving) return
     const receiptNotes = receiptMode ? receiptLinesToNotes(receiptLines) : ''
     const mergedNotes = [notes.trim(), receiptNotes].filter(Boolean).join('\n\n')
     onSave(
@@ -140,22 +157,42 @@ export function BusinessExpenseSheet({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={[styles.sheet, { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.md }]}>
+      <View style={[styles.sheet, { paddingTop: insets.top + spacing.sm, paddingBottom: insets.bottom + spacing.md }]}>
+        <View style={styles.handle} />
+
         <View style={styles.header}>
-          <AppText style={styles.title}>{isEdit ? 'Edit expense' : 'Log business expense'}</AppText>
-          <AppText style={styles.subtitle}>
-            {receiptMode
-              ? 'Receipt image is linked to this expense'
-              : 'Dated one-time payment — shows in P&L for that month only'}
-          </AppText>
+          <View style={styles.headerLeft}>
+            <View style={styles.headerIcon}>
+              <Receipt size={16} color={colors.greenText} weight="duotone" />
+            </View>
+            <View style={styles.headerText}>
+              <AppText style={styles.title}>{isEdit ? 'Edit expense' : 'Log business expense'}</AppText>
+              <AppText style={styles.subtitle}>
+                {receiptMode
+                  ? 'Receipt image is linked to this expense'
+                  : 'One-time cost for P&L'}
+              </AppText>
+            </View>
+          </View>
+          <Pressable
+            onPress={onClose}
+            style={[styles.closeBtn, webInlinePressableReset]}
+            accessibilityLabel="Close"
+          >
+            <X size={16} color={colors.textMuted} weight="bold" />
+          </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.body}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {!isEdit ? (
             <Pressable
               accessibilityRole="button"
               onPress={receiptMode ? clearReceipt : openReceiptReview}
-              style={[styles.chip, receiptMode ? styles.chipOn : null]}
+              style={[styles.chip, receiptMode ? styles.chipOn : null, webInlinePressableReset]}
             >
               <AppText style={[styles.chipLabel, receiptMode ? styles.chipLabelOn : null]}>
                 {receiptMode ? 'Clear receipt' : '+ Add receipt'}
@@ -201,24 +238,92 @@ export function BusinessExpenseSheet({
             />
           ) : null}
 
-          <FormField label="Date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
-          <AffixField label="Amount" value={amount} onChangeText={setAmount} placeholder="0" keyboardType="decimal-pad" />
-          <FormField label="Name" value={name} onChangeText={setName} placeholder="Expense name" />
+          <AppText variant="sectionLabel">Expense details</AppText>
+
+          <FormField
+            label="Name"
+            value={name}
+            onChangeText={setName}
+            placeholder="e.g. AutoZone supplies"
+          />
+
+          <View style={styles.amountDate}>
+            <AffixField
+              label="Total"
+              value={amount}
+              onChangeText={(t) => setAmount(t.replace(/[^0-9.]/g, ''))}
+              placeholder="0.00"
+              keyboardType="decimal-pad"
+              style={styles.totalField}
+            />
+            <View style={styles.dateWrap}>
+              <AppText variant="sectionLabel" style={styles.dateLabel}>
+                Date
+              </AppText>
+              <Pressable
+                onPress={() => {
+                  selectionHaptic()
+                  setDatePickerOpen(true)
+                }}
+                style={({ pressed }) => [
+                  styles.dateCard,
+                  dateValid && styles.dateCardOn,
+                  webPressableReset,
+                  pressed && styles.pressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Date ${formatCardDate(date)}. Tap to change.`}
+              >
+                <AppText style={styles.dateValue}>{formatCardDate(date)}</AppText>
+                {dateValid ? <Check size={16} color={colors.green} weight="bold" /> : null}
+              </Pressable>
+            </View>
+          </View>
+
           <PillGroup label="Category" options={CATEGORY_PILLS} value={category} onChange={setCategory} />
-          <FormField label="Vendor (optional)" value={vendor} onChangeText={setVendor} placeholder="Store or provider" />
-          <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} placeholder="Receipt details…" multiline />
+          <FormField
+            label="Vendor (optional)"
+            value={vendor}
+            onChangeText={setVendor}
+            placeholder="e.g. AutoZone"
+          />
+          <FormField
+            label="Notes (optional)"
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Add any details…"
+            multiline
+          />
         </ScrollView>
 
         <View style={styles.footer}>
+          {!canSave ? (
+            <AppText style={styles.hint}>Enter a name, amount, and category to save</AppText>
+          ) : null}
           {isEdit && onDelete ? <SecondaryButton label="Delete expense" onPress={onDelete} /> : null}
-          <SecondaryButton label="Cancel" onPress={onClose} />
-          <PrimaryButton
-            label={saving ? 'Saving…' : isEdit ? 'Save changes' : 'Log expense'}
-            onPress={handleSave}
-            loading={saving}
-            disabled={!canSave}
-          />
+          <View style={styles.footerRow}>
+            <SecondaryButton label="Cancel" onPress={onClose} style={styles.footerBtn} />
+            <SheetSubmitButton
+              label={isEdit ? 'Save changes' : 'Save'}
+              ready={canSave}
+              loading={saving}
+              onPress={handleSave}
+              style={styles.footerBtn}
+            />
+          </View>
         </View>
+
+        <DatePickerSheet
+          visible={datePickerOpen}
+          title="Expense date"
+          value={date}
+          minDate="2000-01-01"
+          onClose={() => setDatePickerOpen(false)}
+          onSelect={(iso) => {
+            setDate(iso)
+            setDatePickerOpen(false)
+          }}
+        />
       </View>
     </Modal>
   )
@@ -231,20 +336,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     gap: spacing.md,
   },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.border,
+  },
   header: {
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  headerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: GREEN_SOFT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  headerText: {
+    flex: 1,
+    gap: 2,
   },
   title: {
     fontFamily: fonts.displayBold,
-    fontSize: 22,
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.textPrimary,
   },
   subtitle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceActive,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   body: {
-    gap: spacing.md,
+    gap: 14,
     paddingBottom: spacing.md,
   },
   chip: {
@@ -280,7 +424,64 @@ const styles = StyleSheet.create({
   amountField: {
     flex: 0.55,
   },
+  amountDate: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  totalField: {
+    flex: 1,
+  },
+  dateWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  dateLabel: {
+    marginBottom: 6,
+  },
+  dateCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    backgroundColor: colors.bg,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    minHeight: 48,
+  },
+  dateCardOn: {
+    borderColor: colors.greenBorder,
+    backgroundColor: GREEN_SOFT,
+  },
+  dateValue: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.textPrimary,
+    fontFamily: fonts.body,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
   footer: {
+    gap: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+  },
+  hint: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: colors.textMuted,
+    fontFamily: fonts.body,
+  },
+  footerRow: {
+    flexDirection: 'row',
     gap: spacing.sm,
+  },
+  footerBtn: {
+    flex: 1,
   },
 })
