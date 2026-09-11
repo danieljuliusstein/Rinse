@@ -1,24 +1,26 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { Boat, Bus, Car, DotsThree, Jeep, Truck, type Icon } from 'phosphor-react-native'
+import { Boat, Bus, Car, Check, DotsThree, Jeep, Truck, type Icon } from 'phosphor-react-native'
 import type { VehicleType } from '@rinse/core'
 import { AppText } from '@/src/components/ui/AppText'
 import { selectionHaptic } from '@/src/lib/haptics'
 import { colors, radii, spacing, webInlinePressableReset } from '@/src/theme/colors'
+import { fonts } from '@/src/theme/typography'
 
 export type VehicleTypeOption = {
   id: VehicleType
   label: string
+  description: string
   Icon: Icon
 }
 
 /** Matches PWA `detailing-app/src/lib/vehicle-type-icons.tsx`. */
 export const VEHICLE_TYPE_OPTIONS: VehicleTypeOption[] = [
-  { id: 'sedan', label: 'Sedan', Icon: Car },
-  { id: 'suv', label: 'SUV', Icon: Jeep },
-  { id: 'truck', label: 'Truck', Icon: Truck },
-  { id: 'van', label: 'Van', Icon: Bus },
-  { id: 'boat', label: 'Boat', Icon: Boat },
-  { id: 'other', label: 'Other', Icon: DotsThree },
+  { id: 'sedan', label: 'Sedan', description: '4-door', Icon: Car },
+  { id: 'suv', label: 'SUV', description: 'Lifted / tall', Icon: Jeep },
+  { id: 'truck', label: 'Truck', description: 'Open bed', Icon: Truck },
+  { id: 'van', label: 'Van', description: 'Enclosed', Icon: Bus },
+  { id: 'boat', label: 'Boat', description: 'Marine', Icon: Boat },
+  { id: 'other', label: 'Other', description: 'Custom', Icon: DotsThree },
 ]
 
 export function getVehicleTypeOption(type: VehicleType): VehicleTypeOption {
@@ -41,7 +43,7 @@ export function VehicleTypeIcon({
 }
 
 type VehicleTypePickerProps = {
-  value: VehicleType
+  value: VehicleType | null
   onChange: (type: VehicleType) => void
   label?: string
   error?: string
@@ -52,9 +54,13 @@ type VehicleTypePickerProps = {
    * `soft` — green-dim + border (PWA New job / QuickAdd).
    */
   variant?: 'solid' | 'soft'
+  /** Hide built-in label when a parent section header owns the title. */
+  hideLabel?: boolean
+  /** Show type description under the label (Bolt edit sheet). Default true for solid. */
+  showDescriptions?: boolean
 }
 
-/** 3-column icon grid — matches PWA vehicle pickers. */
+/** 3-column icon grid — matches Bolt edit-vehicle + PWA pickers. */
 export function VehicleTypePicker({
   value,
   onChange,
@@ -62,15 +68,18 @@ export function VehicleTypePicker({
   error,
   exclude,
   variant = 'solid',
+  hideLabel = false,
+  showDescriptions,
 }: VehicleTypePickerProps) {
   const options = exclude?.length
     ? VEHICLE_TYPE_OPTIONS.filter((o) => !exclude.includes(o.id))
     : VEHICLE_TYPE_OPTIONS
   const soft = variant === 'soft'
+  const withDesc = showDescriptions ?? !soft
 
   return (
     <View style={styles.wrap}>
-      {label ? (
+      {!hideLabel && label ? (
         <AppText variant="sectionLabel" style={styles.label}>
           {label}
         </AppText>
@@ -82,7 +91,7 @@ export function VehicleTypePicker({
           const iconColor = active
             ? soft
               ? colors.greenText
-              : '#071407'
+              : '#ffffff'
             : colors.textMuted
           return (
             <Pressable
@@ -93,6 +102,7 @@ export function VehicleTypePicker({
               }}
               style={({ pressed }) => [
                 styles.btn,
+                withDesc && styles.btnTall,
                 webInlinePressableReset,
                 active && (soft ? styles.btnOnSoft : styles.btnOn),
                 pressed && styles.btnPressed,
@@ -101,8 +111,13 @@ export function VehicleTypePicker({
               accessibilityState={{ selected: active }}
               accessibilityLabel={option.label}
             >
+              {active && !soft ? (
+                <View style={styles.checkBadge}>
+                  <Check size={10} color={colors.green} weight="bold" />
+                </View>
+              ) : null}
               <View style={styles.btnInner}>
-                <Icon size={22} weight={active ? 'fill' : 'regular'} color={iconColor} />
+                <Icon size={24} weight={active ? 'fill' : 'regular'} color={iconColor} />
                 <AppText
                   style={[
                     styles.btnLabel,
@@ -111,6 +126,16 @@ export function VehicleTypePicker({
                 >
                   {option.label}
                 </AppText>
+                {withDesc ? (
+                  <AppText
+                    style={[
+                      styles.btnDesc,
+                      active && (soft ? styles.btnDescOnSoft : styles.btnDescOn),
+                    ]}
+                  >
+                    {option.description}
+                  </AppText>
+                ) : null}
               </View>
             </Pressable>
           )
@@ -135,16 +160,22 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: 10,
   },
   btn: {
     width: '31%',
+    flexGrow: 1,
+    maxWidth: '32.5%',
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingVertical: 10,
+    borderRadius: 12,
+    paddingVertical: 12,
     paddingHorizontal: 6,
+    position: 'relative',
+  },
+  btnTall: {
+    paddingVertical: 14,
   },
   btnInner: {
     alignItems: 'center',
@@ -162,17 +193,38 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   btnLabel: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: colors.textMuted,
+    fontSize: 12,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.textPrimary,
   },
   btnLabelOn: {
-    fontWeight: '600',
-    color: '#071407',
+    color: '#ffffff',
   },
   btnLabelOnSoft: {
-    fontWeight: '600',
     color: colors.greenText,
+  },
+  btnDesc: {
+    fontSize: 9,
+    fontFamily: fonts.bodyMedium,
+    color: colors.textDim,
+  },
+  btnDescOn: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  btnDescOnSoft: {
+    color: colors.greenText,
+  },
+  checkBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
   },
   error: {
     marginTop: spacing.xs,

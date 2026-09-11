@@ -343,7 +343,7 @@ export default function HomeScreen() {
             {isHomeModuleEnabled(homeModules, 'job_readiness') ? (
               <BlockStagger index={5}>
                 <HomeSection label={t('home.jobReadiness')}>
-                  <WeatherReadinessCard result={weather} loading={weatherLoading} compact />
+                  <WeatherReadinessCard result={weather} loading={weatherLoading} />
                 </HomeSection>
               </BlockStagger>
             ) : null}
