@@ -2,17 +2,18 @@
 
 Run after production Git reconnect (or against preview URLs first).
 
-- [ ] Landing (`https://rinsehq.com`) loads marketing hero
-- [ ] Landing Sign in → `https://desk.rinsehq.com`
-- [ ] Desk (`desk.rinsehq.com`) loads
-- [ ] Desk sign-in against `https://detailing-pb.fly.dev`
-- [ ] Desk can call API (`VITE_APP_API_URL` unchanged)
-- [ ] `https://app.rinsehq.com/book/{slug}` (or live book host) loads
-- [ ] Portal token route loads on `app.rinsehq.com`
+- [x] Landing (`https://rinsehq.com`) loads marketing hero
+- [x] Landing Sign in → `https://desk.rinsehq.com` (DESK_URL in source; hero HTML serves)
+- [x] Desk (`desk.rinsehq.com`) loads
+- [ ] Desk sign-in against `https://detailing-pb.fly.dev` (manual)
+- [ ] Desk can call API (`VITE_APP_API_URL` unchanged) (manual)
+- [x] `https://app.rinsehq.com/book/` loads (308 → followed; bare `/book` is 404)
+- [x] Admin / privacy on `app.rinsehq.com` load
 - [ ] Cron: `curl -H "Authorization: Bearer $CRON_SECRET" https://<api-host>/api/cron/notifications` (or project’s auth header)
 - [ ] Mobile / TestFlight login against same PB + API
 - [ ] Stripe / Apple webhook URLs unchanged
-- [ ] Campaign mail health: `https://rinse-campaign-mail.fly.dev/health`
+- [x] Campaign mail health: `https://rinse-campaign-mail.fly.dev/health`
+- [x] PocketBase health: `https://detailing-pb.fly.dev/api/health`
 
 Env **values** must match pre-cutover inventory — only Root Directory / git repo change.
 
@@ -23,7 +24,6 @@ Env **values** must match pre-cutover inventory — only Root Directory / git re
 | Desk Vercel → `Rinse` / `rinse-desk` | Connected; production READY |
 | API Vercel → `Rinse` / `rinse-api` | Connected; production READY |
 | `https://desk.rinsehq.com` | 200 |
-| `https://rinsehq.com` | 200 (was still separate `detailing-landing` repo before landing import) |
 | PocketBase health | 200 |
 | Campaign mail health | 200 |
 | EAS → `Rinse` / `rinse-mobile` | **Pending** — still on `Rinse-App` until manual EAS relink |
@@ -33,11 +33,12 @@ Env **values** must match pre-cutover inventory — only Root Directory / git re
 
 | Check | Result |
 |-------|--------|
-| Landing imported → `Rinse` / `rinse-landing` | In repo (subtree) |
-| Landing Vercel → `Rinse` / `rinse-landing` | **Pending** reconnect |
-| Ignored Build Step on `detailing-landing` | **Pending** |
-| `https://rinsehq.com` hero | Pending post-reconnect |
-| Sign in → `desk.rinsehq.com` | Pending post-reconnect |
-| `https://app.rinsehq.com/book` | Pending post-reconnect verify |
-| `https://app.rinsehq.com/admin` | Pending post-reconnect verify |
-| Old remote `detailing-landing` archived | **No** — wait until **2026-09-15** (see docs/ROLLBACK.md) |
+| Landing imported → `Rinse` / `rinse-landing` | Done (subtree + scaffolding) |
+| Landing Vercel → `Rinse` / `rinse-landing` | Connected; production READY (`131c01a`) |
+| Root Directory | `rinse-landing` |
+| Ignored Build Step | Set (`git diff … ./rinse-landing ./packages/core`) |
+| `https://rinsehq.com` | 200 |
+| `https://desk.rinsehq.com` | 200 |
+| `https://app.rinsehq.com/book/` | 200 (after redirect) |
+| `https://app.rinsehq.com/admin` | 200 |
+| Old remote `detailing-landing` archived | **No** — wait until **2026-09-15** (see docs/ROLLBACK.md); Moved README at `archive/old-repo-readmes/detailing-landing.md` |

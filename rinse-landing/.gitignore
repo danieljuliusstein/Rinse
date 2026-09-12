@@ -7,3 +7,4 @@ dist/
 .cursor/
 .DS_Store
 *.log
+.env*
