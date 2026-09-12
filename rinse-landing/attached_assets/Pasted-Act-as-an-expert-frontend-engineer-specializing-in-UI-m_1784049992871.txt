@@ -1,0 +1,25 @@
+Act as an expert frontend engineer specializing in UI motion design and micro-interactions. I want to integrate an "Attio CRM-inspired" motion design system across my entire portfolio site using Framer Motion and Tailwind CSS. 
+
+Please implement the following global transition properties, choreography rules, and component-specific animations throughout the site:
+
+### 1. Core Motion Personality (The Easing System)
+Attio's identity is mechanical, clean, and highly structured (never floppy, bouncy, or playful).
+- Replace any spring physics with a strict cubic-bezier ease-out curve: `cubic-bezier(0.16, 1, 0.3, 1)` or `easeOut`.
+- Micro-interactions (hovers, tab clicks, toggles) must be ultra-snappy: Duration `0.15s` to `0.2s`.
+- Macro-interactions (page loads, full section reveals, charts) must be smooth and premium: Duration `0.4s` to `0.6s`.
+
+### 2. Global Section & Text Reveals (Scroll-Driven)
+Apply this animation pattern to all major page sections and hero components as they scroll into view (use Framer Motion's `whileInView` with `viewport: { once: true, margin: "-100px" }`):
+- Transformation: Initial state of `opacity: 0` and a tight Y-axis translation (`y: 15`). Final state `opacity: 1` and `y: 0`.
+- Choreography Strategy: Use staggered dependencies. Ensure the background or layout container fades in first, followed by the text elements, followed by secondary visual grids/logos in a fast, staggered sequence (`staggerChildren: 0.05`).
+
+### 3. Navigation & Dropdown Micro-interactions
+- Header Tabs / Nav Items: On hover, apply a quick cross-fade or slide-in background indicator (duration `0.15s`, linear to slight ease-out).
+- Dropdown Menus: Trigger on hover/click using an explicit height expansion + simultaneous opacity fade. Avoid structural "popping" by transitioning `height` or utilizing Framer Motion's `LayoutGroup` to animate bounding boxes gracefully.
+
+### 4. Interactive Components & Data Viz 
+- Card Lists & Grids: Apply a subtle scale-up and fade-in when revealed. Stagger the items dynamically so they pop up one after another in a controlled sequence rather than landing all at once.
+- Accordions & Collapsible Items: When opened, animate the inner height smoothly from 0 to auto (`animate={{ height: "auto" }}`) while fading the content opacity to match.
+- Custom Node Graphs / Charts (if present): Animate vector/SVG paths using path-drawing metrics (`initial={{ pathLength: 0 }}` to `animate={{ pathLength: 1 }}`) with a medium `0.4s` ease-out duration.
+
+Please audit the existing components across the site workspace and refactor/wrap them using `<motion.div>` structures to bring this cohesive, premium, utility-first motion library to life. Ensure zero layout shifting or performance drops.

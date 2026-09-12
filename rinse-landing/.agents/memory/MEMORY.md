@@ -1,0 +1,2 @@
+- [CSS overflow-x-clip breaks window scroll](overflow-clip-scroll-container.md) — setting overflow-x on a large wrapper div (not html/body) silently creates a separate scroll container, decoupling window.scrollY/scrollIntoView from what's visible.
+- [Scroll-driven sticky two-column sections](scroll-driven-sticky-grid.md) — grid container needs explicit tall minHeight for sticky children to actually stick; use useScroll+useMotionValueEvent bracket mapping to drive active tab from scroll, no pinning.
