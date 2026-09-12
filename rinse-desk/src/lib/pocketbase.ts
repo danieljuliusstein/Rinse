@@ -19,6 +19,14 @@ export function getPocketBase(): PocketBase {
   return pb
 }
 
+/** Production apps/api (rinsehq.com) — signup, oauth provisioning, geocode, route-trip. */
+const DEFAULT_APP_API_URL = 'https://rinsehq.com'
+
+export function getAppApiUrl(): string {
+  const raw = (import.meta.env.VITE_APP_API_URL as string | undefined)?.trim() || DEFAULT_APP_API_URL
+  return raw.replace(/\/$/, '')
+}
+
 export async function checkPocketBaseHealth(timeoutMs = 8000): Promise<boolean> {
   try {
     const controller = new AbortController()

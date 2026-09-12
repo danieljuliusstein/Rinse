@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { RecordModel } from 'pocketbase'
 import * as auth from '@/lib/auth'
+import type { OAuthProvider } from '@/lib/auth'
 import { checkPocketBaseHealth } from '@/lib/pocketbase'
 
 interface AuthContextValue {
@@ -8,6 +9,8 @@ interface AuthContextValue {
   loading: boolean
   backendHealthy: boolean | null
   signIn: (email: string, password: string) => Promise<void>
+  signUp: (input: { email: string; password: string; businessName: string }) => Promise<void>
+  signInWithOAuth: (provider: OAuthProvider, opts?: { businessName?: string }) => Promise<void>
   signOut: () => Promise<void>
   refreshUser: () => void
 }
@@ -49,14 +52,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(auth.getCurrentUser())
   }, [])
 
+  const signUp = useCallback(async (input: { email: string; password: string; businessName: string }) => {
+    await auth.signUpWithEmail(input)
+    setUser(auth.getCurrentUser())
+  }, [])
+
+  const signInWithOAuth = useCallback(async (provider: OAuthProvider, opts?: { businessName?: string }) => {
+    await auth.signInWithOAuth(provider, opts)
+    setUser(auth.getCurrentUser())
+  }, [])
+
   const signOut = useCallback(async () => {
     await auth.signOut()
     setUser(null)
   }, [])
 
   const value = useMemo(
-    () => ({ user, loading, backendHealthy, signIn, signOut, refreshUser }),
-    [user, loading, backendHealthy, signIn, signOut, refreshUser],
+    () => ({ user, loading, backendHealthy, signIn, signUp, signInWithOAuth, signOut, refreshUser }),
+    [user, loading, backendHealthy, signIn, signUp, signInWithOAuth, signOut, refreshUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

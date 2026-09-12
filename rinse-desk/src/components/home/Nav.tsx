@@ -33,22 +33,14 @@ export function HomeNav({ onSignIn, onStartTrial }: { onSignIn: () => void; onSt
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-        {/* Logo + Sign in */}
-        <div className="flex items-center gap-5">
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center hover:opacity-80 transition-opacity"
-            aria-label="Rinse home"
-          >
-            <RinseLockup height={22} />
-          </button>
-          <button
-            onClick={onSignIn}
-            className="hidden sm:inline text-sm text-black/50 hover:text-neutral-900 transition-colors duration-200"
-          >
-            Sign in
-          </button>
-        </div>
+        {/* Logo */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="flex items-center hover:opacity-80 transition-opacity"
+          aria-label="Rinse home"
+        >
+          <RinseLockup height={22} />
+        </button>
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
@@ -59,8 +51,14 @@ export function HomeNav({ onSignIn, onStartTrial }: { onSignIn: () => void; onSt
           ))}
         </div>
 
-        {/* CTA */}
+        {/* Sign in + CTA */}
         <div className="hidden md:flex items-center gap-3">
+          <button
+            onClick={onSignIn}
+            className="text-sm text-black/50 hover:text-neutral-900 transition-colors duration-200"
+          >
+            Sign in
+          </button>
           <button
             onClick={onStartTrial}
             className="text-sm font-semibold text-white bg-neutral-900 hover:bg-neutral-800 transition-colors duration-200 px-4 py-2 rounded-xl"

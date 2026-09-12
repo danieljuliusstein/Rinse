@@ -1,19 +1,12 @@
 /** Desk → Detailing apps/api helpers for geocode + OSRM trip. */
-
-/** Production apps/api (rinsehq.com). Override with VITE_APP_API_URL. */
-const DEFAULT_APP_API_URL = 'https://rinsehq.com'
-
-function appApiBase(): string {
-  const raw = import.meta.env.VITE_APP_API_URL?.trim() || DEFAULT_APP_API_URL
-  return raw.replace(/\/$/, '')
-}
+import { getAppApiUrl } from './pocketbase'
 
 export function isRouteApiConfigured(): boolean {
-  return Boolean(appApiBase())
+  return Boolean(getAppApiUrl())
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
-  const base = appApiBase()
+  const base = getAppApiUrl()
   // Geocode / route-trip are unauthenticated. Do not send Authorization —
   // app.rinsehq.com CORS only allows Content-Type, so a Bearer header fails preflight.
   const res = await fetch(`${base}${path}`, {

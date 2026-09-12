@@ -16,7 +16,7 @@ import InvoicesPage from './pages/InvoicesPage'
 import ReceiptsPage from './pages/ReceiptsPage'
 import CarsPage from './pages/CarsPage'
 import RoutesPage from './pages/RoutesPage'
-import LoginPage from './pages/LoginPage'
+import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
 import { colors } from './theme/colors'
 import { AuthProvider, useAuth } from './providers/AuthProvider'
@@ -832,7 +832,7 @@ function Gate() {
     )
   }
   if (!user) {
-    if (view === 'login') return <LoginPage onBack={() => setView('home')} />
+    if (view === 'login') return <AuthPage onBack={() => setView('home')} />
     return <HomePage onSignIn={() => setView('login')} />
   }
   return (
