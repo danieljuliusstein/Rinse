@@ -5,7 +5,8 @@ const https = require('https')
 const { getDefaultConfig } = require('expo/metro-config')
 
 const projectRoot = __dirname
-const monorepoRoot = path.resolve(projectRoot, '..', '..')
+// rinse-mobile sits at <repo>/rinse-mobile (not apps/mobile) — one level up is monorepo root
+const monorepoRoot = path.resolve(projectRoot, '..')
 const coreRoot = path.resolve(monorepoRoot, 'packages', 'core')
 
 /** Load apps/mobile/.env into process.env (does not override existing vars). */
@@ -111,7 +112,7 @@ function forwardApiProxy(req, res, targetBase, targetPath, body, allowFallback) 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(projectRoot)
 
-// Required for file:../../packages/core — Metro does not follow symlinks outside project root by default.
+// Required for file:../packages/core — Metro does not follow symlinks outside project root by default.
 config.watchFolders = [coreRoot, monorepoRoot]
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),

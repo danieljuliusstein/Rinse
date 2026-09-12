@@ -6,7 +6,7 @@
     "moduleSuffixes": [".native", ".web", ""],
     "paths": {
       "@/*": ["./*"],
-      "@rinse/core": ["../../packages/core/src/index.ts"]
+      "@rinse/core": ["../packages/core/src/index.ts"]
     }
   },
   "include": [
