@@ -3,6 +3,7 @@
   "private": true,
   "description": "Rinse monorepo — landing, desk, mobile, api, pocketbase, packages/core",
   "scripts": {
+    "dev": "npm run dev --prefix rinse-desk",
     "landing": "npm run dev --prefix rinse-landing",
     "desk": "npm run dev --prefix rinse-desk",
     "mobile": "npm run start --prefix rinse-mobile",
