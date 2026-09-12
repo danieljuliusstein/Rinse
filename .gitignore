@@ -13,3 +13,6 @@ ios/build
 android/build
 **/pb_data/
 archive/*.tgz
+.vercel
+**/.env.local
+.env*
