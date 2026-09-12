@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-07-12T19:37:56.689Z",
+  "count": 9,
+  "sites": [
+    {
+      "slug": "perspective.co",
+      "url": "https://www.perspective.co/",
+      "title": "Perspective Funnels - Build breathtaking Funnels easily",
+      "category": "funnels-crm",
+      "error": null,
+      "screenshot": "perspective.co.png"
+    },
+    {
+      "slug": "attio.com",
+      "url": "https://attio.com/",
+      "title": "Attio: The system for agentic revenue",
+      "category": "crm",
+      "error": null,
+      "screenshot": "attio.com.png"
+    },
+    {
+      "slug": "linear.app",
+      "url": "https://linear.app/",
+      "title": "Linear – The system for product development",
+      "category": "saas",
+      "error": null,
+      "screenshot": "linear.app.png"
+    },
+    {
+      "slug": "notion.so",
+      "url": "https://www.notion.so/product",
+      "title": "The AI workspace that works for you. | Notion",
+      "category": "saas",
+      "error": null,
+      "screenshot": "notion.so.png"
+    },
+    {
+      "slug": "hubspot.com",
+      "url": "https://www.hubspot.com/",
+      "title": "HubSpot | Software & Tools for your Business - Homepage",
+      "category": "crm",
+      "error": null,
+      "screenshot": "hubspot.com.png"
+    },
+    {
+      "slug": "close.com",
+      "url": "https://www.close.com/",
+      "title": "Close CRM | Sales CRM with Built-In AI Sales Agent",
+      "category": "crm",
+      "error": null,
+      "screenshot": "close.com.png"
+    },
+    {
+      "slug": "pipedrive.com",
+      "url": "https://www.pipedrive.com/",
+      "title": "Sales CRM & Pipeline Management Software | Pipedrive",
+      "category": "crm",
+      "error": null,
+      "screenshot": "pipedrive.com.png"
+    },
+    {
+      "slug": "copper.com",
+      "url": "https://www.copper.com/",
+      "title": "CRM Software Solutions Company for Service Businesses | Copper CRM",
+      "category": "crm",
+      "error": null,
+      "screenshot": "copper.com.png"
+    },
+    {
+      "slug": "folk.app",
+      "url": "https://www.folk.app/",
+      "title": "folk, the CRM that works for you",
+      "category": "crm",
+      "error": null,
+      "screenshot": "folk.app.png"
+    }
+  ]
+}

@@ -1,0 +1,419 @@
+{
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "saving": "저장 중…",
+    "loading": "로딩 중…",
+    "signOut": "로그아웃",
+    "search": "검색",
+    "back": "뒤로",
+    "done": "완료",
+    "error": "문제가 발생했습니다",
+    "offline": "오프라인 상태입니다",
+    "retry": "다시 시도",
+    "client": "고객",
+    "detail": "디테일",
+    "close": "닫기",
+    "keep": "유지",
+    "clear": "지우기",
+    "edit": "편집",
+    "delete": "삭제",
+    "more": "+ {{count}}개 더",
+    "result_one": "{{count}}개 결과",
+    "result_other": "{{count}}개 결과",
+    "changeWaiting_one": "{{count}}개 변경이 동기화 대기 중",
+    "changeWaiting_other": "{{count}}개 변경이 동기화 대기 중",
+    "export": "내보내기",
+    "directions": "길찾기",
+    "call": "통화",
+    "text": "문자",
+    "email": "이메일",
+    "notes": "메모",
+    "photos": "사진",
+    "package": "패키지",
+    "vehicle": "차량",
+    "location": "위치",
+    "revenue": "매출",
+    "expenses": "지출",
+    "invoice": "청구서",
+    "quote": "견적",
+    "all": "전체"
+  },
+  "tabs": {
+    "home": "홈",
+    "jobs": "작업",
+    "clients": "고객",
+    "business": "비즈니스"
+  },
+  "settings": {
+    "title": "설정",
+    "searchPlaceholder": "설정 검색",
+    "signOutBlocked": "로그아웃 전에 대기 중인 변경을 동기화하거나 삭제하세요.",
+    "cannotSignOut": "로그아웃할 수 없음",
+    "unsyncedTitle": "동기화되지 않은 변경",
+    "groups": {
+      "account": "계정",
+      "business": "비즈니스",
+      "preferences": "환경설정",
+      "management": "관리",
+      "support": "지원"
+    },
+    "menu": {
+      "account": {
+        "title": "계정",
+        "subtitle": "이메일, 비밀번호 및 로그인"
+      },
+      "business": {
+        "title": "내 비즈니스",
+        "subtitle": "프로필 및 온라인 예약"
+      },
+      "schedule": {
+        "title": "일정 및 휴무",
+        "subtitle": "영업 시간, 점심, 차단일"
+      },
+      "invoicing": {
+        "title": "청구",
+        "subtitle": "온라인 결제 및 청구서 스타일"
+      },
+      "billing": {
+        "title": "구독",
+        "subtitle": "플랜, 체험 및 구독"
+      },
+      "progress": {
+        "title": "진행 상황",
+        "subtitle": "비즈니스 활동 마일스톤"
+      },
+      "preferences": {
+        "title": "앱 환경설정",
+        "subtitle": "알림 및 알림"
+      },
+      "language": {
+        "title": "언어",
+        "subtitle": "앱 및 고객 문서"
+      },
+      "quietHours": {
+        "title": "방해 금지 시간",
+        "subtitle": "야간 자동 이메일 일시 중지"
+      },
+      "access": {
+        "title": "접근 및 데이터",
+        "subtitle": "백업, 내보내기 및 개인정보"
+      },
+      "inventory": {
+        "title": "재고",
+        "subtitle": "소모품 및 재고"
+      },
+      "packages": {
+        "title": "서비스 패키지",
+        "subtitle": "상품 관리"
+      },
+      "invoices": {
+        "title": "모든 청구서",
+        "subtitle": "재무 기록"
+      },
+      "tools": {
+        "title": "도구",
+        "subtitle": "청구서, 비용 등의 바로가기"
+      },
+      "expenses": {
+        "title": "비용",
+        "subtitle": "간접비 및 사업 비용"
+      },
+      "support": {
+        "title": "도움말 및 지원",
+        "subtitle": "문의, FAQ 및 문제 해결"
+      }
+    }
+  },
+  "language": {
+    "title": "언어",
+    "subtitle": "Rinse가 나와 고객에게 말하는 방식을 선택하세요",
+    "sectionApp": "앱 언어",
+    "sectionDocs": "다음에 함께 적용",
+    "docsHint": "견적, 청구서, 고객 포털이 같은 언어를 사용합니다.",
+    "deviceDefault": "기기 설정 따르기 ({{lang}})",
+    "saved": "언어가 업데이트되었습니다",
+    "saveFailed": "언어를 저장할 수 없습니다",
+    "searchPlaceholder": "언어 검색",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "청구",
+    "subtitle": "결제 및 청구서 스타일",
+    "appearance": "모양",
+    "previewCustomize": "미리보기 및 사용자 지정",
+    "previewSubtitle": "레이아웃, 강조색, 로고, 약관 — 모든 청구서에 적용"
+  },
+  "auth": {
+    "checkingSession": "세션 확인 중…",
+    "starting": "Rinse 시작 중…"
+  },
+  "home": {
+    "goodMorning": "좋은 아침",
+    "goodAfternoon": "좋은 오후",
+    "goodEvening": "좋은 저녁",
+    "greetingNamed": "{{greeting}}, {{name}}님",
+    "searchPlaceholder": "작업, 고객, 패키지 검색…",
+    "noMatch": "“{{query}}”와 일치하는 작업이 없습니다.",
+    "jobReadiness": "작업 준비도",
+    "collected": "수금",
+    "calendar": "캘린더",
+    "todaysJobs": "오늘의 작업",
+    "alsoToday": "오늘 더",
+    "upcoming": "예정",
+    "serviceMix": "서비스 구성",
+    "account": "계정",
+    "pipeline": "파이프라인",
+    "messages": "메시지",
+    "search": "검색",
+    "settings": "설정",
+    "sendInvoice": "청구서 보내기",
+    "newJob": "새 작업",
+    "newQuote": "새 견적",
+    "outstanding": "미수",
+    "invoiced": "청구됨",
+    "unpaid": "미결제",
+    "openCount": "{{count}}건 미결",
+    "collectedThisMonth": " 이번 달 수금",
+    "viewInvoices": "청구서 보기",
+    "noJobsToday": "오늘 예정된 작업이 없습니다",
+    "scheduleJob": "작업 예약",
+    "openJob": "작업 열기",
+    "statusConfirmed": "확정",
+    "statusPending": "대기",
+    "completeProfile": "프로필 완성하기",
+    "nextStep": "다음: {{label}}",
+    "finishSetup": "설정 완료",
+    "continueSetup": "설정 계속",
+    "checkingWeather": "날씨 확인 중…"
+  },
+  "quickActions": {
+    "title": "빠른 작업",
+    "close": "빠른 작업 닫기",
+    "drag": "끌어서 닫기",
+    "newLead": "새 리드",
+    "newLeadSub": "문의 기록",
+    "newJob": "새 작업",
+    "newJobSub": "일정 잡기 또는 기록",
+    "createInvoice": "청구서 만들기",
+    "createInvoiceSub": "작업 선택 후 보내기",
+    "logExpense": "지출 기록",
+    "logExpenseSub": "일회성 사업 비용",
+    "buySupplies": "소모품 구매",
+    "buySuppliesSub": "재고와 지출 함께",
+    "newQuote": "새 견적",
+    "newQuoteSub": "가격 견적 보내기",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
+  },
+  "jobs": {
+    "title": "작업",
+    "add": "작업 추가",
+    "create": "작업 만들기",
+    "searchPlaceholder": "제조사, 색상, 번호판, 고객 검색…",
+    "emptyTitle": "작업을 찾을 수 없음",
+    "emptyFiltered": "다른 검색어나 필터를 시도하세요.",
+    "emptyDefault": "첫 작업을 예약하여 매출을 추적하세요.",
+    "shown": "{{count}}개 표시",
+    "totalPeriod": "총 {{count}} · {{period}}",
+    "onDate": "{{date}}에 {{count}}개",
+    "showingDate": "{{date}} 표시 · 지우기",
+    "editJob": "작업 편집",
+    "cancelAppointment": "예약 취소",
+    "cancelAppointmentConfirm": "예약을 취소할까요?",
+    "cancelAppointmentBody": "슬롯이 비워지고 작업이 삭제됩니다.",
+    "cancelJob": "작업 취소",
+    "jobActions": "작업 작업",
+    "loadFailed": "작업 로드 실패",
+    "moreJobs": "+ {{count}}개 더",
+    "sections": {
+      "today": "오늘 · {{date}}",
+      "week": "이번 주",
+      "month": "이번 달 이전",
+      "older": "이전"
+    },
+    "filters": {
+      "all": "전체",
+      "scheduled": "예정됨",
+      "inProgress": "진행 중",
+      "recurring": "반복"
+    },
+    "status": {
+      "scheduled": "예정됨",
+      "inProgress": "진행 중",
+      "paid": "결제됨",
+      "invoiced": "청구됨",
+      "awaitingPayment": "결제 대기",
+      "complete": "완료"
+    }
+  },
+  "clients": {
+    "title": "고객",
+    "add": "고객 추가",
+    "import": "고객 가져오기",
+    "export": "고객 CSV 내보내기",
+    "searchPlaceholder": "이름, 전화, 이메일 검색…",
+    "emptyTitle": "아직 고객이 없습니다",
+    "emptyFiltered": "고객을 찾을 수 없음",
+    "emptyDefault": "첫 고객을 추가하여 예약을 시작하세요.",
+    "emptySearch": "다른 세그먼트나 검색어를 시도하세요.",
+    "followUp": "팔로업",
+    "topClients": "우수 고객",
+    "allClients": "모든 고객",
+    "moreClients_one": "+ 고객 {{count}}명 더",
+    "moreClients_other": "+ 고객 {{count}}명 더",
+    "sortBy": "정렬",
+    "loadFailed": "고객 로드 실패",
+    "filters": {
+      "all": "전체",
+      "followup": "팔로업",
+      "top": "우수",
+      "new": "신규"
+    },
+    "sort": {
+      "revenue": "매출",
+      "name": "이름",
+      "recent": "최근 서비스"
+    }
+  },
+  "business": {
+    "title": "비즈니스",
+    "searchPlaceholder": "서비스, 지출, 작업 검색…",
+    "netProfit": "순이익",
+    "netLoss": "순손실",
+    "revenue": "매출",
+    "expenses": "지출",
+    "avgJobValue": "평균 작업 가치",
+    "fromJobs": "작업에서",
+    "perJob": "작업당",
+    "invoices": "청구서",
+    "quotes": "견적",
+    "revenueByService": "서비스별 매출",
+    "expenseBreakdown": "지출 내역",
+    "custom": "사용자 지정",
+    "startDate": "시작 YYYY-MM-DD",
+    "endDate": "종료 YYYY-MM-DD",
+    "exportCsv": "CSV 내보내기",
+    "exportPdf": "PDF 내보내기",
+    "expense": {
+      "supplies": "소모품",
+      "travel": "이동",
+      "equipment": "장비",
+      "marketing": "마케팅",
+      "labor": "인건비",
+      "overhead": "간접비",
+      "business": "사업",
+      "other": "기타"
+    },
+    "ranges": {
+      "this_week": "이번 주",
+      "this_month": "이번 달",
+      "last_month": "지난달",
+      "this_year": "올해",
+      "lifetime": "전체"
+    }
+  },
+  "invoices": {
+    "title": "청구서",
+    "openBalance": "미결 잔액",
+    "searchPlaceholder": "청구서 검색…",
+    "emptyTitle": "청구서 없음",
+    "emptyDescription": "완료된 작업에서 청구서를 만들어 결제를 추적하세요.",
+    "unavailable": "청구서를 사용할 수 없음",
+    "loadFailed": "청구서 로드 실패",
+    "markSent": "발송됨으로 표시",
+    "markPaid": "결제됨으로 표시",
+    "actions": "청구서 작업",
+    "due": "기한",
+    "sectionTotal": "섹션 합계",
+    "filters": {
+      "all": "전체",
+      "open": "미결",
+      "overdue": "연체",
+      "paid": "결제됨",
+      "draft": "초안"
+    },
+    "detail": {
+      "loading": "청구서 로딩 중…",
+      "title": "청구서",
+      "notFound": "청구서를 찾을 수 없음",
+      "send": "청구서 보내기",
+      "resend": "재전송 / 공유",
+      "logPayment": "결제 기록",
+      "editLines": "항목 편집",
+      "editLinesCount": "항목 편집 (추가 {{count}}개)",
+      "quickAdjustments": "빠른 조정",
+      "previewCustomize": "미리보기 및 맞춤설정",
+      "viewJob": "작업 보기"
+    }
+  },
+  "jobDetail": {
+    "loading": "작업 로딩 중…",
+    "titleFallback": "작업",
+    "markComplete": "작업 완료로 표시",
+    "markingComplete": "완료로 표시 중…",
+    "liability": "책임 점검",
+    "viewWalkthrough": "점검 보기",
+    "startWalkthrough": "점검 시작",
+    "hoursWorked": "작업 시간",
+    "hoursValue": "{{hours}}시간",
+    "netProfit": "순이익",
+    "nextService": "다음 서비스",
+    "bookNext": "다음 예약",
+    "onMyWay": "가는 중",
+    "textClient": "고객에게 문자",
+    "createQuote": "견적 만들기",
+    "createInvoice": "청구서 만들기",
+    "creating": "만드는 중…",
+    "sharePdf": "PDF 공유",
+    "shareBeforeAfter": "전후 PDF 공유",
+    "editJob": "작업 편집",
+    "cancelAppointment": "예약 취소",
+    "cancelling": "취소 중…",
+    "jobCompleteTitle": "작업 완료",
+    "jobCompleteBody": "이 화면에서 청구하거나 공유할 수 있습니다.",
+    "noPhoneTitle": "전화번호 없음",
+    "noPhoneBody": "먼저 고객 프로필에 전화번호를 추가하세요.",
+    "sentTitle": "전송됨",
+    "onMyWaySent": "“가는 중” 문자를 보냈습니다.",
+    "cancelConfirm": "예약을 취소할까요?",
+    "cancelBody": "슬롯이 비워지고 작업이 삭제됩니다."
+  },
+  "clientDetail": {
+    "newJob": "새 작업",
+    "quote": "견적",
+    "invoice": "청구서",
+    "totalRevenue": "총 매출",
+    "totalJobs": "총 작업",
+    "avgJob": "평균 작업",
+    "leadSource": "리드 출처",
+    "notes": "메모",
+    "quotes": "견적",
+    "vehicles": "차량",
+    "addVehicle": "차량 추가",
+    "upcoming": "예정",
+    "jobHistory": "작업 기록",
+    "contact": "연락처",
+    "editClient": "고객 편집",
+    "directions": "길찾기",
+    "call": "통화",
+    "text": "문자",
+    "email": "이메일"
+  }
+}

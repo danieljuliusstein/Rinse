@@ -1,0 +1,419 @@
+{
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ…",
+    "loading": "جارٍ التحميل…",
+    "signOut": "تسجيل الخروج",
+    "search": "بحث",
+    "back": "رجوع",
+    "done": "تم",
+    "error": "حدث خطأ ما",
+    "offline": "أنت غير متصل",
+    "retry": "إعادة المحاولة",
+    "client": "عميل",
+    "detail": "تفصيل",
+    "close": "إغلاق",
+    "keep": "إبقاء",
+    "clear": "مسح",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "more": "+ {{count}} المزيد",
+    "result_one": "{{count}} نتيجة",
+    "result_other": "{{count}} نتائج",
+    "changeWaiting_one": "{{count}} تغيير بانتظار المزامنة",
+    "changeWaiting_other": "{{count}} تغييرات بانتظار المزامنة",
+    "export": "تصدير",
+    "directions": "الاتجاهات",
+    "call": "اتصال",
+    "text": "رسالة",
+    "email": "بريد",
+    "notes": "ملاحظات",
+    "photos": "صور",
+    "package": "باقة",
+    "vehicle": "مركبة",
+    "location": "الموقع",
+    "revenue": "الإيرادات",
+    "expenses": "المصروفات",
+    "invoice": "فاتورة",
+    "quote": "عرض سعر",
+    "all": "الكل"
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "jobs": "المهام",
+    "clients": "العملاء",
+    "business": "الأعمال"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "searchPlaceholder": "البحث في الإعدادات",
+    "signOutBlocked": "زامن أو تجاهل التغييرات المعلقة قبل تسجيل الخروج.",
+    "cannotSignOut": "تعذر تسجيل الخروج",
+    "unsyncedTitle": "تغييرات غير متزامنة",
+    "groups": {
+      "account": "الحساب",
+      "business": "الأعمال",
+      "preferences": "التفضيلات",
+      "management": "الإدارة",
+      "support": "الدعم"
+    },
+    "menu": {
+      "account": {
+        "title": "الحساب",
+        "subtitle": "البريد وكلمة المرور وتسجيل الدخول"
+      },
+      "business": {
+        "title": "عملك",
+        "subtitle": "الملف والحجز عبر الإنترنت"
+      },
+      "schedule": {
+        "title": "الجدول والإجازات",
+        "subtitle": "الساعات والغداء والأيام المحظورة"
+      },
+      "invoicing": {
+        "title": "الفوترة",
+        "subtitle": "المدفوعات عبر الإنترنت ومظهر الفاتورة"
+      },
+      "billing": {
+        "title": "الاشتراك",
+        "subtitle": "الخطة والتجربة والاشتراك"
+      },
+      "progress": {
+        "title": "تقدمك",
+        "subtitle": "معالم نشاط عملك"
+      },
+      "preferences": {
+        "title": "تفضيلات التطبيق",
+        "subtitle": "التذكيرات والإشعارات"
+      },
+      "language": {
+        "title": "اللغة",
+        "subtitle": "التطبيق ومستندات العملاء"
+      },
+      "quietHours": {
+        "title": "ساعات الهدوء",
+        "subtitle": "إيقاف رسائل البريد التلقائية ليلاً"
+      },
+      "access": {
+        "title": "الوصول والبيانات",
+        "subtitle": "النسخ والتصدير والخصوصية"
+      },
+      "inventory": {
+        "title": "المخزون",
+        "subtitle": "المستلزمات والمخزون"
+      },
+      "packages": {
+        "title": "باقات الخدمة",
+        "subtitle": "إدارة عروضك"
+      },
+      "invoices": {
+        "title": "كل الفواتير",
+        "subtitle": "السجلات المالية"
+      },
+      "tools": {
+        "title": "الأدوات",
+        "subtitle": "اختصارات للفواتير والمصروفات والمزيد"
+      },
+      "expenses": {
+        "title": "المصروفات",
+        "subtitle": "التكاليف التشغيلية والتجارية"
+      },
+      "support": {
+        "title": "المساعدة والدعم",
+        "subtitle": "التواصل والأسئلة واستكشاف الأخطاء"
+      }
+    }
+  },
+  "language": {
+    "title": "اللغة",
+    "subtitle": "اختر كيف يتحدث Rinse معك ومع عملائك",
+    "sectionApp": "لغة التطبيق",
+    "sectionDocs": "ينطبق أيضًا على",
+    "docsHint": "عروض الأسعار والفواتير وبوابة العميل تستخدم اللغة نفسها.",
+    "deviceDefault": "مطابقة الجهاز ({{lang}})",
+    "saved": "تم تحديث اللغة",
+    "saveFailed": "تعذر حفظ اللغة",
+    "searchPlaceholder": "البحث عن لغة",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "الفوترة",
+    "subtitle": "المدفوعات ومظهر الفاتورة",
+    "appearance": "المظهر",
+    "previewCustomize": "معاينة وتخصيص",
+    "previewSubtitle": "التخطيط واللون والشعار والشروط — لجميع الفواتير"
+  },
+  "auth": {
+    "checkingSession": "جارٍ التحقق من الجلسة…",
+    "starting": "جارٍ تشغيل Rinse…"
+  },
+  "home": {
+    "goodMorning": "صباح الخير",
+    "goodAfternoon": "مساء الخير",
+    "goodEvening": "مساء الخير",
+    "greetingNamed": "{{greeting}}، {{name}}",
+    "searchPlaceholder": "ابحث عن وظائف وعملاء وباقات…",
+    "noMatch": "لا توجد وظائف تطابق “{{query}}”.",
+    "jobReadiness": "جاهزية الوظيفة",
+    "collected": "المحصّل",
+    "calendar": "التقويم",
+    "todaysJobs": "وظائف اليوم",
+    "alsoToday": "أيضاً اليوم",
+    "upcoming": "القادمة",
+    "serviceMix": "مزيج الخدمات",
+    "account": "الحساب",
+    "pipeline": "خط الأنابيب",
+    "messages": "الرسائل",
+    "search": "بحث",
+    "settings": "الإعدادات",
+    "sendInvoice": "إرسال فاتورة",
+    "newJob": "وظيفة جديدة",
+    "newQuote": "عرض سعر جديد",
+    "outstanding": "المستحق",
+    "invoiced": "مفوتر",
+    "unpaid": "غير مدفوع",
+    "openCount": "{{count}} مفتوحة",
+    "collectedThisMonth": " محصّل هذا الشهر",
+    "viewInvoices": "عرض الفواتير",
+    "noJobsToday": "لا توجد وظائف مجدولة اليوم",
+    "scheduleJob": "جدولة وظيفة",
+    "openJob": "فتح الوظيفة",
+    "statusConfirmed": "مؤكد",
+    "statusPending": "قيد الانتظار",
+    "completeProfile": "أكمل ملفك",
+    "nextStep": "التالي: {{label}}",
+    "finishSetup": "إنهاء الإعداد",
+    "continueSetup": "متابعة الإعداد",
+    "checkingWeather": "جاري التحقق من الطقس…"
+  },
+  "quickActions": {
+    "title": "إجراءات سريعة",
+    "close": "إغلاق الإجراءات السريعة",
+    "drag": "اسحب للإغلاق",
+    "newLead": "عميل محتمل جديد",
+    "newLeadSub": "تسجيل استفسار",
+    "newJob": "وظيفة جديدة",
+    "newJobSub": "جدولة أو تسجيل عمل",
+    "createInvoice": "إنشاء فاتورة",
+    "createInvoiceSub": "اختر وظيفة وأرسل",
+    "logExpense": "تسجيل مصروف",
+    "logExpenseSub": "تكلفة عمل لمرة واحدة",
+    "buySupplies": "شراء مستلزمات",
+    "buySuppliesSub": "مخزون ومصروف معاً",
+    "newQuote": "عرض سعر جديد",
+    "newQuoteSub": "إرسال تقدير سعر",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
+  },
+  "jobs": {
+    "title": "الوظائف",
+    "add": "إضافة وظيفة",
+    "create": "إنشاء وظيفة",
+    "searchPlaceholder": "ابحث بالماركة أو اللون أو اللوحة أو العميل…",
+    "emptyTitle": "لا توجد وظائف",
+    "emptyFiltered": "جرّب بحثاً أو تصفية مختلفة.",
+    "emptyDefault": "جدول وظيفتك الأولى لبدء تتبع الإيرادات.",
+    "shown": "{{count}} معروضة",
+    "totalPeriod": "{{count}} إجمالي · {{period}}",
+    "onDate": "{{count}} في {{date}}",
+    "showingDate": "عرض {{date}} · مسح",
+    "editJob": "تعديل الوظيفة",
+    "cancelAppointment": "إلغاء الموعد",
+    "cancelAppointmentConfirm": "إلغاء الموعد؟",
+    "cancelAppointmentBody": "هذا يحرر الفترة ويحذف الوظيفة.",
+    "cancelJob": "إلغاء الوظيفة",
+    "jobActions": "إجراءات الوظيفة",
+    "loadFailed": "تعذر تحميل الوظائف",
+    "moreJobs": "+ {{count}} المزيد",
+    "sections": {
+      "today": "اليوم · {{date}}",
+      "week": "هذا الأسبوع",
+      "month": "سابقاً هذا الشهر",
+      "older": "أقدم"
+    },
+    "filters": {
+      "all": "الكل",
+      "scheduled": "مجدولة",
+      "inProgress": "قيد التنفيذ",
+      "recurring": "متكررة"
+    },
+    "status": {
+      "scheduled": "مجدولة",
+      "inProgress": "قيد التنفيذ",
+      "paid": "مدفوعة",
+      "invoiced": "مفوترة",
+      "awaitingPayment": "بانتظار الدفع",
+      "complete": "مكتملة"
+    }
+  },
+  "clients": {
+    "title": "العملاء",
+    "add": "إضافة عميل",
+    "import": "استيراد عملاء",
+    "export": "تصدير عملاء CSV",
+    "searchPlaceholder": "ابحث بالاسم أو الهاتف أو البريد…",
+    "emptyTitle": "لا يوجد عملاء بعد",
+    "emptyFiltered": "لم يُعثر على عملاء",
+    "emptyDefault": "أضف عميلك الأول لبدء حجز الوظائف.",
+    "emptySearch": "جرّب شريحة أو مصطلح بحث آخر.",
+    "followUp": "متابعة",
+    "topClients": "أفضل العملاء",
+    "allClients": "كل العملاء",
+    "moreClients_one": "+ {{count}} عميل إضافي",
+    "moreClients_other": "+ {{count}} عملاء إضافيين",
+    "sortBy": "ترتيب حسب",
+    "loadFailed": "تعذر تحميل العملاء",
+    "filters": {
+      "all": "الكل",
+      "followup": "متابعة",
+      "top": "الأفضل",
+      "new": "جدد"
+    },
+    "sort": {
+      "revenue": "الإيرادات",
+      "name": "الاسم",
+      "recent": "آخر خدمة"
+    }
+  },
+  "business": {
+    "title": "الأعمال",
+    "searchPlaceholder": "ابحث عن خدمات ومصروفات ووظائف…",
+    "netProfit": "صافي الربح",
+    "netLoss": "صافي الخسارة",
+    "revenue": "الإيرادات",
+    "expenses": "المصروفات",
+    "avgJobValue": "متوسط قيمة الوظيفة",
+    "fromJobs": "من الوظائف",
+    "perJob": "لكل وظيفة",
+    "invoices": "الفواتير",
+    "quotes": "عروض الأسعار",
+    "revenueByService": "الإيرادات حسب الخدمة",
+    "expenseBreakdown": "تفصيل المصروفات",
+    "custom": "مخصص",
+    "startDate": "البداية YYYY-MM-DD",
+    "endDate": "النهاية YYYY-MM-DD",
+    "exportCsv": "تصدير CSV",
+    "exportPdf": "تصدير PDF",
+    "expense": {
+      "supplies": "مستلزمات",
+      "travel": "سفر",
+      "equipment": "معدات",
+      "marketing": "تسويق",
+      "labor": "عمالة",
+      "overhead": "نفقات عامة",
+      "business": "أعمال",
+      "other": "أخرى"
+    },
+    "ranges": {
+      "this_week": "هذا الأسبوع",
+      "this_month": "هذا الشهر",
+      "last_month": "الشهر الماضي",
+      "this_year": "هذا العام",
+      "lifetime": "كل الوقت"
+    }
+  },
+  "invoices": {
+    "title": "الفواتير",
+    "openBalance": "الرصيد المفتوح",
+    "searchPlaceholder": "ابحث في الفواتير…",
+    "emptyTitle": "لا توجد فواتير",
+    "emptyDescription": "أنشئ فاتورة من وظيفة مكتملة لتتبع المدفوعات.",
+    "unavailable": "الفواتير غير متاحة",
+    "loadFailed": "تعذر تحميل الفواتير",
+    "markSent": "وضع علامة مُرسلة",
+    "markPaid": "وضع علامة مدفوعة",
+    "actions": "إجراءات الفاتورة",
+    "due": "مستحق",
+    "sectionTotal": "إجمالي القسم",
+    "filters": {
+      "all": "الكل",
+      "open": "مفتوحة",
+      "overdue": "متأخرة",
+      "paid": "مدفوعة",
+      "draft": "مسودة"
+    },
+    "detail": {
+      "loading": "جاري تحميل الفاتورة…",
+      "title": "فاتورة",
+      "notFound": "الفاتورة غير موجودة",
+      "send": "إرسال الفاتورة",
+      "resend": "إعادة إرسال / مشاركة",
+      "logPayment": "تسجيل دفعة",
+      "editLines": "تعديل البنود",
+      "editLinesCount": "تعديل البنود ({{count}} إضافية)",
+      "quickAdjustments": "تعديلات سريعة",
+      "previewCustomize": "معاينة وتخصيص",
+      "viewJob": "عرض الوظيفة"
+    }
+  },
+  "jobDetail": {
+    "loading": "جاري تحميل الوظيفة…",
+    "titleFallback": "وظيفة",
+    "markComplete": "وضع علامة مكتملة",
+    "markingComplete": "جاري وضع العلامة…",
+    "liability": "جولة المسؤولية",
+    "viewWalkthrough": "عرض الجولة",
+    "startWalkthrough": "بدء الجولة",
+    "hoursWorked": "ساعات العمل",
+    "hoursValue": "{{hours}} ساعة",
+    "netProfit": "صافي الربح",
+    "nextService": "الخدمة التالية",
+    "bookNext": "حجز التالية",
+    "onMyWay": "في الطريق",
+    "textClient": "مراسلة العميل",
+    "createQuote": "إنشاء عرض سعر",
+    "createInvoice": "إنشاء فاتورة",
+    "creating": "جاري الإنشاء…",
+    "sharePdf": "مشاركة PDF",
+    "shareBeforeAfter": "مشاركة PDF قبل/بعد",
+    "editJob": "تعديل الوظيفة",
+    "cancelAppointment": "إلغاء الموعد",
+    "cancelling": "جاري الإلغاء…",
+    "jobCompleteTitle": "اكتملت الوظيفة",
+    "jobCompleteBody": "يمكنك إصدار فاتورة أو المشاركة من هذه الشاشة.",
+    "noPhoneTitle": "لا يوجد هاتف",
+    "noPhoneBody": "أضف رقم هاتف في ملف العميل أولاً.",
+    "sentTitle": "تم الإرسال",
+    "onMyWaySent": "تم إرسال رسالة “في الطريق”.",
+    "cancelConfirm": "إلغاء الموعد؟",
+    "cancelBody": "هذا يحرر الفترة ويحذف الوظيفة."
+  },
+  "clientDetail": {
+    "newJob": "وظيفة جديدة",
+    "quote": "عرض سعر",
+    "invoice": "فاتورة",
+    "totalRevenue": "إجمالي الإيرادات",
+    "totalJobs": "إجمالي الوظائف",
+    "avgJob": "متوسط الوظيفة",
+    "leadSource": "مصدر العميل",
+    "notes": "ملاحظات",
+    "quotes": "عروض الأسعار",
+    "vehicles": "المركبات",
+    "addVehicle": "إضافة مركبة",
+    "upcoming": "القادمة",
+    "jobHistory": "سجل الوظائف",
+    "contact": "التواصل",
+    "editClient": "تعديل العميل",
+    "directions": "الاتجاهات",
+    "call": "اتصال",
+    "text": "رسالة",
+    "email": "بريد"
+  }
+}

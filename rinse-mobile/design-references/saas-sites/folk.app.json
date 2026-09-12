@@ -1,0 +1,246 @@
+{
+  "url": "https://www.folk.app/",
+  "slug": "folk.app",
+  "scrapedAt": "2026-07-12T19:37:56.649Z",
+  "durationMs": 2007,
+  "screenshot": "folk.app.png",
+  "title": "folk, the CRM that works for you",
+  "metaDescription": "folk is a simple, integrated, and proactive CRM. We do the busy work for you, so you can focus on growing your business. Multi-channel data in one place, AI to help you sell more.",
+  "body": {
+    "tag": "body",
+    "text": "Products\nSolutions\nResources\nPricing\nGet a demo\nLogin\nIntroducing folk MCP\nThe CRM that works for your team\n\nfolk CRM ca",
+    "color": "rgba(3, 2, 0, 0.89)",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "fontFamily": "Foundersgrotesk",
+    "fontSize": "14.4px",
+    "fontWeight": "400",
+    "lineHeight": "23.04px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "hero": {
+    "h1": {
+      "tag": "h1",
+      "text": "The CRM that works for your team",
+      "color": "rgba(3, 2, 0, 0.89)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "Uxumgrotesque, sans-serif",
+      "fontSize": "64px",
+      "fontWeight": "500",
+      "lineHeight": "64px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "h2": {
+      "tag": "h2",
+      "text": "folk CRM captures multi-channel data to automate your work",
+      "color": "rgb(0, 0, 0)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "Uxumgrotesque, sans-serif",
+      "fontSize": "48px",
+      "fontWeight": "500",
+      "lineHeight": "52.8px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "supporting": null
+  },
+  "nav": {
+    "tag": "div",
+    "text": "Products\nSolutions\nResources\nPricing\nGet a demo\nLogin",
+    "color": "rgba(3, 2, 0, 0.89)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "Foundersgrotesk",
+    "fontSize": "14.4px",
+    "fontWeight": "400",
+    "lineHeight": "23.04px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "primaryCta": {
+    "tag": "a",
+    "text": "Watch Demo{\n  \"items\": [\n    {\n      \"url\": \"https://youtube.com/watch?v=w-gs7i3Jdnw?si=ljuixZhmZW-dd3ru\",\n      \"origin",
+    "color": "rgba(3, 2, 0, 0.89)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "Foundersgrotesk",
+    "fontSize": "14.4px",
+    "fontWeight": "400",
+    "lineHeight": "23.04px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "palette": [
+    {
+      "value": "rgba(3, 2, 0, 0.89)",
+      "count": 285
+    },
+    {
+      "value": "rgb(0, 0, 0)",
+      "count": 41
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.93)",
+      "count": 32
+    },
+    {
+      "value": "rgb(255, 255, 255)",
+      "count": 15
+    },
+    {
+      "value": "rgb(0, 0, 0) rgba(3, 2, 0, 0.89) rgba(3, 2, 0, 0.89)",
+      "count": 2
+    },
+    {
+      "value": "rgb(51, 51, 51)",
+      "count": 2
+    },
+    {
+      "value": "rgba(10, 10, 0, 0.63)",
+      "count": 2
+    },
+    {
+      "value": "rgba(3, 2, 0, 0.89) rgba(3, 2, 0, 0.89) rgb(0, 0, 0)",
+      "count": 1
+    },
+    {
+      "value": "rgb(246, 223, 246)",
+      "count": 1
+    },
+    {
+      "value": "rgb(227, 239, 220)",
+      "count": 1
+    },
+    {
+      "value": "rgb(196, 234, 238)",
+      "count": 1
+    },
+    {
+      "value": "rgb(190, 217, 239)",
+      "count": 1
+    }
+  ],
+  "fonts": [
+    {
+      "value": "Inter, Arial, sans-serif",
+      "count": 79
+    },
+    {
+      "value": "Foundersgrotesk",
+      "count": 59
+    },
+    {
+      "value": "Uxumgrotesque, sans-serif",
+      "count": 19
+    },
+    {
+      "value": "\"Uxum Grotesque\"",
+      "count": 12
+    },
+    {
+      "value": "Inter, sans-serif",
+      "count": 10
+    },
+    {
+      "value": "Rubik, sans-serif",
+      "count": 4
+    }
+  ],
+  "radii": [
+    {
+      "value": "1440px",
+      "count": 7
+    },
+    {
+      "value": "20px",
+      "count": 3
+    },
+    {
+      "value": "12px",
+      "count": 2
+    },
+    {
+      "value": "100px",
+      "count": 1
+    }
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.08) 0px 5px 12px 0px, rgba(0, 0, 0, 0.07) 0px 21px 21px 0px, rgba(0, 0, 0, 0.04) 0px 48px 29px 0px, rgba(0, 0, 0, 0.01) 0px 86px 34px 0px",
+      "count": 2
+    }
+  ],
+  "cssVariables": {
+    "--black": "#030200e3",
+    "--grey11": "#050500a1",
+    "--white": "white",
+    "--blue<deleted|variable-83e67b71>": "#f6f8fe",
+    "--pink<deleted|variable-4cc9684e>": "#fff7f6",
+    "--orange-plain<deleted|variable-73e30f5b>": "#f56741",
+    "--yellow<deleted|variable-a9798688>": "#fffcf2",
+    "--black--300<deleted|variable-35e7fffd>": "#d6d7d7",
+    "--black--200<deleted|variable-33acd7b1>": "#ebebec",
+    "--grey5": "#e4e4e4",
+    "--grey2": "#12120008",
+    "--black--500<deleted|variable-25419047>": "#989a9c",
+    "--black--100<deleted|variable-3f5d0b1a>": "#f4f5f5",
+    "--separator": "#030200e3",
+    "--grey8": "#bbb",
+    "--black--800<deleted|variable-a5ec4446>": "#313539",
+    "--black--700<deleted|variable-0a0534d5>": "#464a4d",
+    "--blue-plain<deleted|variable-475b994a>": "#5079e4",
+    "--grey4": "#0f0a001a",
+    "--grey3": "#0f08000f",
+    "--grey6": "#0d0a0029",
+    "--grey7": "#d4d4d4",
+    "--grey1": "#fcfcfc",
+    "--grey--600<deleted|variable-289adc91>": "#6f7275",
+    "--folk-blue": "#94c4ff",
+    "--folk-purple": "#c1aaf9",
+    "--folk-orange": "#ffc53d",
+    "--folk-green": "#bdee63",
+    "--grey9": "#8d8d8d",
+    "--accessible-components--dark-grey": "#9b9b9b",
+    "--accessible-components--dodger-blue": "#1378d1",
+    "--button--vertical-padding": ".375rem",
+    "--button--horizontal-padding": "1.1rem",
+    "--button--bg": "#030200e3",
+    "--button--text": "white",
+    "--button--text-size": ".9375rem",
+    "--button--hover-bg": "transparent",
+    "--button--hover-text": "#030200e3",
+    "--button--font": "Inter,Arial,sans-serif",
+    "--grey10": "grey",
+    "--highlight-color": "#fab9fb",
+    "--bg-color": "#bee0ef",
+    "--margin-bottom": "7rem",
+    "--h1-width-crmfor": "120ch",
+    "--subtitle-width-crmfor": "90ch",
+    "--button--border": "#030200e3",
+    "--button--hover-border": "#030200e3",
+    "--button--line-height": "1.25rem"
+  },
+  "layoutNotes": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hasStickyHeader": true,
+    "sectionCount": 12
+  },
+  "category": "crm"
+}

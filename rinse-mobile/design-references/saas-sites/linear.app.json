@@ -1,0 +1,203 @@
+{
+  "url": "https://linear.app/",
+  "slug": "linear.app",
+  "scrapedAt": "2026-07-12T19:37:41.437Z",
+  "durationMs": 1906,
+  "screenshot": "linear.app.png",
+  "title": "Linear – The system for product development",
+  "metaDescription": "Purpose-built for planning and building products with AI agents.",
+  "body": {
+    "tag": "body",
+    "text": "Skip to content →\nProduct\nResources\nCustomers\nPricing\nNow\nContact\nLog in\nSign up\nThe product development\nsystem for team",
+    "color": "rgb(247, 248, 248)",
+    "backgroundColor": "rgb(8, 9, 10)",
+    "fontFamily": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "lineHeight": "24px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "hero": {
+    "h1": {
+      "tag": "h1",
+      "text": "The product development\nsystem for teams and agents\nThe product development system for teams and agents",
+      "color": "rgb(247, 248, 248)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+      "fontSize": "64px",
+      "fontWeight": "510",
+      "lineHeight": "64px",
+      "letterSpacing": "-1.408px",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px 0px 0px -2px"
+    },
+    "h2": {
+      "tag": "h2",
+      "text": "A new species of product tool. Purpose-built for modern teams with AI workflows at its core, Linear sets a new standard ",
+      "color": "rgb(138, 143, 152)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+      "fontSize": "48px",
+      "fontWeight": "510",
+      "lineHeight": "48px",
+      "letterSpacing": "-1.056px",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px 32px",
+      "margin": "0px 0px 0px -2px"
+    },
+    "supporting": {
+      "tag": "div",
+      "text": "",
+      "color": "rgb(247, 248, 248)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "31px 0px 0px -1px"
+    }
+  },
+  "nav": {
+    "tag": "header",
+    "text": "Product\nResources\nCustomers\nPricing\nNow\nContact\nLog in\nSign up",
+    "color": "rgb(247, 248, 248)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "lineHeight": "24px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "primaryCta": {
+    "tag": "a",
+    "text": "Sign up",
+    "color": "rgb(8, 9, 10)",
+    "backgroundColor": "rgb(229, 229, 230)",
+    "fontFamily": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+    "fontSize": "13px",
+    "fontWeight": "510",
+    "lineHeight": "32px",
+    "letterSpacing": "normal",
+    "borderRadius": "9999px",
+    "boxShadow": "rgba(0, 0, 0, 0) 0px 8px 2px 0px, rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px, rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px",
+    "padding": "0px 12px",
+    "margin": "0px"
+  },
+  "palette": [
+    {
+      "value": "rgb(98, 102, 109)",
+      "count": 110
+    },
+    {
+      "value": "rgb(208, 214, 224)",
+      "count": 108
+    },
+    {
+      "value": "rgb(247, 248, 248)",
+      "count": 83
+    },
+    {
+      "value": "rgb(138, 143, 152)",
+      "count": 65
+    },
+    {
+      "value": "rgba(255, 255, 255, 0.05)",
+      "count": 18
+    },
+    {
+      "value": "rgb(255, 255, 255)",
+      "count": 10
+    },
+    {
+      "value": "rgb(229, 229, 230)",
+      "count": 6
+    },
+    {
+      "value": "rgb(8, 9, 10)",
+      "count": 4
+    },
+    {
+      "value": "rgb(35, 37, 42)",
+      "count": 2
+    },
+    {
+      "value": "rgb(247, 248, 248) rgb(247, 248, 248) rgba(255, 255, 255, 0.08)",
+      "count": 1
+    },
+    {
+      "value": "rgb(94, 106, 210)",
+      "count": 1
+    },
+    {
+      "value": "rgb(18, 20, 20)",
+      "count": 1
+    }
+  ],
+  "fonts": [
+    {
+      "value": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+      "count": 197
+    },
+    {
+      "value": "\"Berkeley Mono\", ui-monospace, \"SF Mono\", Menlo, monospace",
+      "count": 3
+    }
+  ],
+  "radii": [
+    {
+      "value": "9999px",
+      "count": 15
+    },
+    {
+      "value": "6px",
+      "count": 14
+    },
+    {
+      "value": "2px",
+      "count": 14
+    },
+    {
+      "value": "4px",
+      "count": 9
+    },
+    {
+      "value": "50%",
+      "count": 3
+    }
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.03) 0px 1.2px 0px 0px",
+      "count": 9
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 8px 2px 0px, rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px, rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px",
+      "count": 3
+    }
+  ],
+  "cssVariables": {},
+  "layoutNotes": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hasStickyHeader": true,
+    "sectionCount": 9
+  },
+  "category": "saas"
+}

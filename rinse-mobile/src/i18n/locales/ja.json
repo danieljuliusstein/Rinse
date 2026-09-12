@@ -1,0 +1,419 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "saving": "保存中…",
+    "loading": "読み込み中…",
+    "signOut": "サインアウト",
+    "search": "検索",
+    "back": "戻る",
+    "done": "完了",
+    "error": "問題が発生しました",
+    "offline": "オフラインです",
+    "retry": "再試行",
+    "client": "顧客",
+    "detail": "ディテール",
+    "close": "閉じる",
+    "keep": "保持",
+    "clear": "クリア",
+    "edit": "編集",
+    "delete": "削除",
+    "more": "+ あと{{count}}件",
+    "result_one": "{{count}}件の結果",
+    "result_other": "{{count}}件の結果",
+    "changeWaiting_one": "{{count}}件の変更が同期待ち",
+    "changeWaiting_other": "{{count}}件の変更が同期待ち",
+    "export": "エクスポート",
+    "directions": "経路",
+    "call": "電話",
+    "text": "メッセージ",
+    "email": "メール",
+    "notes": "メモ",
+    "photos": "写真",
+    "package": "パッケージ",
+    "vehicle": "車両",
+    "location": "場所",
+    "revenue": "売上",
+    "expenses": "経費",
+    "invoice": "請求書",
+    "quote": "見積もり",
+    "all": "すべて"
+  },
+  "tabs": {
+    "home": "ホーム",
+    "jobs": "ジョブ",
+    "clients": "顧客",
+    "business": "ビジネス"
+  },
+  "settings": {
+    "title": "設定",
+    "searchPlaceholder": "設定を検索",
+    "signOutBlocked": "サインアウト前に保留中の変更を同期または破棄してください。",
+    "cannotSignOut": "サインアウトできません",
+    "unsyncedTitle": "未同期の変更",
+    "groups": {
+      "account": "アカウント",
+      "business": "ビジネス",
+      "preferences": "設定",
+      "management": "管理",
+      "support": "サポート"
+    },
+    "menu": {
+      "account": {
+        "title": "アカウント",
+        "subtitle": "メール、パスワード、ログイン"
+      },
+      "business": {
+        "title": "ビジネス",
+        "subtitle": "プロフィールとオンライン予約"
+      },
+      "schedule": {
+        "title": "スケジュールと休暇",
+        "subtitle": "営業時間、昼休み、ブロック日"
+      },
+      "invoicing": {
+        "title": "請求",
+        "subtitle": "オンライン決済と請求書の見た目"
+      },
+      "billing": {
+        "title": "課金",
+        "subtitle": "プラン、トライアル、サブスク"
+      },
+      "progress": {
+        "title": "進捗",
+        "subtitle": "ビジネス活動のマイルストーン"
+      },
+      "preferences": {
+        "title": "アプリ設定",
+        "subtitle": "リマインダーと通知"
+      },
+      "language": {
+        "title": "言語",
+        "subtitle": "アプリと顧客向け書類"
+      },
+      "quietHours": {
+        "title": "サイレント時間",
+        "subtitle": "夜間の自動メールを停止"
+      },
+      "access": {
+        "title": "アクセスとデータ",
+        "subtitle": "バックアップ、エクスポート、プライバシー"
+      },
+      "inventory": {
+        "title": "在庫",
+        "subtitle": "消耗品と在庫"
+      },
+      "packages": {
+        "title": "サービスパッケージ",
+        "subtitle": "提供内容の管理"
+      },
+      "invoices": {
+        "title": "すべての請求書",
+        "subtitle": "財務記録"
+      },
+      "tools": {
+        "title": "ツール",
+        "subtitle": "請求書・経費などのショートカット"
+      },
+      "expenses": {
+        "title": "経費",
+        "subtitle": "オーバーヘッドと事業コスト"
+      },
+      "support": {
+        "title": "ヘルプとサポート",
+        "subtitle": "連絡先、FAQ、トラブルシューティング"
+      }
+    }
+  },
+  "language": {
+    "title": "言語",
+    "subtitle": "Rinse があなたと顧客に話す言語を選択",
+    "sectionApp": "アプリの言語",
+    "sectionDocs": "次にも適用",
+    "docsHint": "見積・請求書・顧客ポータルは同じ言語を使います。",
+    "deviceDefault": "端末に合わせる（{{lang}}）",
+    "saved": "言語を更新しました",
+    "saveFailed": "言語を保存できませんでした",
+    "searchPlaceholder": "言語を検索",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "請求",
+    "subtitle": "支払いと請求書の見た目",
+    "appearance": "外観",
+    "previewCustomize": "プレビューとカスタマイズ",
+    "previewSubtitle": "レイアウト、アクセント、ロゴ、条件 — すべての請求書に適用"
+  },
+  "auth": {
+    "checkingSession": "セッションを確認中…",
+    "starting": "Rinse を起動中…"
+  },
+  "home": {
+    "goodMorning": "おはようございます",
+    "goodAfternoon": "こんにちは",
+    "goodEvening": "こんばんは",
+    "greetingNamed": "{{greeting}}、{{name}}さん",
+    "searchPlaceholder": "仕事・顧客・パッケージを検索…",
+    "noMatch": "「{{query}}」に一致する仕事はありません。",
+    "jobReadiness": "仕事の準備状況",
+    "collected": "入金済み",
+    "calendar": "カレンダー",
+    "todaysJobs": "今日の仕事",
+    "alsoToday": "今日も",
+    "upcoming": "今後",
+    "serviceMix": "サービス構成",
+    "account": "アカウント",
+    "pipeline": "パイプライン",
+    "messages": "メッセージ",
+    "search": "検索",
+    "settings": "設定",
+    "sendInvoice": "請求書を送る",
+    "newJob": "新しい仕事",
+    "newQuote": "新しい見積もり",
+    "outstanding": "未収",
+    "invoiced": "請求済み",
+    "unpaid": "未払い",
+    "openCount": "{{count}}件未処理",
+    "collectedThisMonth": " 今月の入金",
+    "viewInvoices": "請求書を見る",
+    "noJobsToday": "今日の予定はありません",
+    "scheduleJob": "仕事を予定する",
+    "openJob": "仕事を開く",
+    "statusConfirmed": "確定",
+    "statusPending": "保留",
+    "completeProfile": "プロフィールを完成",
+    "nextStep": "次：{{label}}",
+    "finishSetup": "設定を完了",
+    "continueSetup": "設定を続ける",
+    "checkingWeather": "天気を確認中…"
+  },
+  "quickActions": {
+    "title": "クイックアクション",
+    "close": "クイックアクションを閉じる",
+    "drag": "ドラッグして閉じる",
+    "newLead": "新規リード",
+    "newLeadSub": "問い合わせを記録",
+    "newJob": "新しい仕事",
+    "newJobSub": "予定または記録",
+    "createInvoice": "請求書を作成",
+    "createInvoiceSub": "仕事を選んで送信",
+    "logExpense": "経費を記録",
+    "logExpenseSub": "一度きりの事業費",
+    "buySupplies": "消耗品を購入",
+    "buySuppliesSub": "在庫と経費を同時に",
+    "newQuote": "新しい見積もり",
+    "newQuoteSub": "価格見積もりを送信",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
+  },
+  "jobs": {
+    "title": "仕事",
+    "add": "仕事を追加",
+    "create": "仕事を作成",
+    "searchPlaceholder": "メーカー・色・ナンバー・顧客を検索…",
+    "emptyTitle": "仕事が見つかりません",
+    "emptyFiltered": "別の検索またはフィルターを試してください。",
+    "emptyDefault": "最初の仕事を予定して売上を追跡しましょう。",
+    "shown": "{{count}}件表示",
+    "totalPeriod": "合計{{count}} · {{period}}",
+    "onDate": "{{date}}に{{count}}件",
+    "showingDate": "{{date}}を表示 · クリア",
+    "editJob": "仕事を編集",
+    "cancelAppointment": "予約をキャンセル",
+    "cancelAppointmentConfirm": "予約をキャンセルしますか？",
+    "cancelAppointmentBody": "スロットが空き、仕事が削除されます。",
+    "cancelJob": "仕事をキャンセル",
+    "jobActions": "仕事の操作",
+    "loadFailed": "仕事の読み込みに失敗",
+    "moreJobs": "+ あと{{count}}件",
+    "sections": {
+      "today": "今日 · {{date}}",
+      "week": "今週",
+      "month": "今月の前半",
+      "older": "それ以前"
+    },
+    "filters": {
+      "all": "すべて",
+      "scheduled": "予定済み",
+      "inProgress": "進行中",
+      "recurring": "繰り返し"
+    },
+    "status": {
+      "scheduled": "予定済み",
+      "inProgress": "進行中",
+      "paid": "支払済み",
+      "invoiced": "請求済み",
+      "awaitingPayment": "支払い待ち",
+      "complete": "完了"
+    }
+  },
+  "clients": {
+    "title": "顧客",
+    "add": "顧客を追加",
+    "import": "顧客をインポート",
+    "export": "顧客CSVをエクスポート",
+    "searchPlaceholder": "名前・電話・メールを検索…",
+    "emptyTitle": "まだ顧客がいません",
+    "emptyFiltered": "顧客が見つかりません",
+    "emptyDefault": "最初の顧客を追加して予約を始めましょう。",
+    "emptySearch": "別のセグメントまたは検索語を試してください。",
+    "followUp": "フォローアップ",
+    "topClients": "優良顧客",
+    "allClients": "すべての顧客",
+    "moreClients_one": "+ あと{{count}}人の顧客",
+    "moreClients_other": "+ あと{{count}}人の顧客",
+    "sortBy": "並び替え",
+    "loadFailed": "顧客の読み込みに失敗",
+    "filters": {
+      "all": "すべて",
+      "followup": "フォロー",
+      "top": "優良",
+      "new": "新規"
+    },
+    "sort": {
+      "revenue": "売上",
+      "name": "名前",
+      "recent": "最終サービス"
+    }
+  },
+  "business": {
+    "title": "ビジネス",
+    "searchPlaceholder": "サービス・経費・仕事を検索…",
+    "netProfit": "純利益",
+    "netLoss": "純損失",
+    "revenue": "売上",
+    "expenses": "経費",
+    "avgJobValue": "平均仕事単価",
+    "fromJobs": "仕事から",
+    "perJob": "1件あたり",
+    "invoices": "請求書",
+    "quotes": "見積もり",
+    "revenueByService": "サービス別売上",
+    "expenseBreakdown": "経費の内訳",
+    "custom": "カスタム",
+    "startDate": "開始 YYYY-MM-DD",
+    "endDate": "終了 YYYY-MM-DD",
+    "exportCsv": "CSVをエクスポート",
+    "exportPdf": "PDFをエクスポート",
+    "expense": {
+      "supplies": "消耗品",
+      "travel": "移動",
+      "equipment": "機材",
+      "marketing": "マーケティング",
+      "labor": "人件費",
+      "overhead": "間接費",
+      "business": "事業",
+      "other": "その他"
+    },
+    "ranges": {
+      "this_week": "今週",
+      "this_month": "今月",
+      "last_month": "先月",
+      "this_year": "今年",
+      "lifetime": "全期間"
+    }
+  },
+  "invoices": {
+    "title": "請求書",
+    "openBalance": "未収残高",
+    "searchPlaceholder": "請求書を検索…",
+    "emptyTitle": "請求書なし",
+    "emptyDescription": "完了した仕事から請求書を作成して支払いを追跡します。",
+    "unavailable": "請求書を利用できません",
+    "loadFailed": "請求書の読み込みに失敗",
+    "markSent": "送信済みにする",
+    "markPaid": "支払済みにする",
+    "actions": "請求書の操作",
+    "due": "支払期限",
+    "sectionTotal": "セクション合計",
+    "filters": {
+      "all": "すべて",
+      "open": "未処理",
+      "overdue": "期限超過",
+      "paid": "支払済み",
+      "draft": "下書き"
+    },
+    "detail": {
+      "loading": "請求書を読み込み中…",
+      "title": "請求書",
+      "notFound": "請求書が見つかりません",
+      "send": "請求書を送る",
+      "resend": "再送 / 共有",
+      "logPayment": "支払いを記録",
+      "editLines": "明細を編集",
+      "editLinesCount": "明細を編集（追加{{count}}件）",
+      "quickAdjustments": "クイック調整",
+      "previewCustomize": "プレビューとカスタマイズ",
+      "viewJob": "仕事を見る"
+    }
+  },
+  "jobDetail": {
+    "loading": "仕事を読み込み中…",
+    "titleFallback": "仕事",
+    "markComplete": "仕事を完了にする",
+    "markingComplete": "完了にしています…",
+    "liability": "責任確認ウォークスルー",
+    "viewWalkthrough": "ウォークスルーを見る",
+    "startWalkthrough": "ウォークスルーを開始",
+    "hoursWorked": "作業時間",
+    "hoursValue": "{{hours}}時間",
+    "netProfit": "純利益",
+    "nextService": "次回サービス",
+    "bookNext": "次回を予約",
+    "onMyWay": "向かっています",
+    "textClient": "顧客にメッセージ",
+    "createQuote": "見積もりを作成",
+    "createInvoice": "請求書を作成",
+    "creating": "作成中…",
+    "sharePdf": "PDFを共有",
+    "shareBeforeAfter": "ビフォーアフターPDFを共有",
+    "editJob": "仕事を編集",
+    "cancelAppointment": "予約をキャンセル",
+    "cancelling": "キャンセル中…",
+    "jobCompleteTitle": "仕事完了",
+    "jobCompleteBody": "この画面から請求または共有できます。",
+    "noPhoneTitle": "電話番号なし",
+    "noPhoneBody": "先に顧客プロフィールに電話番号を追加してください。",
+    "sentTitle": "送信済み",
+    "onMyWaySent": "「向かっています」メッセージを送信しました。",
+    "cancelConfirm": "予約をキャンセルしますか？",
+    "cancelBody": "スロットが空き、仕事が削除されます。"
+  },
+  "clientDetail": {
+    "newJob": "新しい仕事",
+    "quote": "見積もり",
+    "invoice": "請求書",
+    "totalRevenue": "総売上",
+    "totalJobs": "総仕事数",
+    "avgJob": "平均",
+    "leadSource": "リード元",
+    "notes": "メモ",
+    "quotes": "見積もり",
+    "vehicles": "車両",
+    "addVehicle": "車両を追加",
+    "upcoming": "今後",
+    "jobHistory": "仕事履歴",
+    "contact": "連絡先",
+    "editClient": "顧客を編集",
+    "directions": "経路",
+    "call": "電話",
+    "text": "メッセージ",
+    "email": "メール"
+  }
+}

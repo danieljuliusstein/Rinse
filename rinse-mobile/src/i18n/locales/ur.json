@@ -1,0 +1,419 @@
+{
+  "common": {
+    "save": "محفوظ کریں",
+    "cancel": "منسوخ",
+    "saving": "محفوظ ہو رہا ہے…",
+    "loading": "لوڈ ہو رہا ہے…",
+    "signOut": "سائن آؤٹ",
+    "search": "تلاش",
+    "back": "واپس",
+    "done": "مکمل",
+    "error": "کچھ غلط ہوا",
+    "offline": "آپ آف لائن ہیں",
+    "retry": "دوبارہ کوشش",
+    "client": "کلائنٹ",
+    "detail": "ڈیٹیل",
+    "close": "بند کریں",
+    "keep": "رکھیں",
+    "clear": "صاف کریں",
+    "edit": "ترمیم",
+    "delete": "حذف",
+    "more": "+ {{count}} مزید",
+    "result_one": "{{count}} نتیجہ",
+    "result_other": "{{count}} نتائج",
+    "changeWaiting_one": "{{count}} تبدیلی ہم آہنگی کے انتظار میں",
+    "changeWaiting_other": "{{count}} تبدیلیاں ہم آہنگی کے انتظار میں",
+    "export": "برآمد",
+    "directions": "راستہ",
+    "call": "کال",
+    "text": "پیغام",
+    "email": "ای میل",
+    "notes": "نوٹس",
+    "photos": "تصاویر",
+    "package": "پیکیج",
+    "vehicle": "گاڑی",
+    "location": "مقام",
+    "revenue": "آمدنی",
+    "expenses": "اخراجات",
+    "invoice": "رسید",
+    "quote": "کوٹ",
+    "all": "سب"
+  },
+  "tabs": {
+    "home": "ہوم",
+    "jobs": "جابز",
+    "clients": "کلائنٹس",
+    "business": "کاروبار"
+  },
+  "settings": {
+    "title": "ترتیبات",
+    "searchPlaceholder": "ترتیبات تلاش کریں",
+    "signOutBlocked": "سائن آؤٹ سے پہلے زیر زیر تبدیلیاں سنک یا رد کریں۔",
+    "cannotSignOut": "سائن آؤٹ نہیں ہو سکتا",
+    "unsyncedTitle": "غیر سنک تبدیلیاں",
+    "groups": {
+      "account": "اکاؤنٹ",
+      "business": "کاروبار",
+      "preferences": "ترجیحات",
+      "management": "انتظام",
+      "support": "مدد"
+    },
+    "menu": {
+      "account": {
+        "title": "اکاؤنٹ",
+        "subtitle": "ای میل، پاس ورڈ اور سائن ان"
+      },
+      "business": {
+        "title": "آپ کا کاروبار",
+        "subtitle": "پروفائل اور آن لائن بکنگ"
+      },
+      "schedule": {
+        "title": "شیڈول اور چھٹی",
+        "subtitle": "اوقات، لنچ اور بلاک دن"
+      },
+      "invoicing": {
+        "title": "انوائسنگ",
+        "subtitle": "آن لائن ادائیگی اور رسید کی شکل"
+      },
+      "billing": {
+        "title": "بلنگ",
+        "subtitle": "پلان، ٹرائل اور سبسکرپشن"
+      },
+      "progress": {
+        "title": "آپ کی پیشرفت",
+        "subtitle": "کاروباری سرگرمی کے سنگ میل"
+      },
+      "preferences": {
+        "title": "ایپ ترجیحات",
+        "subtitle": "یاد دہانیاں اور اطلاعیں"
+      },
+      "language": {
+        "title": "زبان",
+        "subtitle": "ایپ اور کسٹمر دستاویزات"
+      },
+      "quietHours": {
+        "title": "خاموش اوقات",
+        "subtitle": "رات کو آٹو ای میلز روکیں"
+      },
+      "access": {
+        "title": "رسائی اور ڈیٹا",
+        "subtitle": "بیک اپ، ایکسپورٹ اور رازداری"
+      },
+      "inventory": {
+        "title": "انوینٹری",
+        "subtitle": "سپلائیز اور اسٹاک"
+      },
+      "packages": {
+        "title": "سروس پیکجز",
+        "subtitle": "اپنی پیشکشیں منظم کریں"
+      },
+      "invoices": {
+        "title": "تمام رسیدیں",
+        "subtitle": "مالی ریکارڈ"
+      },
+      "tools": {
+        "title": "ٹولز",
+        "subtitle": "رسیدوں، اخراجات وغیرہ کے شارٹ کٹ"
+      },
+      "expenses": {
+        "title": "اخراجات",
+        "subtitle": "اوور ہیڈ اور کاروباری لاگت"
+      },
+      "support": {
+        "title": "مدد اور سپورٹ",
+        "subtitle": "رابطہ، FAQ اور ٹربل شوٹنگ"
+      }
+    }
+  },
+  "language": {
+    "title": "زبان",
+    "subtitle": "منتخب کریں کہ Rinse آپ اور گاہکوں سے کیسے بات کرے",
+    "sectionApp": "ایپ کی زبان",
+    "sectionDocs": "اس پر بھی لاگو",
+    "docsHint": "کوٹس، رسیدیں اور کلائنٹ پورٹل ایک ہی زبان استعمال کرتے ہیں۔",
+    "deviceDefault": "ڈیوائس سے ملایں ({{lang}})",
+    "saved": "زبان اپ ڈیٹ ہو گئی",
+    "saveFailed": "زبان محفوظ نہیں ہو سکی",
+    "searchPlaceholder": "زبان تلاش کریں",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "انوائسنگ",
+    "subtitle": "ادائیگی اور رسید کی شکل",
+    "appearance": "ظاہری شکل",
+    "previewCustomize": "پیش منظر اور تخصیص",
+    "previewSubtitle": "لے آؤٹ، ایکسنٹ، لوگو اور شرائط — تمام رسیدوں پر"
+  },
+  "auth": {
+    "checkingSession": "سیشن چیک…",
+    "starting": "Rinse شروع ہو رہا ہے…"
+  },
+  "home": {
+    "goodMorning": "صبح بخیر",
+    "goodAfternoon": "سہ پہر بخیر",
+    "goodEvening": "شام بخیر",
+    "greetingNamed": "{{greeting}}، {{name}}",
+    "searchPlaceholder": "جاب، کلائنٹ، پیکیج تلاش کریں…",
+    "noMatch": "“{{query}}” سے کوئی جاب نہیں ملی۔",
+    "jobReadiness": "جاب کی تیاری",
+    "collected": "وصول شدہ",
+    "calendar": "کیلنڈر",
+    "todaysJobs": "آج کی جابیں",
+    "alsoToday": "آج مزید",
+    "upcoming": "آنے والی",
+    "serviceMix": "سروس مکس",
+    "account": "اکاؤنٹ",
+    "pipeline": "پائپ لائن",
+    "messages": "پیغامات",
+    "search": "تلاش",
+    "settings": "ترتیبات",
+    "sendInvoice": "رسید بھیجیں",
+    "newJob": "نئی جاب",
+    "newQuote": "نیا کوٹ",
+    "outstanding": "باقی",
+    "invoiced": "بل کیا گیا",
+    "unpaid": "غیر ادا شدہ",
+    "openCount": "{{count}} کھلی",
+    "collectedThisMonth": " اس مہینے وصول",
+    "viewInvoices": "رسیدیں دیکھیں",
+    "noJobsToday": "آج کوئی جاب شیڈول نہیں",
+    "scheduleJob": "جاب شیڈول کریں",
+    "openJob": "جاب کھولیں",
+    "statusConfirmed": "تصدیق شدہ",
+    "statusPending": "زیر التوا",
+    "completeProfile": "پروفائل مکمل کریں",
+    "nextStep": "اگلا: {{label}}",
+    "finishSetup": "سیٹ اپ مکمل کریں",
+    "continueSetup": "سیٹ اپ جاری رکھیں",
+    "checkingWeather": "موسم چیک ہو رہا…"
+  },
+  "quickActions": {
+    "title": "فوری اقدامات",
+    "close": "فوری اقدامات بند کریں",
+    "drag": "بند کرنے کے لیے کھینچیں",
+    "newLead": "نیا لیڈ",
+    "newLeadSub": "استفسار درج کریں",
+    "newJob": "نئی جاب",
+    "newJobSub": "کام شیڈول یا لاگ کریں",
+    "createInvoice": "رسید بنائیں",
+    "createInvoiceSub": "جاب منتخب کر کے بھیجیں",
+    "logExpense": "خرچ درج کریں",
+    "logExpenseSub": "ایک بار کا کاروباری خرچ",
+    "buySupplies": "سامان خریدیں",
+    "buySuppliesSub": "اسٹاک اور خرچ ساتھ",
+    "newQuote": "نیا کوٹ",
+    "newQuoteSub": "قیمت کا اندازہ بھیجیں",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
+  },
+  "jobs": {
+    "title": "جابیں",
+    "add": "جاب شامل کریں",
+    "create": "جاب بنائیں",
+    "searchPlaceholder": "میک، رنگ، پلیٹ، کلائنٹ تلاش کریں…",
+    "emptyTitle": "کوئی جاب نہیں ملی",
+    "emptyFiltered": "دوسری تلاش یا فلٹر آزمائیں۔",
+    "emptyDefault": "آمدنی ٹریک کرنے کے لیے پہلی جاب شیڈول کریں۔",
+    "shown": "{{count}} دکھائی گئیں",
+    "totalPeriod": "{{count}} کل · {{period}}",
+    "onDate": "{{date}} کو {{count}}",
+    "showingDate": "{{date}} دکھا رہا · صاف",
+    "editJob": "جاب ترمیم",
+    "cancelAppointment": "اپائنٹمنٹ منسوخ",
+    "cancelAppointmentConfirm": "اپائنٹمنٹ منسوخ کریں؟",
+    "cancelAppointmentBody": "اس سے سلاٹ خالی ہوگا اور جاب ہٹ جائے گی۔",
+    "cancelJob": "جاب منسوخ",
+    "jobActions": "جاب اقدامات",
+    "loadFailed": "جابیں لوڈ نہیں ہو سکیں",
+    "moreJobs": "+ {{count}} مزید",
+    "sections": {
+      "today": "آج · {{date}}",
+      "week": "اس ہفتے",
+      "month": "اس مہینے پہلے",
+      "older": "پہلے کی"
+    },
+    "filters": {
+      "all": "سب",
+      "scheduled": "شیڈول",
+      "inProgress": "جاری",
+      "recurring": "بار بار"
+    },
+    "status": {
+      "scheduled": "شیڈول",
+      "inProgress": "جاری",
+      "paid": "ادا شدہ",
+      "invoiced": "بل کیا گیا",
+      "awaitingPayment": "ادائیگی کا انتظار",
+      "complete": "مکمل"
+    }
+  },
+  "clients": {
+    "title": "کلائنٹس",
+    "add": "کلائنٹ شامل کریں",
+    "import": "کلائنٹ درآمد",
+    "export": "کلائنٹ CSV برآمد",
+    "searchPlaceholder": "نام، فون، ای میل تلاش کریں…",
+    "emptyTitle": "ابھی کوئی کلائنٹ نہیں",
+    "emptyFiltered": "کوئی کلائنٹ نہیں ملا",
+    "emptyDefault": "جاب بک کرنے کے لیے پہلا کلائنٹ شامل کریں۔",
+    "emptySearch": "دوسرا سیگمنٹ یا تلاش آزمائیں۔",
+    "followUp": "فالو اپ",
+    "topClients": "بہترین کلائنٹس",
+    "allClients": "تمام کلائنٹس",
+    "moreClients_one": "+ {{count}} مزید کلائنٹ",
+    "moreClients_other": "+ {{count}} مزید کلائنٹس",
+    "sortBy": "ترتیب",
+    "loadFailed": "کلائنٹس لوڈ نہیں ہو سکے",
+    "filters": {
+      "all": "سب",
+      "followup": "فالو اپ",
+      "top": "ٹاپ",
+      "new": "نئے"
+    },
+    "sort": {
+      "revenue": "آمدنی",
+      "name": "نام",
+      "recent": "آخری سروس"
+    }
+  },
+  "business": {
+    "title": "کاروبار",
+    "searchPlaceholder": "سروسز، اخراجات، جابیں تلاش کریں…",
+    "netProfit": "خالص منافع",
+    "netLoss": "خالص نقصان",
+    "revenue": "آمدنی",
+    "expenses": "اخراجات",
+    "avgJobValue": "اوسط جاب قیمت",
+    "fromJobs": "جابوں سے",
+    "perJob": "فی جاب",
+    "invoices": "رسیدیں",
+    "quotes": "کوٹس",
+    "revenueByService": "سروس کے مطابق آمدنی",
+    "expenseBreakdown": "اخراجات کی تفصیل",
+    "custom": "حسب ضرورت",
+    "startDate": "شروع YYYY-MM-DD",
+    "endDate": "اختتام YYYY-MM-DD",
+    "exportCsv": "CSV برآمد",
+    "exportPdf": "PDF برآمد",
+    "expense": {
+      "supplies": "سامان",
+      "travel": "سفر",
+      "equipment": "آلات",
+      "marketing": "مارکیٹنگ",
+      "labor": "مزدوری",
+      "overhead": "اوور ہیڈ",
+      "business": "کاروبار",
+      "other": "دیگر"
+    },
+    "ranges": {
+      "this_week": "اس ہفتے",
+      "this_month": "اس مہینے",
+      "last_month": "پچھلا مہینہ",
+      "this_year": "اس سال",
+      "lifetime": "تمام وقت"
+    }
+  },
+  "invoices": {
+    "title": "رسیدیں",
+    "openBalance": "کھلا بیلنس",
+    "searchPlaceholder": "رسیدیں تلاش کریں…",
+    "emptyTitle": "کوئی رسید نہیں",
+    "emptyDescription": "ادائیگی ٹریک کرنے کے لیے مکمل جاب سے رسید بنائیں۔",
+    "unavailable": "رسیدیں دستیاب نہیں",
+    "loadFailed": "رسیدیں لوڈ نہیں ہو سکیں",
+    "markSent": "بھیجی ہوئی نشان زد",
+    "markPaid": "ادا شدہ نشان زد",
+    "actions": "رسید اقدامات",
+    "due": "واجب الادا",
+    "sectionTotal": "سیکشن کل",
+    "filters": {
+      "all": "سب",
+      "open": "کھلی",
+      "overdue": "زائد المیعاد",
+      "paid": "ادا شدہ",
+      "draft": "مسودہ"
+    },
+    "detail": {
+      "loading": "رسید لوڈ ہو رہی…",
+      "title": "رسید",
+      "notFound": "رسید نہیں ملی",
+      "send": "رسید بھیجیں",
+      "resend": "دوبارہ بھیجیں / شیئر",
+      "logPayment": "ادائیگی درج کریں",
+      "editLines": "لائن آئٹمز ترمیم",
+      "editLinesCount": "لائنز ترمیم ({{count}} اضافی)",
+      "quickAdjustments": "فوری ایڈجسٹمنٹ",
+      "previewCustomize": "پیش نظارہ اور تخصیص",
+      "viewJob": "جاب دیکھیں"
+    }
+  },
+  "jobDetail": {
+    "loading": "جاب لوڈ ہو رہی…",
+    "titleFallback": "جاب",
+    "markComplete": "جاب مکمل نشان زد",
+    "markingComplete": "مکمل نشان زد ہو رہا…",
+    "liability": "ذمہ داری واک تھرو",
+    "viewWalkthrough": "واک تھرو دیکھیں",
+    "startWalkthrough": "واک تھرو شروع",
+    "hoursWorked": "کام کے گھنٹے",
+    "hoursValue": "{{hours}} گھنٹے",
+    "netProfit": "خالص منافع",
+    "nextService": "اگلی سروس",
+    "bookNext": "اگلی بک کریں",
+    "onMyWay": "راستے میں",
+    "textClient": "کلائنٹ کو پیغام",
+    "createQuote": "کوٹ بنائیں",
+    "createInvoice": "رسید بنائیں",
+    "creating": "بن رہا…",
+    "sharePdf": "PDF شیئر",
+    "shareBeforeAfter": "پہلے/بعد PDF شیئر",
+    "editJob": "جاب ترمیم",
+    "cancelAppointment": "اپائنٹمنٹ منسوخ",
+    "cancelling": "منسوخ ہو رہا…",
+    "jobCompleteTitle": "جاب مکمل",
+    "jobCompleteBody": "اس اسکرین سے رسید یا شیئر کر سکتے ہیں۔",
+    "noPhoneTitle": "کوئی فون نہیں",
+    "noPhoneBody": "پہلے کلائنٹ پروفائل پر فون نمبر شامل کریں۔",
+    "sentTitle": "بھیج دیا",
+    "onMyWaySent": "“راستے میں” پیغام بھیج دیا۔",
+    "cancelConfirm": "اپائنٹمنٹ منسوخ کریں؟",
+    "cancelBody": "اس سے سلاٹ خالی ہوگا اور جاب ہٹ جائے گی۔"
+  },
+  "clientDetail": {
+    "newJob": "نئی جاب",
+    "quote": "کوٹ",
+    "invoice": "رسید",
+    "totalRevenue": "کل آمدنی",
+    "totalJobs": "کل جابیں",
+    "avgJob": "اوسط جاب",
+    "leadSource": "لیڈ ذریعہ",
+    "notes": "نوٹس",
+    "quotes": "کوٹس",
+    "vehicles": "گاڑیاں",
+    "addVehicle": "گاڑی شامل کریں",
+    "upcoming": "آنے والی",
+    "jobHistory": "جاب تاریخ",
+    "contact": "رابطہ",
+    "editClient": "کلائنٹ ترمیم",
+    "directions": "راستہ",
+    "call": "کال",
+    "text": "پیغام",
+    "email": "ای میل"
+  }
+}

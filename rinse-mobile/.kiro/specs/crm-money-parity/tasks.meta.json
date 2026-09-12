@@ -1,0 +1,165 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Write a failing money-parity exploration test that reproduces the bug": [
+      {
+        "executionId": "c51e37ff-2199-4e9f-8db1-56233cb050dd",
+        "chatSessionId": "sess_1e76b511-7009-43df-a690-79554d5a3c9f",
+        "timestamp": 1787517582279
+      },
+      {
+        "executionId": "c51e37ff-2199-4e9f-8db1-56233cb050dd",
+        "chatSessionId": "sess_1e76b511-7009-43df-a690-79554d5a3c9f",
+        "timestamp": 1787517987380
+      }
+    ],
+    "2.1 Create `packages/core/src/reports.ts` with shared range + P&L logic": [
+      {
+        "executionId": "391dd527-5372-4821-9b7e-db23f8b13517",
+        "chatSessionId": "sess_752b583a-6b45-4a19-96f5-08d21aef6fba",
+        "timestamp": 1787518176574
+      },
+      {
+        "executionId": "391dd527-5372-4821-9b7e-db23f8b13517",
+        "chatSessionId": "sess_752b583a-6b45-4a19-96f5-08d21aef6fba",
+        "timestamp": 1787518287381
+      }
+    ],
+    "2.2 Export the new module and add core unit tests": [
+      {
+        "executionId": "391dd527-5372-4821-9b7e-db23f8b13517",
+        "chatSessionId": "sess_752b583a-6b45-4a19-96f5-08d21aef6fba",
+        "timestamp": 1787518289989
+      },
+      {
+        "executionId": "391dd527-5372-4821-9b7e-db23f8b13517",
+        "chatSessionId": "sess_752b583a-6b45-4a19-96f5-08d21aef6fba",
+        "timestamp": 1787518670515
+      }
+    ],
+    "2. Add the canonical reports/money module to `@rinse/core`": [
+      {
+        "executionId": "391dd527-5372-4821-9b7e-db23f8b13517",
+        "chatSessionId": "sess_752b583a-6b45-4a19-96f5-08d21aef6fba",
+        "timestamp": 1787518670547
+      }
+    ],
+    "3.1 Replace desktop duplicate money math with core imports": [
+      {
+        "executionId": "7f56d26e-7d03-4a56-8776-1b55fd7914d5",
+        "chatSessionId": "sess_c57572d7-33d9-4f53-9835-6e3e04a6a29d",
+        "timestamp": 1787518705472
+      },
+      {
+        "executionId": "7f56d26e-7d03-4a56-8776-1b55fd7914d5",
+        "chatSessionId": "sess_c57572d7-33d9-4f53-9835-6e3e04a6a29d",
+        "timestamp": 1787518971439
+      }
+    ],
+    "3.2 Replace desktop P&L aggregation with core and guard orchestration": [
+      {
+        "executionId": "7f56d26e-7d03-4a56-8776-1b55fd7914d5",
+        "chatSessionId": "sess_c57572d7-33d9-4f53-9835-6e3e04a6a29d",
+        "timestamp": 1787518974328
+      },
+      {
+        "executionId": "7f56d26e-7d03-4a56-8776-1b55fd7914d5",
+        "chatSessionId": "sess_c57572d7-33d9-4f53-9835-6e3e04a6a29d",
+        "timestamp": 1787519311794
+      }
+    ],
+    "3.3 Exclude cancelled jobs on desktop job-based revenue helpers and fetch reads": [
+      {
+        "executionId": "7f56d26e-7d03-4a56-8776-1b55fd7914d5",
+        "chatSessionId": "sess_c57572d7-33d9-4f53-9835-6e3e04a6a29d",
+        "timestamp": 1787519314329
+      },
+      {
+        "executionId": "7f56d26e-7d03-4a56-8776-1b55fd7914d5",
+        "chatSessionId": "sess_c57572d7-33d9-4f53-9835-6e3e04a6a29d",
+        "timestamp": 1787519674194
+      }
+    ],
+    "3. Point the desktop app at `@rinse/core` (part of the simultaneous switch)": [
+      {
+        "executionId": "7f56d26e-7d03-4a56-8776-1b55fd7914d5",
+        "chatSessionId": "sess_c57572d7-33d9-4f53-9835-6e3e04a6a29d",
+        "timestamp": 1787519674223
+      }
+    ],
+    "4.1 Migrate mobile reports to core": [
+      {
+        "executionId": "b9056f6e-70ac-4e5f-bd70-94e1d3ac281f",
+        "chatSessionId": "sess_b2ad02b3-1470-4e79-b4b3-9fafc89d5288",
+        "timestamp": 1787519723816
+      },
+      {
+        "executionId": "b9056f6e-70ac-4e5f-bd70-94e1d3ac281f",
+        "chatSessionId": "sess_b2ad02b3-1470-4e79-b4b3-9fafc89d5288",
+        "timestamp": 1787519895106
+      }
+    ],
+    "4.2 Align mobile job-based month revenue with core exclusion": [
+      {
+        "executionId": "b9056f6e-70ac-4e5f-bd70-94e1d3ac281f",
+        "chatSessionId": "sess_b2ad02b3-1470-4e79-b4b3-9fafc89d5288",
+        "timestamp": 1787519897899
+      },
+      {
+        "executionId": "b9056f6e-70ac-4e5f-bd70-94e1d3ac281f",
+        "chatSessionId": "sess_b2ad02b3-1470-4e79-b4b3-9fafc89d5288",
+        "timestamp": 1787520047187
+      }
+    ],
+    "4. Point the mobile app at `@rinse/core` (same change as step 3)": [
+      {
+        "executionId": "b9056f6e-70ac-4e5f-bd70-94e1d3ac281f",
+        "chatSessionId": "sess_b2ad02b3-1470-4e79-b4b3-9fafc89d5288",
+        "timestamp": 1787520047223
+      }
+    ],
+    "5.1 Re-run the step-1 test against migrated code": [
+      {
+        "executionId": "d7ea3d01-52eb-4909-8c6c-8592013c3d60",
+        "chatSessionId": "sess_2ddbeace-f858-4a62-bb37-e534b07067a9",
+        "timestamp": 1787520098822
+      },
+      {
+        "executionId": "d7ea3d01-52eb-4909-8c6c-8592013c3d60",
+        "chatSessionId": "sess_2ddbeace-f858-4a62-bb37-e534b07067a9",
+        "timestamp": 1787520785573
+      }
+    ],
+    "5.2 Complete required parity coverage": [
+      {
+        "executionId": "d7ea3d01-52eb-4909-8c6c-8592013c3d60",
+        "chatSessionId": "sess_2ddbeace-f858-4a62-bb37-e534b07067a9",
+        "timestamp": 1787520788407
+      },
+      {
+        "executionId": "d7ea3d01-52eb-4909-8c6c-8592013c3d60",
+        "chatSessionId": "sess_2ddbeace-f858-4a62-bb37-e534b07067a9",
+        "timestamp": 1787521016395
+      }
+    ],
+    "5. Make the exploration test pass and add the full parity suite": [
+      {
+        "executionId": "d7ea3d01-52eb-4909-8c6c-8592013c3d60",
+        "chatSessionId": "sess_2ddbeace-f858-4a62-bb37-e534b07067a9",
+        "timestamp": 1787521016425
+      }
+    ],
+    "6. Verify builds and full test runs for all three packages": [
+      {
+        "executionId": "1499865a-0720-4428-809a-5268950b377f",
+        "chatSessionId": "sess_c613aa43-598d-449a-9dfb-f29206df58ac",
+        "timestamp": 1787521573228
+      },
+      {
+        "executionId": "1499865a-0720-4428-809a-5268950b377f",
+        "chatSessionId": "sess_c613aa43-598d-449a-9dfb-f29206df58ac",
+        "timestamp": 1787522065899
+      }
+    ]
+  }
+}

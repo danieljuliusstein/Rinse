@@ -1,0 +1,185 @@
+{
+  "url": "https://www.copper.com/",
+  "slug": "copper.com",
+  "scrapedAt": "2026-07-12T19:37:54.594Z",
+  "durationMs": 2054,
+  "screenshot": "copper.com.png",
+  "title": "CRM Software Solutions Company for Service Businesses | Copper CRM",
+  "metaDescription": "Win clients for life with Copper CRM software solutions. Give us a try and see how we can help your business build stronger customer relationships.",
+  "body": {
+    "tag": "body",
+    "text": "This website uses cookies\n\nWe serve cookies on this site to analyze traffic, remember your preferences, and optimize you",
+    "color": "rgb(25, 9, 47)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "Inter, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif",
+    "fontSize": "20px",
+    "fontWeight": "400",
+    "lineHeight": "30px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "hero": {
+    "h1": {
+      "tag": "h1",
+      "text": "Be there for your clients,\nevery step of the way",
+      "color": "rgb(25, 9, 47)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Bricolage Grotesque\", sans-serif",
+      "fontSize": "60px",
+      "fontWeight": "700",
+      "lineHeight": "66px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px 0px 40px"
+    },
+    "h2": {
+      "tag": "h2",
+      "text": "No more switching tabs. Do it all in Copper",
+      "color": "rgb(25, 9, 47)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"Bricolage Grotesque\", sans-serif",
+      "fontSize": "52px",
+      "fontWeight": "800",
+      "lineHeight": "59.8px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "supporting": {
+      "tag": "div",
+      "text": "Try Copper free\nGet a demo",
+      "color": "rgb(25, 9, 47)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "Inter, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif",
+      "fontSize": "20px",
+      "fontWeight": "400",
+      "lineHeight": "30px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    }
+  },
+  "nav": {
+    "tag": "nav",
+    "text": "ProductOrganize contactsKeep all your relationships in one placeTrack dealsSet up the pipelines that work for youManage ",
+    "color": "rgb(25, 9, 47)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "Inter, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif",
+    "fontSize": "20px",
+    "fontWeight": "400",
+    "lineHeight": "30px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "primaryCta": {
+    "tag": "a",
+    "text": "Try Copper free",
+    "color": "rgb(255, 255, 255)",
+    "backgroundColor": "rgb(255, 52, 101)",
+    "fontFamily": "Inter, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "600",
+    "lineHeight": "26px",
+    "letterSpacing": "normal",
+    "borderRadius": "10px",
+    "boxShadow": "none",
+    "padding": "10px 28px",
+    "margin": "0px 20px 0px 0px"
+  },
+  "palette": [
+    {
+      "value": "rgb(229, 231, 235)",
+      "count": 191
+    },
+    {
+      "value": "rgb(0, 0, 0)",
+      "count": 171
+    },
+    {
+      "value": "rgb(50, 30, 65)",
+      "count": 24
+    },
+    {
+      "value": "rgb(25, 9, 47)",
+      "count": 12
+    },
+    {
+      "value": "rgb(238, 238, 238)",
+      "count": 4
+    },
+    {
+      "value": "rgb(229, 231, 235) rgb(229, 231, 235) rgb(255, 255, 255)",
+      "count": 3
+    },
+    {
+      "value": "rgb(255, 52, 101)",
+      "count": 2
+    },
+    {
+      "value": "rgb(255, 255, 255)",
+      "count": 1
+    },
+    {
+      "value": "rgb(249, 248, 251)",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) rgb(50, 30, 65)",
+      "count": 1
+    }
+  ],
+  "fonts": [
+    {
+      "value": "sans-serif",
+      "count": 187
+    },
+    {
+      "value": "Inter, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif",
+      "count": 10
+    },
+    {
+      "value": "\"Bricolage Grotesque\", sans-serif",
+      "count": 3
+    }
+  ],
+  "radii": [
+    {
+      "value": "32px",
+      "count": 8
+    },
+    {
+      "value": "60px",
+      "count": 4
+    },
+    {
+      "value": "10px",
+      "count": 1
+    }
+  ],
+  "shadows": [],
+  "cssVariables": {
+    "--swiper-theme-color": "#007aff",
+    "--swiper-navigation-size": "44px"
+  },
+  "layoutNotes": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hasStickyHeader": true,
+    "sectionCount": 22
+  },
+  "category": "crm"
+}

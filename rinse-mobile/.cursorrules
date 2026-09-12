@@ -1,0 +1,34 @@
+# apps/mobile — Cursor guardrails (Expo SDK 57 / React Native)
+
+## Stack
+
+- Expo Router for navigation (`href`, `router.push`) — never Next.js `Link` or `pages/` patterns.
+- React Native primitives only: `View`, `Text`, `Pressable` — never `div`, `span`, or `className` (use `StyleSheet`).
+- Shared business logic: import from `@rinse/core` (types, Zod schemas, `fmt`, `generatePocketBaseId`). Do not duplicate validation or calculations in screen files.
+- Design: tokens from `src/theme/`, compose `src/components/ui/*`, operator light lane only (`#f2f2f7` / `#22c55e`).
+
+## Web bleed (forbidden in this project)
+
+- No `window`, `document`, `localStorage`, `sessionStorage`, or browser `File`/`Blob`.
+- PocketBase file uploads: React Native `FormData` with `{ uri, name, type }` objects.
+- Do not copy operator UI patterns from `apps/api` — that app is API + book/portal/admin only.
+
+## expo-sqlite (SDK 57+)
+
+Use modern async APIs only: `openDatabaseSync`, `db.runAsync`, `db.getAllAsync`, `db.getFirstAsync`, `db.prepareAsync`.
+
+Never use legacy `db.transaction()` + `executeSql` callback style.
+
+## Sync & background
+
+- No `setInterval` / recursive `setTimeout` sync loops — iOS freezes them in background.
+- Sync runner: atomic, sequential, reads queue state from SQLite; trigger on `AppState` `active` and explicit user action.
+- On 401 during flush: pause, `authRefresh`, resume current item — do not fail whole batch.
+
+## Permissions
+
+Use Expo hooks (e.g. `useCameraPermissions`, `ImagePicker.requestMediaLibraryPermissionsAsync`).
+
+## Prompting
+
+When adding features, start with: "Using types and schemas from `@rinse/core`…"

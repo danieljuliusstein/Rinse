@@ -1,0 +1,319 @@
+{
+  "url": "https://www.hubspot.com/",
+  "slug": "hubspot.com",
+  "scrapedAt": "2026-07-12T19:37:48.389Z",
+  "durationMs": 3897,
+  "screenshot": "hubspot.com.png",
+  "title": "HubSpot | Software & Tools for your Business - Homepage",
+  "metaDescription": "HubSpot's customer platform includes all the marketing, sales, customer service, and CRM software you need to grow your business.",
+  "body": {
+    "tag": "body",
+    "text": "×\nclose\n\nWe use cookies to improve HubSpot’s site. Some cookies are necessary for our website and services to function p",
+    "color": "rgb(31, 31, 31)",
+    "backgroundColor": "rgb(252, 252, 250)",
+    "fontFamily": "\"HubSpot Sans\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "300",
+    "lineHeight": "28px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "hero": {
+    "h1": {
+      "tag": "h1",
+      "text": "Where go-to-market\nteams go to \ngrow\nscale\nclose\nretain\ngrow",
+      "color": "rgb(248, 245, 238)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"HubSpot Serif Page Header Human\", \"HubSpot Serif\", serif",
+      "fontSize": "80px",
+      "fontWeight": "500",
+      "lineHeight": "95px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px 0px 24px"
+    },
+    "h2": {
+      "tag": "h2",
+      "text": "",
+      "color": "rgb(31, 31, 31)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"HubSpot Sans\", sans-serif",
+      "fontSize": "18px",
+      "fontWeight": "500",
+      "lineHeight": "28px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "supporting": {
+      "tag": "p",
+      "text": "Unite marketing, sales, and customer service on one agentic\ncustomer platform that delivers results fast.",
+      "color": "rgb(248, 245, 238)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "\"HubSpot Sans\", sans-serif",
+      "fontSize": "18px",
+      "fontWeight": "300",
+      "lineHeight": "32px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    }
+  },
+  "nav": {
+    "tag": "header",
+    "text": "Skip to content\nEnglish\nSelect a language\nHigh Contrast\nCustomer Support\nContact Sales\nLog in\nAbout\nAbout\nProducts\nProdu",
+    "color": "rgb(31, 31, 31)",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "fontFamily": "\"HubSpot Sans\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "300",
+    "lineHeight": "28px",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "rgba(33, 51, 67, 0.12) 0px 2px 4px 0px",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "primaryCta": {
+    "tag": "a",
+    "text": "Learn more\n        \n          about HubSpot’s Starter Customer Platform",
+    "color": "rgb(31, 31, 31)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "\"HubSpot Sans\", sans-serif",
+    "fontSize": "14px",
+    "fontWeight": "500",
+    "lineHeight": "22px",
+    "letterSpacing": "normal",
+    "borderRadius": "8px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "palette": [
+    {
+      "value": "rgb(31, 31, 31)",
+      "count": 307
+    },
+    {
+      "value": "rgb(255, 255, 255)",
+      "count": 42
+    },
+    {
+      "value": "rgb(0, 0, 0)",
+      "count": 28
+    },
+    {
+      "value": "rgb(18, 69, 72)",
+      "count": 22
+    },
+    {
+      "value": "rgb(252, 252, 250)",
+      "count": 3
+    },
+    {
+      "value": "rgb(248, 245, 238)",
+      "count": 2
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.11)",
+      "count": 2
+    },
+    {
+      "value": "rgb(0, 0, 197)",
+      "count": 1
+    },
+    {
+      "value": "rgb(239, 239, 239)",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.05)",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) rgb(31, 31, 31)",
+      "count": 1
+    }
+  ],
+  "fonts": [
+    {
+      "value": "\"HubSpot Sans\", sans-serif",
+      "count": 190
+    },
+    {
+      "value": "\"HubSpot Sans\", \"Lexend Deca\", LexendDeca, \"Helvetica Neue\", helvetica, arial, sans-serif",
+      "count": 8
+    },
+    {
+      "value": "\"HubSpot Serif Page Header Human\", \"HubSpot Serif\", serif",
+      "count": 1
+    },
+    {
+      "value": "\"Zen Kaku Gothic New\", sans-serif",
+      "count": 1
+    }
+  ],
+  "radii": [
+    {
+      "value": "8px",
+      "count": 50
+    },
+    {
+      "value": "16px",
+      "count": 5
+    },
+    {
+      "value": "42px",
+      "count": 1
+    },
+    {
+      "value": "6px",
+      "count": 1
+    },
+    {
+      "value": "50%",
+      "count": 1
+    }
+  ],
+  "shadows": [
+    {
+      "value": "rgba(33, 51, 67, 0.12) 0px 2px 4px 0px",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 1px",
+      "count": 1
+    }
+  ],
+  "cssVariables": {
+    "--cl-content-max-width-default": "1080px",
+    "--cl-content-max-width-lg": "1220px",
+    "--cl-content-max-width-enhanced-layout": "1460px",
+    "--cl-content-max-width": "1080px",
+    "--cl-content-max-width-enhanced": "1080px",
+    "--cl-section-content-max-width": "1080px",
+    "--cl-section-gutter": "16px",
+    "--cl-section-padding-none": "0",
+    "--cl-section-padding-extra-small": "24px",
+    "--cl-section-padding-small": "40px",
+    "--cl-section-padding-medium": "64px",
+    "--cl-section-padding-large": "96px",
+    "--cl-card-border-width": "0px",
+    "--cl-card-border-color": "transparent",
+    "--global-nav-content-max-width": "1080px",
+    "--global-nav-header-height": "128px",
+    "--global-nav-header-height-dynamic": "128px",
+    "--global-nav-header-lp-height": "54px",
+    "--csol-content-padding-true": "1rem",
+    "--csol-content-padding-false": "0",
+    "--csol-content-padding-mobile": "1rem",
+    "--csol-content-padding-desktop": "0",
+    "--csol-content-padding-desktop-enhanced-layout": "0",
+    "--csol-section-padding-top": "16px",
+    "--csol-section-padding-top-desktop": "24px",
+    "--csol-section-padding-bottom": "16px",
+    "--csol-section-padding-bottom-desktop": "24px",
+    "--cl-carousel-slide-gap-default": "24px",
+    "--cl-carousel-slides-per-view-default": "3",
+    "--cl-carousel-slides-per-view-phone": "1",
+    "--cl-carousel-slides-per-view-tablet": "2",
+    "--cl-carousel-peek-default": "48px",
+    "--cl-carousel-peek-phone": "24px",
+    "--cl-carousel-peek-tablet": "32px",
+    "--cl-carousel-slides-to-scroll-default": "1",
+    "--cl-carousel-slides-to-scroll-phone": "1",
+    "--cl-carousel-slides-to-scroll-tablet": "2",
+    "--cl-carousel-is-infinite": "0",
+    "--cl-carousel-dot-size": "16px",
+    "--cl-carousel-dot-gap": "8px",
+    "--cl-carousel-show-dots-default": "1",
+    "--cl-carousel-show-dots-phone": "1",
+    "--cl-carousel-show-dots-tablet": "1",
+    "--cl-carousel-show-dots-desktop": "1",
+    "--cl-carousel-animation-duration": "300ms",
+    "--cl-carousel-easing": "ease",
+    "--wf-flexible-tagline-spacing-small": "0.5rem",
+    "--wf-flexible-tagline-spacing-large": "1rem",
+    "--wf-flexible-tagline-icon-size-small": "1rem",
+    "--wf-flexible-tagline-icon-size-large": "2rem",
+    "--wf-flexible-tagline-border-radius-small": "0.5rem",
+    "--wf-flexible-tagline-border-radius-large": "1rem",
+    "--wf-flexible-tagline-anchor-offset": "128px",
+    "--breakpoint-phone": "500px",
+    "--breakpoint-tablet-portrait": "767px",
+    "--breakpoint-tablet": "1024px",
+    "--breakpoint-desktop": "1366px",
+    "--black": "#1F1F1F",
+    "--pantera": "#213343",
+    "--white": "#FFFFFF",
+    "--color-font-primary": "#1F1F1F",
+    "--color-font-light": "#FFFFFF",
+    "--consent-background-color": "#1F1F1F",
+    "--light-interactive": "#FFFFFF",
+    "--color-modal-heading": "#1F1F1F",
+    "--color-high-contrast": "#1d0cff",
+    "--color-background-solid-light": "#FFFFFF",
+    "--colors-teal-light": "#1F1F1F",
+    "--color-brand01": "#FF4800",
+    "--color-slide-off": "#ddd",
+    "--color-border-light": "#0000001c",
+    "--color-banner-border-light": "#dbe4ed30",
+    "--color-background-modal": "#FCFCFA",
+    "--font-weight-light": "300",
+    "--font-weight-normal": "400",
+    "--font-weight-medium": "500",
+    "--font-weight-semi-bold": "600",
+    "--font-weight-bold": "700",
+    "--font-hs-hubspot-sans-medium": "'HubSpot Sans'",
+    "--font-lexend-deca": "'Lexend Deca'",
+    "--font-lexend-deca-alt": "'LexendDeca'",
+    "--font-family": "'HubSpot Sans', 'Lexend Deca', 'LexendDeca', 'Helvetica Neue', helvetica, arial, sans-serif",
+    "--font-size": "0.975rem",
+    "--font-size-mobile": "0.8rem",
+    "--font-size-mobile-small": "0.7rem",
+    "--font-size-small": "0.875rem",
+    "--font-size-medium": "0.9rem",
+    "--font-size-large": "1.125rem",
+    "--font-size-xl": "1.375rem",
+    "--font-size-banner-icon": "0.9998rem",
+    "--spacing-xs": "0.25rem",
+    "--spacing-sm": "0.5rem",
+    "--spacing-md": "1rem",
+    "--spacing-lg": "1.5rem",
+    "--spacing-xl": "2rem",
+    "--spacing-2xl": "2.5rem",
+    "--border-radius-sm": "0.188rem",
+    "--border-radius-md": "0.5rem",
+    "--border-radius-lg": "1rem",
+    "--shadow-light": "0 0.063rem 0.313rem rgba(240, 246, 251, 0.12)",
+    "--modal-max-height": "calc(min(38.375rem, 100%))",
+    "--toggle-width": "4rem",
+    "--toggle-height": "2rem",
+    "--toggle-nob-size": "1.39rem",
+    "--button-min-width": "7.188rem",
+    "--button-min-height": "2.5rem",
+    "--close-button-size": "1.25rem",
+    "--z-index-banner": "99999",
+    "--z-index-modal": "3000000002",
+    "--default-content-width": "1080px",
+    "--button-transition": "0.15s color ease-out, 0.15s background-color ease-out, 0.15s border-color ease-out"
+  },
+  "layoutNotes": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hasStickyHeader": false,
+    "sectionCount": 20
+  },
+  "category": "crm"
+}

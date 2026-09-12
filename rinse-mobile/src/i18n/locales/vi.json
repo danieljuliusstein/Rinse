@@ -1,0 +1,419 @@
+{
+  "common": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "saving": "Đang lưu…",
+    "loading": "Đang tải…",
+    "signOut": "Đăng xuất",
+    "search": "Tìm kiếm",
+    "back": "Quay lại",
+    "done": "Xong",
+    "error": "Đã xảy ra lỗi",
+    "offline": "Bạn đang ngoại tuyến",
+    "retry": "Thử lại",
+    "client": "Khách hàng",
+    "detail": "Chi tiết",
+    "close": "Đóng",
+    "keep": "Giữ",
+    "clear": "Xóa",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "more": "+ {{count}} nữa",
+    "result_one": "{{count}} kết quả",
+    "result_other": "{{count}} kết quả",
+    "changeWaiting_one": "{{count}} thay đổi đang chờ đồng bộ",
+    "changeWaiting_other": "{{count}} thay đổi đang chờ đồng bộ",
+    "export": "Xuất",
+    "directions": "Chỉ đường",
+    "call": "Gọi",
+    "text": "Nhắn tin",
+    "email": "Email",
+    "notes": "Ghi chú",
+    "photos": "Ảnh",
+    "package": "Gói",
+    "vehicle": "Xe",
+    "location": "Vị trí",
+    "revenue": "Doanh thu",
+    "expenses": "Chi phí",
+    "invoice": "Hóa đơn",
+    "quote": "Báo giá",
+    "all": "Tất cả"
+  },
+  "tabs": {
+    "home": "Trang chủ",
+    "jobs": "Công việc",
+    "clients": "Khách hàng",
+    "business": "Doanh nghiệp"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "searchPlaceholder": "Tìm cài đặt",
+    "signOutBlocked": "Đồng bộ hoặc hủy thay đổi đang chờ trước khi đăng xuất.",
+    "cannotSignOut": "Không thể đăng xuất",
+    "unsyncedTitle": "Thay đổi chưa đồng bộ",
+    "groups": {
+      "account": "Tài khoản",
+      "business": "Doanh nghiệp",
+      "preferences": "Tùy chọn",
+      "management": "Quản lý",
+      "support": "Hỗ trợ"
+    },
+    "menu": {
+      "account": {
+        "title": "Tài khoản",
+        "subtitle": "Email, mật khẩu và đăng nhập"
+      },
+      "business": {
+        "title": "Doanh nghiệp của bạn",
+        "subtitle": "Hồ sơ và đặt lịch trực tuyến"
+      },
+      "schedule": {
+        "title": "Lịch & nghỉ",
+        "subtitle": "Giờ làm, nghỉ trưa và ngày chặn"
+      },
+      "invoicing": {
+        "title": "Hóa đơn",
+        "subtitle": "Thanh toán trực tuyến & giao diện hóa đơn"
+      },
+      "billing": {
+        "title": "Gói đăng ký",
+        "subtitle": "Gói, dùng thử và đăng ký"
+      },
+      "progress": {
+        "title": "Tiến độ của bạn",
+        "subtitle": "Các cột mốc hoạt động kinh doanh"
+      },
+      "preferences": {
+        "title": "Tùy chọn ứng dụng",
+        "subtitle": "Nhắc nhở và thông báo"
+      },
+      "language": {
+        "title": "Ngôn ngữ",
+        "subtitle": "Ứng dụng và tài liệu khách hàng"
+      },
+      "quietHours": {
+        "title": "Giờ im lặng",
+        "subtitle": "Tạm dừng email tự động vào ban đêm"
+      },
+      "access": {
+        "title": "Truy cập & dữ liệu",
+        "subtitle": "Sao lưu, xuất và quyền riêng tư"
+      },
+      "inventory": {
+        "title": "Kho",
+        "subtitle": "Vật tư và tồn kho"
+      },
+      "packages": {
+        "title": "Gói dịch vụ",
+        "subtitle": "Quản lý dịch vụ của bạn"
+      },
+      "invoices": {
+        "title": "Tất cả hóa đơn",
+        "subtitle": "Hồ sơ tài chính"
+      },
+      "tools": {
+        "title": "Công cụ",
+        "subtitle": "Phím tắt hóa đơn, chi phí và hơn nữa"
+      },
+      "expenses": {
+        "title": "Chi phí",
+        "subtitle": "Chi phí chung và kinh doanh"
+      },
+      "support": {
+        "title": "Trợ giúp & hỗ trợ",
+        "subtitle": "Liên hệ, FAQ và khắc phục sự cố"
+      }
+    }
+  },
+  "language": {
+    "title": "Ngôn ngữ",
+    "subtitle": "Chọn cách Rinse nói chuyện với bạn và khách hàng",
+    "sectionApp": "Ngôn ngữ ứng dụng",
+    "sectionDocs": "Cũng áp dụng cho",
+    "docsHint": "Báo giá, hóa đơn và cổng khách hàng dùng cùng một ngôn ngữ.",
+    "deviceDefault": "Theo thiết bị ({{lang}})",
+    "saved": "Đã cập nhật ngôn ngữ",
+    "saveFailed": "Không thể lưu ngôn ngữ",
+    "searchPlaceholder": "Tìm ngôn ngữ",
+    "english": "English",
+    "chinese": "中文",
+    "hindi": "हिन्दी",
+    "spanish": "Español",
+    "french": "Français",
+    "arabic": "العربية",
+    "bengali": "বাংলা",
+    "portuguese": "Português",
+    "russian": "Русский",
+    "urdu": "اردو",
+    "indonesian": "Bahasa Indonesia",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "turkish": "Türkçe",
+    "korean": "한국어",
+    "italian": "Italiano",
+    "vietnamese": "Tiếng Việt"
+  },
+  "invoicing": {
+    "title": "Hóa đơn",
+    "subtitle": "Thanh toán và giao diện hóa đơn",
+    "appearance": "Giao diện",
+    "previewCustomize": "Xem trước & tùy chỉnh",
+    "previewSubtitle": "Bố cục, màu nhấn, logo và điều khoản — áp dụng mọi hóa đơn"
+  },
+  "auth": {
+    "checkingSession": "Đang kiểm tra phiên…",
+    "starting": "Đang khởi động Rinse…"
+  },
+  "home": {
+    "goodMorning": "Chào buổi sáng",
+    "goodAfternoon": "Chào buổi chiều",
+    "goodEvening": "Chào buổi tối",
+    "greetingNamed": "{{greeting}}, {{name}}",
+    "searchPlaceholder": "Tìm việc, khách, gói…",
+    "noMatch": "Không có việc nào khớp “{{query}}”.",
+    "jobReadiness": "Mức sẵn sàng công việc",
+    "collected": "Đã thu",
+    "calendar": "Lịch",
+    "todaysJobs": "Việc hôm nay",
+    "alsoToday": "Cũng hôm nay",
+    "upcoming": "Sắp tới",
+    "serviceMix": "Cơ cấu dịch vụ",
+    "account": "Tài khoản",
+    "pipeline": "Phễu",
+    "messages": "Tin nhắn",
+    "search": "Tìm kiếm",
+    "settings": "Cài đặt",
+    "sendInvoice": "Gửi hóa đơn",
+    "newJob": "Việc mới",
+    "newQuote": "Báo giá mới",
+    "outstanding": "Còn nợ",
+    "invoiced": "Đã xuất HĐ",
+    "unpaid": "chưa thanh toán",
+    "openCount": "{{count}} đang mở",
+    "collectedThisMonth": " đã thu tháng này",
+    "viewInvoices": "Xem hóa đơn",
+    "noJobsToday": "Không có việc nào hôm nay",
+    "scheduleJob": "Lên lịch việc",
+    "openJob": "Mở việc",
+    "statusConfirmed": "Đã xác nhận",
+    "statusPending": "Đang chờ",
+    "completeProfile": "Hoàn thiện hồ sơ",
+    "nextStep": "Tiếp: {{label}}",
+    "finishSetup": "Hoàn tất thiết lập",
+    "continueSetup": "Tiếp tục thiết lập",
+    "checkingWeather": "Đang kiểm tra thời tiết…"
+  },
+  "quickActions": {
+    "title": "Thao tác nhanh",
+    "close": "Đóng thao tác nhanh",
+    "drag": "Kéo để đóng",
+    "newLead": "Lead mới",
+    "newLeadSub": "Ghi nhận yêu cầu",
+    "newJob": "Việc mới",
+    "newJobSub": "Lên lịch hoặc ghi nhận công việc",
+    "createInvoice": "Tạo hóa đơn",
+    "createInvoiceSub": "Chọn việc và gửi",
+    "logExpense": "Ghi chi phí",
+    "logExpenseSub": "Chi phí kinh doanh một lần",
+    "buySupplies": "Mua vật tư",
+    "buySuppliesSub": "Kho + chi phí cùng lúc",
+    "newQuote": "Báo giá mới",
+    "newQuoteSub": "Gửi ước tính giá",
+    "scan": "Scan",
+    "scanSub": "Receipt or VIN"
+  },
+  "jobs": {
+    "title": "Công việc",
+    "add": "Thêm việc",
+    "create": "Tạo việc",
+    "searchPlaceholder": "Tìm hãng, màu, biển số, khách…",
+    "emptyTitle": "Không tìm thấy việc",
+    "emptyFiltered": "Thử tìm kiếm hoặc bộ lọc khác.",
+    "emptyDefault": "Lên lịch việc đầu tiên để theo dõi doanh thu.",
+    "shown": "{{count}} đang hiện",
+    "totalPeriod": "{{count}} tổng · {{period}}",
+    "onDate": "{{count}} vào {{date}}",
+    "showingDate": "Đang hiện {{date}} · Xóa",
+    "editJob": "Sửa việc",
+    "cancelAppointment": "Hủy lịch hẹn",
+    "cancelAppointmentConfirm": "Hủy lịch hẹn?",
+    "cancelAppointmentBody": "Điều này sẽ giải phóng khung giờ và xóa việc.",
+    "cancelJob": "Hủy việc",
+    "jobActions": "Thao tác việc",
+    "loadFailed": "Không tải được công việc",
+    "moreJobs": "+ {{count}} nữa",
+    "sections": {
+      "today": "Hôm nay · {{date}}",
+      "week": "Tuần này",
+      "month": "Sớm hơn trong tháng",
+      "older": "Trước đó"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "scheduled": "Đã lên lịch",
+      "inProgress": "Đang làm",
+      "recurring": "Định kỳ"
+    },
+    "status": {
+      "scheduled": "Đã lên lịch",
+      "inProgress": "Đang làm",
+      "paid": "Đã thanh toán",
+      "invoiced": "Đã xuất HĐ",
+      "awaitingPayment": "Chờ thanh toán",
+      "complete": "Hoàn thành"
+    }
+  },
+  "clients": {
+    "title": "Khách hàng",
+    "add": "Thêm khách",
+    "import": "Nhập khách",
+    "export": "Xuất CSV khách",
+    "searchPlaceholder": "Tìm tên, điện thoại, email…",
+    "emptyTitle": "Chưa có khách hàng",
+    "emptyFiltered": "Không tìm thấy khách",
+    "emptyDefault": "Thêm khách đầu tiên để bắt đầu đặt lịch.",
+    "emptySearch": "Thử phân khúc hoặc từ khóa khác.",
+    "followUp": "Theo dõi",
+    "topClients": "Khách hàng hàng đầu",
+    "allClients": "Tất cả khách",
+    "moreClients_one": "+ {{count}} khách nữa",
+    "moreClients_other": "+ {{count}} khách nữa",
+    "sortBy": "Sắp xếp theo",
+    "loadFailed": "Không tải được khách hàng",
+    "filters": {
+      "all": "Tất cả",
+      "followup": "Theo dõi",
+      "top": "Top",
+      "new": "Mới"
+    },
+    "sort": {
+      "revenue": "Doanh thu",
+      "name": "Tên",
+      "recent": "Dịch vụ gần nhất"
+    }
+  },
+  "business": {
+    "title": "Kinh doanh",
+    "searchPlaceholder": "Tìm dịch vụ, chi phí, việc…",
+    "netProfit": "Lợi nhuận ròng",
+    "netLoss": "Lỗ ròng",
+    "revenue": "Doanh thu",
+    "expenses": "Chi phí",
+    "avgJobValue": "Giá trị TB mỗi việc",
+    "fromJobs": "từ công việc",
+    "perJob": "mỗi việc",
+    "invoices": "Hóa đơn",
+    "quotes": "Báo giá",
+    "revenueByService": "Doanh thu theo dịch vụ",
+    "expenseBreakdown": "Phân tích chi phí",
+    "custom": "Tùy chỉnh",
+    "startDate": "Bắt đầu YYYY-MM-DD",
+    "endDate": "Kết thúc YYYY-MM-DD",
+    "exportCsv": "Xuất CSV",
+    "exportPdf": "Xuất PDF",
+    "expense": {
+      "supplies": "Vật tư",
+      "travel": "Di chuyển",
+      "equipment": "Thiết bị",
+      "marketing": "Marketing",
+      "labor": "Nhân công",
+      "overhead": "Chi phí chung",
+      "business": "Kinh doanh",
+      "other": "Khác"
+    },
+    "ranges": {
+      "this_week": "Tuần này",
+      "this_month": "Tháng này",
+      "last_month": "Tháng trước",
+      "this_year": "Năm nay",
+      "lifetime": "Toàn thời gian"
+    }
+  },
+  "invoices": {
+    "title": "Hóa đơn",
+    "openBalance": "Số dư mở",
+    "searchPlaceholder": "Tìm hóa đơn…",
+    "emptyTitle": "Không có hóa đơn",
+    "emptyDescription": "Tạo hóa đơn từ việc hoàn thành để theo dõi thanh toán.",
+    "unavailable": "Hóa đơn không khả dụng",
+    "loadFailed": "Không tải được hóa đơn",
+    "markSent": "Đánh dấu đã gửi",
+    "markPaid": "Đánh dấu đã thanh toán",
+    "actions": "Thao tác hóa đơn",
+    "due": "đến hạn",
+    "sectionTotal": "Tổng mục",
+    "filters": {
+      "all": "Tất cả",
+      "open": "Đang mở",
+      "overdue": "Quá hạn",
+      "paid": "Đã thanh toán",
+      "draft": "Nháp"
+    },
+    "detail": {
+      "loading": "Đang tải hóa đơn…",
+      "title": "Hóa đơn",
+      "notFound": "Không tìm thấy hóa đơn",
+      "send": "Gửi hóa đơn",
+      "resend": "Gửi lại / chia sẻ",
+      "logPayment": "Ghi thanh toán",
+      "editLines": "Sửa dòng",
+      "editLinesCount": "Sửa dòng ({{count}} thêm)",
+      "quickAdjustments": "Điều chỉnh nhanh",
+      "previewCustomize": "Xem trước & tùy chỉnh",
+      "viewJob": "Xem việc"
+    }
+  },
+  "jobDetail": {
+    "loading": "Đang tải việc…",
+    "titleFallback": "Công việc",
+    "markComplete": "Đánh dấu hoàn thành",
+    "markingComplete": "Đang đánh dấu…",
+    "liability": "Kiểm tra trách nhiệm",
+    "viewWalkthrough": "Xem kiểm tra",
+    "startWalkthrough": "Bắt đầu kiểm tra",
+    "hoursWorked": "Giờ làm việc",
+    "hoursValue": "{{hours}} giờ",
+    "netProfit": "Lợi nhuận ròng",
+    "nextService": "Dịch vụ tiếp theo",
+    "bookNext": "Đặt lần sau",
+    "onMyWay": "Đang đến",
+    "textClient": "Nhắn khách",
+    "createQuote": "Tạo báo giá",
+    "createInvoice": "Tạo hóa đơn",
+    "creating": "Đang tạo…",
+    "sharePdf": "Chia sẻ PDF",
+    "shareBeforeAfter": "Chia sẻ PDF trước/sau",
+    "editJob": "Sửa việc",
+    "cancelAppointment": "Hủy lịch hẹn",
+    "cancelling": "Đang hủy…",
+    "jobCompleteTitle": "Việc hoàn thành",
+    "jobCompleteBody": "Bạn có thể xuất hóa đơn hoặc chia sẻ từ màn hình này.",
+    "noPhoneTitle": "Không có điện thoại",
+    "noPhoneBody": "Thêm số điện thoại vào hồ sơ khách trước.",
+    "sentTitle": "Đã gửi",
+    "onMyWaySent": "Đã gửi tin “đang đến”.",
+    "cancelConfirm": "Hủy lịch hẹn?",
+    "cancelBody": "Điều này sẽ giải phóng khung giờ và xóa việc."
+  },
+  "clientDetail": {
+    "newJob": "Việc mới",
+    "quote": "Báo giá",
+    "invoice": "Hóa đơn",
+    "totalRevenue": "Tổng doanh thu",
+    "totalJobs": "Tổng việc",
+    "avgJob": "TB mỗi việc",
+    "leadSource": "Nguồn lead",
+    "notes": "Ghi chú",
+    "quotes": "Báo giá",
+    "vehicles": "Xe",
+    "addVehicle": "Thêm xe",
+    "upcoming": "Sắp tới",
+    "jobHistory": "Lịch sử việc",
+    "contact": "Liên hệ",
+    "editClient": "Sửa khách",
+    "directions": "Chỉ đường",
+    "call": "Gọi",
+    "text": "Nhắn tin",
+    "email": "Email"
+  }
+}

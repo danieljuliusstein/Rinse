@@ -1,0 +1,72 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_API_URL": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_WEB_ORIGIN": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_wyxJULDswY6PGpmNsVnZ67KWU8qH7vNjucmC4oz6PFoT",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://1a84c04c06f79d1ff6247c0080131173@o4511718252806144.ingest.us.sentry.io/4511718269911040"
+      }
+    },
+    "development-device": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_API_URL": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_WEB_ORIGIN": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_wyxJULDswY6PGpmNsVnZ67KWU8qH7vNjucmC4oz6PFoT",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://1a84c04c06f79d1ff6247c0080131173@o4511718252806144.ingest.us.sentry.io/4511718269911040"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_API_URL": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_WEB_ORIGIN": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_wyxJULDswY6PGpmNsVnZ67KWU8qH7vNjucmC4oz6PFoT",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://1a84c04c06f79d1ff6247c0080131173@o4511718252806144.ingest.us.sentry.io/4511718269911040"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_APP_API_URL": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_WEB_ORIGIN": "https://app.rinsehq.com",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_wyxJULDswY6PGpmNsVnZ67KWU8qH7vNjucmC4oz6PFoT",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://1a84c04c06f79d1ff6247c0080131173@o4511718252806144.ingest.us.sentry.io/4511718269911040"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "danieljuliusstein@gmail.com",
+        "ascAppId": "REPLACE_WITH_ASC_APP_ID",
+        "appleTeamId": "5KYPXT76B4"
+      }
+    }
+  }
+}

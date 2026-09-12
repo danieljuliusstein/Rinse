@@ -1,0 +1,176 @@
+{
+  "url": "https://www.pipedrive.com/",
+  "slug": "pipedrive.com",
+  "scrapedAt": "2026-07-12T19:37:52.503Z",
+  "durationMs": 1955,
+  "screenshot": "pipedrive.com.png",
+  "title": "Sales CRM & Pipeline Management Software | Pipedrive",
+  "metaDescription": "Pipedrive is the easy-to-use, #1 user-rated CRM tool. Get more qualified leads and grow your business with our sales CRM. Sign up for a 14-day free trial.",
+  "body": {
+    "tag": "body",
+    "text": "Skip to main content\nFeatures\nWhy Pipedrive\nResources\nContact sales\nPricing\nLog in\nTry it free\nThe easy and effective CR",
+    "color": "rgb(0, 0, 0)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "fontFamily": "Inter, \"Inter fallback\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "lineHeight": "normal",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "hero": {
+    "h1": {
+      "tag": "h1",
+      "text": "The easy and effective CRM for closing deals",
+      "color": "rgb(1, 119, 55)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "Haffer, \"Haffer Fallback\", sans-serif",
+      "fontSize": "52px",
+      "fontWeight": "700",
+      "lineHeight": "62px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "h2": {
+      "tag": "h2",
+      "text": "CRM software sales teams will love",
+      "color": "rgb(25, 36, 53)",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "fontFamily": "Inter, \"Inter fallback\", sans-serif",
+      "fontSize": "36px",
+      "fontWeight": "700",
+      "lineHeight": "43px",
+      "letterSpacing": "normal",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "supporting": null
+  },
+  "nav": {
+    "tag": "header",
+    "text": "Features\nWhy Pipedrive\nResources\nContact sales\nPricing\nLog in\nTry it free",
+    "color": "rgb(25, 36, 53)",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "fontFamily": "Inter, \"Inter fallback\", sans-serif",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "lineHeight": "normal",
+    "letterSpacing": "normal",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "padding": "0px",
+    "margin": "0px"
+  },
+  "primaryCta": {
+    "tag": "button",
+    "text": "Try it free",
+    "color": "rgb(255, 255, 255)",
+    "backgroundColor": "rgb(104, 97, 242)",
+    "fontFamily": "Inter, \"Inter fallback\", sans-serif",
+    "fontSize": "18px",
+    "fontWeight": "700",
+    "lineHeight": "24px",
+    "letterSpacing": "normal",
+    "borderRadius": "4px",
+    "boxShadow": "none",
+    "padding": "9px 20px",
+    "margin": "0px"
+  },
+  "palette": [
+    {
+      "value": "rgb(25, 36, 53)",
+      "count": 198
+    },
+    {
+      "value": "rgb(0, 0, 238)",
+      "count": 82
+    },
+    {
+      "value": "rgb(0, 0, 0)",
+      "count": 53
+    },
+    {
+      "value": "rgb(255, 255, 255)",
+      "count": 49
+    },
+    {
+      "value": "rgb(65, 61, 153)",
+      "count": 20
+    },
+    {
+      "value": "rgb(13, 110, 206)",
+      "count": 12
+    },
+    {
+      "value": "rgb(1, 119, 55)",
+      "count": 6
+    },
+    {
+      "value": "rgb(104, 97, 242)",
+      "count": 5
+    },
+    {
+      "value": "rgb(225, 225, 255)",
+      "count": 5
+    },
+    {
+      "value": "rgb(101, 110, 122)",
+      "count": 5
+    },
+    {
+      "value": "rgb(14, 82, 53)",
+      "count": 4
+    },
+    {
+      "value": "rgb(215, 249, 211)",
+      "count": 1
+    }
+  ],
+  "fonts": [
+    {
+      "value": "Inter, \"Inter fallback\", sans-serif",
+      "count": 198
+    },
+    {
+      "value": "Haffer, \"Haffer Fallback\", sans-serif",
+      "count": 1
+    },
+    {
+      "value": "\"Source Sans Pro\", sans-serif",
+      "count": 1
+    }
+  ],
+  "radii": [
+    {
+      "value": "4px",
+      "count": 13
+    },
+    {
+      "value": "0px 0px 4px 4px",
+      "count": 1
+    },
+    {
+      "value": "50%",
+      "count": 1
+    }
+  ],
+  "shadows": [],
+  "cssVariables": {},
+  "layoutNotes": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "hasStickyHeader": true,
+    "sectionCount": 20
+  },
+  "category": "crm"
+}
