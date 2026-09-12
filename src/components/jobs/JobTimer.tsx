@@ -1,14 +1,6 @@
-import { useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { ArrowCounterClockwise, Clock, Pause, Play } from 'phosphor-react-native'
-import {
-  formatElapsedMs,
-  getJobTimer,
-  resetJobTimer,
-  startJobTimer,
-  stopJobTimer,
-} from '@/src/lib/job-timer'
-import { successHaptic } from '@/src/lib/haptics'
+import { Clock } from '@/src/icons'
+import { useJobTimer } from '@/src/hooks/useJobTimer'
 import { AppText } from '@/src/components/ui/AppText'
 import { PrimaryButton } from '@/src/components/ui/Button'
 import { SecondaryButton } from '@/src/components/ui/Button'
@@ -17,47 +9,32 @@ import { colors, spacing } from '@/src/theme/colors'
 interface JobTimerProps {
   jobId: string
   onStopped?: (hours: number) => void
+  /** Embedded inside accordion — no card chrome or primary start/stop (parent owns CTA). */
+  embedded?: boolean
 }
 
-export function JobTimer({ jobId, onStopped }: JobTimerProps) {
-  const [elapsedMs, setElapsedMs] = useState(0)
-  const [running, setRunning] = useState(false)
+export function JobTimer({ jobId, onStopped, embedded = false }: JobTimerProps) {
+  const timer = useJobTimer(jobId, onStopped)
 
-  useEffect(() => {
-    let cancelled = false
-    const sync = async () => {
-      const state = await getJobTimer(jobId)
-      if (!cancelled) {
-        setElapsedMs(state.elapsedMs)
-        setRunning(state.running)
-      }
-    }
-    void sync()
-    const id = setInterval(() => void sync(), 1000)
-    return () => {
-      cancelled = true
-      clearInterval(id)
-    }
-  }, [jobId])
-
-  const handleStart = () => {
-    void startJobTimer(jobId).then(() => setRunning(true))
-  }
-
-  const handleStop = () => {
-    void stopJobTimer(jobId).then((total) => {
-      setElapsedMs(total)
-      setRunning(false)
-      void successHaptic()
-      onStopped?.(total / 3_600_000)
-    })
-  }
-
-  const handleReset = () => {
-    void resetJobTimer(jobId).then(() => {
-      setElapsedMs(0)
-      setRunning(false)
-    })
+  if (embedded) {
+    return (
+      <View style={styles.embedded}>
+        <View style={styles.timerBlock}>
+          <View style={styles.liveRow}>
+            {timer.running ? <View style={styles.liveDot} /> : null}
+            <AppText variant="sectionLabel" style={styles.timerLabel}>
+              TIME ON JOB
+            </AppText>
+          </View>
+          <AppText variant="bodySemiBold" style={styles.display}>
+            {timer.formatted}
+          </AppText>
+        </View>
+        {timer.elapsedMs > 0 && !timer.running ? (
+          <SecondaryButton label="Reset timer" onPress={timer.reset} />
+        ) : null}
+      </View>
+    )
   }
 
   return (
@@ -67,16 +44,16 @@ export function JobTimer({ jobId, onStopped }: JobTimerProps) {
         <AppText variant="sectionLabel">Time on job</AppText>
       </View>
       <AppText variant="bodySemiBold" style={styles.display}>
-        {formatElapsedMs(elapsedMs)}
+        {timer.formatted}
       </AppText>
       <View style={styles.actions}>
-        {running ? (
-          <SecondaryButton label="Stop" onPress={handleStop} />
+        {timer.running ? (
+          <SecondaryButton label="Stop" onPress={timer.stop} />
         ) : (
-          <PrimaryButton label="Start timer" onPress={handleStart} />
+          <PrimaryButton label="Start timer" onPress={timer.start} />
         )}
-        {elapsedMs > 0 && !running ? (
-          <SecondaryButton label="Reset" onPress={handleReset} />
+        {timer.elapsedMs > 0 && !timer.running ? (
+          <SecondaryButton label="Reset" onPress={timer.reset} />
         ) : null}
       </View>
     </View>
@@ -91,6 +68,29 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     gap: spacing.sm,
+  },
+  embedded: {
+    gap: spacing.sm,
+  },
+  timerBlock: {
+    backgroundColor: colors.greenSoft,
+    borderRadius: 12,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  liveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.green,
+  },
+  timerLabel: {
+    color: colors.greenText,
   },
   head: {
     flexDirection: 'row',

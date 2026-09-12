@@ -12,6 +12,7 @@ interface ConfirmOptions {
 /**
  * Confirm dialog that works on iOS / Android / web.
  * Note: react-native-web's `Alert.alert` is a no-op — never use it for confirms on web.
+ * Prefer a custom AppSheet for new product flows; this is for rare system-style confirms.
  */
 export function confirmNativeAction({
   title,

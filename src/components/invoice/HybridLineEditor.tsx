@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { Trash } from 'phosphor-react-native'
+import { Trash } from '@/src/icons'
 import {
   INVOICE_LINE_UNIT_OPTIONS,
   formatBillingLineDetail,

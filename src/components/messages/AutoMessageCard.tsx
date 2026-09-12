@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Switch, View } from 'react-native'
-import { CaretDown, PencilSimple } from 'phosphor-react-native'
+import { CaretDown, PencilSimple } from '@/src/icons'
 import { AppText, Badge } from '@/src/components/ui'
 import type { AutoMessageTemplate } from '@/src/lib/messages-api'
 import { mergeTemplateBodyForContext } from '@/src/lib/message-templates'

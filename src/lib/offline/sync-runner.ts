@@ -418,10 +418,11 @@ async function processQueueItem(item: QueueItem): Promise<void> {
       const meta = Array.isArray(record.photo_meta)
         ? (record.photo_meta as PhotoMeta[]).filter((m) => m.filename !== op.params.filename)
         : []
-      const formData = new FormData()
-      formData.append('photos-', op.params.filename)
-      await pb.collection('jobs').update(op.params.jobId, formData)
-      await pb.collection('jobs').update(op.params.jobId, { photo_meta: meta })
+      const { patchPocketBaseForm } = await import('../upload-file')
+      await patchPocketBaseForm('jobs', op.params.jobId, {
+        'photos-': op.params.filename,
+        photo_meta: JSON.stringify(meta),
+      })
       break
     }
     case 'createVehicle': {

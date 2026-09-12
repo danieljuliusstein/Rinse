@@ -34,11 +34,79 @@ function loadEnvFile() {
 
 loadEnvFile()
 
-const API_PROXY_TARGET = (
+const { execSync } = require('child_process')
+
+function isLocalApiTarget(base) {
+  return /localhost|127\.0\.0\.1/i.test(base)
+}
+
+function isLocalApiReachable() {
+  try {
+    execSync('nc -z -w 1 127.0.0.1 3000', { stdio: 'ignore' })
+    return true
+  } catch {
+    return false
+  }
+}
+
+const configuredProxyTarget = (
   process.env.EXPO_PUBLIC_APP_API_URL ??
   process.env.APP_API_PROXY_TARGET ??
   'http://localhost:3000'
 ).replace(/\/$/, '')
+
+const API_PROXY_FALLBACK = 'https://app.rinsehq.com'
+
+const API_PROXY_TARGET =
+  isLocalApiTarget(configuredProxyTarget) && !isLocalApiReachable()
+    ? API_PROXY_FALLBACK
+    : configuredProxyTarget
+
+function forwardApiProxy(req, res, targetBase, targetPath, body, allowFallback) {
+  const target = new URL(`${targetBase}${targetPath}`)
+  const transport = target.protocol === 'http:' ? http : https
+
+  const headers = { ...req.headers }
+  delete headers.host
+  headers.host = target.host
+  if (body.length > 0) {
+    headers['content-length'] = String(body.length)
+  } else {
+    delete headers['content-length']
+  }
+
+  const proxyReq = transport.request(
+    {
+      protocol: target.protocol,
+      hostname: target.hostname,
+      port: target.port || (target.protocol === 'http:' ? 80 : 443),
+      path: `${target.pathname}${target.search}`,
+      method: req.method,
+      headers,
+    },
+    (proxyRes) => {
+      res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers)
+      proxyRes.pipe(res)
+    },
+  )
+
+  proxyReq.on('error', (err) => {
+    if (allowFallback && isLocalApiTarget(targetBase) && targetBase !== API_PROXY_FALLBACK) {
+      console.warn(
+        `[metro] API proxy ${targetBase} unreachable (${err.message}) — retrying → ${API_PROXY_FALLBACK}`,
+      )
+      forwardApiProxy(req, res, API_PROXY_FALLBACK, targetPath, body, false)
+      return
+    }
+    res.statusCode = 502
+    res.end(`API proxy error: ${err.message}`)
+  })
+
+  if (body.length > 0) {
+    proxyReq.write(body)
+  }
+  proxyReq.end()
+}
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(projectRoot)
@@ -82,34 +150,12 @@ config.server.enhanceMiddleware = (middleware) => {
 
     if (url.startsWith('/api-proxy')) {
       const targetPath = url.replace(/^\/api-proxy/, '') || '/'
-      const target = new URL(`${API_PROXY_TARGET}${targetPath}`)
-      const transport = target.protocol === 'http:' ? http : https
-
-      const headers = { ...req.headers }
-      delete headers.host
-      headers.host = target.host
-
-      const proxyReq = transport.request(
-        {
-          protocol: target.protocol,
-          hostname: target.hostname,
-          port: target.port || (target.protocol === 'http:' ? 80 : 443),
-          path: `${target.pathname}${target.search}`,
-          method: req.method,
-          headers,
-        },
-        (proxyRes) => {
-          res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers)
-          proxyRes.pipe(res)
-        }
-      )
-
-      proxyReq.on('error', (err) => {
-        res.statusCode = 502
-        res.end(`API proxy error: ${err.message}`)
+      const chunks = []
+      req.on('data', (c) => chunks.push(c))
+      req.on('end', () => {
+        const body = Buffer.concat(chunks)
+        forwardApiProxy(req, res, API_PROXY_TARGET, targetPath, body, true)
       })
-
-      req.pipe(proxyReq)
       return
     }
 
@@ -118,7 +164,13 @@ config.server.enhanceMiddleware = (middleware) => {
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  console.log(`[metro] API proxy → ${API_PROXY_TARGET}`)
+  if (API_PROXY_TARGET !== configuredProxyTarget) {
+    console.log(
+      `[metro] Local API (${configuredProxyTarget}) not running — API proxy → ${API_PROXY_TARGET}`,
+    )
+  } else {
+    console.log(`[metro] API proxy → ${API_PROXY_TARGET}`)
+  }
 }
 
 module.exports = config

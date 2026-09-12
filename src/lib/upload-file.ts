@@ -96,3 +96,51 @@ export async function uploadPocketBaseFile(input: {
 
   return body
 }
+
+/** Multipart PATCH for text fields (file deletes, JSON fields) — reliable on native RN. */
+export async function patchPocketBaseForm(
+  collection: string,
+  recordId: string,
+  fields: Record<string, string>,
+): Promise<Record<string, unknown>> {
+  const client = getPocketBase()
+  const token = client.authStore.token
+  if (!client.authStore.isValid || !token) {
+    throw new Error('PocketBase not authenticated')
+  }
+
+  const formData = new FormData()
+  for (const [key, value] of Object.entries(fields)) {
+    formData.append(key, value)
+  }
+
+  if (Platform.OS === 'web') {
+    return (await client.collection(collection).update(recordId, formData)) as Record<string, unknown>
+  }
+
+  const base = getPbUrl().replace(/\/$/, '')
+  const url = `${base}/api/collections/${collection}/records/${recordId}`
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: { Authorization: token },
+    body: formData,
+  })
+
+  let body: Record<string, unknown> = {}
+  try {
+    body = (await response.json()) as Record<string, unknown>
+  } catch {
+    body = {}
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      formatPocketBaseError(
+        { status: response.status, response: body, data: body },
+        `Update failed (${response.status})`,
+      ),
+    )
+  }
+
+  return body
+}

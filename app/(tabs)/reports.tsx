@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Platform, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import type { BusinessExpense, Invoice, JobWithRelations, OverheadExpense, QuoteWithRelations } from '@rinse/core'
 import { listJobs } from '@/src/lib/api'
@@ -37,6 +37,7 @@ import { filterJobsByRange } from '@/src/lib/jobs-revenue'
 import { listOverheadExpenses } from '@/src/lib/packages-api'
 import { listQuotes } from '@/src/lib/quotes-api'
 import { useModuleSearch } from '@/src/hooks/useModuleSearch'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import {
   computePLReport,
   computePLReportForDates,
@@ -69,6 +70,7 @@ function openQuoteCount(quotes: QuoteWithRelations[]): number {
 
 export default function ReportsScreen() {
   const { t } = useTranslation()
+  const router = useRouter()
   const dockPadding = useTabDockPadding()
   const [range, setRange] = useState<DateRangeKey | 'custom'>('this_month')
   const [customStart, setCustomStart] = useState('')
@@ -80,6 +82,10 @@ export default function ReportsScreen() {
   const [overheadItems, setOverheadItems] = useState<OverheadExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load(true)
+  })
   const [exporting, setExporting] = useState(false)
   const [chartView, setChartView] = useState<CashFlowMode>('compare')
   const { query, setQuery, visible: searchVisible, active: searchActive, toggle: toggleSearch, inputRef } =
@@ -445,7 +451,12 @@ export default function ReportsScreen() {
       title={t('business.title')}
       subtitle={`${rangeLabel} · ${report.jobCount} ${report.jobCount === 1 ? 'job' : 'jobs'}`}
       headerRight={
-        <ModuleHeaderActions onSearchPress={toggleSearch} searchActive={searchActive} />
+        <ModuleHeaderActions
+          onSearchPress={toggleSearch}
+          searchActive={searchActive}
+          onSettingsPress={() => router.push('/(tabs)/settings')}
+          settingsLabel={t('home.settings')}
+        />
       }
     >
       {searchVisible ? (
@@ -464,9 +475,7 @@ export default function ReportsScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />
-          }
+          refreshControl={refreshControl}
           contentContainerStyle={[styles.scroll, { paddingBottom: dockPadding }]}
         >
           <BusinessDatePills

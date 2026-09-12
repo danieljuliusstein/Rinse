@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { Copy } from 'phosphor-react-native'
+import { Copy } from '@/src/icons'
 import { AppText, SecondaryButton } from '@/src/components/ui'
 import {
   embedButtonScriptHtml,

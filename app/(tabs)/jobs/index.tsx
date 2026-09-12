@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Car, MapTrifold, Plus } from 'phosphor-react-native'
+import { Car, MapTrifold, Plus } from '@/src/icons'
 import type { TechRosterEntry } from '@rinse/core'
 import { deleteJob, listJobs, updateJob } from '@/src/lib/api'
 import type { JobWithRelations, Vehicle } from '@rinse/core'
@@ -15,6 +15,7 @@ import {
   CurrencyAmount,
   EmptyState,
   GreenHeaderButton,
+  IconHeaderButton,
   ListRow,
   ModuleHeaderActions,
   PillGroup,
@@ -27,6 +28,7 @@ import {
 import { useDataRefresh } from '@/src/providers/DataRefreshProvider'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
 import { useModuleSearch } from '@/src/hooks/useModuleSearch'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import {
   groupVehiclesByClient,
   listAllVehicles,
@@ -49,6 +51,7 @@ import { depositBadgeLabel, depositBadgeTone } from '@/src/lib/deposits'
 import { driveSubtitlesForDayJobs } from '@/src/lib/drive-time'
 import { loadSettings } from '@/src/lib/settings-store'
 import { normalizeTechRoster } from '@/src/lib/wave5-prefs'
+import { noScrollbarScrollProps } from '@/src/theme/invoice-surface'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 
 const VISIBLE_PER_SECTION = 4
@@ -112,6 +115,10 @@ export default function JobsScreen() {
       setRefreshing(false)
     }
   }, [t])
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load(true)
+  })
 
   useFocusEffect(
     useCallback(() => {
@@ -184,6 +191,14 @@ export default function JobsScreen() {
       return extras ? `${name} · ${extras}` : name
     }
     return jobListRowSubtitle(job)
+  }
+
+  const handleRoutePress = () => {
+    if (dateFilter) {
+      setRouteMode((v) => !v)
+      return
+    }
+    router.push('/(tabs)/routes' as never)
   }
 
   const showJobActions = (job: JobWithRelations) => {
@@ -351,8 +366,21 @@ export default function JobsScreen() {
     <OperatorScreen
       title={t('jobs.title')}
       subtitle={subtitle}
+      hideScrollbars
       headerRight={
-        <ModuleHeaderActions onSearchPress={toggleSearch} searchActive={searchActive}>
+        <ModuleHeaderActions
+          onSearchPress={toggleSearch}
+          searchActive={searchActive}
+          onSettingsPress={() => router.push('/(tabs)/settings')}
+          settingsLabel={t('home.settings')}
+        >
+          <IconHeaderButton label={t('home.routes')} onPress={handleRoutePress} active={routeMode}>
+            <MapTrifold
+              size={18}
+              color={routeMode ? colors.greenText : colors.textSecondary}
+              weight="duotone"
+            />
+          </IconHeaderButton>
           <GreenHeaderButton label={t('jobs.add')} onPress={() => router.push('/jobs/new')}>
             <Plus size={18} color="#fff" weight="bold" />
           </GreenHeaderButton>
@@ -371,8 +399,8 @@ export default function JobsScreen() {
         />
       ) : null}
 
-      <View style={styles.techRow}>
-        {showTechFilterChips ? (
+      {showTechFilterChips ? (
+        <View style={styles.techRow}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -380,43 +408,9 @@ export default function JobsScreen() {
             contentContainerStyle={styles.techChips}
           >
             <PillGroup inline options={techChipOptions} value={techFilter} onChange={setTechFilter} />
-              {/*
-              TODO(team-filter): Team CTA — opens Settings → Team to manage tech roster.
-              Shown beside assignee filter chips; not itself a filter value.
-              Needs: import { UserPlus } from 'phosphor-react-native'
-              <Pressable
-                onPress={() => router.push('/settings/team')}
-                style={styles.addTech}
-                accessibilityRole="button"
-                accessibilityLabel="Add technicians"
-              >
-                <UserPlus size={16} color={colors.greenText} weight="bold" />
-                <AppText variant="caption" style={styles.addTechText}>
-                  Team
-                </AppText>
-              </Pressable>
-            */}
           </ScrollView>
-        ) : (
-          <View style={styles.techChipsSpacer} />
-        )}
-        <Pressable
-          onPress={() => {
-            if (!dateFilter) {
-              Alert.alert('Route', 'Open a day from Home (or filter by date) to reorder stops.')
-              return
-            }
-            setRouteMode((v) => !v)
-          }}
-          style={[styles.routeToggle, routeMode && styles.routeToggleOn]}
-          accessibilityRole="button"
-        >
-          <MapTrifold size={14} color={routeMode ? '#fff' : colors.textSecondary} weight="bold" />
-          <AppText variant="caption" style={[styles.routeToggleText, routeMode && styles.routeToggleTextOn]}>
-            Route
-          </AppText>
-        </Pressable>
-      </View>
+        </View>
+      ) : null}
 
       {dateFilter && routeMode ? (
         <View style={styles.routeBanner}>
@@ -456,9 +450,8 @@ export default function JobsScreen() {
         />
       ) : (
         <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />
-          }
+          {...noScrollbarScrollProps}
+          refreshControl={refreshControl}
           contentContainerStyle={[styles.list, { paddingBottom: dockPadding }]}
         >
           {sections.map((section) => {
@@ -512,27 +505,11 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     minHeight: 44,
   },
-  techChipsSpacer: {
-    flex: 1,
-  },
   techChips: {
     alignItems: 'center',
     gap: spacing.xs,
     paddingVertical: 8,
     paddingRight: spacing.sm,
-  },
-  addTech: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: iconTonePalette.green.bg,
-  },
-  addTechText: {
-    color: colors.greenText,
-    fontWeight: '600',
   },
   dateBanner: {
     alignSelf: 'flex-start',
@@ -594,28 +571,6 @@ const styles = StyleSheet.create({
     color: colors.greenText,
     fontWeight: '700',
     fontSize: 16,
-  },
-  routeToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  routeToggleOn: {
-    backgroundColor: colors.green,
-    borderColor: colors.green,
-  },
-  routeToggleText: {
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  routeToggleTextOn: {
-    color: '#fff',
   },
   trailingTime: {
     fontSize: 12,

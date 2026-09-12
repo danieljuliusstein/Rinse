@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
-import { Plus, Receipt } from 'phosphor-react-native'
+import { Plus, Receipt } from '@/src/icons'
 import type { BusinessExpense, BusinessExpenseInput } from '@rinse/core'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { BusinessExpenseSheet } from '@/src/components/expenses/BusinessExpenseSheet'

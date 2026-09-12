@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { Check } from 'phosphor-react-native'
+import { Check } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import { InvoiceTemplateMock } from '@/src/components/invoice/InvoiceTemplateMock'
 import { INVOICE_TEMPLATES, type InvoiceTemplateId } from '@/src/lib/invoice-templates'

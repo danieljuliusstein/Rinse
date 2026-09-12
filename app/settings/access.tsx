@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native'
 import { useRouter } from 'expo-router'
-import { Check } from 'phosphor-react-native'
+import { Check } from '@/src/icons'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { DeveloperToolsPanel } from '@/src/components/settings/DeveloperToolsPanel'
 import {

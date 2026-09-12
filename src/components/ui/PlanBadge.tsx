@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native'
-import { Archive, Crown, Leaf, Sparkle, Tag } from 'phosphor-react-native'
+import { Archive, Crown, Leaf, Sparkle, Tag } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import {
   hasStarterAccess,

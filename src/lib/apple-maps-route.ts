@@ -11,7 +11,14 @@ export type AppleMapsDayRouteResult =
   | { ok: true; url: string; truncated: boolean; omittedCount: number }
   | { ok: false; reason: 'no_stops' }
 
+/**
+ * Prefer the address string the operator sees over cached coords.
+ * Stale/wrong lat,lng pins are a common cause of “wrong address” in Maps.
+ * Fall back to coords only when there is no address text.
+ */
 function appleMapsPoint(stop: AppleMapsStop): string | null {
+  const address = stop.address?.trim()
+  if (address) return address
   if (
     stop.lat != null &&
     stop.lng != null &&
@@ -20,8 +27,32 @@ function appleMapsPoint(stop: AppleMapsStop): string | null {
   ) {
     return `${stop.lat},${stop.lng}`
   }
-  const address = stop.address?.trim()
-  return address ? address : null
+  return null
+}
+
+function pointKey(point: string): string {
+  return point.trim().toLowerCase()
+}
+
+/** Collapse A→A→B into A→B so shop + garage source don’t double up. */
+function dedupeConsecutive(points: string[]): string[] {
+  const out: string[] = []
+  for (const point of points) {
+    const prev = out[out.length - 1]
+    if (prev != null && pointKey(prev) === pointKey(point)) continue
+    out.push(point)
+  }
+  return out
+}
+
+/**
+ * Apple Maps expects percent-encoding (`%20`), not form-urlencoded (`+`).
+ * `URLSearchParams` uses `+` for spaces, which often geocodes to the wrong place.
+ */
+function appleMapsQuery(params: Array<[string, string]>): string {
+  return params
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&')
 }
 
 /**
@@ -36,17 +67,22 @@ export function appleMapsDayRouteUrl(
   stops: AppleMapsStop[],
   opts?: { depotAddress?: string | null },
 ): AppleMapsDayRouteResult {
-  const points = stops
-    .map(appleMapsPoint)
-    .filter((point): point is string => Boolean(point))
+  const depot = opts?.depotAddress?.trim() || ''
+  let points = dedupeConsecutive(
+    stops.map(appleMapsPoint).filter((point): point is string => Boolean(point)),
+  )
+
+  // Garage is already `source` — drop leading job stops that are the same place.
+  if (depot) {
+    const depotKey = pointKey(depot)
+    while (points.length > 0 && pointKey(points[0]!) === depotKey) {
+      points = points.slice(1)
+    }
+  }
 
   if (points.length === 0) {
     return { ok: false, reason: 'no_stops' }
   }
-
-  const depot = opts?.depotAddress?.trim() || ''
-  const params = new URLSearchParams()
-  params.set('mode', 'driving')
 
   let truncated = false
   let omittedCount = 0
@@ -64,17 +100,18 @@ export function appleMapsDayRouteUrl(
 
   const destination = routeStops[routeStops.length - 1]!
   const waypoints = routeStops.slice(0, -1)
+  const query: Array<[string, string]> = [['mode', 'driving']]
   if (depot) {
-    params.set('source', depot)
+    query.push(['source', depot])
   }
-  params.set('destination', destination)
+  query.push(['destination', destination])
   for (const waypoint of waypoints) {
-    params.append('waypoint', waypoint)
+    query.push(['waypoint', waypoint])
   }
 
   return {
     ok: true,
-    url: `https://maps.apple.com/directions?${params.toString()}`,
+    url: `https://maps.apple.com/directions?${appleMapsQuery(query)}`,
     truncated,
     omittedCount,
   }

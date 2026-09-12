@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { WarningCircle } from 'phosphor-react-native'
+import { WarningCircle } from '@/src/icons'
 import { fmt } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
 import { colors, spacing, webInlinePressableReset } from '@/src/theme/colors'

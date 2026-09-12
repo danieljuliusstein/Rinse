@@ -1,8 +1,19 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Image as ImageIcon } from 'phosphor-react-native'
+import {
+  ClipboardText,
+  Calendar,
+  Clock,
+  FileText,
+  GearSix,
+  Image as ImageIcon,
+  MapPin,
+  NavigationArrow,
+  PaperPlaneTilt,
+  Wallet,
+} from '@/src/icons'
 import {
   countJobPhotosByType,
   jobExpensesForDisplay,
@@ -12,7 +23,6 @@ import {
   mapJobStatusForDisplay,
   marginPct,
   netProfit,
-  effectiveRate,
   requiresPreJobInspection,
 } from '@rinse/core'
 import type { Invoice, JobPhoto, JobWithRelations } from '@rinse/core'
@@ -37,7 +47,17 @@ import { AppText } from '@/src/components/ui/AppText'
 import { useTabDockPadding } from '@/src/hooks/useTabDockPadding'
 import { Badge } from '@/src/components/ui/Badge'
 import { CurrencyAmount } from '@/src/components/ui/CurrencyAmount'
-import { ListRow } from '@/src/components/ui/ListRow'
+import { AccordionSection } from '@/src/components/ui/AccordionSection'
+import { DetailRow } from '@/src/components/ui/DetailRow'
+import { TextActionRow } from '@/src/components/ui/TextActionRow'
+import { JobStatusPanel } from '@/src/components/detail/JobStatusPanel'
+import { useJobTimer } from '@/src/hooks/useJobTimer'
+import {
+  jobDetailPriority,
+  paymentsAccordionHint,
+  photosAccordionHint,
+  type JobDetailSection,
+} from '@/src/lib/job-detail-priority'
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button'
 import { SharePayLinkSheet } from '@/src/components/invoice/SharePayLinkSheet'
 import { CollectDepositSheet } from '@/src/components/jobs/CollectDepositSheet'
@@ -51,8 +71,9 @@ import {
   normalizeTechRoster,
 } from '@/src/lib/wave5-prefs'
 import type { BusinessPolicies, TipPrefs, TechRosterEntry } from '@rinse/core'
-import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
+import { colors, spacing } from '@/src/theme/colors'
 import { listEntityEvents, type EntityEvent } from '@/src/lib/entity-events'
+import { navigateAfterClose } from '@/src/lib/navigate-after-close'
 
 function JobHistorySection({ jobId }: { jobId: string }) {
   const [events, setEvents] = useState<EntityEvent[]>([])
@@ -115,6 +136,64 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
   const [cancelOpen, setCancelOpen] = useState(false)
   const [depositBusy, setDepositBusy] = useState(false)
   const [sharePayOpen, setSharePayOpen] = useState(false)
+  const [openSection, setOpenSection] = useState<JobDetailSection | null>(null)
+  const jobRef = useRef<JobWithRelations | null>(null)
+
+  const navigateAway = useCallback(
+    (href: string) => {
+      navigateAfterClose(onClose, () => router.push(href as never))
+    },
+    [onClose, router],
+  )
+
+  const handleTimerStop = useCallback(
+    async (hours: number) => {
+      const current = jobRef.current
+      if (!current) return
+      const nextStatus = current.status === 'scheduled' ? 'in_progress' : current.status
+      if (requiresPreJobInspection(current.status, nextStatus) && !jobHasPreJobInspection(current)) {
+        Alert.alert(
+          'Walkthrough required',
+          'Complete the pre-job liability walkthrough before starting this job.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open walkthrough',
+              onPress: () => {
+                navigateAway(`/jobs/${jobId}/inspection`)
+              },
+            },
+          ],
+        )
+        return
+      }
+      const updated = await updateJob(jobId, {
+        date: current.date,
+        packageId: current.package_id,
+        vehicleType: current.vehicle_type,
+        locationType: current.location_type,
+        revenue: current.revenue,
+        tip: current.tip,
+        hours_worked: Math.round(hours * 100) / 100,
+        start_time: current.start_time,
+        status: nextStatus,
+        notes: current.notes,
+      })
+      setJob(updated)
+    },
+    [jobId, navigateAway],
+  )
+
+  const timer = useJobTimer(jobId, (hours) => void handleTimerStop(hours))
+
+  useEffect(() => {
+    if (!job) return
+    const next = jobDetailPriority(job, {
+      hasInvoice: Boolean(invoice),
+      timerRunning: timer.running,
+    })
+    setOpenSection(next.expandedSection)
+  }, [job, invoice, timer.running])
 
   const load = useCallback(async () => {
     setError(null)
@@ -182,10 +261,20 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
     )
   }
 
+  jobRef.current = job
+
+  const priority = jobDetailPriority(job, {
+    hasInvoice: Boolean(invoice),
+    timerRunning: timer.running,
+  })
+
+  const toggleSection = (section: JobDetailSection) => {
+    setOpenSection((current) => (current === section ? null : section))
+  }
+
   const status = mapJobStatusForDisplay(job)
   const profit = netProfit(job)
   const margin = marginPct(job)
-  const rate = effectiveRate(job)
   const expenses = jobExpensesForDisplay(job)
   const invoiceChip = invoice ? invoiceStatusChip(invoice.status) : null
   const isUpcoming = job.status === 'scheduled' || job.status === 'in_progress'
@@ -374,8 +463,7 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
         {
           text: 'Add photos',
           onPress: () => {
-            onClose?.()
-            router.push(`/(tabs)/jobs/${jobId}/photos` as never)
+            navigateAway(`/(tabs)/jobs/${jobId}/photos`)
           },
         },
       ])
@@ -390,42 +478,37 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
     }
   }
 
-  const handleTimerStop = async (hours: number) => {
-    const nextStatus = job.status === 'scheduled' ? 'in_progress' : job.status
-    if (requiresPreJobInspection(job.status, nextStatus) && !jobHasPreJobInspection(job)) {
-      Alert.alert(
-        'Walkthrough required',
-        'Complete the pre-job liability walkthrough before starting this job.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Open walkthrough',
-            onPress: () => {
-              onClose?.()
-              router.push(`/jobs/${jobId}/inspection` as never)
-            },
-          },
-        ],
-      )
-      return
-    }
-    const updated = await updateJob(jobId, {
-      date: job.date,
-      packageId: job.package_id,
-      vehicleType: job.vehicle_type,
-      locationType: job.location_type,
-      revenue: job.revenue,
-      tip: job.tip,
-      hours_worked: Math.round(hours * 100) / 100,
-      start_time: job.start_time,
-      status: nextStatus,
-      notes: job.notes,
-    })
-    setJob(updated)
-  }
-
   const contentPadding = variant === 'overlay' ? spacing.md : 0
   const bottomPad = variant === 'screen' ? dockPadding : spacing.xl
+  const statusEyebrow = [dateLabel, timeLabel].filter(Boolean).join(' · ').toUpperCase()
+
+  const handlePrimaryAction = () => {
+    switch (priority.primaryAction) {
+      case 'on_my_way':
+        void handleOnMyWay()
+        break
+      case 'timer_toggle':
+        timer.toggle()
+        break
+      case 'create_invoice':
+        void handleCreateInvoice()
+        break
+      case 'open_invoice':
+        if (invoice) {
+          navigateAway(`/invoices/${invoice.id}`)
+        }
+        break
+      case 'share_pay_link':
+        setSharePayOpen(true)
+        break
+      default:
+        break
+    }
+  }
+
+  const openPhotos = () => {
+    navigateAway(`/(tabs)/jobs/${jobId}/photos`)
+  }
 
   return (
     <ScrollView
@@ -450,6 +533,12 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
         <ConflictBanner onRefresh={() => void handleRefreshFromServer()} refreshing={refreshing} />
       ) : null}
 
+      <JobStatusPanel
+        eyebrow={statusEyebrow}
+        heading={priority.guidanceHeading}
+        statusTone={statusBadgeTone(status)}
+      />
+
       <View style={styles.card}>
         <AppText variant="caption" style={styles.kvLabel}>
           VEHICLE
@@ -467,286 +556,299 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
       </View>
 
       <View style={[styles.card, styles.serviceCard]}>
-        {(
-          [
-            { label: 'Service', value: job.package?.name ?? '—' },
-            { label: 'Time', value: timeLabel || dateLabel },
-            { label: 'Technician', value: techName, chip: true },
-            { label: 'Status', value: status.replace('_', ' '), badge: true },
-          ] as const
-        ).map((row, i, arr) => (
-          <View
-            key={row.label}
-            style={[styles.serviceRow, i < arr.length - 1 && styles.serviceRowBorder]}
-          >
-            <AppText variant="body" style={styles.muted}>
-              {row.label}
-            </AppText>
-            {'badge' in row && row.badge ? (
-              <Badge tone={statusBadgeTone(status)} label={String(row.value)} />
-            ) : 'chip' in row && row.chip ? (
-              <View style={styles.techChip}>
-                <AppText variant="caption" style={styles.techChipText}>
-                  {String(row.value)}
-                </AppText>
-              </View>
-            ) : (
-              <AppText variant="bodySemiBold">{String(row.value)}</AppText>
-            )}
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.moneyRow}>
-          <AppText variant="bodySemiBold">Deposit</AppText>
-          {depositTone && depositLabel ? <Badge tone={depositTone} label={depositLabel} /> : null}
-        </View>
-        {job.deposit_status === 'due' || (!job.deposit_status && depositDueAmount > 0) ? (
-          <>
-            <AppText variant="caption" style={styles.muted}>
-              ${depositDueAmount.toFixed(2)} due at booking
-            </AppText>
-            <PrimaryButton label="Collect Deposit" onPress={() => setDepositOpen(true)} />
-          </>
-        ) : null}
-        {job.deposit_status === 'paid' ? (
-          <AppText variant="caption" style={styles.profit}>
-            ✓ ${(job.deposit_amount ?? depositDueAmount).toFixed(2)} collected
-          </AppText>
-        ) : null}
-        {job.deposit_status === 'waived' ? (
-          <AppText variant="caption" style={styles.muted}>
-            Deposit waived
-          </AppText>
-        ) : null}
-      </View>
-
-      <Pressable
-        style={styles.card}
-        onPress={() => {
-          onClose?.()
-          router.push(`/(tabs)/jobs/${jobId}/photos` as never)
-        }}
-      >
-        <AppText variant="sectionLabel">Before / After</AppText>
-        <AppText variant="body">
-          {photoCounts.before} before · {photoCounts.after} after
-        </AppText>
-        <AppText variant="caption" style={styles.muted}>
-          {jobPhotoCompletenessMessage(photoCounts)}
-        </AppText>
-      </Pressable>
-
-      {job.client ? (
-        <PrimaryButton label="Share Pay Link / Tip" onPress={() => setSharePayOpen(true)} />
-      ) : null}
-
-      {isUpcoming ? (
-        <SecondaryButton
-          label={completing ? t('jobDetail.markingComplete') : t('jobDetail.markComplete')}
-          loading={completing}
-          onPress={() => promptComplete()}
+        <DetailRow label="Service" value={job.package?.name ?? '—'} />
+        <DetailRow label="Time" value={timeLabel || dateLabel} />
+        <DetailRow label="Technician" value={techName} chip />
+        <DetailRow
+          label="Status"
+          value={status.replace('_', ' ')}
+          badge
+          badgeTone={statusBadgeTone(status)}
+          isLast
         />
-      ) : null}
+      </View>
 
-      {job.status === 'scheduled' || job.status === 'in_progress' ? (
-        <View style={styles.card}>
-          <AppText variant="sectionLabel">{t('jobDetail.liability')}</AppText>
-          {jobHasPreJobInspection(job) ? (
-            <AppText variant="caption" style={styles.muted}>
-              Completed — view docs or export PDF
-            </AppText>
-          ) : (
-            <AppText variant="caption" style={styles.muted}>
-              Required before moving to In progress
-            </AppText>
-          )}
-          <PrimaryButton
-            label={jobHasPreJobInspection(job) ? t('jobDetail.viewWalkthrough') : t('jobDetail.startWalkthrough')}
-            onPress={() => {
-              onClose?.()
-              router.push(`/jobs/${job.id}/inspection` as never)
-            }}
-          />
-        </View>
-      ) : null}
-
-      <JobTimer jobId={job.id} onStopped={(hours) => void handleTimerStop(hours)} />
-
-      <View style={styles.card}>
-        <View style={styles.moneyRow}>
-          <AppText variant="body">{t('common.revenue')}</AppText>
-          <CurrencyAmount value={job.revenue + job.tip} variant="revenue" />
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.moneyRow}>
-          <AppText variant="bodySemiBold">{t('jobDetail.netProfit')}</AppText>
-          <CurrencyAmount value={profit} variant="profit" />
-        </View>
-        <View style={styles.rateRow}>
-          <AppText variant="caption" style={styles.margin}>
-            Margin {margin}%
+      {priority.hideActions ? (
+        <View style={styles.cancelledNote}>
+          <AppText variant="body" style={styles.muted}>
+            Actions unavailable — job cancelled.
           </AppText>
-          {rate != null ? (
-            <>
-              <AppText variant="caption" style={styles.margin}>
-                {' · '}
-              </AppText>
-              <CurrencyAmount value={rate} variant="neutral" precision="detailed" style={styles.margin} />
-              <AppText variant="caption" style={styles.margin}>
-                /hr
-              </AppText>
-            </>
-          ) : null}
         </View>
-      </View>
-
-      {nextServiceDate ? (
-        <View style={styles.card}>
-          <AppText variant="sectionLabel">{t('jobDetail.nextService')}</AppText>
-          <AppText variant="body" style={styles.nextCopy}>
-            Suggested: {formatNextServiceLabel(nextServiceDate)} ({returnDays}-day cadence)
-          </AppText>
-          <PrimaryButton
-            label={t('jobDetail.bookNext')}
-            onPress={() => {
-              onClose?.()
-              router.push(`/jobs/new?client=${job.client_id}&date=${nextServiceDate}` as never)
-            }}
-          />
-        </View>
-      ) : null}
-
-      {job.location_type === 'mobile' && job.client?.address ? (
-        <SecondaryButton
-          label={t('common.directions')}
-          onPress={() => void Linking.openURL(openMaps(job.client!.address!))}
-        />
-      ) : null}
-
-      {job.client?.phone ? (
-        <>
-          <PrimaryButton label={t('jobDetail.onMyWay')} onPress={() => void handleOnMyWay()} />
-          <SecondaryButton label={t('jobDetail.textClient')} onPress={() => void handleTextClient()} />
-        </>
-      ) : null}
-
-      {expenses.length > 0 ? (
-        <View style={styles.section}>
-          <AppText variant="sectionLabel">{t('common.expenses')}</AppText>
-          {expenses.map((e, i) => (
-            <View key={`${e.category}-${i}`} style={styles.expenseRow}>
-              <AppText variant="body">{e.description || e.category}</AppText>
-              <CurrencyAmount value={e.amount} variant="expense" unsigned />
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-      <SecondaryButton
-        label={t('jobDetail.createQuote')}
-        onPress={() => {
-          onClose?.()
-          router.push(`/quotes/new?clientId=${job.client_id}&jobId=${job.id}` as never)
-        }}
-      />
-
-      <View style={styles.section}>
-        <AppText variant="sectionLabel">{t('common.invoice')}</AppText>
-        {invoice ? (
-          <>
-            <Pressable
-              style={styles.invoiceCard}
-              onPress={() => {
-                onClose?.()
-                router.push(`/invoices/${invoice.id}`)
-              }}
-            >
-              <View style={styles.invoiceRow}>
-                <AppText variant="bodySemiBold">{invoice.invoice_number}</AppText>
-                {invoiceChip ? <Badge tone={invoiceChip.tone} label={invoiceChip.label} /> : null}
-              </View>
-              <View style={styles.invoiceDueRow}>
-                <CurrencyAmount value={invoice.balance_due} variant="balance" precision="detailed" />
-                <AppText variant="caption" style={styles.muted}>
-                  {' '}
-                  due · Tap to edit
-                </AppText>
-              </View>
-            </Pressable>
-          </>
-        ) : (
-          <PrimaryButton
-            label={creatingInvoice ? t('jobDetail.creating') : t('jobDetail.createInvoice')}
-            loading={creatingInvoice}
-            onPress={() => void handleCreateInvoice()}
-          />
-        )}
-      </View>
-
-      {job.client ? (
-        <ShareLinkActions
-          clientId={job.client_id}
-          clientEmail={job.client.email}
-          clientName={job.client.name}
-          jobId={job.id}
-          context={invoice ? 'invoice' : isUpcoming ? 'appointment' : 'full'}
-          invoiceNumber={invoice?.invoice_number}
-          hasBeforeAndAfter={jobHasBeforeAndAfter(photos)}
-          onRequirePhotos={() => {
-            onClose?.()
-            router.push(`/(tabs)/jobs/${jobId}/photos` as never)
-          }}
-          onPdf={invoice ? () => void handleSharePdf() : undefined}
-          pdfLabel={t('jobDetail.sharePdf')}
-        />
-      ) : null}
-
-      <JobHistorySection jobId={jobId} />
-
-      <View style={styles.section}>
-        <ListRow
-          icon={<ImageIcon size={18} color={iconTonePalette.green.fg} weight="duotone" />}
-          iconTone="green"
-          title={t('common.photos')}
-          subtitle={jobPhotoCompletenessMessage(countJobPhotosByType(photos))}
-          onPress={() => {
-            onClose?.()
-            router.push(`/(tabs)/jobs/${jobId}/photos` as never)
-          }}
-        />
-        {jobHasBeforeAndAfter(photos) ? (
-          <SecondaryButton
-            label={t('jobDetail.shareBeforeAfter')}
-            onPress={() => void handleShareTransformation()}
-          />
-        ) : null}
-      </View>
-
-      {job.notes ? (
-        <View style={styles.section}>
-          <AppText variant="sectionLabel">{t('common.notes')}</AppText>
-          <View style={styles.card}>
-            <AppText variant="body">{job.notes}</AppText>
-          </View>
-        </View>
-      ) : null}
-
-      {variant === 'screen' ? (
-        <SecondaryButton label={t('jobDetail.editJob')} onPress={() => router.push(`/jobs/edit/${jobId}`)} />
-      ) : null}
-
-      {isUpcoming ? (
-        <>
-          <SecondaryButton label="Collect deposit" onPress={() => setDepositOpen(true)} />
-          <SecondaryButton
-            label={cancelling ? t('jobDetail.cancelling') : t('jobDetail.cancelAppointment')}
-            onPress={handleCancel}
-          />
-        </>
       ) : (
-        <SecondaryButton label="Deposit" onPress={() => setDepositOpen(true)} />
+        <>
+          {priority.primaryLabel && priority.primaryAction ? (
+            <PrimaryButton
+              label={
+                priority.primaryAction === 'create_invoice' && creatingInvoice
+                  ? t('jobDetail.creating')
+                  : priority.primaryLabel
+              }
+              loading={priority.primaryAction === 'create_invoice' && creatingInvoice}
+              onPress={handlePrimaryAction}
+            />
+          ) : null}
+
+          <AccordionSection
+            title="Job Progress"
+            hint={job.status === 'in_progress' ? 'Live' : `$${(job.revenue + job.tip).toFixed(0)} revenue`}
+            icon={<Clock size={19} color={colors.greenText} weight="duotone" />}
+            expanded={openSection === 'progress'}
+            onToggle={() => toggleSection('progress')}
+          >
+            <JobTimer jobId={job.id} embedded onStopped={(hours) => void handleTimerStop(hours)} />
+            <View style={styles.metricGrid}>
+              <View style={styles.metricCell}>
+                <AppText variant="caption" style={styles.metricLabel}>
+                  {t('common.revenue')}
+                </AppText>
+                <CurrencyAmount value={job.revenue + job.tip} variant="revenue" />
+              </View>
+              <View style={[styles.metricCell, styles.metricDivider]}>
+                <AppText variant="caption" style={styles.metricLabel}>
+                  {t('jobDetail.netProfit')}
+                </AppText>
+                <CurrencyAmount value={profit} variant="profit" />
+              </View>
+              <View style={[styles.metricCell, styles.metricDivider]}>
+                <AppText variant="caption" style={styles.metricLabel}>
+                  Margin
+                </AppText>
+                <AppText variant="bodySemiBold" style={styles.metricValue}>
+                  {margin}%
+                </AppText>
+              </View>
+            </View>
+            {isUpcoming ? (
+              <SecondaryButton
+                label={completing ? t('jobDetail.markingComplete') : t('jobDetail.markComplete')}
+                loading={completing}
+                onPress={() => promptComplete()}
+              />
+            ) : null}
+            {(job.status === 'scheduled' || job.status === 'in_progress') && (
+              <>
+                <AppText variant="caption" style={styles.muted}>
+                  {jobHasPreJobInspection(job)
+                    ? 'Walkthrough completed'
+                    : 'Walkthrough required before In progress'}
+                </AppText>
+                <TextActionRow
+                  label={
+                    jobHasPreJobInspection(job)
+                      ? t('jobDetail.viewWalkthrough')
+                      : t('jobDetail.startWalkthrough')
+                  }
+                  icon={<ClipboardText size={17} color={colors.greenText} weight="duotone" />}
+                  onPress={() => {
+                    navigateAway(`/jobs/${job.id}/inspection`)
+                  }}
+                />
+              </>
+            )}
+            {expenses.length > 0 ? (
+              <View style={styles.expenseList}>
+                <AppText variant="sectionLabel">{t('common.expenses')}</AppText>
+                {expenses.map((e, i) => (
+                  <View key={`${e.category}-${i}`} style={styles.expenseRow}>
+                    <AppText variant="body">{e.description || e.category}</AppText>
+                    <CurrencyAmount value={e.amount} variant="expense" unsigned />
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </AccordionSection>
+
+          <AccordionSection
+            title="Payments"
+            hint={paymentsAccordionHint(job, depositDueAmount)}
+            icon={<Wallet size={19} color={colors.greenText} weight="duotone" />}
+            expanded={openSection === 'payments'}
+            onToggle={() => toggleSection('payments')}
+          >
+            <View style={styles.depositSummary}>
+              <View>
+                <AppText variant="sectionLabel">DEPOSIT</AppText>
+                <AppText variant="bodySemiBold">
+                  ${(job.deposit_amount ?? depositDueAmount).toFixed(2)}
+                </AppText>
+                <AppText variant="caption" style={styles.muted}>
+                  {job.deposit_status === 'paid'
+                    ? 'Collected'
+                    : job.deposit_status === 'waived'
+                      ? 'Waived'
+                      : 'Due at booking'}
+                </AppText>
+              </View>
+              {depositTone && depositLabel ? <Badge tone={depositTone} label={depositLabel} /> : null}
+            </View>
+            {(job.deposit_status === 'due' || (!job.deposit_status && depositDueAmount > 0)) && (
+              <SecondaryButton label="Collect deposit" onPress={() => setDepositOpen(true)} />
+            )}
+            {job.client ? (
+              <TextActionRow
+                label="Share pay link / tip"
+                icon={<PaperPlaneTilt size={16} color={colors.greenText} weight="duotone" />}
+                onPress={() => setSharePayOpen(true)}
+              />
+            ) : null}
+          </AccordionSection>
+
+          <AccordionSection
+            title="Photos"
+            hint={photosAccordionHint(photoCounts.before, photoCounts.after)}
+            icon={<ImageIcon size={19} color={colors.greenText} weight="duotone" />}
+            expanded={openSection === 'photos'}
+            onToggle={() => toggleSection('photos')}
+          >
+            <AppText variant="body" style={styles.accordionBody}>
+              {jobPhotoCompletenessMessage(photoCounts)}
+            </AppText>
+            <SecondaryButton
+              label="Add photos"
+              onPress={openPhotos}
+              style={styles.accordionOutlineButton}
+            />
+            {jobHasBeforeAndAfter(photos) ? (
+              <TextActionRow
+                label={t('jobDetail.shareBeforeAfter')}
+                icon={<ImageIcon size={17} color={colors.greenText} weight="duotone" />}
+                onPress={() => void handleShareTransformation()}
+              />
+            ) : null}
+          </AccordionSection>
+
+          <AccordionSection
+            title="Client Communication"
+            hint={
+              job.client?.phone
+                ? `${job.status === 'scheduled' ? 3 : 2} actions`
+                : 'No phone on file'
+            }
+            icon={<NavigationArrow size={19} color={colors.greenText} weight="duotone" />}
+            expanded={openSection === 'communication'}
+            onToggle={() => toggleSection('communication')}
+          >
+            {job.location_type === 'mobile' && job.client?.address ? (
+              <TextActionRow
+                label={t('common.directions')}
+                icon={<MapPin size={17} color={colors.greenText} weight="duotone" />}
+                onPress={() => void Linking.openURL(openMaps(job.client!.address!))}
+              />
+            ) : null}
+            {job.client?.phone ? (
+              <>
+                <TextActionRow
+                  label={t('jobDetail.onMyWay')}
+                  icon={<NavigationArrow size={17} color={colors.greenText} weight="duotone" />}
+                  highlighted={job.status === 'scheduled'}
+                  onPress={() => void handleOnMyWay()}
+                />
+                <TextActionRow
+                  label={t('jobDetail.textClient')}
+                  icon={<PaperPlaneTilt size={17} color={colors.greenText} weight="duotone" />}
+                  onPress={() => void handleTextClient()}
+                />
+              </>
+            ) : null}
+            <TextActionRow
+              label={t('jobDetail.createQuote')}
+              icon={<FileText size={17} color={colors.greenText} weight="duotone" />}
+              onPress={() => {
+                navigateAway(`/quotes/new?clientId=${job.client_id}&jobId=${job.id}`)
+              }}
+            />
+          </AccordionSection>
+
+          <AccordionSection
+            title="Billing"
+            hint={invoice ? invoice.invoice_number : 'Invoice & portal'}
+            icon={<FileText size={19} color={colors.greenText} weight="duotone" />}
+            expanded={openSection === 'billing'}
+            onToggle={() => toggleSection('billing')}
+          >
+            {invoice ? (
+              <Pressable
+                style={styles.invoiceCard}
+                onPress={() => {
+                  navigateAway(`/invoices/${invoice.id}`)
+                }}
+              >
+                <View style={styles.invoiceRow}>
+                  <AppText variant="bodySemiBold">{invoice.invoice_number}</AppText>
+                  {invoiceChip ? <Badge tone={invoiceChip.tone} label={invoiceChip.label} /> : null}
+                </View>
+                <View style={styles.invoiceDueRow}>
+                  <CurrencyAmount value={invoice.balance_due} variant="balance" precision="detailed" />
+                  <AppText variant="caption" style={styles.muted}>
+                    {' '}
+                    due · Tap to edit
+                  </AppText>
+                </View>
+              </Pressable>
+            ) : (
+              <TextActionRow
+                label={creatingInvoice ? t('jobDetail.creating') : t('jobDetail.createInvoice')}
+                icon={<FileText size={17} color={colors.greenText} weight="duotone" />}
+                highlighted={job.status === 'completed' || job.status === 'invoiced'}
+                onPress={() => void handleCreateInvoice()}
+              />
+            )}
+            {job.client ? (
+              <ShareLinkActions
+                clientId={job.client_id}
+                clientEmail={job.client.email}
+                clientName={job.client.name}
+                jobId={job.id}
+                context={invoice ? 'invoice' : isUpcoming ? 'appointment' : 'full'}
+                invoiceNumber={invoice?.invoice_number}
+                hasBeforeAndAfter={jobHasBeforeAndAfter(photos)}
+                onRequirePhotos={openPhotos}
+                onPdf={invoice ? () => void handleSharePdf() : undefined}
+                pdfLabel={t('jobDetail.sharePdf')}
+              />
+            ) : null}
+            {nextServiceDate ? (
+              <>
+                <AppText variant="caption" style={styles.muted}>
+                  Suggested next: {formatNextServiceLabel(nextServiceDate)} ({returnDays}-day cadence)
+                </AppText>
+                <TextActionRow
+                  label={t('jobDetail.bookNext')}
+                  icon={<Calendar size={17} color={colors.greenText} weight="duotone" />}
+                  onPress={() => {
+                    navigateAway(`/jobs/new?client=${job.client_id}&date=${nextServiceDate}`)
+                  }}
+                />
+              </>
+            ) : null}
+          </AccordionSection>
+
+          <JobHistorySection jobId={jobId} />
+
+          {job.notes ? (
+            <View style={styles.section}>
+              <AppText variant="sectionLabel">{t('common.notes')}</AppText>
+              <View style={styles.card}>
+                <AppText variant="body">{job.notes}</AppText>
+              </View>
+            </View>
+          ) : null}
+
+          {variant === 'screen' ? (
+            <TextActionRow
+              label={t('jobDetail.editJob')}
+              icon={<GearSix size={17} color={colors.greenText} weight="duotone" />}
+              onPress={() => router.push(`/jobs/edit/${jobId}`)}
+            />
+          ) : null}
+
+          {isUpcoming ? (
+            <SecondaryButton
+              label={cancelling ? t('jobDetail.cancelling') : t('jobDetail.cancelAppointment')}
+              onPress={handleCancel}
+            />
+          ) : null}
+        </>
       )}
 
       <CollectDepositSheet
@@ -817,23 +919,11 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
           hasBeforeAndAfter={jobHasBeforeAndAfter(photos)}
           onRequirePhotos={() => {
             setSharePayOpen(false)
-            onClose?.()
-            router.push(`/(tabs)/jobs/${jobId}/photos` as never)
+            navigateAway(`/(tabs)/jobs/${jobId}/photos`)
           }}
         />
       ) : null}
     </ScrollView>
-  )
-}
-
-function KvCell({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.kv}>
-      <AppText variant="caption" style={styles.kvLabel}>
-        {label.toUpperCase()}
-      </AppText>
-      <AppText variant="bodySemiBold">{value}</AppText>
-    </View>
   )
 }
 
@@ -864,38 +954,54 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   serviceCard: {
-    paddingVertical: 0,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     gap: 0,
   },
-  serviceRow: {
+  cancelledNote: {
+    backgroundColor: colors.surfaceActive,
+    borderRadius: 12,
+    padding: spacing.md,
+  },
+  metricGrid: {
+    flexDirection: 'row',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+  },
+  metricCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  metricDivider: {
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderLeftColor: colors.border,
+  },
+  metricLabel: {
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    fontSize: 10,
+  },
+  metricValue: {
+    color: colors.greenText,
+  },
+  depositSummary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 11,
+    alignItems: 'flex-start',
+    gap: spacing.sm,
   },
-  serviceRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+  expenseList: {
+    gap: spacing.xs,
   },
-  techChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: iconTonePalette.green.bg,
+  accordionBody: {
+    color: colors.textSecondary,
   },
-  techChipText: {
-    color: colors.greenText,
-    fontWeight: '600',
-  },
-  kvGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  kv: {
-    width: '46%',
-    gap: 2,
+  accordionOutlineButton: {
+    alignSelf: 'stretch',
+    width: '100%',
+    borderColor: colors.greenBorder,
   },
   kvLabel: {
     color: colors.textMuted,

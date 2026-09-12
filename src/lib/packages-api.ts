@@ -1,7 +1,9 @@
 import type { OverheadExpense, OverheadInput, Package, PackageInput } from '@rinse/core'
 import { getPocketBase } from './pocketbase'
 import { isOnline } from './network'
+import { formatPocketBaseError } from './pocketbase-errors'
 import { requireOrganizationId } from './org'
+import { requireOrganizationIdForWrite } from './org-write'
 
 function pb() {
   const client = getPocketBase()
@@ -35,24 +37,48 @@ export async function listAllPackages(): Promise<Package[]> {
   return records.map((r) => mapPackage(r as Record<string, unknown>))
 }
 
-export async function createPackage(input: PackageInput): Promise<Package> {
-  const orgId = requireOrganizationId()
-  const record = await pb().collection('packages').create({
-    organization_id: orgId,
-    name: input.name,
+function toPackagePayload(input: PackageInput): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    name: input.name.trim(),
     base_price: input.base_price,
-    description: input.description ?? '',
-    expected_return_days: input.expected_return_days ?? 30,
-    duration_minutes: input.duration_minutes ?? 60,
-    default_supplies: input.default_supplies ?? [],
     active: input.active ?? true,
-  })
-  return mapPackage(record as Record<string, unknown>)
+  }
+  if (input.description !== undefined) payload.description = input.description
+  if (input.expected_return_days !== undefined) payload.expected_return_days = input.expected_return_days
+  if (input.duration_minutes !== undefined) payload.duration_minutes = input.duration_minutes
+  if (input.default_supplies?.length) payload.default_supplies = input.default_supplies
+  return payload
+}
+
+function toPackagePatch(input: Partial<PackageInput>): Record<string, unknown> {
+  const payload: Record<string, unknown> = {}
+  if (input.name !== undefined) payload.name = input.name.trim()
+  if (input.base_price !== undefined) payload.base_price = input.base_price
+  if (input.description !== undefined) payload.description = input.description
+  if (input.expected_return_days !== undefined) payload.expected_return_days = input.expected_return_days
+  if (input.duration_minutes !== undefined) payload.duration_minutes = input.duration_minutes
+  if (input.default_supplies !== undefined) payload.default_supplies = input.default_supplies
+  if (input.active !== undefined) payload.active = input.active
+  return payload
+}
+
+export async function createPackage(input: PackageInput): Promise<Package> {
+  const orgId = await requireOrganizationIdForWrite()
+  try {
+    const record = await pb().collection('packages').create({
+      organization_id: orgId,
+      ...toPackagePayload(input),
+    })
+    return mapPackage(record as Record<string, unknown>)
+  } catch (err) {
+    throw new Error(formatPocketBaseError(err, 'Could not create package'))
+  }
 }
 
 export async function updatePackage(id: string, input: Partial<PackageInput>): Promise<Package | null> {
+  await requireOrganizationIdForWrite()
   try {
-    const record = await pb().collection('packages').update(id, input)
+    const record = await pb().collection('packages').update(id, toPackagePatch(input))
     return mapPackage(record as Record<string, unknown>)
   } catch {
     return null
@@ -60,6 +86,7 @@ export async function updatePackage(id: string, input: Partial<PackageInput>): P
 }
 
 export async function deletePackage(id: string): Promise<boolean> {
+  await requireOrganizationIdForWrite()
   try {
     await pb().collection('packages').update(id, { active: false })
     return true
@@ -92,17 +119,21 @@ export async function listOverheadExpenses(): Promise<OverheadExpense[]> {
 }
 
 export async function createOverheadExpense(input: OverheadInput): Promise<OverheadExpense> {
-  const orgId = requireOrganizationId()
-  const record = await pb().collection('overhead_expenses').create({
-    organization_id: orgId,
-    name: input.name,
-    amount: input.amount,
-    category: input.category ?? 'other',
-    billing_cycle: input.billing_cycle ?? 'monthly',
-    next_due: input.next_due ?? '',
-    notes: input.notes ?? '',
-  })
-  return mapOverhead(record as Record<string, unknown>)
+  const orgId = await requireOrganizationIdForWrite()
+  try {
+    const record = await pb().collection('overhead_expenses').create({
+      organization_id: orgId,
+      name: input.name,
+      amount: input.amount,
+      category: input.category ?? 'other',
+      billing_cycle: input.billing_cycle ?? 'monthly',
+      next_due: input.next_due ?? '',
+      notes: input.notes ?? '',
+    })
+    return mapOverhead(record as Record<string, unknown>)
+  } catch (err) {
+    throw new Error(formatPocketBaseError(err, 'Could not create expense'))
+  }
 }
 
 export async function updateOverheadExpense(

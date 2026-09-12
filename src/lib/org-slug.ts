@@ -16,10 +16,14 @@ export async function loadOrganizationSlug(): Promise<string | null> {
 }
 
 export function appOrigin(): string {
-  // Customer-facing booking/portal links — prefer public web origin when API is local.
-  return (
-    process.env.EXPO_PUBLIC_WEB_ORIGIN ??
-    process.env.EXPO_PUBLIC_APP_API_URL ??
-    'https://rinsehq.com'
-  ).replace(/\/$/, '')
+  // Customer-facing booking/portal links — app host (not marketing rinsehq.com).
+  const web = process.env.EXPO_PUBLIC_WEB_ORIGIN?.trim()
+  if (web) return web.replace(/\/$/, '')
+
+  const api = process.env.EXPO_PUBLIC_APP_API_URL?.trim()
+  if (api && !/localhost|127\.0\.0\.1/i.test(api)) {
+    return api.replace(/\/$/, '')
+  }
+
+  return 'https://app.rinsehq.com'
 }

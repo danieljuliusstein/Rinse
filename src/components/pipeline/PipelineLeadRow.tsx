@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Alert, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { DotsThreeVertical } from 'phosphor-react-native'
+import { DotsThreeVertical } from '@/src/icons'
 import type { LeadStage, LeadWithRelations } from '@rinse/core'
 import { AppText } from '@/src/components/ui/AppText'
 import { Badge } from '@/src/components/ui/Badge'

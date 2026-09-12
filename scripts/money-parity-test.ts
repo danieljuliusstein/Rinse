@@ -2,7 +2,7 @@
  * Mobile money-parity test (task 5.2).
  *
  * PURPOSE: prove that the MOBILE app's money aggregation
- * (`apps/mobile-wave5-crm/src/lib/reports.ts`) produces exactly the same P&L
+ * (`apps/rinse-mobile/src/lib/reports.ts`) produces exactly the same P&L
  * numbers as the canonical `@rinse/core` baseline when fed the SAME shared
  * fixture the cross-app parity suite uses. This is the mobile half of the
  * Requirement 4.1 equality guarantee.

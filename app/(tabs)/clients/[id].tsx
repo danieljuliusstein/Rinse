@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ClientDetailBody } from '@/src/components/detail/ClientDetailBody'
 import { DetailHeaderActions } from '@/src/components/DetailHeaderActions'
@@ -6,6 +7,7 @@ import { OperatorScreen } from '@/src/components/OperatorScreen'
 export default function ClientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
+  const [header, setHeader] = useState<{ title: string; subtitle?: string } | null>(null)
 
   if (!id) {
     return (
@@ -17,7 +19,8 @@ export default function ClientDetailScreen() {
 
   return (
     <OperatorScreen
-      title="Client"
+      title={header?.title ?? 'Client'}
+      subtitle={header?.subtitle}
       headerRight={
         <DetailHeaderActions
           onEdit={() => router.push(`/clients/edit/${id}`)}
@@ -25,7 +28,12 @@ export default function ClientDetailScreen() {
         />
       }
     >
-      <ClientDetailBody clientId={id} onClose={() => router.back()} variant="screen" />
+      <ClientDetailBody
+        clientId={id}
+        onClose={() => router.back()}
+        onMetaChange={setHeader}
+        variant="screen"
+      />
     </OperatorScreen>
   )
 }

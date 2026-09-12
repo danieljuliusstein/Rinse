@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { House, MapPin } from 'phosphor-react-native'
+import { House, MapPin } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { selectionHaptic } from '@/src/lib/haptics'
 import { colors, radii, spacing, webInlinePressableReset } from '@/src/theme/colors'

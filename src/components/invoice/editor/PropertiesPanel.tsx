@@ -1,4 +1,4 @@
-import { Minus, Plus, TextAlignCenter, TextAlignLeft, TextAlignRight } from 'phosphor-react-native'
+import { Minus, Plus, TextAlignCenter, TextAlignLeft, TextAlignRight } from '@/src/icons'
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { AppText } from '@/src/components/ui'
 import {

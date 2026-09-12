@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ChartBar, Plus, SquaresFour, Briefcase, Users } from 'phosphor-react-native'
+import { ChartBar, Plus, SquaresFour, Briefcase, Users } from '@/src/icons'
 import { useRouter } from 'expo-router'
 import { AppText } from '@/src/components/ui/AppText'
 import { useQuickAction } from '@/src/providers/QuickActionProvider'

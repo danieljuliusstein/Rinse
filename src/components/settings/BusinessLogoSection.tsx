@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Alert, Image, Pressable, StyleSheet, View } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
-import { Image as ImageIcon } from 'phosphor-react-native'
+import { Image as ImageIcon } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import { hasCustomBusinessLogo, resolveBusinessLogoSrc } from '@/src/lib/business-logo'
 import { validateLogoAsset } from '@/src/lib/logo-upload'

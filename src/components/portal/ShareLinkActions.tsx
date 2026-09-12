@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, Image, Linking, Platform, StyleSheet, View } from 'react-native'
+import { Alert, Linking, Platform, StyleSheet, View } from 'react-native'
 import { formatShareEmailBody, transformationPdfMissingMessage } from '@rinse/core'
 import { createPortalLink, shareTransformationPdf } from '@/src/lib/share'
 import { SHARE_LINK_PRESETS, type ShareLinkContext } from '@/src/lib/share-link-presets'
 import { loadSettings } from '@/src/lib/settings-store'
 import { checkPremiumGate } from '@/src/lib/subscription'
-import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
+import { AppText, PrimaryButton, SecondaryButton, ShareQrCode } from '@/src/components/ui'
 import { TipsSheet } from '@/src/components/invoice/TipsSheet'
 import { DEFAULT_TIP_PREFS, normalizeTipPrefs } from '@/src/lib/wave5-prefs'
 import type { TipPrefs } from '@rinse/core'
@@ -165,10 +165,6 @@ export function ShareLinkActions({
     else void handleEmail()
   }
 
-  const qrUri = url
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`
-    : null
-
   return (
     <View style={styles.root}>
       <AppText variant="sectionLabel">{preset.sectionTitle}</AppText>
@@ -179,14 +175,7 @@ export function ShareLinkActions({
         </AppText>
       ) : null}
 
-      {qrUri ? (
-        <View style={styles.qrWrap}>
-          <Image source={{ uri: qrUri }} style={styles.qr} accessibilityLabel="QR code for portal link" />
-          <AppText variant="caption" style={styles.qrLabel}>
-            Scan to open portal
-          </AppText>
-        </View>
-      ) : null}
+      {url ? <ShareQrCode url={url} size={120} label="Scan to open portal" /> : null}
 
       <PrimaryButton
         label={preset.primaryActionLabel}
@@ -249,20 +238,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-  },
-  qrWrap: {
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-  },
-  qr: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  qrLabel: {
-    color: colors.textMuted,
   },
   hint: {
     color: colors.textMuted,

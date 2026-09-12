@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { CaretRight, FileText, Receipt } from 'phosphor-react-native'
+import { CaretRight, FileText, Receipt } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import { colors, spacing, webPressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'

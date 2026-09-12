@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { Garage } from 'phosphor-react-native'
+import { Garage } from '@/src/icons'
 import { AppText, Badge } from '@/src/components/ui'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 

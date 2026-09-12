@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { CalendarBlank, FileText } from 'phosphor-react-native'
+import { CalendarBlank, FileText } from '@/src/icons'
 import type { JobWithRelations, LeadStage, LeadWithRelations } from '@rinse/core'
 import { SubScreen } from '@/src/components/SubScreen'
 import {

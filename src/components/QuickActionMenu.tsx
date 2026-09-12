@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Briefcase, FileText, Flask, Receipt, Scan, Wallet, type Icon } from 'phosphor-react-native'
+import { Briefcase, FileText, Flask, Receipt, Scan, Wallet, type Icon } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { useSheetDismissGesture } from '@/src/hooks/useSheetDismissGesture'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
@@ -31,12 +31,14 @@ export function QuickActionMenu() {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const { width: windowWidth, height: windowHeight } = useWindowDimensions()
-  const sheetOffscreen = Math.max(windowHeight + 48, SHEET_OFFSCREEN_FALLBACK)
-
   const reduceMotion = useReduceMotion()
   const { menuOpen, closeMenu } = useQuickAction()
   const [mounted, setMounted] = useState(menuOpen)
   const skipCloseAnimation = useRef(false)
+
+  // Must clear the full sheet height — a fixed 480px leave the panel peeking,
+  // then unmount makes it "stop then vanish".
+  const sheetOffscreen = Math.max(windowHeight + 48, SHEET_OFFSCREEN_FALLBACK)
 
   const sheetWidth =
     Platform.OS === 'web' ? Math.min(windowWidth, layout.phoneColumnWidth) : windowWidth

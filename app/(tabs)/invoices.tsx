@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Camera, Receipt, Wallet } from 'phosphor-react-native'
+import { Camera, Receipt, Wallet } from '@/src/icons'
 import { fmt, jobHasBeforeAndAfter, transformationPdfMissingMessage } from '@rinse/core'
 import type { Client, Invoice } from '@rinse/core'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import {
   AppFlashList,
   AppText,
@@ -36,6 +37,7 @@ import {
 } from '@/src/lib/invoices-list'
 import { useSafeBack } from '@/src/lib/safe-go-back'
 import { trackProductEvent } from '@/src/lib/telemetry'
+import { noScrollbarScrollProps } from '@/src/theme/invoice-surface'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 
 export default function InvoicesScreen() {
@@ -49,6 +51,10 @@ export default function InvoicesScreen() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load(true)
+  })
   const [error, setError] = useState<string | null>(null)
   const dockPadding = useTabDockPadding()
 
@@ -212,7 +218,7 @@ export default function InvoicesScreen() {
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+      <ScrollView horizontal {...noScrollbarScrollProps} style={styles.filterScroll}>
         <PillGroup
           options={INVOICE_FILTERS.map((f) => ({ value: f.key, label: t(f.labelKey) }))}
           value={filter}
@@ -220,7 +226,7 @@ export default function InvoicesScreen() {
         />
       </ScrollView>
       {filter === 'open' || filter === 'overdue' ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.agingScroll}>
+        <ScrollView horizontal {...noScrollbarScrollProps} style={styles.agingScroll}>
           <Pressable
             style={[styles.agingChip, agingFilter === null && styles.agingChipOn]}
             onPress={() => setAgingFilter(null)}
@@ -255,6 +261,7 @@ export default function InvoicesScreen() {
       title={t('invoices.title')}
       subtitle={t('jobs.shown', { count: filtered.length })}
       onBack={goBack}
+      invoiceSurface
       headerRight={
         <View style={styles.headerActions}>
           <IconHeaderButton label="Scan" onPress={() => router.push('/scan')}>
@@ -286,9 +293,7 @@ export default function InvoicesScreen() {
           data={rows}
           keyExtractor={(item) => (item.kind === 'invoice' ? item.inv.id : item.key)}
           ListHeaderComponent={listHeader}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />
-          }
+          refreshControl={refreshControl}
           renderItem={({ item, index }) => renderRow(item, index)}
           contentContainerStyle={[styles.list, { paddingBottom: dockPadding }]}
         />

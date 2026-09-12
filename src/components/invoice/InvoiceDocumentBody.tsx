@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Image, Linking, Pressable, StyleSheet, View } from 'react-native'
+import { Image, Pressable, StyleSheet, View } from 'react-native'
 import { InvoiceLayoutDocument } from '@/src/components/invoice/InvoiceLayoutDocument'
 import { AppText } from '@/src/components/ui'
 import { accentTint } from '@/src/lib/brand-color'
@@ -10,6 +10,7 @@ import {
   INVOICE_STATUS_COLORS,
   type InvoiceViewModel,
 } from '@/src/lib/invoice-layout'
+import { openPortalPreview } from '@/src/lib/open-portal-preview'
 import { colors, radii, spacing, webInlinePressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
@@ -199,7 +200,7 @@ function InvoiceDocumentFlow({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="View invoice online"
-            onPress={() => void Linking.openURL(model.portalUrl!)}
+            onPress={() => void openPortalPreview(model.portalUrl!)}
             style={[styles.viewBtn, webInlinePressableReset, { backgroundColor: accent }]}
           >
             <AppText style={styles.viewBtnText}>View invoice online</AppText>
@@ -440,7 +441,7 @@ const styles = StyleSheet.create({
   viewBtnText: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    color: '#071407',
+    color: '#ffffff',
   },
   accentBar: {
     height: 3,

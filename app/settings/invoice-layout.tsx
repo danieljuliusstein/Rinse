@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ImagePickerAsset } from 'expo-image-picker'
-import { Alert, StyleSheet, View } from 'react-native'
+import { Alert, BackHandler, StyleSheet, View } from 'react-native'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { InvoiceLayoutEditor } from '@/src/components/invoice/editor/InvoiceLayoutEditor'
 import { logoMetaFromUri } from '@/src/components/settings/BusinessLogoSection'
@@ -20,9 +20,11 @@ import {
   saveSettings,
   uploadBusinessLogo,
 } from '@/src/lib/settings-store'
+import { useSafeBack } from '@/src/lib/safe-go-back'
 import { spacing } from '@/src/theme/colors'
 
 export default function SettingsInvoicingScreen() {
+  const goBack = useSafeBack('/settings/invoicing')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [layout, setLayout] = useState<InvoiceEditorLayout | null>(null)
@@ -56,6 +58,14 @@ export default function SettingsInvoicingScreen() {
   useEffect(() => {
     void refresh().finally(() => setLoading(false))
   }, [refresh])
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      goBack()
+      return true
+    })
+    return () => sub.remove()
+  }, [goBack])
 
   const handleSave = async (next: InvoiceEditorLayout) => {
     setSaving(true)
@@ -111,17 +121,23 @@ export default function SettingsInvoicingScreen() {
 
   if (loading || !layout) {
     return (
-      <SettingsScreen title="Preview & Customize" bottomPadding={0}>
+      <SettingsScreen
+        title="Preview & Customize"
+        bottomPadding={0}
+        fallbackHref="/settings/invoicing"
+        invoiceSurface
+      >
         <ScreenLoading variant="list" />
       </SettingsScreen>
     )
   }
 
   return (
-    <SettingsScreen title="Preview & Customize" bottomPadding={0}>
+    <SettingsScreen title="Preview & Customize" bottomPadding={0} fallbackHref="/settings/invoicing">
       <View style={styles.fill}>
         <InvoiceLayoutEditor
           initialLayout={layout}
+          onDone={goBack}
           businessName={businessName}
           businessEmail={businessEmail}
           businessAddress={businessAddress}

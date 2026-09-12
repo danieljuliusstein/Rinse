@@ -2,7 +2,7 @@
 
 ## Overview
 
-Both the mobile CRM (`apps/mobile-wave5-crm`) and the desktop CRM (`apps/api`)
+Both the mobile CRM (`apps/rinse-mobile`) and the desktop CRM (`apps/api`)
 compute money figures from PocketBase `jobs` and `invoices`, but each keeps its
 own copy of the math. They have drifted, and cancelled (soft-deleted) jobs are
 excluded on mobile but included on desktop. This design makes `@rinse/core` the
@@ -20,7 +20,7 @@ needed.
 - `isActiveJob(job)` => `job.status !== 'cancelled'` and `activeJobs(jobs)`.
 - `mapJobStatusForDisplay` handles `cancelled`.
 
-### Mobile (`apps/mobile-wave5-crm`)
+### Mobile (`apps/rinse-mobile`)
 - `src/lib/api.ts` `listJobs` / `getClientJobs`: PocketBase query uses
   `filter: 'status != "cancelled"'` AND wraps results in `activeJobs(...)`
   (belt-and-suspenders). Cancelled jobs never reach the money math.
@@ -97,7 +97,7 @@ it rather than maintaining copies.
 
 ### 3. Migrate mobile to core aggregation
 
-- `apps/mobile-wave5-crm/src/lib/reports.ts`: re-export
+- `apps/rinse-mobile/src/lib/reports.ts`: re-export
   `computePLReportForDates`, `computePLReport`, `rangeFor`, `priorRangeFor`,
   `jobInRange`, `reportBoundsFor`, `lifetimeActivityStart`, and `PLReport` from
   `@rinse/core`. Preserve mobile-only bits (e.g. `parseReportDate`,

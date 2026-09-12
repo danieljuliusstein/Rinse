@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
-import { TrendUp } from 'phosphor-react-native'
+import { TrendUp } from '@/src/icons'
 import { fmt } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
 import { smoothPath } from '@/src/lib/smooth-path'

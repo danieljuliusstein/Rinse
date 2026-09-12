@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native'
 import { useRouter } from 'expo-router'
-import { CurrencyDollar, Wallet } from 'phosphor-react-native'
+import { CurrencyDollar, Wallet } from '@/src/icons'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { ListRow, SectionGroup } from '@/src/components/ui'
 import { SignOutBlockedError } from '@/src/lib/auth'

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
-import { WarningCircle } from 'phosphor-react-native'
+import { WarningCircle } from '@/src/icons'
 import { useOrgSubscription } from '@/src/hooks/useOrgSubscription'
 import { usePaywallGateContext } from '@/src/providers/PaywallGateProvider'
 import { STARTER_PLAN } from '@/src/lib/plans'

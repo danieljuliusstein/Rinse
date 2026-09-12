@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { Boat, Bus, Car, Check, DotsThree, Jeep, Truck, type Icon } from 'phosphor-react-native'
+import { Boat, Bus, Car, Check, DotsThree, Jeep, Truck, type Icon } from '@/src/icons'
 import type { VehicleType } from '@rinse/core'
 import { AppText } from '@/src/components/ui/AppText'
 import { selectionHaptic } from '@/src/lib/haptics'

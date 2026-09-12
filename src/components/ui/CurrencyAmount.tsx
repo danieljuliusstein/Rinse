@@ -4,7 +4,7 @@ import { AppText } from './AppText'
 import { colors } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
-/** Matches PWA `CurrencyAmount` — DM Sans tabular, not Syne display. */
+/** Matches PWA `CurrencyAmount` — Inter tabular figures for money. */
 export type CurrencyVariant = 'revenue' | 'expense' | 'profit' | 'balance' | 'neutral'
 export type CurrencyPrecision = 'macro' | 'line-item' | 'detailed'
 export type CurrencySize = 'default' | 'stat' | 'hero'

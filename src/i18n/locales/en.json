@@ -177,7 +177,7 @@
     "stops": "{{count}} stops",
     "garageTitle": "Your garage",
     "garageStartBadge": "Start",
-    "garagePinnedHint": "Always first — can’t be reordered",
+    "garagePinnedHint": "Always first",
     "emptyTitle": "No stops this day",
     "emptyBody": "Schedule jobs or pick another day to build your drive order.",
     "moveUp": "Move stop up",

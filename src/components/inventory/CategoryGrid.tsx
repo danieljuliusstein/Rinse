@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { CaretRight, Flask, Package, Star, Wrench, type IconProps } from 'phosphor-react-native'
+import { CaretRight, Flask, Package, Star, Wrench, type IconProps } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import type { CategoryMeta, SectionKey } from '@/src/lib/inventory-utils'
 import { SECTION_CONFIG } from '@/src/lib/inventory-utils'

@@ -16,7 +16,7 @@ import { requireOrganizationId } from './org'
 import { isOfflineWritesEnabled } from './subscription-fetch'
 import { enqueue } from './offline/queue'
 import { fileUriToDataUrl } from './offline/sync-files'
-import { uploadPocketBaseFile } from './upload-file'
+import { uploadPocketBaseFile, patchPocketBaseForm } from './upload-file'
 
 export function mapInvoiceFromRecord(record: Record<string, unknown>): Invoice {
   const payments = Array.isArray(record.payments) ? (record.payments as Payment[]) : []
@@ -327,15 +327,28 @@ export async function uploadJobPhoto(
 
 export async function deleteJobPhoto(jobId: string, filename: string): Promise<void> {
   await assertOnline('Deleting photo')
-  const record = await pb().collection('jobs').getOne(jobId)
+
+  let record: Record<string, unknown>
+  try {
+    record = (await pb().collection('jobs').getOne(jobId)) as Record<string, unknown>
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : 'Could not load job'
+    throw new Error(`Could not load job photos (${detail})`)
+  }
+
   const meta = Array.isArray(record.photo_meta)
     ? (record.photo_meta as PhotoMeta[]).filter((m) => m.filename !== filename)
     : []
 
-  const formData = new FormData()
-  formData.append('photos-', filename)
-  await pb().collection('jobs').update(jobId, formData)
-  await pb().collection('jobs').update(jobId, { photo_meta: meta })
+  try {
+    await patchPocketBaseForm('jobs', jobId, {
+      'photos-': filename,
+      photo_meta: JSON.stringify(meta),
+    })
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : 'Server rejected delete'
+    throw new Error(`Could not remove "${filename}" (${detail})`)
+  }
 }
 
 export function invoiceBadgeTone(status: InvoiceStatus): 'draft' | 'green' | 'amber' | 'yellow' | 'red' {

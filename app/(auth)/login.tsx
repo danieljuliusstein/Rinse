@@ -114,7 +114,7 @@ export default function LoginScreen() {
   }
 
   const openLegal = (path: '/terms' | '/privacy') => {
-    const origin = (process.env.EXPO_PUBLIC_WEB_ORIGIN ?? process.env.EXPO_PUBLIC_APP_API_URL ?? 'https://rinsehq.com').replace(/\/$/, '')
+    const origin = (process.env.EXPO_PUBLIC_WEB_ORIGIN ?? process.env.EXPO_PUBLIC_APP_API_URL ?? 'https://app.rinsehq.com').replace(/\/$/, '')
     void Linking.openURL(`${origin}${path}`)
   }
 

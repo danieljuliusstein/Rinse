@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Sparkle } from 'phosphor-react-native'
+import { Sparkle } from '@/src/icons'
 import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
 import { EARLY_PLAN, FREE_PLAN, FOUNDING_PLAN, STARTER_PLAN } from '@/src/lib/plans'
 import {

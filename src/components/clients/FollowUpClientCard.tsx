@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
-import { Clock } from 'phosphor-react-native'
+import { Clock, X } from '@/src/icons'
 import type { ClientWithStats } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
 import { timeAgo } from '@/src/lib/client-relationship-logic'
@@ -27,7 +27,12 @@ function followUpAction(client: ClientWithStats): { label: string; action: 'rebo
   return { label: 'Chase', action: 'open' }
 }
 
-export function FollowUpClientCard({ client }: { client: ClientWithStats }) {
+type FollowUpClientCardProps = {
+  client: ClientWithStats
+  onClearPress: (client: ClientWithStats) => void
+}
+
+export function FollowUpClientCard({ client, onClearPress }: FollowUpClientCardProps) {
   const router = useRouter()
   const { openClient } = useDetailNavigation()
   const action = followUpAction(client)
@@ -50,12 +55,23 @@ export function FollowUpClientCard({ client }: { client: ClientWithStats }) {
             openClient(client.id)
           }
         }}
+        accessibilityRole="button"
+        accessibilityLabel={action.label}
       >
         <View>
           <AppText variant="bodySemiBold" style={styles.actionLabel}>
             {action.label}
           </AppText>
         </View>
+      </Pressable>
+      <Pressable
+        style={({ pressed }) => [styles.dismiss, pressed && styles.pressed]}
+        onPress={() => onClearPress(client)}
+        accessibilityRole="button"
+        accessibilityLabel="Clear follow-up"
+        hitSlop={8}
+      >
+        <X size={16} color={colors.textMuted} weight="bold" />
       </Pressable>
     </View>
   )
@@ -90,6 +106,13 @@ const styles = StyleSheet.create({
   actionLabel: {
     color: colors.greenText,
     fontSize: 14,
+  },
+  dismiss: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pressed: {
     opacity: 0.85,

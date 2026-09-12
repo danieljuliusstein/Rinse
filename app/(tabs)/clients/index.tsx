@@ -1,11 +1,12 @@
-import { useCallback, useMemo, useState } from 'react'
-import { Alert, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { DownloadSimple, Plus, SortAscending, UploadSimple } from 'phosphor-react-native'
+import { DownloadSimple, Plus, SortAscending, UploadSimple } from '@/src/icons'
 import type { ClientWithStats } from '@rinse/core'
 import { listClientsWithStats } from '@/src/lib/api'
 import { ClientCard } from '@/src/components/clients/ClientCard'
+import { FollowUpClearSheet } from '@/src/components/clients/FollowUpClearSheet'
 import { FollowUpClientCard } from '@/src/components/clients/FollowUpClientCard'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import {
@@ -21,6 +22,7 @@ import {
 } from '@/src/components/ui'
 import { useDataRefresh } from '@/src/providers/DataRefreshProvider'
 import { useModuleSearch } from '@/src/hooks/useModuleSearch'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import { formatClientsCsv, shareTextExport } from '@/src/lib/data-export'
 import {
   buildDerivedMap,
@@ -34,6 +36,16 @@ import {
   type ClientSegment,
   type ClientSort,
 } from '@/src/lib/client-relationship-logic'
+import {
+  DEFAULT_FOLLOW_UP_PREFS,
+  dismissUntilNextJobInPrefs,
+  isFollowUpSuppressed,
+  loadFollowUpPrefs,
+  pruneFollowUpPrefs,
+  saveFollowUpPrefs,
+  snoozeClientInPrefs,
+  type FollowUpPrefs,
+} from '@/src/lib/follow-up-prefs-store'
 import { colors, spacing, webInlinePressableReset } from '@/src/theme/colors'
 
 const CLIENTS_VISIBLE = 5
@@ -52,15 +64,29 @@ export default function ClientsScreen() {
   const [showAllRest, setShowAllRest] = useState(false)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load(true)
+  })
   const [error, setError] = useState<string | null>(null)
+  const [followUpPrefs, setFollowUpPrefs] = useState<FollowUpPrefs>({
+    ...DEFAULT_FOLLOW_UP_PREFS,
+    suppressions: {},
+  })
+  const [clearTarget, setClearTarget] = useState<ClientWithStats | null>(null)
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
     setError(null)
     try {
-      const rows = await listClientsWithStats()
+      const [rows, prefs] = await Promise.all([listClientsWithStats(), loadFollowUpPrefs()])
+      const pruned = pruneFollowUpPrefs(prefs, rows)
+      if (pruned !== prefs) {
+        void saveFollowUpPrefs(pruned)
+      }
       setClients(rows)
+      setFollowUpPrefs(pruned)
     } catch (e) {
       setError(e instanceof Error ? e.message : t('clients.loadFailed'))
     } finally {
@@ -76,26 +102,70 @@ export default function ClientsScreen() {
   )
 
   const derivedMap = useMemo(() => buildDerivedMap(clients), [clients])
-  const overdue = useMemo(() => overdueClients(clients), [clients])
+  const showFollowUpSection = followUpPrefs.showFollowUpSection
+  const overdue = useMemo(() => {
+    if (!showFollowUpSection) return []
+    return overdueClients(clients).filter((c) => !isFollowUpSuppressed(c, followUpPrefs))
+  }, [clients, followUpPrefs, showFollowUpSection])
   const topClients = useMemo(() => topClientsByRevenue(clients, 3), [clients])
+
+  const segmentChips = useMemo(
+    () =>
+      showFollowUpSection
+        ? CLIENT_SEGMENT_CHIPS
+        : CLIENT_SEGMENT_CHIPS.filter((c) => c.key !== 'followup'),
+    [showFollowUpSection],
+  )
 
   const filtered = useMemo(() => {
     const searched = searchClients(clients, query)
-    const segmented = filterClientsBySegment(searched, segment)
+    let segmented = filterClientsBySegment(searched, segment)
+    if (segment === 'followup') {
+      segmented = segmented.filter((c) => !isFollowUpSuppressed(c, followUpPrefs))
+    }
     return sortClients(segmented, sort)
-  }, [clients, query, segment, sort])
+  }, [clients, query, segment, sort, followUpPrefs])
 
   const allRest = useMemo(() => {
     const topIds = new Set(topClients.map((c) => c.id))
-    const overdueIds = new Set(overdue.map((c) => c.id))
+    // When follow-up section is hidden, overdue clients stay in the main list
+    const overdueIds = showFollowUpSection ? new Set(overdue.map((c) => c.id)) : new Set<string>()
     return clients
       .filter((c) => !topIds.has(c.id) && !overdueIds.has(c.id))
       .sort((a, b) => b.totalRevenue - a.totalRevenue)
-  }, [clients, topClients, overdue])
+  }, [clients, topClients, overdue, showFollowUpSection])
 
   const visibleRest = showAllRest ? allRest : allRest.slice(0, CLIENTS_VISIBLE)
   const hiddenRest = allRest.length - visibleRest.length
   const searching = query.trim().length > 0
+
+  const persistFollowUpPrefs = useCallback(async (next: FollowUpPrefs) => {
+    setFollowUpPrefs(next)
+    await saveFollowUpPrefs(next)
+  }, [])
+
+  const handleSheetSnooze = useCallback(
+    (days: number) => {
+      if (!clearTarget) return
+      const next = snoozeClientInPrefs(followUpPrefs, clearTarget.id, days)
+      setClearTarget(null)
+      void persistFollowUpPrefs(next)
+    },
+    [clearTarget, followUpPrefs, persistFollowUpPrefs],
+  )
+
+  const handleSheetDismissUntilNextJob = useCallback(() => {
+    if (!clearTarget) return
+    const next = dismissUntilNextJobInPrefs(followUpPrefs, clearTarget)
+    setClearTarget(null)
+    void persistFollowUpPrefs(next)
+  }, [clearTarget, followUpPrefs, persistFollowUpPrefs])
+
+  useEffect(() => {
+    if (!showFollowUpSection && segment === 'followup') {
+      setSegment('all')
+    }
+  }, [showFollowUpSection, segment])
 
   const handleExport = async () => {
     try {
@@ -139,6 +209,8 @@ export default function ClientsScreen() {
               key="right"
               onSearchPress={toggleSearch}
               searchActive={searchActive}
+              onSettingsPress={() => router.push('/(tabs)/settings')}
+              settingsLabel={t('home.settings')}
             >
               <IconHeaderButton label={t('clients.add')} onPress={() => router.push('/clients/new')}>
                 <Plus size={18} color={colors.textSecondary} weight="bold" />
@@ -167,7 +239,7 @@ export default function ClientsScreen() {
       >
         <PillGroup
           inline
-          options={CLIENT_SEGMENT_CHIPS.map((c) => ({ value: c.key, label: t(c.labelKey) }))}
+          options={segmentChips.map((c) => ({ value: c.key, label: t(c.labelKey) }))}
           value={segment}
           onChange={setSegment}
         />
@@ -233,7 +305,7 @@ export default function ClientsScreen() {
         <AppFlashList
           data={filtered}
           keyExtractor={(item) => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}
+          refreshControl={refreshControl}
           renderItem={({ item, index }) => (
             <StaggeredListItem index={index}>
               <ClientCard client={item} derived={derivedMap.get(item.id)!} />
@@ -244,15 +316,19 @@ export default function ClientsScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}
+          refreshControl={refreshControl}
           contentContainerStyle={[styles.list, { paddingBottom: dockPadding }]}
         >
-          {overdue.length > 0 ? (
+          {showFollowUpSection && overdue.length > 0 ? (
             <View style={styles.block}>
               <AppText variant="sectionLabel">{t('clients.followUp')}</AppText>
               <View style={styles.followUpList}>
                 {overdue.map((client) => (
-                  <FollowUpClientCard key={client.id} client={client} />
+                  <FollowUpClientCard
+                    key={client.id}
+                    client={client}
+                    onClearPress={setClearTarget}
+                  />
                 ))}
               </View>
             </View>
@@ -290,6 +366,12 @@ export default function ClientsScreen() {
           ) : null}
         </ScrollView>
       )}
+      <FollowUpClearSheet
+        target={clearTarget ? { id: clearTarget.id, name: clearTarget.name } : null}
+        onClose={() => setClearTarget(null)}
+        onSnooze={handleSheetSnooze}
+        onDismissUntilNextJob={handleSheetDismissUntilNextJob}
+      />
     </OperatorScreen>
   )
 }

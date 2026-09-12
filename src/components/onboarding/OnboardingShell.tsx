@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ArrowLeft } from 'phosphor-react-native'
+import { ArrowLeft } from '@/src/icons'
 import { AppText, PrimaryButton } from '@/src/components/ui'
 import { SetupStepIn } from '@/src/components/motion/SetupStepIn'
 import {

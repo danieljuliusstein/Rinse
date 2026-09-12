@@ -1,4 +1,4 @@
-import { ArrowClockwise, ArrowCounterClockwise } from 'phosphor-react-native'
+import { ArrowClockwise, ArrowCounterClockwise } from '@/src/icons'
 import { Pressable, StyleSheet, Switch, View } from 'react-native'
 import { AppText } from '@/src/components/ui'
 import { EDITOR_CHROME } from '@/src/lib/invoice-editor'
@@ -10,6 +10,7 @@ export function EditorToolbar({
   canRedo,
   snapEnabled,
   saving,
+  onDone,
   onTemplate,
   onUndo,
   onRedo,
@@ -20,6 +21,7 @@ export function EditorToolbar({
   canRedo: boolean
   snapEnabled: boolean
   saving?: boolean
+  onDone: () => void
   onTemplate: () => void
   onUndo: () => void
   onRedo: () => void
@@ -78,6 +80,14 @@ export function EditorToolbar({
             accessibilityLabel="Snap to guides"
           />
         </View>
+        <Pressable
+          onPress={onDone}
+          style={({ pressed }) => [styles.done, pressed ? styles.pressed : null, webInlinePressableReset]}
+          accessibilityRole="button"
+          accessibilityLabel="Done"
+        >
+          <AppText style={styles.doneText}>Done</AppText>
+        </Pressable>
         <Pressable
           onPress={onSave}
           disabled={saving}
@@ -146,6 +156,17 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 12,
     color: EDITOR_CHROME.textMuted,
+  },
+  done: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: EDITOR_CHROME.surface,
+  },
+  doneText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: EDITOR_CHROME.text,
   },
   save: {
     paddingHorizontal: 14,

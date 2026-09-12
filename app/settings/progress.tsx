@@ -6,7 +6,7 @@ import {
   CurrencyDollar,
   Medal,
   Trophy,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { AppText, Card, ScreenLoading } from '@/src/components/ui'
 import { listJobs } from '@/src/lib/api'

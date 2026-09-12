@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { ReactNode } from 'react'
 import { Platform, StyleSheet, TextInput, View } from 'react-native'
-import { Clock } from 'phosphor-react-native'
+import { Clock } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import { formatStartTimeLabel } from '@/src/lib/home-dashboard'
 import { colors, radii, spacing } from '@/src/theme/colors'

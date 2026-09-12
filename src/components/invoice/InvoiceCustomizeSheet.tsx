@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
-import { CaretDown, CaretUp, Plus } from 'phosphor-react-native'
+import { CaretDown, CaretUp, Plus } from '@/src/icons'
 import {
   generatePocketBaseId,
   lineAmount,

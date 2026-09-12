@@ -4,6 +4,7 @@ import { AppText } from '@/src/components/ui/AppText'
 import { usePillPopScale } from '@/src/hooks/useMotionArchetypes'
 import { selectionHaptic } from '@/src/lib/haptics'
 import { colors, radii, webInlinePressableReset } from '@/src/theme/colors'
+import { fonts } from '@/src/theme/typography'
 import type { PillOption } from './PillGroup'
 
 interface PillButtonProps<T extends string> {
@@ -54,6 +55,6 @@ const styles = StyleSheet.create({
   },
   pillLabelOn: {
     color: colors.greenText,
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: fonts.bodySemiBold,
   },
 })

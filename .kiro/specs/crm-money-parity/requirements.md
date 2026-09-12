@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The mobile CRM (`apps/mobile-wave5-crm`) and the desktop CRM (`apps/api`)
+The mobile CRM (`apps/rinse-mobile`) and the desktop CRM (`apps/api`)
 display different values for money-related figures (revenue, net profit, P&L,
 dashboard KPIs) computed from the same underlying data. This spec defines the
 behavior required for both apps to report identical money numbers for the same
@@ -17,7 +17,7 @@ Root cause (verified during investigation):
    `apps/api/src/lib/calculations.ts` is a near-duplicate that is missing
    `isActiveJob` / `activeJobs` and whose `mapJobStatusForDisplay` has no
    `cancelled` branch. P&L/report math is duplicated in
-   `apps/mobile-wave5-crm/src/lib/reports.ts` and `apps/api/src/lib/api/aggregates.ts`.
+   `apps/rinse-mobile/src/lib/reports.ts` and `apps/api/src/lib/api/aggregates.ts`.
 
 2. Cancelled (soft-deleted) jobs counted inconsistently. Jobs are soft-cancelled
    (`status = 'cancelled'`) rather than hard-deleted. Mobile excludes cancelled
@@ -86,5 +86,5 @@ produce the same money numbers, so regressions are caught.
 - Non-money data parity (e.g., client lists, scheduling display).
 
 ## Constraints
-- Operator features ship in `apps/mobile-wave5-crm` only; `apps/api` is the API + customer book/portal/admin. Changes to `apps/api` here are limited to correcting its money computations to match the shared source of truth, not building operator UI.
+- Operator features ship in `apps/rinse-mobile` only; `apps/api` is the API + customer book/portal/admin. Changes to `apps/api` here are limited to correcting its money computations to match the shared source of truth, not building operator UI.
 - Follow Expo v57 docs for any mobile-side changes.

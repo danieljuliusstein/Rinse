@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { ChatCircle, Funnel, GearSix, MagnifyingGlass, MapTrifold } from 'phosphor-react-native'
+import { ChatCircle, Funnel, GearSix, MagnifyingGlass, MapTrifold } from '@/src/icons'
 import { AppText, IconHeaderButton } from '@/src/components/ui'
 import { TrialPlanBadge } from '@/src/components/subscription/TrialPlanBadge'
 import { colors, layout, spacing, webInlinePressableReset } from '@/src/theme/colors'

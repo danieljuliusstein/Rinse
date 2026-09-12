@@ -12,6 +12,7 @@
     "sync-qa": "tsx scripts/sync-qa.ts",
     "native-smoke": "tsx scripts/native-smoke.ts",
     "money-parity": "tsx scripts/money-parity-test.ts",
+    "follow-up-prefs": "tsx scripts/follow-up-prefs-test.ts",
     "visual-audit": "playwright test e2e/visual-audit.spec.ts --project=native-audit",
     "visual-audit:pwa": "playwright test e2e/visual-audit.spec.ts --project=pwa-parity",
     "visual-audit:all": "playwright test e2e/visual-audit.spec.ts",

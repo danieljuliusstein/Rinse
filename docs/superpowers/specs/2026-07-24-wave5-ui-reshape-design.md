@@ -1,7 +1,7 @@
 # Wave 5 UI reshape — Business hub + Make-aligned Jobs/sheets
 
 **Date:** 2026-07-24  
-**Surface:** `apps/mobile` (worktree `mobile-wave5-crm`, branch `feat/wave5-crm`)  
+**Surface:** `apps/rinse-mobile` (branch `feat/wave5-crm`)  
 **Status:** Approved (conversation)  
 **References:** `/Users/danny/Downloads/Follow Prompt Action/src/App.tsx`, user mockups (Business hub, job detail, Jobs day, Share Pay Link, Rain Day reschedule), `docs/FIGMA_MAKE_CRM_PROMPT.md`
 

@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleShee
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { useNavigation } from 'expo-router'
 import { initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context'
-import { X } from 'phosphor-react-native'
+import { X } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { useSheetDismissGesture } from '@/src/hooks/useSheetDismissGesture'
 import { tabDockSafeBottom } from '@/src/hooks/useTabDockPadding'

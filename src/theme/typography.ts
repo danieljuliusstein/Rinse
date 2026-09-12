@@ -1,6 +1,7 @@
 import { TextStyle } from 'react-native'
 import { colors } from './tokens'
 
+/** Syne (display) + DM Sans (body) — operator light brand fonts. */
 export const fonts = {
   displayBold: 'Syne_700Bold',
   displaySemiBold: 'Syne_600SemiBold',
@@ -12,14 +13,16 @@ export const fonts = {
 export const typography = {
   h1: {
     fontFamily: fonts.displayBold,
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 27,
+    lineHeight: 32,
+    letterSpacing: -0.7,
     color: colors.textPrimary,
   } satisfies TextStyle,
   h2: {
     fontFamily: fonts.displaySemiBold,
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 21,
+    lineHeight: 27,
+    letterSpacing: -0.4,
     color: colors.textPrimary,
   } satisfies TextStyle,
   body: {
@@ -48,15 +51,15 @@ export const typography = {
   } satisfies TextStyle,
   sectionLabel: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 0.4,
+    fontSize: 10,
+    lineHeight: 13,
+    letterSpacing: 0.9,
     textTransform: 'uppercase',
     color: colors.textMuted,
   } satisfies TextStyle,
   button: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 20,
     color: '#ffffff',
   } satisfies TextStyle,

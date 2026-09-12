@@ -5,6 +5,11 @@ import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { SettingsPanelDivider, SettingsToggleRow } from '@/src/components/settings/SettingsToggleRow'
 import { AppText, Card, ListRow, PrimaryButton, ScreenLoading, SectionGroup } from '@/src/components/ui'
 import { loadAppearance, saveAppearance, type AppearanceMode } from '@/src/lib/appearance-store'
+import {
+  DEFAULT_FOLLOW_UP_PREFS,
+  loadFollowUpPrefs,
+  setShowFollowUpSection,
+} from '@/src/lib/follow-up-prefs-store'
 import { HOME_MODULES } from '@/src/lib/home-modules'
 import {
   isPushEnabled,
@@ -49,22 +54,27 @@ export default function SettingsPreferencesScreen() {
     low_inventory: true,
   })
   const [trackSupplies, setTrackSupplies] = useState(false)
+  const [showFollowUpReminders, setShowFollowUpReminders] = useState(
+    DEFAULT_FOLLOW_UP_PREFS.showFollowUpSection,
+  )
   const [homeModules, setHomeModules] = useState<HomeModulePrefs>({})
   const [pushOn, setPushOn] = useState(false)
   const [pushMsg, setPushMsg] = useState<string | null>(null)
   const pushSupported = isPushSupported()
 
   const refresh = useCallback(async () => {
-    const [settings, mode, pushEnabled] = await Promise.all([
+    const [settings, mode, pushEnabled, followUpPrefs] = await Promise.all([
       loadSettings(),
       loadAppearance(),
       isPushEnabled(),
+      loadFollowUpPrefs(),
     ])
     setNotifications(settings.notifications)
     setTrackSupplies(settings.track_job_supplies ?? false)
     setHomeModules(settings.home_modules ?? {})
     setAppearance(mode)
     setPushOn(pushEnabled)
+    setShowFollowUpReminders(followUpPrefs.showFollowUpSection)
   }, [])
 
   useEffect(() => {
@@ -96,12 +106,21 @@ export default function SettingsPreferencesScreen() {
     router.replace('/(tabs)')
   }
 
+  const handleFollowUpRemindersToggle = (next: boolean) => {
+    setShowFollowUpReminders(next)
+    void setShowFollowUpSection(next).catch(() => {
+      setShowFollowUpReminders(!next)
+      Alert.alert('Save failed', 'Could not update follow-up reminders on this device.')
+    })
+  }
+
   const save = async () => {
     setSaving(true)
     try {
       await Promise.all([
         saveAppearance(appearance),
         saveSettings({ notifications, track_job_supplies: trackSupplies, home_modules: homeModules }),
+        setShowFollowUpSection(showFollowUpReminders),
       ])
       Alert.alert('Saved', 'Preferences updated.')
     } catch (e) {
@@ -176,6 +195,16 @@ export default function SettingsPreferencesScreen() {
               onChange={(v) => setNotifications((n) => ({ ...n, [item.key]: v }))}
             />
           ))}
+
+          <SettingsPanelDivider />
+
+          <AppText style={styles.sectionLead}>Clients</AppText>
+          <SettingsToggleRow
+            label="Show follow-up reminders"
+            hint="Chase queue on Clients. Off = hide the section on this device. Separate from auto follow-up messages."
+            value={showFollowUpReminders}
+            onChange={handleFollowUpRemindersToggle}
+          />
 
           <SettingsPanelDivider />
 

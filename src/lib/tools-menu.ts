@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { Icon } from '@/src/icons'
 import {
   CalendarBlank,
   ChatCircle,
@@ -10,7 +10,7 @@ import {
   Shield,
   Wallet,
   Wrench,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import type { SettingsIconTone } from './settings-menu'
 
 export interface ToolsMenuItem {
@@ -18,7 +18,7 @@ export interface ToolsMenuItem {
   title: string
   subtitle: string
   href: string
-  Icon: ComponentType<{ size?: number; color?: string; weight?: 'duotone' | 'regular' | 'fill' }>
+  Icon: Icon
   tone: SettingsIconTone
 }
 

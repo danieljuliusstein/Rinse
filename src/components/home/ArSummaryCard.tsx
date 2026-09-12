@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Receipt } from 'phosphor-react-native'
+import { Receipt } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import { formatMoney } from '@/src/lib/inventory-utils'
 import type { ArSummary } from '@/src/lib/ar-metrics'

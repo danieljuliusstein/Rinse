@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Alert, Pressable, StyleSheet, View } from 'react-native'
-import { CloudRain } from 'phosphor-react-native'
+import { CloudRain } from '@/src/icons'
 import type { JobWithRelations } from '@rinse/core'
 import { AppSheet } from '@/src/components/ui/AppSheet'
 import { AppText, PillGroup, PrimaryButton, SecondaryButton } from '@/src/components/ui'

@@ -21,6 +21,7 @@ import { getPostHog } from '@/src/lib/posthog'
 import { initSentry, wrapRoot } from '@/src/lib/sentry'
 
 import { fonts } from '@/src/theme/typography'
+import { installInvoiceSurfaceScrollbarStyles } from '@/src/theme/invoice-surface'
 
 initSentry()
 
@@ -55,6 +56,10 @@ function RootLayout() {
   })
 
   const loaded = syneLoaded && dmLoaded
+
+  useEffect(() => {
+    installInvoiceSurfaceScrollbarStyles()
+  }, [])
 
   useEffect(() => {
     if (loaded) {
@@ -105,7 +110,7 @@ function RootLayout() {
                   <Stack.Screen name="invoices/[id]" options={{ presentation: 'card' }} />
                   <Stack.Screen name="invoices/new" options={sheetScreenOptions} />
                   <Stack.Screen name="quotes/new" options={sheetScreenOptions} />
-                  <Stack.Screen name="quotes/[id]" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="quotes/[id]" options={sheetScreenOptions} />
                   <Stack.Screen name="leads/new" options={sheetScreenOptions} />
                   <Stack.Screen name="pipeline/[id]" options={{ presentation: 'card' }} />
                   <Stack.Screen name="reports/pl" options={{ presentation: 'card' }} />

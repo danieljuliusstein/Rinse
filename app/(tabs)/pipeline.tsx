@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { RefreshControl, ScrollView, StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet } from 'react-native'
 import Animated from 'react-native-reanimated'
 import { useFocusEffect, useRouter } from 'expo-router'
-import { Plus } from 'phosphor-react-native'
+import { Plus } from '@/src/icons'
 import type { LeadStage, LeadWithRelations } from '@rinse/core'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import { EmptyState, GreenHeaderButton, ScreenLoading, SectionGroup } from '@/src/components/ui'
@@ -16,9 +16,10 @@ import {
 } from '@/src/lib/lead-sources'
 import { listLeads } from '@/src/lib/leads-api'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import { pipelineStageEntering } from '@/src/lib/motion-presets'
 import { useSafeBack } from '@/src/lib/safe-go-back'
-import { colors, spacing } from '@/src/theme/colors'
+import { spacing } from '@/src/theme/colors'
 
 export default function PipelineScreen() {
   const router = useRouter()
@@ -53,6 +54,10 @@ export default function PipelineScreen() {
     },
     [applyLeads],
   )
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load({ refresh: true, preserveStage: true })
+  })
 
   useFocusEffect(
     useCallback(() => {
@@ -98,13 +103,7 @@ export default function PipelineScreen() {
         <ScrollView
           contentContainerStyle={[styles.scroll, { paddingBottom: dockPadding }]}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => void load({ refresh: true, preserveStage: true })}
-              tintColor={colors.green}
-            />
-          }
+          refreshControl={refreshControl}
         >
           {leads.length > 0 ? (
             <PipelineStepper

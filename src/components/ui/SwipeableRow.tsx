@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Animated, PanResponder, Pressable, StyleSheet, View, type ViewStyle } from 'react-native'
-import { PencilSimple, Trash } from 'phosphor-react-native'
+import { PencilSimple, Trash } from '@/src/icons'
 import { AppText } from './AppText'
 import { colors, spacing } from '@/src/theme/colors'
 import { motion } from '@/src/theme/motion'

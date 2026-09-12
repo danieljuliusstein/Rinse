@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Check } from 'phosphor-react-native'
+import { Check } from '@/src/icons'
 import { useFocusEffect } from 'expo-router'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { AppText, Card, ListRow, ScreenLoading } from '@/src/components/ui'

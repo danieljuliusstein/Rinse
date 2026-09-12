@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native'
-import { MagnifyingGlass } from 'phosphor-react-native'
+import { MagnifyingGlass } from '@/src/icons'
 import { colors, spacing } from '@/src/theme/colors'
 
 type SearchFieldProps = Pick<
@@ -14,7 +14,9 @@ export const SearchField = forwardRef<TextInput, SearchFieldProps>(function Sear
 ) {
   return (
     <View style={styles.wrap}>
-      <MagnifyingGlass size={16} color={colors.textMuted} style={styles.icon} />
+      <View style={styles.icon} pointerEvents="none">
+        <MagnifyingGlass size={16} color={colors.textMuted} />
+      </View>
       <TextInput
         ref={ref}
         {...props}

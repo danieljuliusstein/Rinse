@@ -24,6 +24,7 @@ type SettingsScreenProps = Omit<ScreenShellProps, 'title'> & {
    * Pass 0 for full-bleed tools (invoice editor) that own their own bottom inset.
    */
   bottomPadding?: number
+  invoiceSurface?: boolean
 }
 
 export function SettingsScreen({
@@ -35,6 +36,7 @@ export function SettingsScreen({
   hub = false,
   tabRoot = false,
   bottomPadding,
+  invoiceSurface,
 }: SettingsScreenProps) {
   const navigation = useNavigation()
   const insets = useSafeAreaInsets()
@@ -51,11 +53,19 @@ export function SettingsScreen({
   )
 
   if (tabRoot) {
-    return <OperatorScreen customHeader={header}>{children}</OperatorScreen>
+    return (
+      <OperatorScreen customHeader={header} invoiceSurface={invoiceSurface}>
+        {children}
+      </OperatorScreen>
+    )
   }
 
   return (
-    <ScreenShell customHeader={header} bottomPadding={bottomPadding ?? insets.bottom + spacing.md}>
+    <ScreenShell
+      customHeader={header}
+      bottomPadding={bottomPadding ?? insets.bottom + spacing.md}
+      invoiceSurface={invoiceSurface}
+    >
       {children}
     </ScreenShell>
   )

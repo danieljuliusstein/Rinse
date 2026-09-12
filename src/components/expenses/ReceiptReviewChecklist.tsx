@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, View } from 'react-native'
-import { Check, Plus, Trash } from 'phosphor-react-native'
+import { Check, Plus, Trash } from '@/src/icons'
 import type { ReceiptHeuristicLine } from '@rinse/core'
 import { FormField } from '@/src/components/FormField'
 import { FormRow } from '@/src/components/forms/FormRow'

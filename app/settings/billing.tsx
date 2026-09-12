@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Check } from 'phosphor-react-native'
+import { Check } from '@/src/icons'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import {
   AppText,

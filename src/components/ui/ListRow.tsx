@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { CaretRight } from 'phosphor-react-native'
+import { CaretRight } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { Badge } from '@/src/components/ui/Badge'
 import { PressableSurface } from '@/src/components/ui/PressableSurface'

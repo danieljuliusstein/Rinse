@@ -1,11 +1,31 @@
 import { useEffect, useRef } from 'react'
-import { Animated, Easing, StyleSheet, View } from 'react-native'
+import { Animated, Easing, Platform, StyleSheet, View } from 'react-native'
 import Svg, { Circle, G, Path } from 'react-native-svg'
+import type { ComponentProps } from 'react'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
 
-const AnimatedPath = Animated.createAnimatedComponent(Path)
-const AnimatedCircle = Animated.createAnimatedComponent(Circle)
-const AnimatedG = Animated.createAnimatedComponent(G)
+/** Animated injects RN view props (e.g. collapsable); strip them on web before SVG DOM. */
+function withoutRnViewProps<T extends Record<string, unknown>>(props: T): T {
+  if (Platform.OS !== 'web') return props
+  const { collapsable: _collapsable, collapsible: _collapsible, ...rest } = props
+  return rest as T
+}
+
+function SvgPath(props: ComponentProps<typeof Path> & Record<string, unknown>) {
+  return <Path {...withoutRnViewProps(props)} />
+}
+
+function SvgCircle(props: ComponentProps<typeof Circle> & Record<string, unknown>) {
+  return <Circle {...withoutRnViewProps(props)} />
+}
+
+function SvgG(props: ComponentProps<typeof G> & Record<string, unknown>) {
+  return <G {...withoutRnViewProps(props)} />
+}
+
+const AnimatedPath = Animated.createAnimatedComponent(SvgPath)
+const AnimatedCircle = Animated.createAnimatedComponent(SvgCircle)
+const AnimatedG = Animated.createAnimatedComponent(SvgG)
 
 /** Approximate length of the S-curve icon path (viewBox units). */
 const ICON_PATH_LENGTH = 150

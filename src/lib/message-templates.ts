@@ -14,6 +14,6 @@ export function mergeTemplateBodyForContext(template: string, ctx: MessageTempla
     .replace(/\{\{package\}\}/g, ctx.packageName ?? 'Detail')
     .replace(/\{\{time\}\}/g, ctx.time ?? '')
     .replace(/\{\{date\}\}/g, ctx.date ?? '')
-    .replace(/\{\{portal_link\}\}/g, ctx.portalLink ?? 'https://rinsehq.com/portal')
+    .replace(/\{\{portal_link\}\}/g, ctx.portalLink ?? 'https://app.rinsehq.com/portal')
     .replace(/\{\{review_link\}\}/g, ctx.reviewLink ?? 'https://g.page/review')
 }

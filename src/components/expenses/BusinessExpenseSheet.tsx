@@ -3,7 +3,7 @@ import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-nat
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BusinessExpense, BusinessExpenseCategory, BusinessExpenseInput, ExpenseLine } from '@rinse/core'
-import { Check, Receipt, X } from 'phosphor-react-native'
+import { Check, Receipt, X } from '@/src/icons'
 import { FormField } from '@/src/components/FormField'
 import { FormRow } from '@/src/components/forms/FormRow'
 import { AffixField, AppText, PillGroup, SecondaryButton } from '@/src/components/ui'

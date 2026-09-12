@@ -4,7 +4,7 @@ import { buildSmsComposeUrl } from '@/src/lib/sms-compose'
 import { colors, spacing, webInlinePressableReset } from '@/src/theme/colors'
 import type { ClientWithStats } from '@rinse/core'
 import { useRouter } from 'expo-router'
-import { CalendarPlus, ChatCircle, DotsThreeVertical, Phone, Trash } from 'phosphor-react-native'
+import { CalendarPlus, ChatCircle, DotsThreeVertical, Phone, Trash } from '@/src/icons'
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import {
     Alert,

@@ -11,7 +11,7 @@ import {
   Warning,
   WarningCircle,
   type Icon,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import type { WeatherReadinessResult, WeatherReadinessRow } from '@/src/lib/weather-readiness'
 import {

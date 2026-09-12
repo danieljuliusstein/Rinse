@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { Code, Copy } from 'phosphor-react-native'
+import { Code, Copy } from '@/src/icons'
 import { AppText, Button, Card } from '@/src/components/ui'
 import { embedCalendarScriptHtml } from '@/src/lib/booking-embed'
 import { appOrigin, loadOrganizationSlug } from '@/src/lib/org-slug'

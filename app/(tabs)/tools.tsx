@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { Globe } from 'phosphor-react-native'
+import { Globe } from '@/src/icons'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import { WebsiteWidgetCard } from '@/src/components/tools/WebsiteWidgetCard'
 import { AppText, ListRow, SectionGroup } from '@/src/components/ui'

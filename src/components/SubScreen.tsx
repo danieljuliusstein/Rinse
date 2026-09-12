@@ -11,6 +11,7 @@ type SubScreenProps = {
   tabDock?: boolean
   headerRight?: ReactNode
   onEdit?: () => void
+  invoiceSurface?: boolean
 }
 
 /** Full-screen stack route with a back action in the header. */
@@ -21,6 +22,7 @@ export function SubScreen({
   tabDock = false,
   headerRight,
   onEdit,
+  invoiceSurface,
 }: SubScreenProps) {
   const navigation = useNavigation()
   const back = () => safeGoBack(navigation, '/(tabs)')
@@ -30,6 +32,7 @@ export function SubScreen({
       title={title}
       subtitle={subtitle}
       tabDock={tabDock}
+      invoiceSurface={invoiceSurface}
       headerRight={
         headerRight ?? <DetailHeaderActions onBack={back} onEdit={onEdit} />
       }

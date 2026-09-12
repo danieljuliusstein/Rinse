@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { EnvelopeSimple } from 'phosphor-react-native'
+import { EnvelopeSimple } from '@/src/icons'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { AppText, Button, Card, ListRow, ScreenLoading, SectionGroup } from '@/src/components/ui'
 import { SignOutBlockedError } from '@/src/lib/auth'

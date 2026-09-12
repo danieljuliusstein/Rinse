@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Modal, Platform, Pressable, StyleSheet, View 
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as ImagePicker from 'expo-image-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Camera, Images, Lightning, X } from 'phosphor-react-native'
+import { Camera, Images, Lightning, X } from '@/src/icons'
 import { AppText, PrimaryButton, SecondaryButton } from '@/src/components/ui'
 import { isOnDeviceVehicleOcrAvailable, ocrVehicleImage, type VehicleOcrTarget } from '@/src/lib/vehicle-ocr'
 import { colors, radii, spacing } from '@/src/theme/colors'

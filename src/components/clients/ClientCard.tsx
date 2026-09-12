@@ -1,6 +1,6 @@
 import { Linking, Pressable, StyleSheet, View } from 'react-native'
 import { useRef } from 'react'
-import { MapPin } from 'phosphor-react-native'
+import { MapPin } from '@/src/icons'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
 import type { ClientWithStats } from '@rinse/core'
 import { openMaps } from '@/src/lib/api'

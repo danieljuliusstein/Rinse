@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Pressable, StyleSheet, View } from 'react-native'
-import { Plus, Trash } from 'phosphor-react-native'
+import { Plus, Trash } from '@/src/icons'
 import {
   INVOICE_LINE_UNIT_OPTIONS,
   formatBillingLineDetail,

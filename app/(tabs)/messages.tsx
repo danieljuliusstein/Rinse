@@ -4,7 +4,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  RefreshControl,
   ScrollView,
   Share,
   StyleSheet,
@@ -15,6 +14,7 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AutoMessageCard } from '@/src/components/messages/AutoMessageCard'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import {
   AppText,
   Badge,
@@ -57,6 +57,10 @@ export default function MessagesScreen() {
   const [sent, setSent] = useState<SentMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load(true)
+  })
   const [expandedId, setExpandedId] = useState('appointment_reminder')
   const [editing, setEditing] = useState<AutoMessageTemplate | null>(null)
   const [editBody, setEditBody] = useState('')
@@ -133,9 +137,7 @@ export default function MessagesScreen() {
       ) : (
         <ScrollView
           contentContainerStyle={[styles.scroll, { paddingBottom: dockPadding }]}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />
-          }
+          refreshControl={refreshControl}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >

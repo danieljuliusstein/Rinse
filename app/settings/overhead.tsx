@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Alert, RefreshControl, ScrollView, StyleSheet } from 'react-native'
 import { useFocusEffect } from 'expo-router'
-import { Plus, Wallet } from 'phosphor-react-native'
+import { Plus, Wallet } from '@/src/icons'
 import type { BillingCycle, OverheadCategory, OverheadExpense } from '@rinse/core'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { OverheadExpenseSheet } from '@/src/components/expenses/OverheadExpenseSheet'

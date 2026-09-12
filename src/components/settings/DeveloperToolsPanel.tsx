@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Alert, Pressable, StyleSheet, View } from 'react-native'
-import { CaretDown } from 'phosphor-react-native'
+import { CaretDown } from '@/src/icons'
 import { AppText, Badge, SecondaryButton } from '@/src/components/ui'
 import { clearQueue } from '@/src/lib/offline/queue'
 import { colors, spacing } from '@/src/theme/colors'

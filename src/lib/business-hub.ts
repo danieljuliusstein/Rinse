@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { Icon } from '@/src/icons'
 import {
   ChartLineUp,
   CurrencyDollar,
@@ -10,12 +10,12 @@ import {
   Star,
   UsersThree,
   Wallet,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import type { SettingsIconTone } from '@/src/lib/settings-menu'
 import { SETTINGS_MENU_GROUPS, SETTINGS_MENU_ITEMS, type SettingsMenuItem } from '@/src/lib/settings-menu'
 import { fmt } from '@rinse/core'
 
-export type HubIcon = ComponentType<{ size?: number; color?: string; weight?: 'duotone' | 'regular' | 'fill' }>
+export type HubIcon = Icon
 
 export type HubRow = {
   id: string

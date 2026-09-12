@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AppText } from '@/src/components/ui/AppText'
+import { hideScrollbarSurfaceProps } from '@/src/theme/invoice-surface'
 import { colors, layout, radii, shadows, spacing } from '@/src/theme/colors'
 
 export interface ScreenShellProps {
@@ -12,6 +13,10 @@ export interface ScreenShellProps {
   bottomPadding?: number
   /** Replaces the default title row (used by settings back-header layout). */
   customHeader?: React.ReactNode
+  /** Hide scrollbars on web (CSS) — use with noScrollbarScrollProps on scroll views. */
+  hideScrollbars?: boolean
+  /** Invoice screens — alias for hideScrollbars. */
+  invoiceSurface?: boolean
 }
 
 export function ScreenShell({
@@ -21,7 +26,10 @@ export function ScreenShell({
   headerRight,
   bottomPadding = 0,
   customHeader,
+  hideScrollbars = false,
+  invoiceSurface = false,
 }: ScreenShellProps) {
+  const suppressScrollbars = hideScrollbars || invoiceSurface
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={[styles.inner, { maxWidth: layout.maxContentWidth, alignSelf: 'center', width: '100%' }]}>
@@ -37,7 +45,12 @@ export function ScreenShell({
         {customHeader && headerRight ? (
           <View style={styles.customHeaderRight}>{headerRight}</View>
         ) : null}
-        <View style={[styles.body, bottomPadding > 0 ? { paddingBottom: bottomPadding } : null]}>{children}</View>
+        <View
+          style={[styles.body, bottomPadding > 0 ? { paddingBottom: bottomPadding } : null]}
+          {...(suppressScrollbars ? hideScrollbarSurfaceProps : {})}
+        >
+          {children}
+        </View>
       </View>
     </SafeAreaView>
   )

@@ -9,7 +9,7 @@ import {
   TextT,
   Wrench,
   type Icon,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { AppText } from '@/src/components/ui'
 import {

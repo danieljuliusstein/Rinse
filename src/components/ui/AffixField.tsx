@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { StyleSheet, TextInput, View, type ViewStyle } from 'react-native'
-import { CheckCircle } from 'phosphor-react-native'
+import { CheckCircle } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'

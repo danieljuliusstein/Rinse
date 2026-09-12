@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
@@ -9,11 +9,10 @@ import {
   FileText,
   MapPin,
   Phone,
-  Plus,
   Receipt,
   Trash,
   Users,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import { fmt, mapJobStatusForDisplay } from '@rinse/core'
 import type { Client, JobWithRelations, QuoteWithRelations, Vehicle } from '@rinse/core'
 import { composeSmsFromTemplate } from '@/src/lib/messages-api'
@@ -33,6 +32,10 @@ import { getQuotesForClient } from '@/src/lib/quotes-api'
 import { checkRecordConflict, refreshRecordFromServer } from '@/src/lib/conflict'
 import { formatJobDate } from '@/src/lib/format-dates'
 import { jobListBadgeTone, jobListIconTone, jobListStatusKey } from '@/src/lib/jobs-list'
+import {
+  clientDetailPriority,
+  type ClientDetailSection,
+} from '@/src/lib/client-detail-priority'
 import { VehicleTypeIcon } from '@/src/lib/vehicle-type-icons'
 import { requireOrganizationId } from '@/src/lib/org'
 import { ConflictBanner } from '@/src/components/ConflictBanner'
@@ -41,14 +44,22 @@ import { AppText } from '@/src/components/ui/AppText'
 import { Badge } from '@/src/components/ui/Badge'
 import { CurrencyAmount } from '@/src/components/ui/CurrencyAmount'
 import { ListRow } from '@/src/components/ui/ListRow'
+import { AccordionSection } from '@/src/components/ui/AccordionSection'
+import { SectionGroup } from '@/src/components/ui/SectionGroup'
+import { DetailRow } from '@/src/components/ui/DetailRow'
+import { TextActionRow } from '@/src/components/ui/TextActionRow'
+import { navigateAfterClose } from '@/src/lib/navigate-after-close'
+import { JobStatusPanel } from '@/src/components/detail/JobStatusPanel'
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
 import { useTabDockPadding } from '@/src/hooks/useTabDockPadding'
-import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
+import { noScrollbarScrollProps } from '@/src/theme/invoice-surface'
+import { colors, iconTonePalette, radii, shadows, spacing } from '@/src/theme/colors'
 
 interface ClientDetailBodyProps {
   clientId: string
   onClose?: () => void
+  onMetaChange?: (meta: { title: string; subtitle?: string }) => void
   variant?: 'screen' | 'overlay'
 }
 
@@ -59,7 +70,12 @@ function quoteBadgeTone(status: string): 'green' | 'blue' | 'amber' | 'red' | 'g
   return 'gray'
 }
 
-export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: ClientDetailBodyProps) {
+export function ClientDetailBody({
+  clientId,
+  onClose,
+  onMetaChange,
+  variant = 'screen',
+}: ClientDetailBodyProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const dockPadding = useTabDockPadding(variant === 'screen')
@@ -75,6 +91,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
   const [hasConflict, setHasConflict] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [openSection, setOpenSection] = useState<ClientDetailSection | null>(null)
 
   const load = useCallback(async () => {
     setError(null)
@@ -98,11 +115,17 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
     }
     const conflict = await checkRecordConflict('clients', clientId)
     setHasConflict(conflict.hasConflict)
+    return { row, vehicleRows, jobRows }
   }, [clientId])
 
   useEffect(() => {
     let cancelled = false
     void load()
+      .then((result) => {
+        if (cancelled || !result?.row) return
+        const priority = clientDetailPriority(result.row, result.jobRows, result.vehicleRows.length)
+        setOpenSection(priority.defaultSection)
+      })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load client')
       })
@@ -162,9 +185,25 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
     }
   }, [client])
 
+  const priority = useMemo(
+    () => (client ? clientDetailPriority(client, jobs, vehicles.length) : null),
+    [client, jobs, vehicles.length],
+  )
+
+  useEffect(() => {
+    if (!client || !onMetaChange) return
+    const subtitle = [
+      client.phone,
+      jobs.length > 0 ? `${jobs.length} job${jobs.length === 1 ? '' : 's'}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ')
+    onMetaChange({ title: client.name, subtitle: subtitle || undefined })
+  }, [client, jobs.length, onMetaChange])
+
   if (loading) return <LoadingState label="Loading client…" />
 
-  if (error || !client) {
+  if (error || !client || !priority) {
     return (
       <View style={styles.errorWrap}>
         <AppText variant="body" style={styles.error}>
@@ -178,10 +217,7 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
   const avgJob = jobs.length > 0 ? totalRevenue / jobs.length : 0
   const upcomingJobs = jobs.filter((j) => j.status === 'scheduled' || j.status === 'in_progress')
   const pastJobs = jobs.filter(
-    (j) =>
-      j.status !== 'scheduled' &&
-      j.status !== 'in_progress' &&
-      j.status !== 'cancelled',
+    (j) => j.status !== 'scheduled' && j.status !== 'in_progress' && j.status !== 'cancelled',
   )
   const billableJobs = jobs.filter(
     (j) => (j.status === 'completed' || j.status === 'paid') && !j.invoice_id,
@@ -189,10 +225,14 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
   const recentQuotes = quotes.slice(0, 3)
   const contentPadding = variant === 'overlay' ? spacing.md : 0
   const bottomPad = variant === 'screen' ? dockPadding : spacing.xl
+  const avatarPalette = priority.isVip ? iconTonePalette.green : iconTonePalette.purple
 
   const navigateAway = (href: string) => {
-    onClose?.()
-    router.push(href as never)
+    navigateAfterClose(onClose, () => router.push(href as never))
+  }
+
+  const toggleSection = (section: ClientDetailSection) => {
+    setOpenSection((current) => (current === section ? null : section))
   }
 
   const handleRemove = () => {
@@ -233,151 +273,213 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
         styles.scroll,
         { paddingHorizontal: contentPadding, paddingBottom: bottomPad },
       ]}
+      {...noScrollbarScrollProps}
     >
-      {variant === 'overlay' ? (
-        <View style={styles.overlayHeader}>
-          <AppText variant="h1">{client.name}</AppText>
-          {client.phone ? <AppText variant="body">{client.phone}</AppText> : null}
-          {client.email ? <AppText variant="caption" style={styles.muted}>{client.email}</AppText> : null}
-          {client.address ? (
-            <AppText variant="caption" style={styles.muted}>{client.address}</AppText>
-          ) : null}
-          {client.address ? (
-            <Pressable
-              style={styles.directionsBtn}
-              onPress={() => void Linking.openURL(openMaps(client.address!))}
-            >
-              <MapPin size={14} color={colors.greenText} weight="bold" />
-              <AppText variant="bodySemiBold" style={styles.directionsLabel}>
-                {t('clientDetail.directions')}
-              </AppText>
-            </Pressable>
-          ) : null}
-          <Pressable
-            style={styles.editLink}
-            onPress={() => navigateAway(`/clients/edit/${clientId}`)}
-          >
-            <AppText variant="caption" style={styles.editLabel}>
-              {t('clientDetail.editClient')}
-            </AppText>
-          </Pressable>
+      <View style={styles.identityRow}>
+        <View style={[styles.avatar, { backgroundColor: avatarPalette.bg }]}>
+          <AppText variant="bodySemiBold" style={[styles.avatarText, { color: avatarPalette.fg }]}>
+            {priority.initials}
+          </AppText>
         </View>
-      ) : null}
+        <View style={styles.identityCopy}>
+          <AppText variant="h1" style={styles.identityName}>
+            {client.name}
+          </AppText>
+          <View style={styles.tagRow}>
+            {priority.isVip ? <Badge tone="green" label="VIP" /> : null}
+            {client.membership_paused ? <Badge tone="amber" label="Paused" /> : null}
+            {client.lead_source ? (
+              <Badge tone="gray" label={client.lead_source.replace(/_/g, ' ')} />
+            ) : null}
+          </View>
+        </View>
+      </View>
 
       {hasConflict ? (
         <ConflictBanner onRefresh={() => void handleRefreshFromServer()} refreshing={refreshing} />
       ) : null}
 
-      {(client.phone || client.email) && variant === 'overlay' ? (
-        <View style={styles.actionGrid}>
+      <JobStatusPanel
+        eyebrow={priority.eyebrow}
+        heading={priority.heading}
+        statusTone={priority.statusTone}
+      />
+
+      {(client.phone || client.email || client.address) ? (
+        <View style={styles.card}>
           {client.phone ? (
-            <Pressable
-              style={styles.actionCell}
+            <TextActionRow
+              label={client.phone}
+              icon={<Phone size={18} color={colors.greenText} weight="duotone" />}
               onPress={() => void handleCallClient()}
-            >
-              <Phone size={20} color={colors.textMuted} />
-              <AppText variant="caption">{t('clientDetail.call')}</AppText>
-            </Pressable>
+            />
           ) : null}
           {client.phone ? (
-            <Pressable
-              style={styles.actionCell}
+            <TextActionRow
+              label={t('clientDetail.text')}
+              icon={<ChatText size={18} color={colors.greenText} weight="duotone" />}
               onPress={() => void handleTextClient()}
-            >
-              <ChatText size={20} color={colors.textMuted} />
-              <AppText variant="caption">{t('clientDetail.text')}</AppText>
-            </Pressable>
+            />
           ) : null}
           {client.email ? (
-            <Pressable
-              style={styles.actionCell}
+            <TextActionRow
+              label={client.email}
+              icon={<Envelope size={18} color={colors.greenText} weight="duotone" />}
               onPress={() => void Linking.openURL(`mailto:${client.email}`)}
-            >
-              <Envelope size={20} color={colors.textMuted} />
-              <AppText variant="caption">{t('clientDetail.email')}</AppText>
-            </Pressable>
+            />
+          ) : null}
+          {client.address ? (
+            <TextActionRow
+              label={client.address}
+              icon={<MapPin size={18} color={colors.greenText} weight="duotone" />}
+              onPress={() => void Linking.openURL(openMaps(client.address!))}
+            />
           ) : null}
         </View>
       ) : null}
 
-      <View style={styles.ctaRow}>
-        <SecondaryButton label={t('clientDetail.newJob')} onPress={() => navigateAway(`/jobs/new?clientId=${clientId}`)} />
-        <SecondaryButton label={t('clientDetail.quote')} onPress={() => navigateAway(`/quotes/new?clientId=${clientId}`)} />
-        <SecondaryButton
+      <PrimaryButton
+        label={t('clientDetail.newJob')}
+        onPress={() => navigateAway(`/jobs/new?clientId=${clientId}`)}
+      />
+
+      <View style={styles.card}>
+        <TextActionRow
+          label={t('clientDetail.quote')}
+          icon={<FileText size={18} color={colors.greenText} weight="duotone" />}
+          onPress={() => navigateAway(`/quotes/new?clientId=${clientId}`)}
+        />
+        <TextActionRow
           label={t('clientDetail.invoice')}
+          icon={<Receipt size={18} color={colors.greenText} weight="duotone" />}
           disabled={billableJobs.length === 0}
           onPress={() => {
             if (billableJobs.length === 1) {
-              navigateAway(`/jobs/${billableJobs[0].id}/invoice`)
+              navigateAway(`/jobs/${billableJobs[0]!.id}/invoice`)
             } else {
               navigateAway('/invoices/new')
             }
           }}
         />
+        <TextActionRow
+          label={t('clientDetail.editClient')}
+          onPress={() => navigateAway(`/clients/edit/${clientId}`)}
+        />
       </View>
 
       <View style={styles.card}>
-        <View style={styles.statsGrid}>
-          <StatCell label={t('clientDetail.totalRevenue')} value={fmt(totalRevenue)} />
-          <StatCell label={t('clientDetail.totalJobs')} value={String(jobs.length)} />
-          <StatCell label={t('clientDetail.avgJob')} value={fmt(avgJob)} />
-          <StatCell
-            label={t('clientDetail.leadSource')}
-            value={client.lead_source?.replace(/_/g, ' ') ?? '—'}
-            cap
-          />
-        </View>
+        <DetailRow label={t('clientDetail.totalRevenue')} value={fmt(totalRevenue)} />
+        <DetailRow label={t('clientDetail.totalJobs')} value={String(jobs.length)} />
+        <DetailRow label={t('clientDetail.avgJob')} value={fmt(avgJob)} />
+        <DetailRow
+          label={t('clientDetail.leadSource')}
+          value={client.lead_source?.replace(/_/g, ' ') ?? '—'}
+          isLast
+        />
       </View>
 
       {client.notes ? (
-        <View style={styles.section}>
-          <AppText variant="sectionLabel">{t('clientDetail.notes')}</AppText>
-          <View style={styles.card}>
-            <AppText variant="body">{client.notes}</AppText>
-          </View>
-        </View>
+        <AccordionSection
+          title={t('clientDetail.notes')}
+          hint={client.notes.slice(0, 48) + (client.notes.length > 48 ? '…' : '')}
+          icon={<FileText size={19} color={colors.greenText} weight="duotone" />}
+          expanded={openSection === 'notes'}
+          onToggle={() => toggleSection('notes')}
+        >
+          <AppText variant="body">{client.notes}</AppText>
+        </AccordionSection>
       ) : null}
 
-      <View style={styles.section}>
-        <AppText variant="sectionLabel">Membership</AppText>
-        <View style={styles.card}>
-          <PillGroup
-            options={[
-              { value: 'weekly', label: 'Weekly' },
-              { value: 'biweekly', label: 'Biweekly' },
-              { value: 'monthly', label: 'Monthly' },
-            ]}
-            value={client.membership_cadence ?? 'monthly'}
-            onChange={(membership_cadence) => {
-              void updateClient(clientId, { name: client.name, membership_cadence }).then(setClient)
-            }}
-          />
-          <AppText variant="caption" style={styles.muted}>
-            Next visit: {client.membership_next_visit || '—'}
-            {client.membership_paused ? ' · Paused' : ''}
-          </AppText>
-          <SecondaryButton
-            label={client.membership_paused ? 'Resume membership' : 'Pause membership'}
-            onPress={() => {
-              void updateClient(clientId, {
-                name: client.name,
-                membership_paused: !client.membership_paused,
-              }).then(setClient)
-            }}
-          />
-        </View>
-      </View>
+      <AccordionSection
+        title="Membership"
+        hint={
+          client.membership_paused
+            ? 'Paused'
+            : client.membership_next_visit
+              ? `Next · ${client.membership_next_visit}`
+              : 'Cadence & visits'
+        }
+        icon={<Users size={19} color={colors.greenText} weight="duotone" />}
+        expanded={openSection === 'membership'}
+        onToggle={() => toggleSection('membership')}
+      >
+        <PillGroup
+          options={[
+            { value: 'weekly', label: 'Weekly' },
+            { value: 'biweekly', label: 'Biweekly' },
+            { value: 'monthly', label: 'Monthly' },
+          ]}
+          value={client.membership_cadence ?? 'monthly'}
+          onChange={(membership_cadence) => {
+            void updateClient(clientId, { name: client.name, membership_cadence }).then(setClient)
+          }}
+        />
+        <AppText variant="caption" style={styles.muted}>
+          Next visit: {client.membership_next_visit || '—'}
+        </AppText>
+        <SecondaryButton
+          label={client.membership_paused ? 'Resume membership' : 'Pause membership'}
+          onPress={() => {
+            void updateClient(clientId, {
+              name: client.name,
+              membership_paused: !client.membership_paused,
+            }).then(setClient)
+          }}
+        />
+      </AccordionSection>
 
-      {recentQuotes.length > 0 ? (
-        <View style={styles.section}>
-          <View style={styles.sectionHead}>
-            <AppText variant="sectionLabel">{t('clientDetail.quotes')}</AppText>
-            <Pressable onPress={() => navigateAway(`/quotes?client=${clientId}`)}>
+      <SectionGroup
+        title={t('clientDetail.vehicles')}
+        meta={
+          vehicles.length > 0
+            ? `${vehicles.length} on file`
+            : t('clientDetail.addVehicle')
+        }
+        inset={vehicles.length === 0}
+      >
+        {vehicles.length === 0 ? (
+          <>
+            <AppText variant="caption" style={styles.muted}>
+              Document pre-existing damage on each vehicle.
+            </AppText>
+            <Pressable onPress={() => navigateAway(`/clients/${clientId}/vehicles/new`)}>
               <AppText variant="caption" style={styles.link}>
-                View all
+                + Add vehicle
               </AppText>
             </Pressable>
-          </View>
+          </>
+        ) : (
+          vehicles.map((vehicle) => (
+            <ListRow
+              key={vehicle.id}
+              title={vehicleDisplayName(vehicle)}
+              subtitle={vehicle.plate ?? vehicle.color ?? 'View damage docs'}
+              icon={<VehicleTypeIcon type={vehicle.type} size={18} color={iconTonePalette.blue.fg} />}
+              iconTone="blue"
+              onPress={() => navigateAway(`/(tabs)/clients/${clientId}/vehicles/${vehicle.id}`)}
+            />
+          ))
+        )}
+      </SectionGroup>
+      {vehicles.length > 0 ? (
+        <Pressable
+          onPress={() => navigateAway(`/clients/${clientId}/vehicles/new`)}
+          style={styles.addVehicleLink}
+        >
+          <AppText variant="caption" style={styles.link}>
+            + Add vehicle
+          </AppText>
+        </Pressable>
+      ) : null}
+
+      {recentQuotes.length > 0 ? (
+        <AccordionSection
+          title={t('clientDetail.quotes')}
+          hint={`${quotes.length} total`}
+          icon={<FileText size={19} color={colors.greenText} weight="duotone" />}
+          expanded={openSection === 'quotes'}
+          onToggle={() => toggleSection('quotes')}
+        >
           {recentQuotes.map((quote) => (
             <ListRow
               key={quote.id}
@@ -391,134 +493,104 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
               onPress={() => openQuote(quote.id, () => void load())}
             />
           ))}
-        </View>
-      ) : null}
-
-      <View style={styles.section}>
-        <View style={styles.sectionHead}>
-          <AppText variant="sectionLabel">{t('clientDetail.vehicles')}</AppText>
-          <Pressable onPress={() => navigateAway(`/clients/${clientId}/vehicles/new`)}>
+          <Pressable onPress={() => navigateAway(`/quotes?client=${clientId}`)}>
             <AppText variant="caption" style={styles.link}>
-              + Add
+              View all quotes
             </AppText>
           </Pressable>
-        </View>
-        {vehicles.length === 0 ? (
-          <View style={styles.emptyVehicle}>
-            <AppText variant="bodySemiBold">{t('clientDetail.addVehicle')}</AppText>
-            <AppText variant="caption" style={styles.muted}>
-              Document pre-existing damage on each vehicle.
-            </AppText>
-            <PrimaryButton
-              label={t('clientDetail.addVehicle')}
-              onPress={() => navigateAway(`/clients/${clientId}/vehicles/new`)}
-            />
-          </View>
-        ) : (
-          vehicles.map((vehicle) => (
-            <ListRow
-              key={vehicle.id}
-              title={vehicleDisplayName(vehicle)}
-              subtitle={vehicle.plate ?? vehicle.color ?? 'View damage docs'}
-              icon={
-                <VehicleTypeIcon type={vehicle.type} size={18} color={iconTonePalette.blue.fg} />
-              }
-              iconTone="blue"
-              onPress={() => navigateAway(`/(tabs)/clients/${clientId}/vehicles/${vehicle.id}`)}
-            />
-          ))
-        )}
-      </View>
-
-      {parentClient ? (
-        <View style={styles.section}>
-          <AppText variant="sectionLabel">Parent account</AppText>
-          <ListRow
-            title={parentClient.name}
-            subtitle="Dealer / fleet"
-            icon={<Users size={18} color={iconTonePalette.purple.fg} weight="duotone" />}
-            iconTone="purple"
-            onPress={() => navigateAway(`/(tabs)/clients/${parentClient.id}`)}
-          />
-        </View>
+        </AccordionSection>
       ) : null}
 
-      {!client.parent_client_id ? (
-        <View style={styles.section}>
-          <View style={styles.sectionHead}>
-            <AppText variant="sectionLabel">Sub-customers</AppText>
-            <Pressable onPress={() => navigateAway(`/clients/new?parent=${clientId}`)}>
-              <AppText variant="caption" style={styles.link}>
-                + Add
-              </AppText>
-            </Pressable>
-          </View>
-          {childClients.length === 0 ? (
-            <AppText variant="caption" style={styles.muted}>
-              Nest end customers under this dealer or fleet.
-            </AppText>
-          ) : (
-            childClients.map((child) => (
-              <ListRow
-                key={child.id}
-                title={child.name}
-                subtitle={child.phone ?? child.email ?? 'Sub-customer'}
-                icon={<Users size={18} color={iconTonePalette.purple.fg} weight="duotone" />}
-                iconTone="purple"
-                onPress={() => navigateAway(`/(tabs)/clients/${child.id}`)}
-              />
-            ))
-          )}
-        </View>
+      {(parentClient || childClients.length > 0) ? (
+        <AccordionSection
+          title="Accounts"
+          hint={parentClient ? 'Sub-customer' : `${childClients.length} linked`}
+          icon={<Users size={19} color={colors.greenText} weight="duotone" />}
+          expanded={openSection === 'family'}
+          onToggle={() => toggleSection('family')}
+        >
+          {parentClient ? (
+            <ListRow
+              title={parentClient.name}
+              subtitle="Parent account"
+              icon={<Users size={18} color={iconTonePalette.purple.fg} weight="duotone" />}
+              iconTone="purple"
+              onPress={() => navigateAway(`/(tabs)/clients/${parentClient.id}`)}
+            />
+          ) : null}
+          {!client.parent_client_id ? (
+            <>
+              <Pressable onPress={() => navigateAway(`/clients/new?parent=${clientId}`)}>
+                <AppText variant="caption" style={styles.link}>
+                  + Add sub-customer
+                </AppText>
+              </Pressable>
+              {childClients.map((child) => (
+                <ListRow
+                  key={child.id}
+                  title={child.name}
+                  subtitle={child.phone ?? child.email ?? 'Sub-customer'}
+                  icon={<Users size={18} color={iconTonePalette.purple.fg} weight="duotone" />}
+                  iconTone="purple"
+                  onPress={() => navigateAway(`/(tabs)/clients/${child.id}`)}
+                />
+              ))}
+            </>
+          ) : null}
+        </AccordionSection>
       ) : null}
 
       {upcomingJobs.length > 0 ? (
-        <View style={styles.section}>
-          <AppText variant="sectionLabel">{t('clientDetail.upcoming')}</AppText>
+        <AccordionSection
+          title={t('clientDetail.upcoming')}
+          hint={`${upcomingJobs.length} scheduled`}
+          icon={<Car size={19} color={colors.greenText} weight="duotone" />}
+          expanded={openSection === 'upcoming'}
+          onToggle={() => toggleSection('upcoming')}
+        >
           {upcomingJobs.map((job) => (
             <ListRow
               key={job.id}
               icon={<Car size={18} color={iconTonePalette.amber.fg} weight="duotone" />}
               iconTone={jobListIconTone(job)}
               title={job.package?.name ?? t('jobDetail.titleFallback')}
-              subtitle={`${formatJobDate(job.date)} · Tap to complete`}
+              subtitle={formatJobDate(job.date)}
               badgeLabel={t(`jobs.status.${jobListStatusKey(job)}`)}
               badgeTone={jobListBadgeTone(job)}
-              trailing={<AppText variant="bodySemiBold" style={styles.amount}>{fmt(job.revenue + job.tip)}</AppText>}
+              trailing={
+                <AppText variant="bodySemiBold" style={styles.amount}>
+                  {fmt(job.revenue + job.tip)}
+                </AppText>
+              }
               onPress={() => openJob(job.id)}
             />
           ))}
-        </View>
+        </AccordionSection>
       ) : null}
 
       {pastJobs.length > 0 ? (
-        <View style={styles.section}>
-          <AppText variant="sectionLabel">{t('clientDetail.jobHistory')}</AppText>
-          <View style={styles.groupCard}>
-            {pastJobs.slice(0, 8).map((job, index) => (
-              <ListRow
-                key={job.id}
-                grouped={index < Math.min(pastJobs.length, 8) - 1}
-                icon={<Car size={18} color={iconTonePalette.green.fg} weight="duotone" />}
-                iconTone={jobListIconTone(job)}
-                title={job.package?.name ?? t('jobDetail.titleFallback')}
-                subtitle={formatJobDate(job.date)}
-                badgeLabel={mapJobStatusForDisplay(job)}
-                badgeTone={jobListBadgeTone(job)}
-                trailing={<AppText variant="bodySemiBold">{fmt(job.revenue + job.tip)}</AppText>}
-                onPress={() => openJob(job.id)}
-              />
-            ))}
-          </View>
-        </View>
-      ) : null}
-
-      {variant === 'screen' && client.phone ? (
-        <View style={styles.section}>
-          <AppText variant="sectionLabel">{t('clientDetail.contact')}</AppText>
-          <SecondaryButton label={t('clientDetail.call')} onPress={() => void handleCallClient()} />
-          <SecondaryButton label={t('clientDetail.text')} onPress={() => void handleTextClient()} />
-        </View>
+        <AccordionSection
+          title={t('clientDetail.jobHistory')}
+          hint={`${pastJobs.length} completed`}
+          icon={<Receipt size={19} color={colors.greenText} weight="duotone" />}
+          expanded={openSection === 'history'}
+          onToggle={() => toggleSection('history')}
+        >
+          {pastJobs.slice(0, 8).map((job, index) => (
+            <ListRow
+              key={job.id}
+              grouped={index < Math.min(pastJobs.length, 8) - 1}
+              icon={<Car size={18} color={iconTonePalette.green.fg} weight="duotone" />}
+              iconTone={jobListIconTone(job)}
+              title={job.package?.name ?? t('jobDetail.titleFallback')}
+              subtitle={formatJobDate(job.date)}
+              badgeLabel={mapJobStatusForDisplay(job)}
+              badgeTone={jobListBadgeTone(job)}
+              trailing={<AppText variant="bodySemiBold">{fmt(job.revenue + job.tip)}</AppText>}
+              onPress={() => openJob(job.id)}
+            />
+          ))}
+        </AccordionSection>
       ) : null}
 
       <Pressable
@@ -535,120 +607,65 @@ export function ClientDetailBody({ clientId, onClose, variant = 'screen' }: Clie
   )
 }
 
-function StatCell({ label, value, cap }: { label: string; value: string; cap?: boolean }) {
-  return (
-    <View style={styles.statCell}>
-      <AppText variant="caption" style={styles.statLabel}>
-        {label}
-      </AppText>
-      <AppText variant="bodySemiBold" style={cap ? styles.capValue : undefined}>
-        {value}
-      </AppText>
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
   scroll: {
     gap: spacing.sm,
   },
-  overlayHeader: {
-    gap: 4,
+  identityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.xs,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  avatarText: {
+    fontSize: 16,
+  },
+  identityCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 6,
+  },
+  identityName: {
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   muted: {
     color: colors.textMuted,
   },
-  directionsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    marginTop: spacing.xs,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.green,
-  },
-  directionsLabel: {
-    color: colors.greenText,
-  },
-  editLink: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.xs,
-  },
-  editLabel: {
-    color: colors.greenText,
-  },
-  actionGrid: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  actionCell: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: spacing.sm,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  ctaRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
+    borderRadius: radii.sheet,
+    paddingHorizontal: 14,
+    paddingVertical: spacing.sm,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  statCell: {
-    width: '46%',
-    gap: 2,
-  },
-  statLabel: {
-    color: colors.textMuted,
-  },
-  capValue: {
-    textTransform: 'capitalize',
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    ...shadows.card,
   },
   link: {
     color: colors.greenText,
+    fontWeight: '600',
+  },
+  addVehicleLink: {
+    marginTop: -spacing.sm,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
   },
   amount: {
     color: colors.greenText,
-  },
-  emptyVehicle: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    gap: spacing.sm,
-  },
-  groupCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    overflow: 'hidden',
   },
   removeBtn: {
     flexDirection: 'row',
@@ -656,7 +673,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.md,
-    borderRadius: 12,
+    borderRadius: radii.sheet,
     backgroundColor: '#fef2f2',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#fecaca',

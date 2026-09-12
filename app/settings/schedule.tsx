@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { Plus } from 'phosphor-react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
+import { Plus } from '@/src/icons'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { AddTimeOffSheet } from '@/src/components/settings/AddTimeOffSheet'
 import { BusinessFilledField } from '@/src/components/settings/BusinessFilledField'
@@ -15,10 +16,10 @@ import {
   ScreenLoading,
   SwipeableRow,
 } from '@/src/components/ui'
-import { bookingPageUrl } from '@/src/lib/booking-embed'
 import { DEFAULT_BOOKING_SCHEDULE, lunchBreakEnabled, SLOT_INTERVALS, ARRIVAL_WINDOW_OPTIONS, BUFFER_OPTIONS, DRIVE_TIME_PAD_OPTIONS, type BookingSchedule } from '@/src/lib/booking-schedule'
 import { formatStartTimeLabel } from '@/src/lib/home-dashboard'
-import { appOrigin, loadOrganizationSlug } from '@/src/lib/org-slug'
+import { openBookingCalendarPreview } from '@/src/lib/open-booking-preview'
+import { loadOrganizationSlug } from '@/src/lib/org-slug'
 import { loadSettings, saveSettings } from '@/src/lib/settings-store'
 import {
   createTimeBlock,
@@ -63,6 +64,7 @@ const INTERVAL_OPTIONS = SLOT_INTERVALS.map((mins) => ({
 }))
 
 export default function SettingsScheduleScreen() {
+  const { date: dateParam } = useLocalSearchParams<{ date?: string | string[] }>()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [schedule, setSchedule] = useState<BookingSchedule>({ ...DEFAULT_BOOKING_SCHEDULE })
@@ -80,6 +82,13 @@ export default function SettingsScheduleScreen() {
   const [savingBlock, setSavingBlock] = useState(false)
 
   const lunchEnabled = lunchBreakEnabled(schedule)
+
+  useEffect(() => {
+    const raw = Array.isArray(dateParam) ? dateParam[0] : dateParam
+    if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      setBlockDate(raw)
+    }
+  }, [dateParam])
 
   const loadBlocks = useCallback(async () => {
     setBlocksLoading(true)
@@ -107,11 +116,6 @@ export default function SettingsScheduleScreen() {
   useEffect(() => {
     void Promise.all([refresh(), loadBlocks()]).finally(() => setLoading(false))
   }, [loadBlocks, refresh])
-
-  const bookingUrl = useMemo(() => {
-    if (!slug) return null
-    return bookingPageUrl(appOrigin(), slug)
-  }, [slug])
 
   const patchSchedule = (patch: Partial<BookingSchedule>) => {
     setSchedule((prev) => ({ ...prev, ...patch }))
@@ -200,8 +204,8 @@ export default function SettingsScheduleScreen() {
             <AppText style={styles.sectionHead}>Work days</AppText>
             <AppText style={styles.sectionDesc}>Days clients can book online.</AppText>
             <WorkDayPills selected={schedule.work_days} onToggle={toggleWorkDay} />
-            {bookingUrl ? (
-              <Pressable onPress={() => void Linking.openURL(bookingUrl)}>
+            {slug ? (
+              <Pressable onPress={() => void openBookingCalendarPreview(slug)}>
                 <AppText style={styles.previewLink}>Preview booking calendar →</AppText>
               </Pressable>
             ) : null}

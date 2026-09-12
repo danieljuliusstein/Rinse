@@ -2,7 +2,7 @@
 
 - [x] 1. Write a failing money-parity exploration test that reproduces the bug
   - Create a shared fixture with jobs (including at least one `cancelled` job with non-zero `revenue`/`tip`), invoices (paid + unpaid), overhead, and business expenses.
-  - Assert that mobile P&L output (`apps/mobile-wave5-crm/src/lib/reports.ts` `computePLReportForDates`) and desktop P&L output (`apps/api/src/lib/api/aggregates.ts` `computePLReportForDates`) are EQUAL for revenue, totalExpenses, netProfit, marginPct, and jobCount on the same fixture and range.
+  - Assert that mobile P&L output (`apps/rinse-mobile/src/lib/reports.ts` `computePLReportForDates`) and desktop P&L output (`apps/api/src/lib/api/aggregates.ts` `computePLReportForDates`) are EQUAL for revenue, totalExpenses, netProfit, marginPct, and jobCount on the same fixture and range.
   - Also assert `rangeFor('lifetime')` start/end bounds are equal across the two apps.
   - This test is EXPECTED TO FAIL on current code (desktop counts the cancelled job; lifetime bounds differ). The failure confirms the root cause.
   - _Requirements: 1.1, 1.2, 3.3, 4.1, 4.2_
@@ -37,11 +37,11 @@
 
 - [x] 4. Point the mobile app at `@rinse/core` (same change as step 3)
 - [x] 4.1 Migrate mobile reports to core
-  - `apps/mobile-wave5-crm/src/lib/reports.ts`: re-export `computePLReportForDates`, `computePLReport`, `rangeFor`, `priorRangeFor`, `jobInRange`, `reportBoundsFor`, `lifetimeActivityStart`, and `PLReport` from `@rinse/core`; keep mobile-only pieces (`parseReportDate`, `REPORT_FILTER_CHIPS`).
+  - `apps/rinse-mobile/src/lib/reports.ts`: re-export `computePLReportForDates`, `computePLReport`, `rangeFor`, `priorRangeFor`, `jobInRange`, `reportBoundsFor`, `lifetimeActivityStart`, and `PLReport` from `@rinse/core`; keep mobile-only pieces (`parseReportDate`, `REPORT_FILTER_CHIPS`).
   - Keep the `listJobs` `status != "cancelled"` fetch filter as the primary mobile exclusion.
   - _Requirements: 1.1, 2.1, 3.1, 3.3_
 - [x] 4.2 Align mobile job-based month revenue with core exclusion
-  - Ensure mobile job-based revenue helpers (`apps/mobile-wave5-crm/src/lib/jobs-revenue.ts`) exclude cancelled jobs, and that invoice-collected month revenue stays invoice-based.
+  - Ensure mobile job-based revenue helpers (`apps/rinse-mobile/src/lib/jobs-revenue.ts`) exclude cancelled jobs, and that invoice-collected month revenue stays invoice-based.
   - _Requirements: 1.1, 3.1, 3.2_
 
 - [x] 5. Make the exploration test pass and add the full parity suite
@@ -55,6 +55,6 @@
   - _Requirements: 4.1, 4.2, 4.3_
 
 - [x] 6. Verify builds and full test runs for all three packages
-  - Run type-check/build and tests for `packages/core`, `apps/api` (`npm run test`), and `apps/mobile-wave5-crm` (`npm run typecheck` + the new test).
+  - Run type-check/build and tests for `packages/core`, `apps/api` (`npm run test`), and `apps/rinse-mobile` (`npm run typecheck` + the new test).
   - Confirm no remaining local money-math duplicates and no mixed state (both apps import from `@rinse/core`).
   - _Requirements: 2.1, 2.2, 4.1, 4.3_

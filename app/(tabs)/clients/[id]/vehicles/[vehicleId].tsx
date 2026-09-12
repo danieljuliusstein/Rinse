@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { PencilSimple, Plus } from 'phosphor-react-native'
+import { PencilSimple, Plus } from '@/src/icons'
 import type { DamageRecord, Vehicle } from '@rinse/core'
 import { CarDamageMap, OFF_MAP_AREAS } from '@/src/components/crm/CarDamageMap'
 import { DamageListRow } from '@/src/components/crm/DamageListRow'

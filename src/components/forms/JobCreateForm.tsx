@@ -29,7 +29,7 @@ import {
   Plus,
   Receipt,
   X,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import { FormField } from '@/src/components/FormField'
 import { FormRow } from '@/src/components/forms/FormRow'
 import { JobExpensesSheet, type JobExpenseDraft } from '@/src/components/jobs/JobExpensesSheet'

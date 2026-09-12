@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { CalendarBlank, MapPin } from 'phosphor-react-native'
+import { CalendarBlank, MapPin } from '@/src/icons'
 import { AppText, SecondaryButton } from '@/src/components/ui'
 import type { TodayJobCardData } from '@/src/lib/home-dashboard'
 import { todayJobDetailsLine } from '@/src/lib/home-dashboard'

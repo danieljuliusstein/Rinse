@@ -12,16 +12,30 @@ export function getPbUrl(): string {
   )
 }
 
+const PRODUCTION_APP_API_URL = 'https://app.rinsehq.com'
+
 export function getAppApiUrl(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined' && __DEV__) {
     // Same-origin proxy in metro dev server — avoids CORS to production API.
     return `${window.location.origin}/api-proxy`
   }
-  return (
+
+  const configured = (
     process.env.EXPO_PUBLIC_APP_API_URL ??
     (Constants.expoConfig?.extra?.appApiUrl as string | undefined) ??
     ''
-  )
+  ).trim()
+
+  if (configured && !/localhost|127\.0\.0\.1/i.test(configured)) {
+    return configured.replace(/\/$/, '')
+  }
+
+  // localhost only works in simulator / web proxy — physical devices need a reachable host.
+  if (configured && __DEV__ && !Constants.isDevice) {
+    return configured.replace(/\/$/, '')
+  }
+
+  return PRODUCTION_APP_API_URL
 }
 
 export function isPocketBaseConfigured(): boolean {

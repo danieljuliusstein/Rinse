@@ -1,7 +1,7 @@
 # Receipt on-device OCR + checklist review
 
 **Date:** 2026-07-24  
-**Surface:** `apps/mobile` (worktree `mobile-wave5-crm`, branch `feat/wave5-crm`)  
+**Surface:** `apps/rinse-mobile` (branch `feat/wave5-crm`)  
 **Status:** Approved (conversation)  
 **References:** existing `ReceiptLineItemsEditor`, `receipt-parse.ts` (cloud `/api/receipts/parse`), `vehicle-ocr.ts` (optional `expo-mlkit-ocr`)
 

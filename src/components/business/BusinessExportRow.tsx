@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
-import { DownloadSimple, FileText } from 'phosphor-react-native'
+import { DownloadSimple, FileText } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import { colors, spacing, webPressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { FileText, PaperPlaneTilt, Plus } from 'phosphor-react-native'
+import { FileText, PaperPlaneTilt, Plus } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import { colors, radii, spacing, webPressableReset } from '@/src/theme/colors'
 

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
-import { CaretLeft } from 'phosphor-react-native'
+import { CaretLeft } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
-import { colors, spacing } from '@/src/theme/colors'
+import { colors, spacing, webInlinePressableReset } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 import { lightHaptic } from '@/src/lib/haptics'
 
@@ -16,7 +16,7 @@ export function BackHeaderButton({ onPress, label = 'Back' }: { onPress: () => v
         lightHaptic()
         onPress()
       }}
-      style={styles.btn}
+      style={[styles.btn, webInlinePressableReset]}
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={8}

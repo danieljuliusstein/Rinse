@@ -1,8 +1,8 @@
-import type { ComponentType } from 'react'
 import { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import Animated from 'react-native-reanimated'
-import { CalendarBlank, Car, ChatCircle, Users } from 'phosphor-react-native'
+import type { Icon } from '@/src/icons'
+import { CalendarBlank, Car, ChatCircle, Users } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { Button } from '@/src/components/ui/Button'
 import { useReduceMotion } from '@/src/hooks/useReduceMotion'
@@ -11,7 +11,7 @@ import { colors, radii, spacing } from '@/src/theme/colors'
 
 export type EmptyIllustrationKind = 'jobs' | 'clients' | 'messages'
 
-const ILLUSTRATIONS: Record<EmptyIllustrationKind, ComponentType<{ size?: number; color?: string; weight?: 'duotone' | 'regular' }>> = {
+const ILLUSTRATIONS: Record<EmptyIllustrationKind, Icon> = {
   jobs: Car,
   clients: Users,
   messages: ChatCircle,

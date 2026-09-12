@@ -1,5 +1,5 @@
 import type { ImageSourcePropType } from 'react-native'
-import type { IconProps } from 'phosphor-react-native'
+import type { IconProps } from '@/src/icons'
 import {
   Briefcase,
   CalendarCheck,
@@ -9,7 +9,7 @@ import {
   Receipt,
   DeviceMobile,
   Users,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 
 export type IntroSlide =
   | {

@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { CaretLeft, CaretRight, Car } from 'phosphor-react-native'
+import { CaretLeft, CaretRight, Car } from '@/src/icons'
 import { fmt, type JobWithRelations } from '@rinse/core'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
 import { DayRouteBanner } from '@/src/components/jobs/DayRouteBanner'
@@ -16,6 +16,7 @@ import {
 } from '@/src/components/ui'
 import { SettingsHeader } from '@/src/components/ui/BackHeaderButton'
 import { useDetailNavigation } from '@/src/hooks/useDetailNavigation'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import { listJobs, updateJob } from '@/src/lib/api'
 import { dayRouteHasUsableStops, openDayRouteInAppleMaps } from '@/src/lib/day-route'
 import { jobsForDate } from '@/src/lib/home-dashboard'
@@ -67,6 +68,10 @@ export default function RoutesScreen() {
   const [depotAddress, setDepotAddress] = useState('')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load(true)
+  })
   const [reordering, setReordering] = useState(false)
 
   const load = useCallback(async (isRefresh = false) => {
@@ -93,7 +98,7 @@ export default function RoutesScreen() {
   )
 
   const dayJobs = useMemo(() => jobsForDate(jobs, date), [jobs, date])
-  const canStartRoute = dayRouteHasUsableStops(dayJobs)
+  const canStartRoute = dayRouteHasUsableStops(dayJobs, { depotAddress })
   const hasGarage = Boolean(depotAddress.trim())
   const dateLabel = new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
     weekday: 'short',
@@ -186,9 +191,7 @@ export default function RoutesScreen() {
         <ScreenLoading variant="list" />
       ) : (
         <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />
-          }
+          refreshControl={refreshControl}
           contentContainerStyle={[styles.list, { paddingBottom: dockPadding }]}
         >
           {dayJobs.length === 0 ? (
@@ -210,32 +213,6 @@ export default function RoutesScreen() {
                 }
                 startLabel={t('jobs.startRoute')}
                 onStartRoute={() => {
-                  // #region agent log
-                  if (typeof fetch !== 'undefined' && typeof window !== 'undefined') {
-                    fetch(`${window.location.origin}/__agent-debug`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'X-Debug-Session-Id': '89a058',
-                      },
-                      body: JSON.stringify({
-                        sessionId: '89a058',
-                        runId: 'post-fix',
-                        hypothesisId: 'A',
-                        location: 'routes.tsx:onStartRoute',
-                        message: 'Routes screen Start route',
-                        data: {
-                          selectedDate: date,
-                          dayJobCount: dayJobs.length,
-                          allJobsCount: jobs.length,
-                          dayNames: dayJobs.map((j) => j.client?.name ?? j.id),
-                          depotSet: Boolean(depotAddress.trim()),
-                        },
-                        timestamp: Date.now(),
-                      }),
-                    }).catch(() => {})
-                  }
-                  // #endregion
                   void openDayRouteInAppleMaps(dayJobs, {
                     depotAddress,
                     noStopsTitle: t('jobs.routeNoStopsTitle'),

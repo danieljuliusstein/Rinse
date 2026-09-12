@@ -44,6 +44,7 @@ export function InvoiceLayoutEditor({
   onTermsChange,
   saving,
   onSave,
+  onDone,
   logoUploading,
   onLogoUpload,
   onLogoRemove,
@@ -59,6 +60,7 @@ export function InvoiceLayoutEditor({
   onTermsChange: (next: string) => void
   saving?: boolean
   onSave: (layout: InvoiceEditorLayout) => void
+  onDone: () => void
   logoUploading?: boolean
   onLogoUpload: (asset: ImagePickerAsset) => Promise<void>
   onLogoRemove: () => Promise<void>
@@ -250,6 +252,7 @@ export function InvoiceLayoutEditor({
         canRedo={canRedo}
         snapEnabled={layout.snapEnabled}
         saving={saving}
+        onDone={onDone}
         onTemplate={() => setTemplateOpen(true)}
         onUndo={undo}
         onRedo={redo}

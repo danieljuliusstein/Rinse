@@ -1,9 +1,8 @@
 import { Modal, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
-import { X } from 'phosphor-react-native'
+import { X } from '@/src/icons'
 import type { DetailOverlayTarget } from '@/src/providers/detail-overlay-context'
 import { ClientDetailBody } from '@/src/components/detail/ClientDetailBody'
 import { JobDetailBody } from '@/src/components/detail/JobDetailBody'
-import { QuoteDetailBody } from '@/src/components/detail/QuoteDetailBody'
 import { colors, radii, spacing } from '@/src/theme/colors'
 
 interface DetailOverlayPanelProps {
@@ -34,16 +33,9 @@ export function DetailOverlayPanel({ target, onClose }: DetailOverlayPanelProps)
           <View style={styles.body}>
             {target.kind === 'job' ? (
               <JobDetailBody jobId={target.id} onClose={onClose} variant="overlay" />
-            ) : target.kind === 'quote' ? (
-              <QuoteDetailBody
-                quoteId={target.id}
-                onClose={onClose}
-                variant="overlay"
-                onRefresh={target.onRefresh}
-              />
-            ) : (
+            ) : target.kind === 'client' ? (
               <ClientDetailBody clientId={target.id} onClose={onClose} variant="overlay" />
-            )}
+            ) : null}
           </View>
         </View>
       </View>

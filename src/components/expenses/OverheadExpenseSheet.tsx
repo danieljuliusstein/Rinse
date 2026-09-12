@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.displayBold,
     fontSize: 22,
     color: colors.textPrimary,
   },

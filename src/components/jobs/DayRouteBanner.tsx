@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { NavigationArrow } from 'phosphor-react-native'
+import { NavigationArrow } from '@/src/icons'
 import { AppText, Button } from '@/src/components/ui'
 import { colors, iconTonePalette, spacing } from '@/src/theme/colors'
 

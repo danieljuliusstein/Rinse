@@ -1,17 +1,20 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Alert, StyleSheet, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import type { VehicleType } from '@rinse/core'
-import { FormField } from '@/src/components/FormField'
-import { FormRow } from '@/src/components/forms/FormRow'
-import { VehicleColorSwatchPicker } from '@/src/components/vehicles/VehicleColorSwatchPicker'
-import { VehicleVinField } from '@/src/components/vehicles/VehicleVinField'
-import { VehiclePlateField } from '@/src/components/vehicles/VehiclePlateField'
-import { AppSheet, PrimaryButton, SectionGroup } from '@/src/components/ui'
+import {
+  VehicleIdentityForm,
+  vehicleIdentityCanSave,
+  vehicleIdentityDisplayName,
+  vehicleIdentitySaveHint,
+  type VehicleIdentitySaveState,
+  type VehicleIdentityValues,
+} from '@/src/components/vehicles/VehicleIdentityForm'
+import { AppSheet, AppText } from '@/src/components/ui'
+import { SheetSubmitButton } from '@/src/components/ui/SheetSubmitButton'
 import { createVehicle } from '@/src/lib/damage-api'
 import { normalizeVehicleColorHex } from '@/src/lib/vehicle-color'
-import { VehicleTypePicker } from '@/src/lib/vehicle-type-icons'
-import { spacing } from '@/src/theme/colors'
+import { colors, spacing } from '@/src/theme/colors'
+import { fonts } from '@/src/theme/typography'
 
 export default function NewVehicleScreen() {
   const { id: clientId, vin: vinParam, make: makeParam, model: modelParam, year: yearParam } =
@@ -23,35 +26,52 @@ export default function NewVehicleScreen() {
       year?: string
     }>()
   const router = useRouter()
-  const [make, setMake] = useState(typeof makeParam === 'string' ? makeParam : '')
-  const [model, setModel] = useState(typeof modelParam === 'string' ? modelParam : '')
-  const [year, setYear] = useState(typeof yearParam === 'string' ? yearParam : '')
-  const [color, setColor] = useState('')
-  const [colorHex, setColorHex] = useState('')
-  const [plate, setPlate] = useState('')
-  const [vin, setVin] = useState(typeof vinParam === 'string' ? vinParam : '')
-  const [type, setType] = useState<VehicleType>('sedan')
+  const [values, setValues] = useState<VehicleIdentityValues>({
+    make: typeof makeParam === 'string' ? makeParam : '',
+    model: typeof modelParam === 'string' ? modelParam : '',
+    year: typeof yearParam === 'string' ? yearParam : '',
+    color: '',
+    colorHex: '',
+    plate: '',
+    vin: typeof vinParam === 'string' ? vinParam : '',
+    type: 'sedan',
+  })
   const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const canSave = vehicleIdentityCanSave(values)
+  const saveState: VehicleIdentitySaveState = saved
+    ? 'success'
+    : busy
+      ? 'saving'
+      : canSave
+        ? 'ready'
+        : 'disabled'
+
+  const handleChange = (patch: Partial<VehicleIdentityValues>) => {
+    setSaved(false)
+    setValues((prev) => ({ ...prev, ...patch }))
+  }
 
   const handleSave = async () => {
-    if (!clientId || !make.trim() || !model.trim()) {
-      Alert.alert('Vehicle', 'Make and model are required.')
-      return
-    }
+    if (!clientId || !canSave || busy || saved) return
     setBusy(true)
     try {
       const vehicle = await createVehicle({
         client_id: clientId,
-        make: make.trim(),
-        model: model.trim(),
-        year: year ? Number(year) : undefined,
-        color: color.trim() || undefined,
-        color_hex: normalizeVehicleColorHex(colorHex) ?? '',
-        plate: plate.trim() || undefined,
-        vin: vin.trim() || undefined,
-        type,
+        make: values.make.trim(),
+        model: values.model.trim(),
+        year: values.year ? Number(values.year) : undefined,
+        color: values.color.trim() || undefined,
+        color_hex: normalizeVehicleColorHex(values.colorHex) ?? '',
+        plate: values.plate.trim() || undefined,
+        vin: values.vin.trim() || undefined,
+        type: values.type,
       })
-      router.replace(`/(tabs)/clients/${clientId}/vehicles/${vehicle.id}`)
+      setSaved(true)
+      setTimeout(() => {
+        router.replace(`/(tabs)/clients/${clientId}/vehicles/${vehicle.id}`)
+      }, 700)
     } catch (e) {
       Alert.alert('Vehicle', e instanceof Error ? e.message : 'Could not save')
     } finally {
@@ -59,50 +79,41 @@ export default function NewVehicleScreen() {
     }
   }
 
+  const subtitle = useMemo(() => vehicleIdentityDisplayName(values), [values])
+
   return (
     <AppSheet
       title="Add vehicle"
-      subtitle="Client vehicle"
+      subtitle={subtitle}
       footer={
-        <View style={styles.actions}>
-          <PrimaryButton label="Save vehicle" loading={busy} onPress={() => void handleSave()} />
+        <View style={styles.footer}>
+          {!canSave && !saved ? (
+            <AppText style={styles.hint}>{vehicleIdentitySaveHint(values)}</AppText>
+          ) : null}
+          <SheetSubmitButton
+            label="Save vehicle"
+            doneLabel="Vehicle saved"
+            ready={canSave || saved}
+            done={saved}
+            loading={busy}
+            onPress={() => void handleSave()}
+          />
         </View>
       }
     >
-      <View style={styles.form}>
-        <SectionGroup inset>
-          <FormRow>
-            <FormField label="Make" value={make} onChangeText={setMake} />
-            <FormField label="Model" value={model} onChangeText={setModel} />
-          </FormRow>
-          <FormRow>
-            <FormField label="Year" value={year} onChangeText={setYear} keyboardType="decimal-pad" />
-            <FormField label="Color" value={color} onChangeText={setColor} />
-          </FormRow>
-          <VehicleColorSwatchPicker value={colorHex} onChange={setColorHex} />
-          <VehiclePlateField plate={plate} onPlateChange={setPlate} />
-          <VehicleVinField
-            vin={vin}
-            onVinChange={setVin}
-            onDecoded={(decoded) => {
-              if (decoded.make) setMake(decoded.make)
-              if (decoded.model) setModel(decoded.model)
-              if (decoded.year) setYear(String(decoded.year))
-            }}
-          />
-          <VehicleTypePicker value={type} onChange={setType} />
-        </SectionGroup>
-      </View>
+      <VehicleIdentityForm values={values} onChange={handleChange} saveState={saveState} />
     </AppSheet>
   )
 }
 
 const styles = StyleSheet.create({
-  form: {
-    gap: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  actions: {
+  footer: {
     gap: spacing.sm,
+  },
+  hint: {
+    fontSize: 10,
+    fontFamily: fonts.bodyMedium,
+    color: colors.textDim,
+    textAlign: 'center',
   },
 })

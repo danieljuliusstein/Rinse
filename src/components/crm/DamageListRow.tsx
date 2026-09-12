@@ -1,6 +1,6 @@
 import { formatLiabilityTimestamp, liabilityTimestamp, type DamageRecord } from '@rinse/core'
 import { Image, StyleSheet } from 'react-native'
-import { Image as ImageIcon } from 'phosphor-react-native'
+import { Image as ImageIcon } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { ListRow } from '@/src/components/ui/ListRow'
 import { colors } from '@/src/theme/colors'

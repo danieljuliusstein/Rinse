@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native'
-import { Warning, WarningCircle } from 'phosphor-react-native'
+import { Warning, WarningCircle } from '@/src/icons'
 import { AppText } from '@/src/components/ui'
 import type { InventoryAlertData } from '@/src/lib/home-dashboard'
 import { colors, spacing } from '@/src/theme/colors'

@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react'
-import { Lock } from 'phosphor-react-native'
+import { Lock } from '@/src/icons'
 import { PanResponder, Pressable, StyleSheet, View } from 'react-native'
 import { BlockContent } from '@/src/components/invoice/editor/BlockContent'
 import type { DropGhost, EditorPreviewData, PlacedElement, SnapGuide } from '@/src/lib/invoice-editor'

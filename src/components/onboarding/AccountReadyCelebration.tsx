@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { CheckCircle } from 'phosphor-react-native'
+import { CheckCircle } from '@/src/icons'
 import { AppText, PrimaryButton } from '@/src/components/ui'
 import { InvoiceTemplateMock } from '@/src/components/invoice/InvoiceTemplateMock'
 import type { InvoiceTemplateId } from '@/src/lib/invoice-templates'

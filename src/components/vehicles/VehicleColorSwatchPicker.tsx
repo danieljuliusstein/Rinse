@@ -1,17 +1,24 @@
 import { Platform, StyleSheet, TextInput, View } from 'react-native'
 import { AppText } from '@/src/components/ui/AppText'
 import { normalizeVehicleColorHex, vehicleColorDisplayHex } from '@/src/lib/vehicle-color'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
 type VehicleColorSwatchPickerProps = {
   value: string
   onChange: (hex: string) => void
+  /** Hide the section label when a parent field already owns “Color”. */
+  hideLabel?: boolean
 }
 
-/** Android / web — native `<input type="color">` on web; swatch + hex on Android. */
-export function VehicleColorSwatchPicker({ value, onChange }: VehicleColorSwatchPickerProps) {
+/** Android / web — compact swatch + hex inside one field row. */
+export function VehicleColorSwatchPicker({
+  value,
+  onChange,
+  hideLabel = false,
+}: VehicleColorSwatchPickerProps) {
   const displayHex = vehicleColorDisplayHex(value)
+  const filled = Boolean(normalizeVehicleColorHex(value))
 
   const commit = (next: string) => {
     const normalized = normalizeVehicleColorHex(next)
@@ -20,36 +27,36 @@ export function VehicleColorSwatchPicker({ value, onChange }: VehicleColorSwatch
 
   return (
     <View style={styles.wrap}>
-      <AppText variant="sectionLabel" style={styles.label}>
-        Color swatch
-      </AppText>
-      <View style={styles.row}>
-        {Platform.OS === 'web' ? (
-          <View style={styles.webWrap}>
+      {!hideLabel ? (
+        <AppText style={styles.label}>Paint swatch</AppText>
+      ) : null}
+      <View style={[styles.field, filled && styles.fieldFilled]}>
+        <View style={[styles.swatch, { backgroundColor: displayHex }]}>
+          {Platform.OS === 'web' ? (
             <input
               type="color"
               value={displayHex}
               onChange={(event) => commit(event.target.value)}
               aria-label="Pick vehicle color"
               style={{
-                width: 44,
-                height: 44,
-                padding: 0,
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                opacity: 0,
                 border: 'none',
-                background: 'transparent',
+                padding: 0,
                 cursor: 'pointer',
               }}
             />
-          </View>
-        ) : (
-          <View style={[styles.swatch, { backgroundColor: displayHex }]} />
-        )}
+          ) : null}
+        </View>
         <TextInput
           style={styles.hexInput}
           value={value}
           onChangeText={onChange}
           placeholder="#1a3a6a"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textDim}
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="off"
@@ -61,42 +68,48 @@ export function VehicleColorSwatchPicker({ value, onChange }: VehicleColorSwatch
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: spacing.sm,
+    gap: 6,
   },
   label: {
-    marginBottom: 0,
+    fontSize: 10,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
-  row: {
+  field: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-  },
-  webWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.md,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
+    gap: 10,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  fieldFilled: {
+    backgroundColor: '#f0fdf4',
+    borderColor: colors.greenBorder,
   },
   swatch: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.12)',
+    overflow: 'hidden',
+    position: 'relative',
   },
   hexInput: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: fonts.body,
+    minWidth: 0,
+    padding: 0,
+    margin: 0,
+    fontSize: 14,
+    fontFamily: fonts.bodySemiBold,
     color: colors.textPrimary,
-    minHeight: 48,
+    letterSpacing: 0.3,
   },
 })

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
-import { Check } from 'phosphor-react-native'
+import { Check } from '@/src/icons'
 import type { Package } from '@rinse/core'
 import { fmt } from '@rinse/core'
 import { AccountReadyCelebration } from '@/src/components/onboarding/AccountReadyCelebration'

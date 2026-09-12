@@ -6,12 +6,13 @@ import {
   PlusCircle,
   SlidersHorizontal,
   UsersThree,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { InvoiceLineTemplateManager } from '@/src/components/invoice/InvoiceLineTemplateManager'
 import { StripeConnectCard } from '@/src/components/settings/StripeConnectCard'
 import { ListRow, SectionGroup } from '@/src/components/ui'
+import { noScrollbarScrollProps } from '@/src/theme/invoice-surface'
 import { iconTonePalette, spacing } from '@/src/theme/colors'
 
 export default function SettingsInvoicingScreen() {
@@ -23,9 +24,9 @@ export default function SettingsInvoicingScreen() {
   const amber = iconTonePalette.amber
 
   return (
-    <SettingsScreen title={t('invoicing.title')} subtitle={t('invoicing.subtitle')}>
+    <SettingsScreen title={t('invoicing.title')} subtitle={t('invoicing.subtitle')} invoiceSurface>
       <ScrollView
-        showsVerticalScrollIndicator={false}
+        {...noScrollbarScrollProps}
         contentContainerStyle={styles.scroll}
       >
         <StripeConnectCard />

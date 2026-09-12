@@ -2,7 +2,7 @@ import { StyleSheet, TextInput, View } from 'react-native'
 import { Host, ColorPicker } from '@expo/ui/swift-ui'
 import { AppText } from '@/src/components/ui/AppText'
 import { normalizeVehicleColorHex, vehicleColorDisplayHex } from '@/src/lib/vehicle-color'
-import { colors, radii, spacing } from '@/src/theme/colors'
+import { colors } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
 
 function toOpaqueHex(value: string): string {
@@ -13,11 +13,17 @@ function toOpaqueHex(value: string): string {
 type VehicleColorSwatchPickerProps = {
   value: string
   onChange: (hex: string) => void
+  hideLabel?: boolean
 }
 
-/** iOS — SwiftUI ColorPicker + hex field. */
-export function VehicleColorSwatchPicker({ value, onChange }: VehicleColorSwatchPickerProps) {
+/** iOS — compact SwiftUI ColorPicker + hex in one field row. */
+export function VehicleColorSwatchPicker({
+  value,
+  onChange,
+  hideLabel = false,
+}: VehicleColorSwatchPickerProps) {
   const displayHex = vehicleColorDisplayHex(value)
+  const filled = Boolean(normalizeVehicleColorHex(value))
 
   const commit = (next: string) => {
     const normalized = normalizeVehicleColorHex(toOpaqueHex(next))
@@ -26,14 +32,14 @@ export function VehicleColorSwatchPicker({ value, onChange }: VehicleColorSwatch
 
   return (
     <View style={styles.wrap}>
-      <AppText variant="sectionLabel" style={styles.label}>
-        Color swatch
-      </AppText>
-      <View style={styles.row}>
+      {!hideLabel ? (
+        <AppText style={styles.label}>Paint swatch</AppText>
+      ) : null}
+      <View style={[styles.field, filled && styles.fieldFilled]}>
         <View style={styles.iosHost}>
           <Host matchContents>
             <ColorPicker
-              label="Paint"
+              label=""
               selection={displayHex}
               onSelectionChange={commit}
               supportsOpacity={false}
@@ -45,7 +51,7 @@ export function VehicleColorSwatchPicker({ value, onChange }: VehicleColorSwatch
           value={value}
           onChangeText={onChange}
           placeholder="#1a3a6a"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textDim}
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="off"
@@ -57,32 +63,47 @@ export function VehicleColorSwatchPicker({ value, onChange }: VehicleColorSwatch
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: spacing.sm,
+    gap: 6,
   },
   label: {
-    marginBottom: 0,
+    fontSize: 10,
+    fontFamily: fonts.bodySemiBold,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
-  row: {
+  field: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 10,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  fieldFilled: {
+    backgroundColor: '#f0fdf4',
+    borderColor: colors.greenBorder,
   },
   iosHost: {
-    minWidth: 44,
-    minHeight: 44,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    overflow: 'hidden',
+    alignItems: 'center',
     justifyContent: 'center',
   },
   hexInput: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: fonts.body,
+    minWidth: 0,
+    padding: 0,
+    margin: 0,
+    fontSize: 14,
+    fontFamily: fonts.bodySemiBold,
     color: colors.textPrimary,
-    minHeight: 48,
+    letterSpacing: 0.3,
   },
 })

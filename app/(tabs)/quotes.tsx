@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react'
-import { RefreshControl, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
-import { FileText } from 'phosphor-react-native'
+import { FileText } from '@/src/icons'
 import { fmt } from '@rinse/core'
 import type { QuoteWithRelations } from '@rinse/core'
 import { OperatorScreen, useTabDockPadding } from '@/src/components/OperatorScreen'
+import { useTabRefreshControl } from '@/src/hooks/useTabRefreshControl'
 import {
   AppFlashList,
   AppText,
@@ -25,6 +26,10 @@ export default function QuotesListScreen() {
   const [quotes, setQuotes] = useState<QuoteWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const refreshControl = useTabRefreshControl(refreshing, () => {
+    void load(true)
+  })
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
@@ -69,7 +74,7 @@ export default function QuotesListScreen() {
         <AppFlashList
           data={quotes}
           keyExtractor={(item) => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}
+          refreshControl={refreshControl}
           renderItem={({ item, index }) => (
             <StaggeredListItem index={index}>
               <ListRow

@@ -1,4 +1,4 @@
-import { Flask, Package, Star, Wrench } from 'phosphor-react-native'
+import { Flask, Package, Star, Wrench } from '@/src/icons'
 import type { Equipment, Supply } from '@rinse/core'
 import { AppText, ListRow } from '@/src/components/ui'
 import type { HomeInventoryItem } from '@/src/lib/home-inventory'

@@ -18,7 +18,7 @@
 - Keep `receipt_ocr` premium gate on Scan hub entry
 - Do not change PocketBase expense schema or save API
 - Commits only when the user asks
-- Verify: `npx vitest run` in `packages/core` for heuristics; `npm run typecheck` in `apps/mobile-wave5-crm`
+- Verify: `npx vitest run` in `packages/core` for heuristics; `npm run typecheck` in `apps/rinse-mobile`
 
 ---
 
@@ -29,16 +29,16 @@
 | `packages/core/src/receipt-heuristics.ts` | **Create** — `parseReceiptHeuristics`, money/date helpers, `ReceiptHeuristicLine` |
 | `packages/core/src/receipt-heuristics.test.ts` | **Create** — fixture receipt text tests |
 | `packages/core/src/index.ts` | Re-export heuristics |
-| `apps/mobile-wave5-crm/src/lib/receipt-ocr.ts` | **Create** — `isOnDeviceReceiptOcrAvailable`, `recognizeReceiptText` |
-| `apps/mobile-wave5-crm/src/lib/receipt-review-draft.ts` | **Create** — in-memory handoff between review → expense form / sheet |
-| `apps/mobile-wave5-crm/src/lib/receipt-parse.ts` | Rewrite — on-device path + `includedLinesToExpenseLines`; drop cloud `appApiJson` |
-| `apps/mobile-wave5-crm/src/components/expenses/ReceiptReviewChecklist.tsx` | **Create** — checklist UI (fields + rows + Continue) |
-| `apps/mobile-wave5-crm/app/expenses/receipt-review.tsx` | **Create** — capture → OCR → checklist screen |
-| `apps/mobile-wave5-crm/app/_layout.tsx` | Register `expenses/receipt-review` stack screen |
-| `apps/mobile-wave5-crm/app/scan.tsx` | Route receipt to `/expenses/receipt-review` |
-| `apps/mobile-wave5-crm/app/expenses/new.tsx` | Consume draft; remove inline auto-scan editor path |
-| `apps/mobile-wave5-crm/src/components/expenses/BusinessExpenseSheet.tsx` | Add-receipt → review route; consume draft on focus |
-| `apps/mobile-wave5-crm/src/components/expenses/ReceiptLineItemsEditor.tsx` | Strip cloud OCR; photo-only attach for non-review paths (or delete if unused) |
+| `apps/rinse-mobile/src/lib/receipt-ocr.ts` | **Create** — `isOnDeviceReceiptOcrAvailable`, `recognizeReceiptText` |
+| `apps/rinse-mobile/src/lib/receipt-review-draft.ts` | **Create** — in-memory handoff between review → expense form / sheet |
+| `apps/rinse-mobile/src/lib/receipt-parse.ts` | Rewrite — on-device path + `includedLinesToExpenseLines`; drop cloud `appApiJson` |
+| `apps/rinse-mobile/src/components/expenses/ReceiptReviewChecklist.tsx` | **Create** — checklist UI (fields + rows + Continue) |
+| `apps/rinse-mobile/app/expenses/receipt-review.tsx` | **Create** — capture → OCR → checklist screen |
+| `apps/rinse-mobile/app/_layout.tsx` | Register `expenses/receipt-review` stack screen |
+| `apps/rinse-mobile/app/scan.tsx` | Route receipt to `/expenses/receipt-review` |
+| `apps/rinse-mobile/app/expenses/new.tsx` | Consume draft; remove inline auto-scan editor path |
+| `apps/rinse-mobile/src/components/expenses/BusinessExpenseSheet.tsx` | Add-receipt → review route; consume draft on focus |
+| `apps/rinse-mobile/src/components/expenses/ReceiptLineItemsEditor.tsx` | Strip cloud OCR; photo-only attach for non-review paths (or delete if unused) |
 
 ---
 
@@ -239,7 +239,7 @@ git commit -m "feat(core): add receipt OCR heuristics parser"
 ### Task 2: On-device receipt OCR wrapper
 
 **Files:**
-- Create: `apps/mobile-wave5-crm/src/lib/receipt-ocr.ts`
+- Create: `apps/rinse-mobile/src/lib/receipt-ocr.ts`
 
 **Interfaces:**
 - Consumes: `expo-modules-core` `requireOptionalNativeModule` (same as `vehicle-ocr.ts`)
@@ -299,7 +299,7 @@ export async function recognizeReceiptText(uri: string): Promise<string | null> 
 
 - [ ] **Step 2: Typecheck touch**
 
-Run: `cd /Users/danny/Projects/Detailing/apps/mobile-wave5-crm && npx tsc --noEmit --pretty false 2>&1 | head -40`  
+Run: `cd /Users/danny/Projects/Detailing/apps/rinse-mobile && npx tsc --noEmit --pretty false 2>&1 | head -40`  
 Expected: no errors in `receipt-ocr.ts` (ignore unrelated pre-existing errors if any)
 
 - [ ] **Step 3: Commit** (only if user asks)
@@ -309,8 +309,8 @@ Expected: no errors in `receipt-ocr.ts` (ignore unrelated pre-existing errors if
 ### Task 3: Draft store + parse handoff helpers
 
 **Files:**
-- Create: `apps/mobile-wave5-crm/src/lib/receipt-review-draft.ts`
-- Modify: `apps/mobile-wave5-crm/src/lib/receipt-parse.ts`
+- Create: `apps/rinse-mobile/src/lib/receipt-review-draft.ts`
+- Modify: `apps/rinse-mobile/src/lib/receipt-parse.ts`
 
 **Interfaces:**
 - Consumes: `ReceiptHeuristicsResult` / `ReceiptHeuristicLine` from `@rinse/core`; `ExpenseLine` from `@rinse/core`; `ReceiptImageAsset` from `business-expenses-api`
@@ -423,7 +423,7 @@ Remove `FileSystem` + `appApiJson` imports from this file.
 Run:
 
 ```bash
-cd /Users/danny/Projects/Detailing/apps/mobile-wave5-crm && npx tsx -e "
+cd /Users/danny/Projects/Detailing/apps/rinse-mobile && npx tsx -e "
 import { parseReceiptHeuristics } from '@rinse/core';
 const r = parseReceiptHeuristics('AUTOZONE\\n07/12/2026\\nCERAMIC 24.99\\nTAX 3.84\\nTOTAL 47.82');
 console.log(JSON.stringify(r, null, 2));
@@ -439,7 +439,7 @@ Expected: merchant AutoZone-ish, date `2026-07-12`, total `47.82`, ceramic `incl
 ### Task 4: Checklist UI component
 
 **Files:**
-- Create: `apps/mobile-wave5-crm/src/components/expenses/ReceiptReviewChecklist.tsx`
+- Create: `apps/rinse-mobile/src/components/expenses/ReceiptReviewChecklist.tsx`
 
 **Interfaces:**
 - Consumes: `ReceiptHeuristicLine`, theme tokens, `FormField`, `AppText`, `PrimaryButton`
@@ -494,8 +494,8 @@ Run: `npm run typecheck` in mobile worktree (or `tsc` filtered)
 ### Task 5: Receipt review screen + stack registration
 
 **Files:**
-- Create: `apps/mobile-wave5-crm/app/expenses/receipt-review.tsx`
-- Modify: `apps/mobile-wave5-crm/app/_layout.tsx` — add  
+- Create: `apps/rinse-mobile/app/expenses/receipt-review.tsx`
+- Modify: `apps/rinse-mobile/app/_layout.tsx` — add  
   `<Stack.Screen name="expenses/receipt-review" options={sheetScreenOptions} />`
 
 **Interfaces:**
@@ -542,9 +542,9 @@ Open `/expenses/receipt-review` — confirm sheet renders Take photo / Upload.
 ### Task 6: Wire entry points
 
 **Files:**
-- Modify: `apps/mobile-wave5-crm/app/scan.tsx`
-- Modify: `apps/mobile-wave5-crm/app/expenses/new.tsx`
-- Modify: `apps/mobile-wave5-crm/src/components/expenses/BusinessExpenseSheet.tsx`
+- Modify: `apps/rinse-mobile/app/scan.tsx`
+- Modify: `apps/rinse-mobile/app/expenses/new.tsx`
+- Modify: `apps/rinse-mobile/src/components/expenses/BusinessExpenseSheet.tsx`
 
 - [ ] **Step 1: Scan hub**
 
@@ -606,7 +606,7 @@ if (draft) {
 
 - [ ] **Step 4: Typecheck**
 
-Run: `cd /Users/danny/Projects/Detailing/apps/mobile-wave5-crm && npm run typecheck`
+Run: `cd /Users/danny/Projects/Detailing/apps/rinse-mobile && npm run typecheck`
 
 - [ ] **Step 5: Commit** (only if user asks)
 
@@ -615,7 +615,7 @@ Run: `cd /Users/danny/Projects/Detailing/apps/mobile-wave5-crm && npm run typech
 ### Task 7: Slim / retire cloud scan from `ReceiptLineItemsEditor`
 
 **Files:**
-- Modify: `apps/mobile-wave5-crm/src/components/expenses/ReceiptLineItemsEditor.tsx`
+- Modify: `apps/rinse-mobile/src/components/expenses/ReceiptLineItemsEditor.tsx`
 
 - [ ] **Step 1: Remove `parseReceiptImage` / scanning state**
 
@@ -625,7 +625,7 @@ If after Task 6 no callers need attach-in-editor, delete the component and inlin
 
 - [ ] **Step 2: Grep for dead imports**
 
-Run: `rg "parseReceiptImage|ReceiptLineItemsEditor|/api/receipts/parse" apps/mobile-wave5-crm`  
+Run: `rg "parseReceiptImage|ReceiptLineItemsEditor|/api/receipts/parse" apps/rinse-mobile`  
 Expected: no cloud parse usage; editor only if still referenced.
 
 - [ ] **Step 3: Typecheck + commit** (commit only if user asks)
@@ -645,7 +645,7 @@ Expected: PASS
 - [ ] **Step 2: Typecheck**
 
 ```bash
-cd /Users/danny/Projects/Detailing/apps/mobile-wave5-crm && npm run typecheck
+cd /Users/danny/Projects/Detailing/apps/rinse-mobile && npm run typecheck
 ```
 
 Expected: exit 0

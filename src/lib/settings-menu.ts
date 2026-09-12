@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { Icon } from '@/src/icons'
 import {
   Bell,
   CalendarBlank,
@@ -17,7 +17,7 @@ import {
   UserCircle,
   Wallet,
   Wrench,
-} from 'phosphor-react-native'
+} from '@/src/icons'
 import i18n from '@/src/i18n'
 
 export type SettingsIconTone = 'green' | 'amber' | 'blue' | 'purple'
@@ -28,7 +28,7 @@ export interface SettingsMenuItem {
   titleKey: string
   subtitleKey: string
   href: string
-  Icon: ComponentType<{ size?: number; color?: string; weight?: 'duotone' | 'regular' | 'fill' }>
+  Icon: Icon
   tone: SettingsIconTone
   searchKeys: string[]
 }

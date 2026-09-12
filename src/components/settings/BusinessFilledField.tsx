@@ -1,4 +1,4 @@
-import { Check } from 'phosphor-react-native'
+import { Check } from '@/src/icons'
 import { StyleSheet, TextInput, View } from 'react-native'
 import { AppText } from '@/src/components/ui'
 import { accentBorder, accentTint, normalizeAccentColor } from '@/src/lib/brand-color'

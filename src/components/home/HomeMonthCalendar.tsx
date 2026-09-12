@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native'
-import { CaretLeft, CaretRight } from 'phosphor-react-native'
+import { CaretLeft, CaretRight } from '@/src/icons'
 import { activeJobs, type JobWithRelations } from '@rinse/core'
 import { AppText } from '@/src/components/ui'
 import { selectionHaptic } from '@/src/lib/haptics'
@@ -268,9 +268,7 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
   },
   dayBubbleBlocked: {
-    backgroundColor: 'rgba(142, 142, 147, 0.35)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(142, 142, 147, 0.65)',
+    opacity: 0.45,
   },
   dayNum: {
     color: colors.textPrimary,
@@ -293,7 +291,6 @@ const styles = StyleSheet.create({
   dayBlocked: {
     textDecorationLine: 'line-through',
     color: colors.textMuted,
-    opacity: 0.9,
   },
   dots: {
     flexDirection: 'row',
