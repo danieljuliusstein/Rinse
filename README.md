@@ -1,6 +1,6 @@
 # Rinse
 
-One git repo for the Rinse product. **Separate deploys** — do not confuse them.
+One git repo for the Rinse product. **Separate deploys** !!!!! do not confuse them.
 
 | Path | Role | Deploy |
 |------|------|--------|
