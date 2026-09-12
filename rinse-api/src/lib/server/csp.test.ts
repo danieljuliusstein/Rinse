@@ -1,0 +1,55 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { buildContentSecurityPolicyReportOnly, embedFrameAncestors } from './csp'
+
+describe('buildContentSecurityPolicyReportOnly', () => {
+  const prevPb = process.env.NEXT_PUBLIC_PB_URL
+
+  beforeAll(() => {
+    process.env.NEXT_PUBLIC_PB_URL = 'https://detailing-pb.fly.dev'
+  })
+
+  afterEach(() => {
+    delete process.env.BOOKING_ALLOWED_ORIGINS
+  })
+
+  afterAll(() => {
+    if (prevPb === undefined) delete process.env.NEXT_PUBLIC_PB_URL
+    else process.env.NEXT_PUBLIC_PB_URL = prevPb
+  })
+
+  it('uses self frame-ancestors on operator routes', () => {
+    const csp = buildContentSecurityPolicyReportOnly('/jobs')
+    expect(csp).toContain("frame-ancestors 'self'")
+    expect(csp).not.toContain('frame-ancestors *')
+  })
+
+  it('allows configured origins in frame-ancestors on book routes', () => {
+    process.env.BOOKING_ALLOWED_ORIGINS = 'https://rinsehq.com,https://customer.example.com'
+    const csp = buildContentSecurityPolicyReportOnly('/book/atlas-detailing')
+    expect(csp).toContain("frame-ancestors 'self' https://rinsehq.com https://customer.example.com")
+  })
+
+  it('includes report-uri and Stripe connect hosts', () => {
+    const csp = buildContentSecurityPolicyReportOnly('/portal/abc')
+    expect(csp).toContain('report-uri /api/csp-report')
+    expect(csp).toContain('https://api.stripe.com')
+    expect(csp).toContain('https://detailing-pb.fly.dev')
+  })
+
+  it('applies embed frame-ancestors on /embed paths', () => {
+    process.env.BOOKING_ALLOWED_ORIGINS = 'https://marketing.test'
+    const csp = buildContentSecurityPolicyReportOnly('/embed/book/slug')
+    expect(csp).toContain('frame-ancestors')
+    expect(csp).toContain('https://marketing.test')
+  })
+})
+
+describe('embedFrameAncestors', () => {
+  afterEach(() => {
+    delete process.env.BOOKING_ALLOWED_ORIGINS
+  })
+
+  it('defaults to self only', () => {
+    expect(embedFrameAncestors()).toBe("'self'")
+  })
+})

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Council Report — Rinse Onboarding UI/UX</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --surface: #fff;
+      --border: rgba(0,0,0,.08);
+      --text: #1c1c1e;
+      --muted: #6c6c70;
+      --hint: #8e8e93;
+      --accent: #22c55e;
+      --accent-dim: rgba(34,197,94,.12);
+      --warn: #ff9500;
+      --danger: #ff3b30;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+    header { margin-bottom: 28px; }
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent); margin: 0 0 8px;
+    }
+    h1 { font-size: 28px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 8px; }
+    .meta { font-size: 14px; color: var(--muted); margin: 0; }
+    .verdict {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .verdict h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--hint); margin: 0 0 12px; }
+    .verdict-lead { font-size: 17px; font-weight: 600; line-height: 1.45; margin: 0 0 16px; }
+    .verdict ul { margin: 0; padding-left: 20px; }
+    .verdict li { margin-bottom: 8px; font-size: 15px; }
+    .verdict .cta-box {
+      margin-top: 20px; padding: 16px; border-radius: 12px;
+      background: var(--accent-dim); border: 1px solid rgba(34,197,94,.25);
+    }
+    .verdict .cta-box strong { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); margin-bottom: 6px; }
+    .verdict .cta-box p { margin: 0; font-size: 15px; font-weight: 500; }
+    .grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;
+    }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px;
+    }
+    .card h3 { font-size: 13px; margin: 0 0 10px; color: var(--hint); font-weight: 600; }
+    .align-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 999px;
+      background: var(--bg); border: 1px solid var(--border);
+    }
+    .pill--agree { background: var(--accent-dim); border-color: rgba(34,197,94,.3); color: #15803d; }
+    .pill--clash { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
+    .spectrum { margin-top: 12px; }
+    .spectrum-label { font-size: 11px; color: var(--hint); margin-bottom: 6px; }
+    .bar { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--danger) 0%, var(--warn) 50%, var(--accent) 100%); position: relative; }
+    .marker {
+      position: absolute; top: -5px; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--text); border: 2px solid #fff; transform: translateX(-50%);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    details {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 10px; overflow: hidden;
+    }
+    summary {
+      padding: 14px 16px; font-weight: 600; font-size: 15px; cursor: pointer;
+      list-style: none; display: flex; align-items: center; justify-content: space-between;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; color: var(--hint); font-size: 18px; font-weight: 400; }
+    details[open] summary::after { content: '−'; }
+    .detail-body { padding: 0 16px 16px; font-size: 14px; color: var(--text); border-top: 1px solid var(--border); }
+    .detail-body p { margin: 12px 0 0; }
+    .advisor-tag {
+      display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: 6px; margin-bottom: 8px;
+    }
+    .tag-contrarian { background: #fee2e2; color: #b91c1c; }
+    .tag-principles { background: #e0e7ff; color: #3730a3; }
+    .tag-expansion { background: #dcfce7; color: #166534; }
+    .tag-outsider { background: #fef3c7; color: #92400e; }
+    .tag-executor { background: #e5e7eb; color: #374151; }
+    footer { margin-top: 32px; font-size: 12px; color: var(--hint); text-align: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--hint); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">LLM Council · UI/UX</p>
+      <h1>Rinse Setup Onboarding</h1>
+      <p class="meta">2026-07-01 · Welcome → Auth → 6-step onboarding (post iOS polish)</p>
+    </header>
+
+    <section class="verdict">
+      <h2>Council Verdict</h2>
+      <p class="verdict-lead">Keep the iOS UI language. Cut perceived length and configuration — optimize for “see your invoice” and “share your link,” not completeness.</p>
+      <ul>
+        <li><strong>Keep:</strong> Settings rows, section labels, footnotes, grouped cards, frosted footer.</li>
+        <li><strong>Fix:</strong> 6-step + mini-screen fatigue; sample invoice anxiety; weak booking share moment; welcome/onboarding tone shift.</li>
+        <li><strong>Defer:</strong> inline package editing, template gallery depth, operator app shell.</li>
+      </ul>
+      <div class="cta-box">
+        <strong>The one thing to do first</strong>
+        <p>Collapse business step to one grouped card + add per-step completion analytics before bigger restructuring.</p>
+      </div>
+    </section>
+
+    <div class="grid">
+      <div class="card">
+        <h3>High-confidence agreement</h3>
+        <div class="align-row">
+          <span class="pill pill--agree">iOS rows ✓</span>
+          <span class="pill pill--agree">Too long ✓</span>
+          <span class="pill pill--agree">Invoice = peak ✓</span>
+          <span class="pill pill--agree">Jargon hurts ✓</span>
+          <span class="pill pill--agree">Tone shift ✓</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Main tension</h3>
+        <div class="align-row">
+          <span class="pill pill--clash">Cut to 2–3 steps</span>
+          <span class="pill pill--clash">vs streamline 6</span>
+        </div>
+        <div class="spectrum">
+          <div class="spectrum-label">Advisor lean: radical cut ← → tactical polish</div>
+          <div class="bar"><div class="marker" style="left: 62%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 24px;">
+      <h3>Where advisors aligned vs diverged</h3>
+      <table>
+        <thead><tr><th>Advisor</th><th>Core take</th><th>Position</th></tr></thead>
+        <tbody>
+          <tr><td>Contrarian</td><td>Length + sample invoice + plans trust leak will kill completion</td><td>Cut hard</td></tr>
+          <tr><td>First Principles</td><td>Goal is confidence, not config — 2–3 moments max</td><td>Cut hard</td></tr>
+          <tr><td>Expansionist</td><td>Invoice preview + share link are viral loops — move earlier, amplify</td><td>Reorder</td></tr>
+          <tr><td>Outsider</td><td>Fake client + packages/templates jargon is scary/confusing</td><td>Simplify copy</td></tr>
+          <tr><td>Executor</td><td>Specific 1–2 day fixes; measure before rewrite</td><td>Polish</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Where the council agrees (full)</summary>
+      <div class="detail-body">
+        <p>iOS row inputs, section labels, and footnotes are the right mobile pattern for non-technical owners. The flow is still too long for phone-between-jobs context. The first-invoice preview is the core product moment but arrives too late. Welcome (Syne marketing) and onboarding (Settings forms) feel like two apps. Terms like packages, templates, and sample invoice confuse fresh users.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Where the council clashes</summary>
+      <div class="detail-body">
+        <p><strong>Step count:</strong> First Principles wants 2–3 moments; Executor says keep 6 slugs but collapse screens and defer optional fields.</p>
+        <p><strong>Services:</strong> Defer all editing vs read-only defaults with edit-in-settings link.</p>
+        <p><strong>Plans step:</strong> Contrarian wants it gone or pre-app; Executor wants better CTA copy only.</p>
+        <p><strong>Chairman resolution:</strong> Don't rewrite routing yet — reduce perceived screens, add analytics, then decide.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Blind spots from peer review</summary>
+      <div class="detail-body">
+        <p>Double progress (6-bar + mini-dots). Sample invoice may create real records — users fear sending to clients. Booking step needs Copy/Share as primary UI. Resume-after-abandon UX. Logo upload on slow networks. Right-aligned inputs truncating long business names.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-tag tag-contrarian">Contrarian</span> Full response</summary>
+      <div class="detail-body">
+        <p>iOS polish fixed inputs not length. Six steps + three business mini-screens = 8+ screens before unlock. Sample invoice is homework with API calls. Welcome Syne vs onboarding Settings is a tone cliff. Six-segment progress signals long setup. Plans step after five config screens feels bait-and-switch. Step 2 (edit 4 packages) and step 4 (fake records) will drive drop-off.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-tag tag-principles">First Principles</span> Full response</summary>
+      <div class="detail-body">
+        <p>Job-to-be-done: enough data to invoice, proof app works, one shareable win. Not template galleries or four package descriptions on day zero. Right shape: business name + phone → invoice with their name → booking link. Keep iOS UI language; cut information architecture. Defer logo, accent, address, service editing to in-app settings.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-tag tag-expansion">Expansionist</span> Full response</summary>
+      <div class="detail-body">
+        <p>Invoice preview is the emotional peak — show it within 60s using auth business name. Booking link should end with native share + suggested caption. Services could use smart regional defaults instead of editing forms. iOS trust aesthetic is a moat if the flow is shorter and ends with a textable artifact.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-tag tag-outsider">Outsider</span> Full response</summary>
+      <div class="detail-body">
+        <p>Sample invoice scary — will someone get billed? Why edit four services first? Six green bars = long wait. "Try Rinse free" confusing after signup. iOS forms feel legit. Expected: name, phone, price, show customer view, share link. Jargon: packages, templates, accent colors vs "text a price and get paid."</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="advisor-tag tag-executor">Executor</span> Full response</summary>
+      <div class="detail-body">
+        <p>1–2 day fixes: unify welcome/onboarding typography; one business card not three mini-screens; services read-only defaults; pre-fill sample client + preview banner; booking Copy/Share above fold; plans CTA "Enter Rinse." Don't touch operator shell or OAuth. Add step analytics immediately.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Recommended next sprint (priority order)</summary>
+      <div class="detail-body">
+        <ol>
+          <li>Merge business mini-screens → one card</li>
+          <li>Step completion analytics</li>
+          <li>Services: read-only defaults</li>
+          <li>First invoice: pre-fill + "nothing sent" banner</li>
+          <li>Booking: Copy + Share primary</li>
+          <li>Invoice look: default pre-selected, customize later</li>
+          <li>Plans: rename primary CTA</li>
+        </ol>
+      </div>
+    </details>
+
+    <footer>
+      Council transcript: council-transcript-2026-07-01-onboarding-ui.md · Methodology: Karpathy LLM Council
+    </footer>
+  </div>
+</body>
+</html>

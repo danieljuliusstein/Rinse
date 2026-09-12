@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-06-28T11:55:18.000Z",
+  "orgSlug": "summit-detail",
+  "orgId": "66a2hvcx6gdcmn1",
+  "appUrl": "https://rinsehq.com",
+  "businessName": "Summit Mobile Detail",
+  "ids": {
+    "paidJobId": "w9e92tz5aeg0dcn",
+    "photoJobId": "w9e92tz5aeg0dcn",
+    "inProgressJobId": "56o9854x7p11z5t",
+    "clientMarcusId": "964iqss03gmjevr",
+    "clientSarahId": "ocmse3t074jumdx",
+    "clientId": "964iqss03gmjevr",
+    "sentInvoiceId": "ogkfi2gcdwfsv7w",
+    "paidInvoiceId": "65lhgrscq4rtn3m",
+    "fullDetailPackageId": "liiwzqybhx5lsom"
+  },
+  "routes": {
+    "home": "/",
+    "jobs": "/jobs",
+    "jobDetail": "/jobs/w9e92tz5aeg0dcn",
+    "jobPhotos": "/jobs/w9e92tz5aeg0dcn/photos",
+    "client": "/clients/964iqss03gmjevr",
+    "reports": "/reports",
+    "pipeline": "/pipeline",
+    "booking": "/book/summit-detail",
+    "bookingDeep": "/book/summit-detail?package=liiwzqybhx5lsom&date=2026-06-29",
+    "settingsBusiness": "/settings/business",
+    "portal": null
+  },
+  "portalToken": null,
+  "portalUrl": null,
+  "capture": {
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 3
+    },
+    "authEmail": "demo@rinsehq.com"
+  }
+}

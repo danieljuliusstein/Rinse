@@ -1,0 +1,207 @@
+import {
+  addressCacheKey,
+  buildWeatherReadiness,
+  geocodeQueryCandidates,
+  isoDate,
+  nextThreeDayDates,
+  roundCoord,
+  weatherCacheKey,
+  type DayForecast,
+  type WeatherJobInput,
+  type WeatherReadinessResult,
+} from '@/lib/weather-risk'
+import {
+  __clearWeatherCachesForTests,
+  readForecastCache,
+  readGeocodeCache,
+  writeForecastCache,
+  writeGeocodeCache,
+} from './weather-cache-store'
+
+export { __clearWeatherCachesForTests }
+
+interface GeoCoords {
+  lat: number
+  lon: number
+}
+
+function todayKey(now = new Date()): string {
+  return isoDate(now)
+}
+
+async function geocodePlaceName(name: string): Promise<GeoCoords | null> {
+  const url = new URL('https://geocoding-api.open-meteo.com/v1/search')
+  url.searchParams.set('name', name)
+  url.searchParams.set('count', '1')
+  url.searchParams.set('language', 'en')
+  url.searchParams.set('format', 'json')
+
+  try {
+    const res = await fetch(url.toString(), { next: { revalidate: 86400 } })
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      results?: Array<{ latitude?: number; longitude?: number }>
+    }
+    const hit = data.results?.[0]
+    if (hit?.latitude == null || hit?.longitude == null) return null
+    return { lat: hit.latitude, lon: hit.longitude }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Geocode via Open-Meteo (no API key). Street lines are reduced to city/place
+ * candidates — Open-Meteo does not resolve full US street addresses.
+ * Cached per calendar day in PocketBase (plus L1 within the invocation).
+ */
+export async function geocodeAddress(address: string, now = new Date()): Promise<GeoCoords | null> {
+  const trimmed = address.trim()
+  if (!trimmed) return null
+
+  const day = todayKey(now)
+  const key = addressCacheKey(trimmed)
+  const cached = await readGeocodeCache(key, day)
+  if (cached !== undefined) return cached
+
+  let coords: GeoCoords | null = null
+  for (const candidate of geocodeQueryCandidates(trimmed)) {
+    coords = await geocodePlaceName(candidate)
+    if (coords) break
+  }
+
+  await writeGeocodeCache(key, day, coords)
+  return coords
+}
+
+/**
+ * Daily forecast for a lat/lon. Cached per calendar day per rounded coords (2dp)
+ * in PocketBase so nearby jobs share one Open-Meteo call across invocations.
+ */
+export async function fetchDayForecast(
+  lat: number,
+  lon: number,
+  date: string,
+  now = new Date(),
+): Promise<DayForecast | null> {
+  const day = todayKey(now)
+  const key = weatherCacheKey(date, lat, lon)
+  const cached = await readForecastCache(key, day)
+  if (cached) return cached
+
+  const rLat = roundCoord(lat)
+  const rLon = roundCoord(lon)
+  const url = new URL('https://api.open-meteo.com/v1/forecast')
+  url.searchParams.set('latitude', String(rLat))
+  url.searchParams.set('longitude', String(rLon))
+  url.searchParams.set(
+    'daily',
+    'precipitation_probability_max,weather_code,temperature_2m_max',
+  )
+  url.searchParams.set('temperature_unit', 'fahrenheit')
+  url.searchParams.set('timezone', 'auto')
+  url.searchParams.set('start_date', date)
+  url.searchParams.set('end_date', date)
+
+  try {
+    const res = await fetch(url.toString(), { next: { revalidate: 1800 } })
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      daily?: {
+        time?: string[]
+        precipitation_probability_max?: Array<number | null>
+        weather_code?: Array<number | null>
+        temperature_2m_max?: Array<number | null>
+      }
+    }
+    const times = data.daily?.time ?? []
+    const idx = times.indexOf(date)
+    if (idx < 0) return null
+
+    const precip = data.daily?.precipitation_probability_max?.[idx]
+    const code = data.daily?.weather_code?.[idx]
+    const temp = data.daily?.temperature_2m_max?.[idx]
+    if (precip == null || code == null || temp == null) return null
+
+    const forecast: DayForecast = {
+      date,
+      precipChance: precip,
+      tempMaxF: temp,
+      weatherCode: code,
+    }
+    await writeForecastCache(key, day, forecast)
+    return forecast
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Resolve per-job forecasts. Geocode is cached by address; weather by day + lat/lon (2dp)
+ * so nearby jobs share one Open-Meteo call.
+ */
+export async function resolveForecastsForJobs(
+  jobs: WeatherJobInput[],
+  now = new Date(),
+  todayStr = isoDate(now),
+): Promise<Map<string, DayForecast>> {
+  // Anchor the window to the operator's calendar day (client-supplied), not UTC.
+  const dates = new Set(nextThreeDayDates(new Date(`${todayStr}T12:00:00`)))
+  const byJobId = new Map<string, DayForecast>()
+
+  const addresses = new Set<string>()
+  for (const job of jobs) {
+    if (!dates.has(job.date)) continue
+    const address = job.address?.trim()
+    if (address) addresses.add(address)
+  }
+
+  const coordByAddress = new Map<string, GeoCoords | null>()
+  await Promise.all(
+    [...addresses].map(async (address) => {
+      coordByAddress.set(address, await geocodeAddress(address, now))
+    }),
+  )
+
+  // Unique day+coords fetches (rounded) — one network call per cache key.
+  const forecastByKey = new Map<string, Promise<DayForecast | null>>()
+
+  function forecastPromise(lat: number, lon: number, date: string): Promise<DayForecast | null> {
+    const key = weatherCacheKey(date, lat, lon)
+    let pending = forecastByKey.get(key)
+    if (!pending) {
+      pending = fetchDayForecast(lat, lon, date, now)
+      forecastByKey.set(key, pending)
+    }
+    return pending
+  }
+
+  await Promise.all(
+    jobs.map(async (job) => {
+      if (!dates.has(job.date)) return
+      const address = job.address?.trim()
+      if (!address) return
+      const coords = coordByAddress.get(address)
+      if (!coords) return
+      const forecast = await forecastPromise(coords.lat, coords.lon, job.date)
+      if (forecast) byJobId.set(job.id, forecast)
+    }),
+  )
+
+  return byJobId
+}
+
+/**
+ * Build readiness for Home. Jobs without a geocodable address are skipped for forecasts;
+ * status reflects no_jobs / unresolved / partial / ready (see buildWeatherReadiness).
+ * `todayStr` should be the operator device's local YYYY-MM-DD when available.
+ */
+export async function buildWeatherReadinessForJobs(
+  jobs: WeatherJobInput[],
+  todayStr?: string,
+  now = new Date(),
+): Promise<WeatherReadinessResult> {
+  const today = todayStr && /^\d{4}-\d{2}-\d{2}$/.test(todayStr) ? todayStr : isoDate(now)
+  const forecasts = await resolveForecastsForJobs(jobs, now, today)
+  return buildWeatherReadiness(jobs, forecasts, today)
+}

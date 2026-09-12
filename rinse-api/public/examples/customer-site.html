@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rinse — Example customer site</title>
+    <style>
+      :root {
+        --bg: #0f1419;
+        --card: #1a222c;
+        --text: #f0f2f5;
+        --muted: #8b95a5;
+        --accent: #5cb85c;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+
+      .banner {
+        background: #1e3a2f;
+        color: #b8e0c8;
+        text-align: center;
+        padding: 10px 16px;
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+      }
+
+      .banner code {
+        background: rgba(0, 0, 0, 0.25);
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      header {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 28px 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: system-ui, sans-serif;
+      }
+
+      .logo {
+        font-weight: 700;
+        font-size: 18px;
+        letter-spacing: 0.02em;
+      }
+
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        margin-left: 20px;
+        font-size: 14px;
+      }
+
+      nav a:hover {
+        color: var(--text);
+      }
+
+      .hero {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+      }
+
+      @media (max-width: 768px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        line-height: 1.1;
+        margin: 0 0 16px;
+      }
+
+      .lead {
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        font-size: 17px;
+        margin: 0 0 24px;
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-family: system-ui, sans-serif;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #0a1a0a;
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .widget-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+      }
+
+      .widget-card h2 {
+        font-family: system-ui, sans-serif;
+        font-size: 15px;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--text);
+        margin: 0 0 14px;
+        font-weight: 700;
+      }
+
+      .services {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 20px 80px;
+      }
+
+      .services h2 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        font-family: system-ui, sans-serif;
+      }
+
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .service {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+      }
+
+      .service strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .service span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      footer {
+        text-align: center;
+        padding: 32px 20px;
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        border-top: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      Example customer website — you edit the brand on your site; the calendar syncs with your app. Slug:
+      <code id="slug-label">your-slug</code>
+    </div>
+
+    <header>
+      <div class="logo" id="brand-name">Rinse</div>
+      <nav>
+        <a href="#services">Services</a>
+        <a href="#book">Book</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div>
+        <h1>Hand-washed. Garage-kept shine.</h1>
+        <p class="lead">
+          Mobile detailing across the metro — we come to your driveway. Change the headline, colors, and
+          <strong id="brand-inline">Rinse</strong> name to match your business; keep the embed snippet as-is.
+        </p>
+        <div class="cta-row">
+          <button type="button" class="btn btn-primary" data-detail-book="" id="book-btn">
+            Book with Rinse
+          </button>
+          <a class="btn btn-secondary" id="book-link" href="#">Open booking page</a>
+        </div>
+      </div>
+
+      <div class="widget-card" id="book">
+        <!-- You write this heading — not injected by the app -->
+        <h2 id="widget-heading">Book with Rinse</h2>
+        <div data-detail-booking="" id="calendar-mount"></div>
+      </div>
+    </section>
+
+    <section class="services" id="services">
+      <h2>Services</h2>
+      <div class="grid">
+        <div class="service">
+          <strong>Exterior wash</strong>
+          <span>From $75 · 90 min</span>
+        </div>
+        <div class="service">
+          <strong>Interior detail</strong>
+          <span>From $130 · 2–3 hrs</span>
+        </div>
+        <div class="service">
+          <strong>Full detail</strong>
+          <span>From $250 · 4–6 hrs</span>
+        </div>
+      </div>
+    </section>
+
+    <footer>Example only · Edit everything except the embed div + script</footer>
+
+    <script>
+      var APP_ORIGIN = window.location.origin
+      var params = new URLSearchParams(window.location.search)
+      var SLUG = params.get('slug') || 'atlas-detailing'
+      var BRAND = params.get('brand') || 'Rinse'
+
+      document.getElementById('slug-label').textContent = SLUG
+      document.getElementById('brand-name').textContent = BRAND
+      document.getElementById('brand-inline').textContent = BRAND
+      document.getElementById('widget-heading').textContent = 'Book with ' + BRAND
+      document.getElementById('book-btn').textContent = 'Book with ' + BRAND
+      document.getElementById('book-btn').setAttribute('data-detail-book', SLUG)
+      document.getElementById('calendar-mount').setAttribute('data-detail-booking', SLUG)
+      document.getElementById('book-link').href = APP_ORIGIN + '/book/' + encodeURIComponent(SLUG)
+      document.title = BRAND + ' — Example customer site'
+
+      var s = document.createElement('script')
+      s.src = APP_ORIGIN + '/embed.js'
+      s.async = true
+      document.body.appendChild(s)
+    </script>
+  </body>
+</html>

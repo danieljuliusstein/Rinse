@@ -1,0 +1,175 @@
+/* Full-page forms using floating label system — Wave 51 save + checkmarks */
+
+.page-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.page-form .f-field {
+  margin: 0;
+}
+
+.page-form .f-field + .f-field {
+  margin-top: 0;
+}
+
+.page-form__grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.page-form-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.page-form .f-input,
+.page-form .f-select,
+.page-form .f-textarea {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding-right: 38px;
+  color: var(--text-primary);
+}
+
+.page-form .f-input.hv,
+.page-form .f-select.hv,
+.page-form .f-textarea.hv {
+  border-color: var(--border-green);
+  background: var(--bg-green);
+}
+
+.page-form .f-input:focus,
+.page-form .f-select:focus,
+.page-form .f-textarea:focus {
+  border-color: var(--green);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.page-form .f-field--filled .f-check {
+  transform: translateY(-50%) scale(1);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+}
+
+.page-form .f-field--textarea .f-check {
+  top: 22px;
+  transform: scale(0);
+}
+
+.page-form .f-field--textarea.f-field--filled .f-check {
+  top: 22px;
+  transform: scale(1);
+}
+
+.page-form .f-field-error {
+  margin: 4px 2px 0;
+}
+
+/* Wave B — virtual list (long operator lists) */
+.virtual-list__item {
+  width: 100%;
+}
+
+.virtual-list__section-header {
+  margin-bottom: 8px;
+}
+
+.setup-row--error .setup-row__input {
+  border-color: var(--red);
+}
+
+.page-form-save .sheet-submit {
+  width: 100%;
+  transition:
+    background var(--duration-medium) var(--ease-out),
+    color var(--duration-fast) ease,
+    border-color var(--duration-medium) var(--ease-out),
+    box-shadow var(--duration-medium) var(--ease-out),
+    transform var(--duration-fast) var(--ease-spring);
+}
+
+.page-form-save .sheet-submit--ready:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.page-form-save .sheet-submit--done {
+  animation: success-pop var(--duration-medium) var(--ease-pop) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-form .f-field--filled .f-check,
+  .page-form-save .sheet-submit--done {
+    animation: none;
+  }
+
+  .page-form-save .sheet-submit--ready:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-form__grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Premium search fields */
+.premium-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.premium-search__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.premium-search__input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 48px;
+  padding: 0 14px 0 40px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color var(--duration-fast) ease,
+    background var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.premium-search__input:focus {
+  border-color: var(--green);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.premium-search__input::placeholder {
+  color: var(--text-muted);
+}
+
+.search .premium-search__input,
+.settings-search-field .premium-search__input,
+.inventory-search .premium-search__input {
+  width: 100%;
+}
+

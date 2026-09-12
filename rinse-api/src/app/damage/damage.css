@@ -1,0 +1,288 @@
+/* CRM — vehicle profile & damage documentation (app tokens) */
+
+.crm-page-header .page-header__title-block {
+  min-width: 0;
+}
+
+/* Vehicle hero */
+.vehicle-hero {
+  height: 120px;
+  background: var(--bg-blue);
+  border: 0.5px solid var(--border-blue);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vehicle-hero__icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+}
+
+.vehicle-hero__icon-wrap--paint {
+  width: 72px;
+  height: 72px;
+  background: var(--vehicle-paint, var(--bg-card));
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: var(--depth-card-shadow);
+}
+
+.vehicle-color-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Damage list rows */
+.damage-list-row .ui-list-row__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.damage-list-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.damage-list-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.damage-list-row__date {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Vehicle / damage press (Wave 45) */
+
+.damage-list-row.ui-list-row--pressable {
+  transition:
+    background var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-spring);
+}
+
+.vehicle-screen .ui-list-row--pressable:active,
+.damage-list-row.ui-list-row--pressable:active {
+  transform: scale(0.985);
+}
+
+.vehicle-screen .more-pill {
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+.vehicle-screen .more-pill:active {
+  transform: scale(0.98);
+  background: var(--bg-surface-active);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vehicle-screen .ui-list-row--pressable:active,
+  .vehicle-screen .more-pill:active {
+    transform: none;
+  }
+}
+
+/* Add damage photo preview */
+.crm-photo-preview {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-muted);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition:
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.crm-photo-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crm-photo-preview__placeholder {
+  color: var(--text-muted);
+}
+
+.crm-photo-preview__label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+  color: #fff;
+}
+
+/* Damage detail photo */
+.crm-detail-photo {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  min-height: 180px;
+}
+
+.crm-detail-photo__img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.crm-detail-photo__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 180px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.crm-detail-photo__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.crm-detail-photo__count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #fff;
+}
+
+.crm-detail-actions {
+  margin-top: 8px;
+}
+
+/* ── Wave 50 — damage photo motion ── */
+
+.damage-screen .page-header,
+.vehicle-screen .page-header {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.damage-screen .crm-detail-photo {
+  animation: home-block-in var(--duration-slow) var(--ease-out) both;
+  animation-delay: var(--stagger-step);
+}
+
+.damage-screen .ui-section .ui-list-row {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.damage-screen .ui-section .ui-list-row:nth-child(1) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.damage-screen .ui-section .ui-list-row:nth-child(2) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.damage-screen .ui-section .ui-list-row:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+
+.damage-screen .ui-section .ui-list-row:nth-child(4) {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.vehicle-screen .damage-list-row,
+.damage-screen .damage-list-row {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+}
+
+.vehicle-screen .ui-section .damage-list-row:nth-child(1),
+.damage-screen .ui-section .damage-list-row:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.vehicle-screen .ui-section .damage-list-row:nth-child(2),
+.damage-screen .ui-section .damage-list-row:nth-child(2) {
+  animation-delay: var(--stagger-step);
+}
+
+.vehicle-screen .ui-section .damage-list-row:nth-child(3),
+.damage-screen .ui-section .damage-list-row:nth-child(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.vehicle-screen .ui-section .damage-list-row:nth-child(n + 4),
+.damage-screen .ui-section .damage-list-row:nth-child(n + 4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+
+.damage-list-thumb img {
+  transition: transform var(--duration-medium) var(--ease-out), opacity var(--duration-fast) ease;
+}
+
+.damage-list-row.ui-list-row--pressable:active .damage-list-thumb img {
+  transform: scale(1.04);
+}
+
+.crm-photo-preview--loaded {
+  animation: home-block-in var(--duration-medium) var(--ease-out) both;
+  border-color: rgba(34, 197, 94, 0.35);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.crm-photo-preview--loaded .crm-photo-preview__img {
+  animation: success-pop var(--duration-slow) var(--ease-pop) both;
+}
+
+.crm-detail-photo__img {
+  animation: home-block-in var(--duration-slow) var(--ease-out) both;
+}
+
+.damage-screen .page-form-save .sheet-submit--ready:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .damage-screen .page-header,
+  .vehicle-screen .page-header,
+  .damage-screen .crm-detail-photo,
+  .damage-screen .ui-section .ui-list-row,
+  .vehicle-screen .damage-list-row,
+  .damage-screen .damage-list-row,
+  .crm-photo-preview--loaded,
+  .crm-photo-preview--loaded .crm-photo-preview__img,
+  .crm-detail-photo__img {
+    animation: none;
+  }
+
+  .damage-list-row.ui-list-row--pressable:active .damage-list-thumb img {
+    transform: none;
+  }
+
+  .damage-screen .page-form-save .sheet-submit--ready:active:not(:disabled) {
+    transform: none;
+  }
+}

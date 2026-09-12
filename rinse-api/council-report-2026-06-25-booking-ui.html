@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Council Report — Public Booking UI</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --surface: #fff;
+      --border: #e4e4de;
+      --text: #141414;
+      --muted: #5c5c56;
+      --green: #16a34a;
+      --green-bg: rgba(22, 163, 74, 0.09);
+      --red: #dc2626;
+      --blue: #2563eb;
+      --amber: #d97706;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 1.75rem; letter-spacing: -0.02em; margin: 0 0 8px; }
+    .meta { color: var(--muted); font-size: 0.875rem; margin-bottom: 28px; }
+    .question {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .verdict {
+      background: var(--green-bg);
+      border: 1px solid rgba(22, 163, 74, 0.3);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .verdict h2 { margin: 0 0 16px; font-size: 1.25rem; color: var(--green); }
+    .verdict h3 { margin: 20px 0 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .verdict p, .verdict li { font-size: 0.95rem; }
+    .verdict ul { margin: 0; padding-left: 1.2rem; }
+  .verdict li { margin-bottom: 6px; }
+    .first-step {
+      background: var(--text);
+      color: #fff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 20px;
+      font-size: 1rem;
+    }
+    .first-step strong { color: #4ade80; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .grid-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; }
+    .advisor-cell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .advisor-cell.agree { border-color: var(--green); background: var(--green-bg); }
+    .advisor-cell.split { border-color: var(--amber); background: rgba(217, 119, 6, 0.08); }
+    .spectrum { margin-bottom: 28px; }
+    .spectrum-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.85rem; }
+    .spectrum-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; position: relative; }
+    .spectrum-dot { position: absolute; top: -4px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; transform: translateX(-50%); }
+    details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    summary {
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      list-style: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; float: right; color: var(--muted); }
+    details[open] summary::after { content: "−"; }
+    .detail-body { padding: 0 16px 16px; font-size: 0.875rem; color: var(--muted); border-top: 1px solid var(--border); }
+    .detail-body p { margin: 12px 0 0; }
+    .tag { display: inline-block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; border-radius: 4px; margin-right: 6px; }
+    .tag-contrarian { background: #fee2e2; color: var(--red); }
+    .tag-principles { background: #dbeafe; color: var(--blue); }
+    .tag-expansion { background: #fef3c7; color: var(--amber); }
+    .tag-outsider { background: #f3e8ff; color: #7c3aed; }
+    .tag-executor { background: var(--green-bg); color: var(--green); }
+    footer { margin-top: 40px; font-size: 0.75rem; color: var(--muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Council Verdict</h1>
+    <p class="meta">Public booking page UI · June 25, 2026 · detailing-app `/book/[slug]`</p>
+
+    <div class="question">
+      <strong>Question:</strong> How should we prioritize the next round of UI improvements to the public booking page — what’s high-impact vs vanity, and what should we avoid?
+    </div>
+
+    <div class="verdict">
+      <h2>Chairman’s Recommendation</h2>
+      <p>Run a <strong>friction-removal + trust</strong> pass, not a <strong>visual parity</strong> pass with the operator app. Keep the light consumer theme; stop porting more QuickAddJob patterns.</p>
+
+      <h3>Where the council agrees</h3>
+      <ul>
+        <li>Operator-app cosplay is low ROI — customers need clarity, not CRM familiarity</li>
+        <li>The step 2 clock box is confusing dead UI — fix or remove first</li>
+        <li>Step 3 shows too many fields — collapse vehicle/location/notes with defaults</li>
+        <li>Trust beats aesthetics: business name, plain language, price visibility, strong confirmation</li>
+        <li>Reliability before polish: hydration, iOS date input, real-device testing</li>
+      </ul>
+
+      <h3>Where the council clashes</h3>
+      <ul>
+        <li><strong>Merchandising</strong> (badges, package photos) — growth lever vs empty UI when detailers don’t configure content</li>
+        <li><strong>Scope</strong> — full Calendly-style restructure vs incremental shippable slices</li>
+      </ul>
+      <p><em>Resolution:</em> Ship structural wins incrementally; only add merchandising hooks where settings data already exists.</p>
+
+      <h3>Ship order (Executor-aligned)</h3>
+      <ol>
+        <li>Fix/remove fake clock box on step 2</li>
+        <li>Sticky package + price summary (steps 2–3)</li>
+        <li>Copy pass: plain-language labels</li>
+        <li>Collapse step 3 optional fields</li>
+        <li>Upgrade confirmation screen</li>
+        <li>Hide bottom nav on book routes · fix hydration</li>
+      </ol>
+
+      <div class="first-step">
+        <strong>Do this first:</strong> Remove the non-interactive clock box on step 2. Show selected time only after a slot is picked — eliminates the top outsider confusion point (~30 min).
+      </div>
+    </div>
+
+    <p class="grid-label">Advisor alignment on “friction removal over visual polish”</p>
+    <div class="grid">
+      <div class="advisor-cell agree">Contrarian<br>Strong yes</div>
+      <div class="advisor-cell agree">First Principles<br>Strong yes</div>
+      <div class="advisor-cell split">Expansionist<br>Partial</div>
+      <div class="advisor-cell agree">Outsider<br>Strong yes</div>
+      <div class="advisor-cell agree">Executor<br>Strong yes</div>
+    </div>
+
+    <div class="spectrum">
+      <p class="grid-label">Priority spectrum</p>
+      <div class="spectrum-row">
+        <span style="width:100px">Reliability</span>
+        <div class="spectrum-bar"><div class="spectrum-dot" style="left:92%;background:var(--green)"></div></div>
+        <span>High</span>
+      </div>
+      <div class="spectrum-row">
+        <span style="width:100px">Trust/copy</span>
+        <div class="spectrum-bar"><div class="spectrum-dot" style="left:85%;background:var(--green)"></div></div>
+        <span>High</span>
+      </div>
+      <div class="spectrum-row">
+        <span style="width:100px">Field collapse</span>
+        <div class="spectrum-bar"><div class="spectrum-dot" style="left:78%;background:var(--green)"></div></div>
+        <span>High</span>
+      </div>
+      <div class="spectrum-row">
+        <span style="width:100px">Merchandising</span>
+        <div class="spectrum-bar"><div class="spectrum-dot" style="left:45%;background:var(--amber)"></div></div>
+        <span>Medium</span>
+      </div>
+      <div class="spectrum-row">
+        <span style="width:100px">App parity</span>
+        <div class="spectrum-bar"><div class="spectrum-dot" style="left:12%;background:var(--red)"></div></div>
+        <span>Low</span>
+      </div>
+    </div>
+
+    <details>
+      <summary><span class="tag tag-contrarian">Contrarian</span> Stop polishing — you're cosplaying the operator app</summary>
+      <div class="detail-body">
+        <p>Porting QuickAddJob patterns adds cognitive load. Date picker broke twice fighting the platform. High-impact: sticky summary, tel link, empty slot states, hydration fix. Vanity: CheckCircle parity. Fatal flaw: designer satisfaction over completion rate.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag tag-principles">First Principles</span> Remove decisions, don't add UI</summary>
+      <div class="detail-body">
+        <p>Five beats: trust → service → time → contact → confirmed. Collapse step 3 defaults. Human dates. Strong confirmation + calendar. Should feel like Calendly, not a CRM form.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag tag-expansion">Expansionist</span> Booking link = landing page</summary>
+      <div class="detail-body">
+        <p>Package merchandising, URL presets, post-booking loop. Persistent footer bar like checkout. Defer app parity; invest in detailer branding slot in settings when ready.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag tag-outsider">Outsider</span> "This feels like a template"</summary>
+      <div class="detail-body">
+        <p>Fake clock box confused me. "Fixed" means nothing. Step 3 feels like a job application. Want bigger business name, price always visible, plain language, obvious "you're done."</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag tag-executor">Executor</span> Monday morning ship list</summary>
+      <div class="detail-body">
+        <p>Half day: hydration + iOS date test + fix clock UI. Then sticky summary, copy pass, field collapse, confirmation upgrade. Do NOT build custom calendar or shared component library yet.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Peer review highlights</summary>
+      <div class="detail-body">
+        <p><strong>Strongest responses:</strong> Outsider (specific confusion), Executor (ship order).</p>
+        <p><strong>Blind spots caught:</strong> Bottom nav on book routes, skeleton states, accessibility, slot race on submit.</p>
+        <p><strong>Expansionist blind spot:</strong> Merchandising assumes detailers maintain photos/badges.</p>
+      </div>
+    </details>
+
+    <footer>
+      LLM Council · detailing-app · Full transcript: council-transcript-2026-06-25-booking-ui.md
+    </footer>
+  </div>
+</body>
+</html>

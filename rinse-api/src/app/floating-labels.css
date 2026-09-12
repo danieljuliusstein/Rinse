@@ -1,0 +1,277 @@
+/* Floating label fields — see .cursor/rules/floating-labels.mdc */
+
+.f-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.f-label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition:
+    top var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    font-size var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) ease;
+  z-index: 1;
+}
+
+.f-input,
+.f-select,
+.f-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.f-input,
+.f-select {
+  padding: 22px 14px 8px;
+  height: 54px;
+}
+
+.f-textarea {
+  padding: 22px 14px 10px;
+  min-height: 88px;
+  resize: none;
+  line-height: 1.5;
+}
+
+.f-input::placeholder,
+.f-textarea::placeholder {
+  color: transparent;
+}
+
+.f-input:focus,
+.f-select:focus,
+.f-textarea:focus {
+  border-color: var(--green);
+  background: var(--green-dim);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.f-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.f-input:focus ~ .f-label,
+.f-input:not(:placeholder-shown) ~ .f-label,
+.f-input.hv ~ .f-label,
+.f-select:focus ~ .f-label,
+.f-select.hv ~ .f-label,
+.f-textarea:focus ~ .f-label,
+.f-textarea:not(:placeholder-shown) ~ .f-label,
+.f-textarea.hv ~ .f-label {
+  top: 9px;
+  transform: translateY(0);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--green-text);
+}
+
+.f-field--textarea .f-label {
+  top: 22px;
+  transform: translateY(0);
+}
+
+.f-field--textarea .f-textarea:focus ~ .f-label,
+.f-field--textarea .f-textarea:not(:placeholder-shown) ~ .f-label,
+.f-field--textarea .f-textarea.hv ~ .f-label {
+  top: 9px;
+}
+
+.f-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.f-form-row .f-field {
+  margin-bottom: 0;
+}
+
+.f-field + .f-field,
+.f-form-row + .f-field {
+  margin-top: 10px;
+}
+
+.f-form-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 14px 0;
+}
+
+/* Affix ($) fields — label is sibling of input inside .f-affix-wrap */
+.f-field--affix .f-affix-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.f-affix-pre {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 2;
+  transition: top var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.f-input--affix {
+  padding-left: 34px !important;
+}
+
+/* When label floats, $ aligns with the value row (not field center) */
+.f-field--affix:focus-within .f-affix-pre,
+.f-field--affix.f-field--filled .f-affix-pre {
+  top: 33px;
+  transform: translateY(-50%);
+}
+
+/* Resting label sits past the $ prefix */
+.f-field--affix .f-label {
+  left: 28px;
+}
+
+.f-field--affix .f-input:focus ~ .f-label,
+.f-field--affix .f-input:not(:placeholder-shown) ~ .f-label,
+.f-field--affix .f-input.hv ~ .f-label,
+.f-field--affix:focus-within .f-label,
+.f-field--affix.f-field--filled .f-label {
+  left: 14px;
+  top: 8px;
+  transform: translateY(0);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--green-text);
+}
+
+/* Value row sits below floated label — match standard f-input padding */
+.f-field--affix.f-field--filled .f-input--affix,
+.f-field--affix:focus-within .f-input--affix {
+  padding-top: 22px;
+  padding-bottom: 8px;
+  padding-left: 34px !important;
+  padding-right: 38px;
+}
+
+.f-field--affix .f-check {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  color: var(--green);
+  transition: transform var(--duration-medium) var(--ease-pop);
+  pointer-events: none;
+}
+
+.f-field--affix.f-field--filled .f-check {
+  transform: translateY(-50%) scale(1);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+}
+
+/* ── Wave 51 — filled checkmark (non-affix fields) ── */
+
+.f-field:not(.f-field--affix):not(.f-field--no-check) .f-check {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  color: var(--green);
+  transition: transform var(--duration-medium) var(--ease-pop);
+  pointer-events: none;
+}
+
+.f-field--textarea:not(.f-field--no-check) .f-check {
+  top: 22px;
+  transform: scale(0);
+}
+
+.f-field--filled:not(.f-field--affix):not(.f-field--no-check) .f-check {
+  transform: translateY(-50%) scale(1);
+  animation: badge-status-in var(--duration-medium) var(--ease-pop) both;
+}
+
+.f-field--textarea.f-field--filled:not(.f-field--no-check) .f-check {
+  top: 22px;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .f-label,
+  .f-input,
+  .f-select,
+  .f-textarea,
+  .f-affix-pre {
+    transition: none;
+  }
+
+  .f-field--affix.f-field--filled .f-check,
+  .f-field--filled:not(.f-field--affix) .f-check {
+    animation: none;
+    transform: translateY(-50%) scale(1);
+  }
+
+  .f-field--textarea.f-field--filled:not(.f-field--no-check) .f-check {
+    transform: scale(1);
+  }
+}
+
+/* Wave B — field validation errors */
+.f-field--error .f-input,
+.f-field--error .f-select,
+.f-field--error .f-textarea,
+.f-field--error .f-affix-wrap .f-input {
+  border-color: var(--red);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.12);
+}
+
+.f-field--error .f-input:focus,
+.f-field--error .f-select:focus,
+.f-field--error .f-textarea:focus,
+.f-field--error .f-affix-wrap .f-input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+
+.f-field--error .f-label {
+  color: var(--red-text);
+}
+
+.f-field-error {
+  margin: 4px 2px 0;
+  padding: 0;
+}

@@ -1,0 +1,147 @@
+/* Floating labels on client-light surfaces — Wave 52 `--cl-*` lane only */
+
+.client-light-root .f-input,
+.client-light-root .f-select,
+.client-light-root .f-textarea {
+  background: var(--cl-surface);
+  border: 1.5px solid var(--cl-border);
+  border-radius: var(--cl-radius-control);
+  color: var(--cl-text);
+  transition:
+    border-color var(--cl-duration-fast) var(--cl-ease-step),
+    background var(--cl-duration-fast) ease,
+    box-shadow var(--cl-duration-fast) ease;
+}
+
+.client-light-root .f-label {
+  transition:
+    top var(--cl-duration-fast) var(--cl-ease-step),
+    transform var(--cl-duration-fast) var(--cl-ease-step),
+    font-size var(--cl-duration-fast) var(--cl-ease-step),
+    color var(--cl-duration-fast) ease;
+}
+
+.client-light-root .f-input:focus,
+.client-light-root .f-select:focus,
+.client-light-root .f-textarea:focus {
+  border-color: var(--cl-accent);
+  background: var(--cl-accent-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cl-accent) 12%, transparent);
+}
+
+.client-light-root .f-input.hv,
+.client-light-root .f-select.hv,
+.client-light-root .f-textarea.hv {
+  border-color: var(--cl-accent-bdr);
+  background: var(--cl-raised);
+}
+
+.client-light-root .f-label {
+  color: var(--cl-muted);
+}
+
+.client-light-root .f-input:focus ~ .f-label,
+.client-light-root .f-input:not(:placeholder-shown) ~ .f-label,
+.client-light-root .f-input.hv ~ .f-label,
+.client-light-root .f-select:focus ~ .f-label,
+.client-light-root .f-select.hv ~ .f-label,
+.client-light-root .f-textarea:focus ~ .f-label,
+.client-light-root .f-textarea:not(:placeholder-shown) ~ .f-label,
+.client-light-root .f-textarea.hv ~ .f-label {
+  color: var(--cl-accent);
+}
+
+.client-light-root .f-check {
+  color: var(--cl-accent);
+}
+
+.client-light-root .f-input,
+.client-light-root .f-textarea {
+  padding-right: 38px;
+}
+
+.client-light-root .f-check,
+.auth-screen .f-check {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  transition: transform var(--cl-duration-medium) var(--cl-ease-pop);
+  pointer-events: none;
+}
+
+.client-light-root .f-field--filled .f-check,
+.auth-screen .f-field--filled .f-check {
+  transform: translateY(-50%) scale(1);
+  animation: badge-status-in var(--cl-duration-medium) var(--cl-ease-pop) both;
+}
+
+.client-light-root .f-field--textarea .f-check,
+.auth-screen .f-field--textarea .f-check {
+  top: 22px;
+  transform: scale(0);
+}
+
+.client-light-root .f-field--textarea.f-field--filled .f-check,
+.auth-screen .f-field--textarea.f-field--filled .f-check {
+  top: 22px;
+  transform: scale(1);
+}
+
+.client-light-root .book-field .f-field + .f-field {
+  margin-top: 0;
+}
+
+.client-light-root .f-affix-pre {
+  color: var(--cl-hint);
+}
+
+.auth-screen .f-input,
+.auth-screen .f-textarea {
+  background: #1a1a1a;
+  border: 1.5px solid #2a2a2a;
+}
+
+.auth-screen.client-light-root .f-input,
+.auth-screen.client-light-root .f-select,
+.auth-screen.client-light-root .f-textarea {
+  background: var(--cl-surface);
+  border: 1.5px solid var(--cl-border);
+  border-radius: var(--cl-radius-control);
+  min-height: 52px;
+}
+
+.auth-screen.client-light-root .ob-field-group .f-input,
+.auth-screen.client-light-root .ob-field-group .f-select,
+.auth-screen.client-light-root .ob-field-group .f-textarea {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  min-height: 52px;
+}
+
+.auth-screen .f-input:focus,
+.auth-screen .f-textarea:focus {
+  border-color: var(--green);
+  background: #0b1e10;
+}
+
+.auth-screen.client-light-root .f-input:focus,
+.auth-screen.client-light-root .f-textarea:focus,
+.auth-screen.client-light-root .f-select:focus {
+  border-color: var(--cl-accent);
+  background: var(--cl-accent-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cl-accent) 12%, transparent);
+}
+
+.auth-screen.client-light-root .ob-field-group .f-input:focus,
+.auth-screen.client-light-root .ob-field-group .f-select:focus {
+  background: var(--cl-accent-bg) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-light-root .f-field--filled .f-check,
+  .auth-screen .f-field--filled .f-check {
+    animation: none;
+  }
+}

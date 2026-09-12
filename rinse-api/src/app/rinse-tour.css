@@ -1,0 +1,365 @@
+/* Rinse product tour — iOS-style spotlight */
+
+.rinse-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 100050;
+  pointer-events: none;
+}
+
+.rinse-tour__shade {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rinse-tour__shade-blocker {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
+  pointer-events: auto;
+}
+
+.rinse-tour__shade-panel {
+  position: fixed;
+  pointer-events: auto;
+}
+
+.rinse-tour__shade-panel--block {
+  background: transparent;
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring);
+}
+
+.rinse-tour__shade-panel--segment {
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring);
+}
+
+.rinse-tour__shade-full {
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
+}
+
+.rinse-tour__spotlight-block {
+  position: fixed;
+  z-index: 0;
+  pointer-events: auto;
+  background: transparent;
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring),
+    border-radius var(--duration-slow) var(--ease-spring);
+}
+
+.rinse-tour__hole {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  background: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.52);
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    width var(--duration-slow) var(--ease-spring),
+    height var(--duration-slow) var(--ease-spring),
+    border-radius var(--duration-slow) var(--ease-spring),
+    opacity var(--duration-slow) var(--ease-out);
+}
+
+.rinse-tour__ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.95),
+    0 0 0 3px color-mix(in srgb, var(--green) 35%, transparent);
+  animation: tour-ring-pulse var(--motion-attention-duration) ease-in-out infinite;
+}
+
+@keyframes tour-ring-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.95),
+      0 0 0 3px color-mix(in srgb, var(--green) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.95),
+      0 0 0 6px color-mix(in srgb, var(--green) 18%, transparent);
+  }
+}
+
+.rinse-tour--prep .rinse-tour__hole,
+.rinse-tour--prep .rinse-tour__card,
+.rinse-tour--prep .rinse-tour__spotlight-block,
+.rinse-tour--prep .rinse-tour__shade-panel--block {
+  opacity: 0;
+  transition-duration: var(--duration-fast);
+}
+
+.rinse-tour--exit .rinse-tour__hole {
+  opacity: 0;
+}
+
+.rinse-tour--exit .rinse-tour__card {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out);
+}
+
+.rinse-tour:not(.rinse-tour--prep) .rinse-tour__card {
+  animation: empty-enter var(--duration-medium) var(--ease-out) both;
+}
+
+.rinse-tour__card {
+  position: fixed;
+  z-index: 2;
+  pointer-events: auto;
+  background: var(--bg-surface);
+  border: 0.5px solid var(--depth-card-border);
+  border-radius: 16px;
+  padding: 16px 16px 14px;
+  box-shadow: var(--depth-elevated-shadow);
+  transition:
+    top var(--duration-slow) var(--ease-spring),
+    left var(--duration-slow) var(--ease-spring),
+    opacity var(--duration-slow) var(--ease-out);
+}
+
+.rinse-tour__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.rinse-tour__progress {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rinse-tour__section {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.rinse-tour__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rinse-tour__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+}
+
+.rinse-tour__body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.rinse-tour__hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+.rinse-tour__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.rinse-tour__btn {
+  border: none;
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rinse-tour__btn--primary {
+  background: var(--green);
+  color: #071407;
+  margin-left: auto;
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.rinse-tour__btn--primary:active {
+  transform: scale(0.97);
+}
+
+.rinse-tour__btn--ghost {
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.rinse-tour__btn--ghost:active {
+  transform: scale(0.97);
+}
+
+.rinse-tour__skip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+}
+
+.rinse-tour__skip {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rinse-tour__skip:hover,
+.rinse-tour__skip:focus-visible {
+  color: var(--text-secondary);
+}
+
+body.rinse-tour-active .bottom-nav {
+  z-index: 100040;
+}
+
+/* Welcome prompt before first tour */
+.tour-welcome-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.tour-welcome-backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: var(--sheet-scrim);
+  cursor: pointer;
+}
+
+.tour-welcome-card {
+  position: relative;
+  width: min(360px, 100%);
+  background: var(--bg-surface);
+  border: 0.5px solid var(--depth-card-border);
+  border-radius: 16px;
+  padding: 24px 22px 20px;
+  box-shadow: var(--depth-elevated-shadow);
+  animation: empty-enter var(--duration-slow) var(--ease-out) both;
+}
+
+.tour-welcome-eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.tour-welcome-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.tour-welcome-lead {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.tour-welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tour-welcome-actions__primary {
+  width: 100%;
+}
+
+.tour-welcome-actions__skip {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rinse-tour__card,
+  .rinse-tour__hole,
+  .rinse-tour__spotlight-block,
+  .rinse-tour__shade-panel--block,
+  .rinse-tour__shade-panel--segment,
+  .rinse-tour__ring {
+    transition: none;
+    animation: none;
+  }
+
+  .rinse-tour--exit .rinse-tour__card {
+    transform: none;
+  }
+
+  .rinse-tour__btn--primary:active,
+  .rinse-tour__btn--ghost:active {
+    transform: none;
+  }
+
+  .tour-welcome-card {
+    animation: none;
+  }
+}

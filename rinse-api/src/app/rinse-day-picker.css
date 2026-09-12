@@ -1,0 +1,382 @@
+/* Wave C — react-day-picker v9 (operator + client lanes) */
+
+.rinse-day-picker {
+  --rdp-accent-color: var(--green);
+  --rdp-accent-background-color: transparent;
+  --rdp-selected-border: none;
+  --rdp-day_button-border: none;
+  --rdp-day_button-border-radius: 0;
+  --rdp-day-height: auto;
+  --rdp-day-width: auto;
+  --rdp-day_button-height: auto;
+  --rdp-day_button-width: 100%;
+  --rdp-today-color: var(--text-primary);
+  --rdp-nav_button-height: 30px;
+  --rdp-nav_button-width: 30px;
+  --rdp-nav-height: 30px;
+  --rdp-outside-opacity: 0.38;
+  --rdp-disabled-opacity: 0.35;
+  --rinse-cal-green: var(--green);
+  --rinse-cal-green-text: var(--green-dark);
+  --rinse-cal-rain: var(--amber-text);
+  --rinse-cal-muted: var(--text-muted);
+  --rinse-cal-legend: var(--text-muted);
+  --rinse-cal-nav-bg: var(--bg-surface-active);
+  --rinse-cal-nav-icon: var(--text-secondary);
+  --rinse-cal-frame: transparent;
+  --rinse-cal-divider: var(--border);
+  width: 100%;
+}
+
+.rinse-day-picker--client {
+  --rdp-accent-color: var(--cl-accent);
+  --rinse-cal-green: var(--cl-accent);
+  --rinse-cal-green-text: var(--cl-accent-text, #0f3d1e);
+  --rinse-cal-rain: #d68a1c;
+}
+
+/* Framed home calendar — single operator card (no warm beige outer shell) */
+.rinse-day-picker__frame {
+  --rinse-cal-green: var(--green);
+  --rinse-cal-green-text: var(--green-dark);
+  --rinse-cal-rain: var(--amber-text);
+  --rinse-cal-muted: var(--text-muted);
+  --rinse-cal-legend: var(--text-muted);
+  --rinse-cal-nav-bg: var(--bg-surface-active);
+  --rinse-cal-nav-icon: var(--text-secondary);
+  --rinse-cal-divider: var(--border);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.rinse-day-picker__card {
+  background: var(--bg-surface);
+  border: 0.5px solid var(--depth-card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--depth-card-shadow);
+  padding: 16px 14px;
+}
+
+.rinse-day-picker--framed.rinse-day-picker {
+  width: 100%;
+}
+
+.rinse-day-picker.rdp-root {
+  width: 100%;
+  max-width: 100%;
+}
+
+.rinse-day-picker__months,
+.rinse-day-picker.rdp-root .rdp-months {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+}
+
+.rinse-day-picker__month {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.rinse-day-picker__caption {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 18px;
+  position: relative;
+  height: auto;
+}
+
+.rinse-day-picker__caption-label {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+}
+
+.rinse-day-picker--client .rinse-day-picker__caption-label {
+  color: var(--cl-text);
+}
+
+.rinse-day-picker__nav {
+  grid-column: 2;
+  grid-row: 1;
+  position: static;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  align-self: center;
+  margin-bottom: 18px;
+}
+
+.rinse-day-picker__grid {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.rinse-day-picker__weekday,
+.rinse-day-picker__day,
+.rinse-day-picker .rdp-day {
+  width: 14.285714%;
+  padding: 0;
+}
+
+.rinse-day-picker__nav-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 50%;
+  background: var(--rinse-cal-nav-bg);
+  border: none;
+  color: var(--rinse-cal-nav-icon);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rinse-day-picker .rdp-button_previous,
+.rinse-day-picker .rdp-button_next {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--rinse-cal-nav-bg);
+  border: none;
+  color: var(--rinse-cal-nav-icon);
+}
+
+.rinse-day-picker .rdp-chevron,
+.rinse-day-picker__nav-btn svg {
+  color: var(--rinse-cal-nav-icon);
+  fill: currentColor;
+}
+
+.rinse-day-picker__nav-btn:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+}
+
+.rinse-day-picker__nav-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.rinse-day-picker__nav-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.rinse-day-picker__weekdays {
+  margin-bottom: 8px;
+}
+
+.rinse-day-picker__weekday {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rinse-cal-muted);
+  text-transform: none;
+  opacity: 1;
+  padding: 0;
+}
+
+.rinse-day-picker--client .rinse-day-picker__weekday {
+  color: var(--cl-text-muted, var(--rinse-cal-muted));
+}
+
+.rinse-day-picker__week {
+  margin-top: 0;
+}
+
+.rinse-day-picker__week + .rinse-day-picker__week {
+  margin-top: 14px;
+}
+
+.rinse-day-picker__day {
+  padding: 0;
+  text-align: center;
+}
+
+.rinse-day-picker__day-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0 auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.rinse-day-picker__day-btn:focus-visible {
+  outline: none;
+}
+
+.rinse-day-picker__day-btn:focus-visible .rinse-day-picker__day-num {
+  box-shadow: 0 0 0 2px var(--green);
+}
+
+.rinse-day-picker__day-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+  border-radius: 50%;
+}
+
+.rinse-day-picker--client .rinse-day-picker__day-num {
+  color: var(--cl-text);
+}
+
+.rinse-day-picker__day-num--selected {
+  background: var(--rinse-cal-green);
+  color: var(--rinse-cal-green-text);
+  font-weight: 600;
+}
+
+.rinse-day-picker__day-dot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+  min-height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rinse-day-picker__day-dot--empty {
+  background: transparent;
+}
+
+.rinse-day-picker__day-dot--job {
+  background: var(--rinse-cal-green);
+}
+
+.rinse-day-picker__day-dot--rain {
+  background: var(--rinse-cal-rain);
+}
+
+.rinse-day-picker__day--outside .rinse-day-picker__day-num {
+  color: var(--text-dim);
+}
+
+.rinse-day-picker__day--disabled .rinse-day-picker__day-btn {
+  opacity: var(--rdp-disabled-opacity);
+  cursor: default;
+}
+
+/* Reset default rdp selected / today chrome */
+.rinse-day-picker .rdp-selected {
+  font-weight: inherit;
+  font-size: inherit;
+}
+
+.rinse-day-picker .rdp-selected .rinse-day-picker__day-btn,
+.rinse-day-picker .rdp-selected .rdp-day_button {
+  background: transparent;
+  color: inherit;
+  border: none;
+}
+
+.rinse-day-picker .rdp-today:not(.rdp-selected) .rinse-day-picker__day-num {
+  box-shadow: none;
+}
+
+.rinse-day-picker__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rinse-cal-divider);
+}
+
+.rinse-day-picker__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--rinse-cal-legend);
+}
+
+.rinse-day-picker__legend-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-style: normal;
+}
+
+.rinse-day-picker__legend-dot--job {
+  background-color: var(--rinse-cal-green);
+}
+
+.rinse-day-picker__legend-dot--rain {
+  background-color: var(--rinse-cal-rain);
+}
+
+/* Home calendar wrapper */
+.home-month-cal-picker {
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+/* Home day jobs panel */
+.home-day-jobs {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.home-day-jobs__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.home-day-jobs__title {
+  font-size: 14px;
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.home-day-jobs__clear {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+}
