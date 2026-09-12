@@ -15,6 +15,19 @@ Also present (out of scope for v1 cutover): `detailing-website`, legacy `detaili
 | Host | App | Root / path | Notes |
 |------|-----|-------------|--------|
 | EAS | Phone | `rinse-mobile` | Expo projectId `a603bec9-0ac7-432a-b24a-9d100f9fd884` (from `app.config.ts`) |
+
+### EAS (phone)
+
+Expo project `@danieljstein/rinse-mobile` (`a603bec9-0ac7-432a-b24a-9d100f9fd884`) stays the same. Clone **`Rinse`**, then:
+
+```bash
+cd rinse-mobile
+npm install
+npx eas build
+```
+
+Do not change `EXPO_PUBLIC_*` values during the git move. Old `Rinse-App` remote keeps a Moved README until archive.
+
 | Fly | DB | `pocketbase` | App name `detailing-pb` — do not change |
 | Fly | Campaign mail | `rinse-desk/server/campaign-mail` | App `rinse-campaign-mail` |
 
