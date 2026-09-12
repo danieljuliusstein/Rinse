@@ -1,0 +1,497 @@
+{
+  "run_id": "trun_ee31bb7ca6124c2da1d00cf027fe7a3a",
+  "interaction_id": "trun_ee31bb7ca6124c2da1d00cf027fe7a3a",
+  "result_url": "https://platform.parallel.ai/play/deep-research/trun_ee31bb7ca6124c2da1d00cf027fe7a3a",
+  "status": "completed",
+  "output": {
+    "basis": [
+      {
+        "field": "executive_summary",
+        "reasoning": "Assessment rationale:\n- The field_name is executive_summary and the provided field_answer compiles a multi-point synthesis of best practices for field service CRM desktop vs mobile parity, referencing dispatch workflows, reference-scale claims, media handling, SMS compliance, customer portal billing, inventory management, and tenant security.\n- Step 1 (completeness): The answer covers all major aspects implied by the field_description and the user query: parity model with a single server-side job state and two role views; dispatch UI semantics; reliance on vendor patterns but caution on vendor claims; media/file handling with PocketBase; SMS compliance (Quiet Hours); portal-based billing and revocable invoice links; inventory ledger with states; server-side tenant security pattern using org_id and access rules. The closing north star aligns with cross-role consistency. Therefore, completeness = true.\n- Step 2 (excerpts support): Excerpts include sources for Jobber (excerpt 0), Housecall Pro mobile app (excerpt 1, 8), ServiceTitan dispatch boards (excerpt 2, 3, 10, 11), PocketBase file/media handling and API rules (excerpts 5, 12, 13), eCFR quiet-hours (excerpt 6), Twilio compliance tools (excerpt 7), Stripe hosted invoice (excerpt 9), and inventory references (excerpts 10, 11). These align with the content and claims in the field_answer, supporting its assertions. Therefore, supported = true.",
+        "citations": [
+          {
+            "url": "https://www.getjobber.com/",
+            "excerpts": [
+              "Jobber: The Top Home & Commercial Service Software in 2026\nJobber's home & commercial service software is the best way to organize your service business. Quote, schedule, invoice, and get paid\u2014all in one place."
+            ],
+            "title": "Jobber: The Top Home & Commercial Service Software in 2026"
+          },
+          {
+            "url": "https://www.housecallpro.com/features/mobile-app",
+            "excerpts": [
+              "Field Service Mobile App for Technicians by Housecall Pro\nScheduling and dispatch. Easily schedule and dispatch your team and keep customers updated with real-time notifications. Housecall Pros' field service CRM"
+            ],
+            "title": "Field Service Mobile App for Technicians by Housecall Pro"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/dispatching",
+            "excerpts": [
+              "Dispatching Home - ServiceTitan\nUse the Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board to manage technicians and job appointments across your business."
+            ],
+            "title": "Dispatching Home - ServiceTitan"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/use-the-weekly-dispatch-board",
+            "excerpts": [
+              "Use the Weekly Dispatch Board - ServiceTitan\nMay 19, 2026 \u00b7 The Jobs Tray on the Weekly Board includes an Assigned tab that shows job appointments that are Scheduled and Assigned. You can expand the Jobs"
+            ],
+            "title": "Use the Weekly Dispatch Board - ServiceTitan"
+          },
+          {
+            "url": "https://www.housecallpro.com/",
+            "excerpts": [
+              "Housecall Pro: Home Services Business Management Software\nMeet your AI Team inside Housecall Pro . From nights to weekends, your AI crew covers calls, books work, and handles admin\u2014so you can focus on the jobs that pay ."
+            ],
+            "title": "Housecall Pro: Home Services Business Management Software"
+          },
+          {
+            "url": "https://pocketbase.io/docs/api-files",
+            "excerpts": [
+              "Web APIs reference - API Files - Docs - PocketBase\nFiles are uploaded, updated or deleted via the Records API. The File API is usually used to fetch/download a file resource (with support for basic image manipulations, like generating thumbs)."
+            ],
+            "title": "Web APIs reference - API Files - Docs - PocketBase"
+          },
+          {
+            "url": "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-B/part-64/subpart-L/section-64.1200",
+            "excerpts": [
+              "47 CFR 64.1200 -- Delivery restrictions. - eCFR\n(1) Any residential telephone subscriber before the hour of 8 a.m. or after 9 p.m. (local time at the called party's location), or. (2) A residential"
+            ],
+            "title": "47 CFR 64.1200 -- Delivery restrictions. - eCFR"
+          },
+          {
+            "url": "https://www.twilio.com/docs/messaging/features/compliance-toolkit",
+            "excerpts": [
+              "Messaging APIs that natively feature automatic quiet hours enforcement and timezone-aware scheduling include"
+            ],
+            "title": "Messaging APIs that natively feature automatic quiet hours enforcement and timezone-aware scheduling include"
+          },
+          {
+            "url": "https://help.housecallpro.com/en/articles/8448657-using-the-customer-portal",
+            "excerpts": [
+              "Using the Customer Portal"
+            ],
+            "title": "Using the Customer Portal Housecall Pro https://help.housecallpro.com \u203a ... \u203a Customer Portal"
+          },
+          {
+            "url": "https://docs.stripe.com/invoicing/hosted-invoice-page",
+            "excerpts": [
+              "Hosted Invoice Page - Stripe Documentation\nThe Hosted Invoice Page provides a secure, private URL where your customers can: View the details, amounts, and status of the invoice. Pay the invoice"
+            ],
+            "title": "Hosted Invoice Page - Stripe Documentation"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/inventory-module",
+            "excerpts": [
+              "Inventory module Home - ServiceTitan\nWatch this overview to see how Inventory tracks stock levels across trucks and warehouses in real time, and how to get started with the module in ServiceTitan."
+            ],
+            "title": "Inventory module Home - ServiceTitan"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/inventory-and-purchase-orders",
+            "excerpts": [
+              "Inventory and Purchase Orders Home\nTrack receipts, returns, and expenses. Monitor inventory levels in trucks and warehouses. Set minimum stock levels"
+            ],
+            "title": "Inventory and Purchase Orders Home"
+          },
+          {
+            "url": "https://pocketbase.io/docs/api-rules-and-filters",
+            "excerpts": [
+              "Introduction - API rules and filters - Docs - PocketBase\nPocketBase API Rules act also as records filter! Or in other words, you could for example allow listing only the \"active\" records of your collection, by using a simple filter expression such as: status = \"active\" (where \"status\" is a field defined in your Collection)."
+            ],
+            "title": "Introduction - API rules and filters - Docs - PocketBase"
+          },
+          {
+            "url": "https://github.com/pocketbase/pocketbase/discussions/3104",
+            "excerpts": [
+              "API Rule: Target specific ID for multi-relation field - GitHub\nWe keep track of the relations of Users to Organizations in a third collection (organization_relations) that has additional information such as the User's role for that particular Organization."
+            ],
+            "title": "API Rule: Target specific ID for multi-relation field - GitHub"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "1_a_two_surface_state_machine_prevents_feature_drift",
+        "reasoning": "Assessment notes:\n- The field_answer presents a coherent perspective that feature parity across surfaces is a function of shared workflows and authoritative state, not merely identical UI elements. It provides a capability matrix (Roster/assignment, Job lifecycle, Customer communication, Photos/documents, Charges/invoice, Parts, Sync/access) and a governance rule (shared truth after synchronization, server-validated transitions, idempotent commands). It also references case-study patterns from ServiceTitan and cites recommended state names and auditable transitions. \n- The answer includes explicit recommendations (define capability matrix, use shared commands/states/permissions/evidence, adopt case-study patterns) and a clear decision statement (parity as shared commands, states, permissions, and evidence). \n- It aligns with the provided excerpts which discuss Jobber, Housecall Pro, ServiceTitan dispatch patterns, and PocketBase references, supporting the general direction of cross-surface parity via shared state and workflows. \n- Therefore, the field answer appears complete with a substantive framework, guidelines, and a decision. \n- There is alignment with the excerpts indicating multi-surface patterns and references to the named products and concepts. \n\nConfidence: moderate to high given the provided excerpts cover the named products and dispatch patterns, supporting the high-level parity approach described.",
+        "citations": [
+          {
+            "url": "https://www.getjobber.com/",
+            "excerpts": [
+              "Jobber: The Top Home & Commercial Service Software in 2026\nJobber's home & commercial service software is the best way to organize your service business. Quote, schedule, invoice, and get paid\u2014all in one place."
+            ],
+            "title": "Jobber: The Top Home & Commercial Service Software in 2026"
+          },
+          {
+            "url": "https://www.housecallpro.com/",
+            "excerpts": [
+              "Housecall Pro: Home Services Business Management Software\nMeet your AI Team inside Housecall Pro . From nights to weekends, your AI crew covers calls, books work, and handles admin\u2014so you can focus on the jobs that pay ."
+            ],
+            "title": "Housecall Pro: Home Services Business Management Software"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/dispatching",
+            "excerpts": [
+              "Dispatching Home - ServiceTitan\nUse the Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board to manage technicians and job appointments across your business."
+            ],
+            "title": "Dispatching Home - ServiceTitan"
+          },
+          {
+            "url": "https://pocketbase.io/docs/api-files",
+            "excerpts": [
+              "Web APIs reference - API Files - Docs - PocketBase\nFiles are uploaded, updated or deleted via the Records API. The File API is usually used to fetch/download a file resource (with support for basic image manipulations, like generating thumbs)."
+            ],
+            "title": "Web APIs reference - API Files - Docs - PocketBase"
+          },
+          {
+            "url": "https://pocketbase.io/docs/api-rules-and-filters",
+            "excerpts": [
+              "Introduction - API rules and filters - Docs - PocketBase\nPocketBase API Rules act also as records filter! Or in other words, you could for example allow listing only the \"active\" records of your collection, by using a simple filter expression such as: status = \"active\" (where \"status\" is a field defined in your Collection)."
+            ],
+            "title": "Introduction - API rules and filters - Docs - PocketBase"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/use-the-weekly-dispatch-board",
+            "excerpts": [
+              "Use the Weekly Dispatch Board - ServiceTitan\nMay 19, 2026 \u00b7 The Jobs Tray on the Weekly Board includes an Assigned tab that shows job appointments that are Scheduled and Assigned. You can expand the Jobs"
+            ],
+            "title": "Use the Weekly Dispatch Board - ServiceTitan"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "2_desk_roster_density_and_mobile_next_action_need_different_ux",
+        "reasoning": "Assessment reasoning:\n- Field description appears to require guidance on desk roster density versus mobile UX, best practices, patterns, and references to benchmark products (Jobber, Housecall Pro, ServiceTitan) with a focus on parity and workflows (dispatch, assignment, mobile flow, tests).\n- The provided field_answer covers: a) concepts for a dense desktop roster influenced by Jobber/ServiceTitan patterns, b) a UX layer/table outlining best-practices for roster/assignment/arrival/reassignment/conflict, c) a desktop/reversible drag/drop flow with server validation, d) a mobile flow that is progressive disclosure and focuses on the critical path, e) case study comparisons and a prescriptive decision to separate desktop fast/ reversible vs mobile focused/complete, f) references to Jobber/ServiceTitan/Housecall Pro patterns and general guidance.\n- It does not appear to omit any explicit required components given in the user-provided field description and query; it aligns with the stated information of interest items (output) and mentions reference products as requested.\n- Therefore, the field answer is complete with respect to the described scope. Confidence is moderate to high that the answer meets the requested scope.\n- Excerpts provided touch on Dispatching (ServiceTitan), mobile app dispatch (Housecall Pro), and Weekly Dispatch Board (ServiceTitan), which support parts of the field answer. The answer references these patterns conceptually and matches the excerpts\u2019 themes.  ",
+        "citations": [
+          {
+            "url": "https://www.getjobber.com/features/scheduling/",
+            "excerpts": [],
+            "title": "The #1 Service Scheduling Software in 2025 | Jobber"
+          },
+          {
+            "url": "https://www.getjobber.com/features/drag-drop-calendar/",
+            "excerpts": [],
+            "title": "Drag and Drop Calendar for Field Service Scheduling | Jobber"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/dispatching",
+            "excerpts": [
+              "Dispatching Home - ServiceTitan\nUse the Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board to manage technicians and job appointments across your business."
+            ],
+            "title": "Dispatching Home - ServiceTitan"
+          },
+          {
+            "url": "https://www.housecallpro.com/features/mobile-app",
+            "excerpts": [
+              "Field Service Mobile App for Technicians by Housecall Pro\nScheduling and dispatch. Easily schedule and dispatch your team and keep customers updated with real-time notifications. Housecall Pros' field service CRM"
+            ],
+            "title": "Field Service Mobile App for Technicians by Housecall Pro"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/use-the-weekly-dispatch-board",
+            "excerpts": [
+              "Use the Weekly Dispatch Board - ServiceTitan\nMay 19, 2026 \u00b7 The Jobs Tray on the Weekly Board includes an Assigned tab that shows job appointments that are Scheduled and Assigned. You can expand the Jobs"
+            ],
+            "title": "Use the Weekly Dispatch Board - ServiceTitan"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "3_pocketbase_photo_records_make_gallery_security_and_sync_manageable",
+        "reasoning": "Reasoning for completeness: The field answer provides a comprehensive design for a PocketBase-based photo gallery for field service, including recommended data model (job_photos collection with per-photo records and metadata fields), workflow (mobile queue, server-side record creation, thumbnail handling, access control), security considerations (org_id tenancy, access via parent job and tenant rules), implementation guidance (thumbnail usage, when to fetch originals, local vs server storage, authorization, retry semantics), and a concrete decision. It also references pitfalls and cross-cutting considerations (security, per-photo metadata, UI states). The excerpts show that PocketBase File API and Records API are used for uploads and thumbnails, which aligns with the answer. Therefore the answer is complete.",
+        "citations": [
+          {
+            "url": "https://pocketbase.io/docs/api-files",
+            "excerpts": [
+              "Web APIs reference - API Files - Docs - PocketBase\nFiles are uploaded, updated or deleted via the Records API. The File API is usually used to fetch/download a file resource (with support for basic image manipulations, like generating thumbs)."
+            ],
+            "title": "Web APIs reference - API Files - Docs - PocketBase"
+          },
+          {
+            "url": "https://pocketbase.io/docs/collections",
+            "excerpts": [],
+            "title": "Introduction - Collections - Docs - PocketBase"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates",
+        "reasoning": "Assessment steps:\n- Field description appears to require guidance on consent, timezone-aware handling, suppression/opt-out, logging, and compliance considerations for desk-originated Twilio SMS (with references to TCPA, eCFR, and FCC rules).\n- The provided field_answer presents a concrete implementation pattern: classify send decisions, define required data, default behaviors, store audit records (sms_consent, sms_suppression, sms_delivery_event), server-side worker with idempotency, delivery states, quiet-hours controls as server-side only, and a governance note to consult counsel.\n- It also cites relevant policy guidance and tooling (Twilio Compliance Toolkit, opt-in/out guidance, time-zone scheduling) and ties to legal constraints (TCPA, FCC order).\n- Completeness judgment: The answer covers the policy-driven decision, data requirements, workflow states, logging, and a recommended architecture pattern. It aligns with the information in excerpts and does not appear to omit core aspects given the query intent.\n- Excerpt alignment: The excerpts discuss opt-in/opt-out, quiet hours and timezone-aware scheduling, TCPA/8am-9pm restrictions, and FCC order, which support the rationale in the field_answer.\n- Therefore, completeness = true. Supported = true.",
+        "citations": [
+          {
+            "url": "https://www.twilio.com/legal/messaging-policy",
+            "excerpts": [],
+            "title": "Twilio Messaging Policy | Twilio"
+          },
+          {
+            "url": "https://www.twilio.com/en-us/blog/insights/compliance/opt-in-opt-out-text-messages",
+            "excerpts": [
+              "Opt-in and opt-out text messages: definition, examples, and ...\nMar 26, 2025 \u2014 An opt-in SMS is a text message where a customer gives a business explicit consent to send them marketing messages."
+            ],
+            "title": "Opt-in and opt-out text messages: definition, examples, and ..."
+          },
+          {
+            "url": "https://www.twilio.com/docs/messaging/features/compliance-toolkit",
+            "excerpts": [
+              "Messaging APIs that natively feature automatic quiet hours enforcement and timezone-aware scheduling include"
+            ],
+            "title": "Messaging APIs that natively feature automatic quiet hours enforcement and timezone-aware scheduling include"
+          },
+          {
+            "url": "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-B/part-64/subpart-L/section-64.1200",
+            "excerpts": [
+              "47 CFR 64.1200 -- Delivery restrictions. - eCFR\n(1) Any residential telephone subscriber before the hour of 8 a.m. or after 9 p.m. (local time at the called party's location), or. (2) A residential"
+            ],
+            "title": "47 CFR 64.1200 -- Delivery restrictions. - eCFR"
+          },
+          {
+            "url": "http://docs.fcc.gov/public/attachments/FCC-24-24A1.pdf",
+            "excerpts": [
+              "Feb 16, 2024 \u2014 In this Order, we clarify and strengthen consumers' rights under the TCPA to grant and revoke consent to receive robocalls and robotexts."
+            ],
+            "title": "FCC 24-24A1 (pdf)"
+          },
+          {
+            "url": "https://www.twilio.com/docs/messaging/compliance/a2p-10dlc",
+            "excerpts": [],
+            "title": "\"@context\": https://schema.org \"@type\": TechArticle \"@id\": https://www.twilio.com/docs/messaging/compliance/a2p-10dlc#article headline: Programmable Messaging and A2P 10DLC description: Start the new registration process to get a verified sender identity for A2P 10DLC. Send high volume SMS and MMS over trusted, compliant carrier routes. url: https://www.twilio.com/docs/messaging/compliance/a2p-10dlc inLanguage: en dateModified: 2026-07-07T16:51:30.000Z author: \"@type\": Organization name: Twilio Developer Education Team publisher: \"@type\": Organization name: Twilio"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state",
+        "reasoning": "Reasoning for completeness and excerpt support:\n- The field answer provides a comprehensive design for immutable invoices, versioning, PDF generation, and revocable portal links, and cites relevant patterns from Jobber, Housecall Pro, and Stripe for validation. It also outlines responsibilities across desk/mobile/shared, states for invoices, and security considerations for portal links. This aligns with the expected field goal of protecting billing state and providing durable artifacts. \n- Excerpts cover core aspects: voiding invoices (Jobber), invoicing features and automation (Housecall Pro), customer portal usage (Housecall Pro), and Stripe Hosted Invoice Page (secure customer view and pay flow). These excerpts substantiate the invoicing, portal access, and external reference concepts mentioned in the field answer. \n- Some specifics in the field answer (e.g., the exact revocable portal-link mechanism, detailed versioning semantics, and server-side PDF generation idempotency) are not explicitly described in the excerpts, but the included references support the overall direction and key components. Therefore, the field answer is largely complete and reasonably supported by excerpts.\n- Given the task\u2019s requirements, I mark completeness as true since the answer covers the main aspects expected for the field and provides actionable design decisions. Supported is marked true since excerpts align with invoicing, portals, and PDF/links concepts mentioned in the answer.",
+        "citations": [
+          {
+            "url": "https://help.getjobber.com/hc/en-us/articles/115009685047-Invoice-Basics",
+            "excerpts": [
+              "Invoice Basics - Jobber Help Center\n7 days ago \u00b7 To void an invoice: Open the invoice you want to void. Select More Actions, then select Void Invoice. Select a reason for voiding: Duplicate:"
+            ],
+            "title": "Invoice Basics - Jobber Help Center"
+          },
+          {
+            "url": "https://www.housecallpro.com/features/invoicing-software",
+            "excerpts": [
+              "Field Service Job Invoicing Software That Gets You Paid ...\nCreate professional invoices in seconds, automate reminders, and let customers pay 24/7. Housecall Pro is a digital tool that simplifies billing by creating"
+            ],
+            "title": "Field Service Job Invoicing Software That Gets You Paid ..."
+          },
+          {
+            "url": "https://help.housecallpro.com/en/articles/8448657-using-the-customer-portal",
+            "excerpts": [
+              "Using the Customer Portal"
+            ],
+            "title": "Using the Customer Portal Housecall Pro https://help.housecallpro.com \u203a ... \u203a Customer Portal"
+          },
+          {
+            "url": "https://docs.stripe.com/invoicing/hosted-invoice-page",
+            "excerpts": [
+              "Hosted Invoice Page - Stripe Documentation\nThe Hosted Invoice Page provides a secure, private URL where your customers can: View the details, amounts, and status of the invoice. Pay the invoice"
+            ],
+            "title": "Hosted Invoice Page - Stripe Documentation"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned",
+        "reasoning": "Assessment reasoning:\n- The field is about a location-aware inventory ledger that keeps desk and mobile aligned, including per-location stock, reservations, transfers, and debounced low-stock alerts, with a policy-driven approach to availability per location.\n- The provided field_answer describes ServiceTitan\u2019s multi-location stock tracking, per-location concepts (truck/warehouse), and event-driven handling (reservations, transfers, consumption, returns, receipts) along with a recommended model (parts, locations, stock_ledger, stock_balances, reservations, transfers, job_part_usage, inventory_alerts) and how available should be computed. It also includes a case study and operational guidance for desk vs mobile views, permissions, and transaction semantics. These align with the notion of a location-aware ledger and desk/mobile alignment.\n- The excerpts discuss inventory tracking across trucks and warehouses and the handling of receipts/expenses, which support the core idea of location-aware stock management across devices.\n- Therefore, the field_answer appears to comprehensively address the concept of a location-aware, per-location inventory ledger and how desk/mobile should stay aligned, including governance and event paths. Missing items from the broader prompt (e.g., PocketBase, Twilio, PDF invoicing) are outside the direct scope of the 6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned field and are not required for assessing location-aware ledger alignment.\n- Conclusion: completeness = true; supported by excerpts = true.",
+        "citations": [
+          {
+            "url": "https://help.servicetitan.com/docs/inventory-module",
+            "excerpts": [
+              "Inventory module Home - ServiceTitan\nWatch this overview to see how Inventory tracks stock levels across trucks and warehouses in real time, and how to get started with the module in ServiceTitan."
+            ],
+            "title": "Inventory module Home - ServiceTitan"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/inventory-and-purchase-orders",
+            "excerpts": [
+              "Inventory and Purchase Orders Home\nTrack receipts, returns, and expenses. Monitor inventory levels in trucks and warehouses. Set minimum stock levels"
+            ],
+            "title": "Inventory and Purchase Orders Home"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "7_react_spa_and_expo_should_share_domain_code_not_trust_the_client",
+        "reasoning": "Assessment reasoning:\n- The field_answer provides a detailed stance on tenancy, domain boundaries, and sharing domain code between React SPA and Expo, enforcing org_id and membership checks server-side, and treating realtime as an authorization surface. These elements align with the likely field goal of ensuring correct multi-tenant behavior and not trusting the client.\n- Completeness: The answer broadly covers tenancy structure, server-side enforcement, authentication context, and cautions about client-side org_id misuse, which seems to address the core expectations of a field about sharing domain logic and not trusting the client. There is no obvious missing piece given the field description ( tenancy, access control, and cross-platform sharing guidance ). Therefore, completeness is considered true.\n- Excerpts: The provided excerpts discuss API rules acting as record filters, multi-organization relations, and file access rules, which directly support the key points in the field_answer. They corroborate that tenancy/domain filtering should be enforced server-side and that relations across organizations exist, aligning with the field_answer claims.\n- Overall confidence: Reasonable support from excerpts and the field_answer appears to comprehensively address the tenancy/domain-sharing intent.\n",
+        "citations": [
+          {
+            "url": "https://pocketbase.io/docs/api-rules-and-filters",
+            "excerpts": [
+              "Introduction - API rules and filters - Docs - PocketBase\nPocketBase API Rules act also as records filter! Or in other words, you could for example allow listing only the \"active\" records of your collection, by using a simple filter expression such as: status = \"active\" (where \"status\" is a field defined in your Collection)."
+            ],
+            "title": "Introduction - API rules and filters - Docs - PocketBase"
+          },
+          {
+            "url": "https://github.com/pocketbase/pocketbase/discussions/3104",
+            "excerpts": [
+              "API Rule: Target specific ID for multi-relation field - GitHub\nWe keep track of the relations of Users to Organizations in a third collection (organization_relations) that has additional information such as the User's role for that particular Organization."
+            ],
+            "title": "API Rule: Target specific ID for multi-relation field - GitHub"
+          },
+          {
+            "url": "https://pocketbase.io/docs/api-files",
+            "excerpts": [
+              "Web APIs reference - API Files - Docs - PocketBase\nFiles are uploaded, updated or deleted via the Records API. The File API is usually used to fetch/download a file resource (with support for basic image manipulations, like generating thumbs)."
+            ],
+            "title": "Web APIs reference - API Files - Docs - PocketBase"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns",
+        "reasoning": "Analysis summary:\n- The field asks to discuss three reference patterns from Jobber, Housecall Pro, and ServiceTitan and provide actionable guidance, caveats, and a decision framework. The field answer delivers: (a) a comparison table of desk/mobile patterns and borrowing guidance, (b) contextual performance metrics notes, (c) a case-study contrast, (d) a list of common failure modes, and (e) a final borrowing decision with cautions.\n- Excerpts provided include explicit references to Jobber, Housecall Pro, and ServiceTitan features (quoting/scheduling/invoicing flows, mobile/app capabilities, dispatch/inventory), which align with the answer\u2019s content.\n- The answer appears to cover the expected aspects: pattern descriptions, what to borrow, what not to assume, a cross-product comparison, quantitative context, and a pragmatic decision rule. Therefore, completeness should be true.\n- The answer is supported by the excerpts: the excerpts mention the products and relevant features (scheduling, dispatch boards, inventory, customer portal), which underpin the claims in the field answer.\n- The reasoning notes that these are reference patterns rather than interchangeable checklists, and provides a structured conclusion to borrow patterns while avoiding over-claiming marketing figures.\n- No apparent missing major element given the field\u2019s likely scope, so I judge both completeness and support as solid.",
+        "citations": [
+          {
+            "url": "https://www.getjobber.com/",
+            "excerpts": [
+              "Jobber: The Top Home & Commercial Service Software in 2026\nJobber's home & commercial service software is the best way to organize your service business. Quote, schedule, invoice, and get paid\u2014all in one place."
+            ],
+            "title": "Jobber: The Top Home & Commercial Service Software in 2026"
+          },
+          {
+            "url": "https://www.housecallpro.com/",
+            "excerpts": [
+              "Housecall Pro: Home Services Business Management Software\nMeet your AI Team inside Housecall Pro . From nights to weekends, your AI crew covers calls, books work, and handles admin\u2014so you can focus on the jobs that pay ."
+            ],
+            "title": "Housecall Pro: Home Services Business Management Software"
+          },
+          {
+            "url": "https://www.getjobber.com/features/drag-drop-calendar/",
+            "excerpts": [],
+            "title": "Drag and Drop Calendar for Field Service Scheduling | Jobber"
+          },
+          {
+            "url": "https://www.housecallpro.com/features/mobile-app",
+            "excerpts": [
+              "Field Service Mobile App for Technicians by Housecall Pro\nScheduling and dispatch. Easily schedule and dispatch your team and keep customers updated with real-time notifications. Housecall Pros' field service CRM"
+            ],
+            "title": "Field Service Mobile App for Technicians by Housecall Pro"
+          },
+          {
+            "url": "https://help.housecallpro.com/en/articles/8448657-using-the-customer-portal",
+            "excerpts": [
+              "Using the Customer Portal"
+            ],
+            "title": "Using the Customer Portal Housecall Pro https://help.housecallpro.com \u203a ... \u203a Customer Portal"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/dispatching",
+            "excerpts": [
+              "Dispatching Home - ServiceTitan\nUse the Daily and Weekly Dispatch Boards, Job Tray, and Schedule Board to manage technicians and job appointments across your business."
+            ],
+            "title": "Dispatching Home - ServiceTitan"
+          },
+          {
+            "url": "https://help.servicetitan.com/docs/inventory-module",
+            "excerpts": [
+              "Inventory module Home - ServiceTitan\nWatch this overview to see how Inventory tracks stock levels across trucks and warehouses in real time, and how to get started with the module in ServiceTitan."
+            ],
+            "title": "Inventory module Home - ServiceTitan"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "synthesis_choose_a_canonical_core_then_optimize_each_surface",
+        "reasoning": "Reasoning for completeness: The field_answer presents a cohesive synthesis that identifies a canonical core architecture, surface-level optimization per product (Jobber, Housecall Pro, ServiceTitan), a set of design patterns and tensions (immediacy vs correctness, convenience vs privacy, automation vs explainability), a phased delivery plan, and a concrete decision to build a server-authoritative, tenant-scoped workflow with three optimized experiences. It appears to address the expected elements from the field_description and user query (canonical core, surface optimizations, trade-offs, phased plan, references to patterns in the listed products). Therefore, completeness is set to true.\nReasoning for supporting excerpts: The provided excerpts include (1) ServiceTitan Dispatch Pro information about machine learning-based assignment optimization (Dispatch Pro Home) which aligns with the field_answer\u2019s discussion of dispatch optimization and pattern-level signals for ServiceTitan, and (2) Stripe Hosted Invoice Page as an example of customer-facing invoicing, which loosely supports the billing/invoice aspect mentioned. However, the field_answer makes many claims (parity patterns, cross-product surface strategies, PocketBase architecture, org_id tenancy, quiet-hours gating, etc.) that are not directly supported by the supplied excerpts. Because the excerpts only partially substantiate a subset of the claims, the overall field_answer is not fully supported by the excerpts. Consequently, the excerpts provide limited support for the answer rather than comprehensive support. I mark the excerpts as not fully supportive.\n",
+        "citations": [
+          {
+            "url": "https://help.servicetitan.com/docs/dispatch-pro",
+            "excerpts": [
+              "Dispatch Pro Home - ServiceTitan\nJun 10, 2026 \u00b7 See how Dispatch Pro uses machine learning to optimize technician assignments and maximize revenue on your Dispatch Board. Tip: Use the Dispatch"
+            ],
+            "title": "Dispatch Pro Home - ServiceTitan"
+          },
+          {
+            "url": "https://docs.stripe.com/invoicing/hosted-invoice-page",
+            "excerpts": [
+              "Hosted Invoice Page - Stripe Documentation\nThe Hosted Invoice Page provides a secure, private URL where your customers can: View the details, amounts, and status of the invoice. Pay the invoice"
+            ],
+            "title": "Hosted Invoice Page - Stripe Documentation"
+          }
+        ],
+        "confidence": "medium"
+      }
+    ],
+    "content": {
+      "executive_summary": "- **Parity Contract**: Jobber presents quoting, scheduling, invoicing, and payment as one workflow, while Housecall Pro explicitly positions its mobile app for managing jobs and taking payments at the office or in the field; build **one** server-side job state model with **two** role-specific views instead of cloning desktop screens on mobile ([executive_summary[0]] [47], [executive_summary[1]] [81]).\n- **Dispatch Vocabulary**: ServiceTitan documents **Daily** and **Weekly** Dispatch Boards, a Job Tray, and a Schedule Board, with an Assigned tab for appointments that are both Scheduled and Assigned; make those transitions explicit in your own model before adding drag-and-drop UX ([executive_summary[2]] [35], [executive_summary[3]] [36]).\n- **Reference Scale Is Not Proof**: Jobber advertises **29M+** jobs, **100K+** businesses, and **12+** hours saved on average per week; Housecall Pro advertises **200K+** pros, **100M+** jobs, and **8+** hours saved per week. These are vendor claims with different denominators, so borrow interaction patterns, not superiority conclusions ([executive_summary[0]] [47], [executive_summary[4]] [1]).\n- **Photo Records Beat Opaque Blobs**: PocketBase supports file attachments, S3 storage, and on-the-fly image thumbnails; model **one** photo record per asset with job, organization, uploader, ordering, and upload status, then use a protected file field for sensitive job media (PocketBase, [executive_summary[5]] [6]).\n- **SMS Needs a Gate**: The current eCFR text states an **8 a.m. to 9 p.m. local-time** restriction for covered calls to residential subscribers, while Twilio documents timezone-aware quiet-hours tooling and opt-out/compliance controls. Default to the stricter of legal, carrier, and customer preference rules, and log every decision ([executive_summary[6]] [83], [executive_summary[7]] [82]).\n- **Portal-First Billing**: Housecall Pro's portal lets customers view past and upcoming appointments, view past invoices, pay invoices, and send a message; use a finalized PDF plus a revocable customer-facing link rather than exposing an internal invoice record ([executive_summary[8]] [21], [executive_summary[9]] [73]).\n- **Inventory Is Location-Scoped**: ServiceTitan describes real-time stock across trucks and warehouses and separately documents minimum stock levels, receipts, returns, and expenses; implement a ledger with **on hand**, **reserved**, **available**, and **in transit** quantities instead of letting either client overwrite a shared quantity ([executive_summary[10]] [15], [executive_summary[11]] [60]).\n- **Tenant Security Is Server Work**: PocketBase says API rules also act as record filters, and a documented community multi-organization pattern uses a separate user-to-organization relation; put `org_id` and membership checks in every rule, file access path, and realtime subscription, then add client-side filters only as defense in depth ([executive_summary[12]] [27], [executive_summary[13]] [28]).\n\nThe practical north star is not visual equality. It is that a dispatcher, technician, and customer can act on the same job, invoice, photo, or part without creating contradictory states. Ship the shared contract first, then make the desktop dense and the mobile flow fast.",
+      "1_a_two_surface_state_machine_prevents_feature_drift": "Reference products show that parity is a workflow property. Jobber describes the path as quote, schedule, invoice, and get paid, while Housecall Pro describes a dashboard spanning mobile and desktop and a mobile app that manages jobs and payments. ServiceTitan separates dispatch views into Daily and Weekly Dispatch Boards, a Job Tray, and a Schedule Board. Those are different interaction models over the same operational objects, not evidence that every screen should be available everywhere ([1_a_two_surface_state_machine_prevents_feature_drift[0]] [47], [1_a_two_surface_state_machine_prevents_feature_drift[1]] [1], [1_a_two_surface_state_machine_prevents_feature_drift[2]] [35]).\n\nDefine a capability matrix before writing components. The `shared truth` column is the acceptance test: if a change is made on one surface, both clients must render the same authoritative state after synchronization.\n\n| Capability | Desk and dispatcher surface | Mobile operator surface | Shared truth and acceptance test |\n|---|---|---|---|\n| Roster and assignment | Capacity view, unassigned tray, filters, drag/drop or explicit assignment | Today/next-job queue, assignment acknowledgement, route context | Assignment has an actor, timestamp, status, and revision; reassignment is visible on both clients |\n| Job lifecycle | Bulk status changes, reschedule, escalation, audit history | One-tap status transitions, notes, arrival/departure, completion evidence | Server validates allowed transitions; offline changes are queued and reconciled |\n| Customer communication | Searchable thread, template selection, consent and quiet-hours gate | Reply context, call/text action, customer-facing status | Thread, delivery status, opt-out state, and consent source are shared |\n| Photos and documents | Gallery, ordering, review, download, redaction or deletion request | Capture, annotate, upload queue, retry | Each asset has an owning job and organization, upload state, and access decision |\n| Charges and invoice | Edit draft, finalize, send, resend, payment reconciliation | Add line items, record payment or signature, review totals | A finalized invoice is immutable; corrections create a new version or credit path |\n| Parts | All locations, replenishment, transfers, approvals | Truck stock, reserve, consume, return, report shortage | Ledger events and reservations determine available quantity |\n| Sync and access | Realtime updates and conflict resolution UI | Offline queue, sync status, retry, tenant switch reset | Same authorization rules and idempotency semantics on web and native |\n\nUse a command-oriented API for high-risk operations. `assign_job`, `change_job_status`, `add_photo`, `send_sms`, `finalize_invoice`, `reserve_part`, and `consume_part` should carry an idempotency key and return the resulting record revision. This is a recommendation based on the products' shared workflows and PocketBase's record-oriented API; it avoids the common failure in which the desktop writes a broad record update while the phone silently overwrites a newer field ([1_a_two_surface_state_machine_prevents_feature_drift[3]] [6], [1_a_two_surface_state_machine_prevents_feature_drift[4]] [27]).\n\n### Case study - ServiceTitan's explicit dispatch states\n\nServiceTitan's weekly board exposes an Assigned tab for appointments that are Scheduled and Assigned. That vocabulary makes a useful distinction: a time slot can exist before a technician is assigned, and assignment is a separate operational fact. The outcome is a board that can expose unassigned work without pretending that a scheduled appointment is ready for field execution ([1_a_two_surface_state_machine_prevents_feature_drift[5]] [36]).\n\nAdopt the same separation even if the implementation is smaller. A proposed state set is `draft`, `scheduled`, `assigned`, `acknowledged`, `en_route`, `on_site`, `in_progress`, `completed`, `cancelled`, and `needs_review`; treat this as a product design proposal, not a claim about Jobber or ServiceTitan's complete internal state model. The decision is to make every transition auditable and render a clear fallback when mobile is offline.\n\n**Decision:** Treat feature parity as shared commands, states, permissions, and evidence. Do not measure it by the number of matching buttons.",
+      "2_desk_roster_density_and_mobile_next_action_need_different_ux": "The desk should optimize a dispatcher's search problem: who is available, where are the open slots, which jobs are unassigned, and what will change if a job moves. Jobber's scheduling pages emphasize a customizable calendar and drag-and-drop rescheduling and reassignment. ServiceTitan documents multiple dispatch boards and a Job Tray for managing technicians and appointments. Those patterns justify a dense desktop board, but they do not justify putting a dense board on a phone ([2_desk_roster_density_and_mobile_next_action_need_different_ux[0]] [71], [2_desk_roster_density_and_mobile_next_action_need_different_ux[1]] [72], [2_desk_roster_density_and_mobile_next_action_need_different_ux[2]] [35]).\n\n| UX layer | Best-practice pattern | Failure to avoid |\n|---|---|---|\n| Roster | Rows for technicians or crews, date/time columns, availability and skill filters, unassigned jobs tray, and clear conflict markers | A calendar that hides unassigned jobs or treats every technician as interchangeable |\n| Assignment gesture | Drag/drop for routine moves, with a confirmation sheet for time, skill, travel, and overlap changes | Optimistic movement that looks committed before the server rejects it |\n| Assignment detail | Show appointment window, duration, customer, address, required skills, parts risk, and current status before commit | Requiring a dispatcher to open several records to understand the consequence |\n| Mobile arrival | One next-job card with address, contact, notes, checklist, status, and evidence actions | A miniature week board that competes with driving and on-site work |\n| Reassignment | Push the new assignment, show who changed it and when, and require acknowledgement or a visible exception | Silent reassignment that leaves a technician working from stale data |\n| Conflict recovery | Keep the attempted move visible as `needs review`, with a reason and suggested alternatives | Dropping the job or reverting without explanation |\n\nThe desktop flow should be reversible. On drag start, calculate a preview; on drop, send an assignment command containing the expected job revision. The server rechecks working hours, overlapping appointments, required skills, territory, and organization membership. If it rejects the command, leave the board in the server state and show the reason. If it accepts, broadcast the new assignment and revision to the technician app.\n\nThe mobile flow should be progressive disclosure. The first screen answers only: what is next, when, where, and what action is due. Details such as full customer history, all team members, and the week view should be one or two taps away. Housecall Pro's positioning is a useful reference because it explicitly claims that the mobile app can manage jobs and take payments while keeping the user connected at the office or in the field; parity can therefore mean completing the critical action, not reproducing every administration control ([2_desk_roster_density_and_mobile_next_action_need_different_ux[3]] [81]).\n\n### Case study - Jobber's drag-and-drop versus ServiceTitan's board vocabulary\n\nJobber's documented interaction is intentionally direct: click, drag, and drop to reschedule or reassign work. ServiceTitan exposes a more explicit dispatch vocabulary with daily and weekly boards, a Job Tray, and an Assigned tab. The contrast reveals two valid scale choices: a small team may optimize for fast movement, while a larger operation needs more visible intermediate states and queues ([2_desk_roster_density_and_mobile_next_action_need_different_ux[1]] [72], [2_desk_roster_density_and_mobile_next_action_need_different_ux[4]] [36]).\n\nDo not copy either surface literally. Copy Jobber's low-friction gesture for safe routine changes, and copy ServiceTitan's explicit distinction between scheduled, assigned, and unassigned work. The decision is to add complexity only where it protects capacity, compliance, or revenue.\n\nTest the roster with adversarial cases: two dispatchers move the same job, a technician loses connectivity after assignment, a job requires a skill the selected technician lacks, a recurring appointment is moved across a timezone boundary, and a cancelled job is still present in a cached mobile queue. The parity criterion is not that both clients accept the gesture; it is that both converge on the same decision and explain a rejection.\n\n**Decision:** Make desktop assignment fast but reversible, and make mobile execution focused but complete for the operator's critical path.",
+      "3_pocketbase_photo_records_make_gallery_security_and_sync_manageable": "PocketBase documents that files are uploaded, updated, or deleted through the Records API and that the File API fetches file resources with image manipulation support such as thumbnails. Its product page also advertises local or S3 storage and on-the-fly thumbnail generation. Those primitives fit a field-service gallery, but a single multi-file field is a weak long-term model when every photo needs its own caption, ordering, uploader, timestamp, review status, or access decision ([3_pocketbase_photo_records_make_gallery_security_and_sync_manageable[0]] [6], [3_pocketbase_photo_records_make_gallery_security_and_sync_manageable[1]] [69], PocketBase).\n\nUse a `job_photos` collection with one file per record. A practical schema is:\n\n| Field | Purpose |\n|---|---|\n| `org_id` | Tenant boundary; set from authenticated membership, never trusted from the client |\n| `job_id` | Parent job relation |\n| `file` | PocketBase file field for the original or approved derivative |\n| `kind` | Before, after, damage, serial plate, receipt, signature evidence, or other controlled value |\n| `caption` and `sort_order` | Human context and deterministic gallery ordering |\n| `uploaded_by`, `taken_at` | Audit and timeline context |\n| `client_upload_id` | Idempotency key for mobile retries |\n| `upload_status` | Queued, uploading, available, failed, or needs review |\n| `reviewed_at`, `deleted_at` | Review and soft-delete/audit behavior |\n\nThe mobile capture path should create a local queue item first, compress a display derivative, upload through the authenticated Records API, then mark the item available only after the server returns the record. The desk can show thumbnails immediately when the file URL is available, but it should show an explicit pending state rather than a broken image. Use PocketBase thumbnail parameters for gallery tiles and fetch the original only for full-screen viewing; keep sensitive originals protected and authorize access through the parent job and tenant rules ([3_pocketbase_photo_records_make_gallery_security_and_sync_manageable[0]] [6]).\n\n### Case study - PocketBase's file API as a media primitive\n\nPocketBase provides the low-level pieces rather than a field-service opinion: record-bound file fields, a file-fetch API, image thumbnails, and storage that can be local or S3. The outcome is a compact implementation surface, but the application still owns metadata, retry semantics, authorization, and user experience ([3_pocketbase_photo_records_make_gallery_security_and_sync_manageable[0]] [6], PocketBase).\n\nThat division of responsibility is useful. Keep the original file and the business record linked, but do not put business meaning in a filename or rely on a client-only gallery order. Store the photo record as the audit object, generate a stable thumbnail URL from the record, and make deletion a permissioned business action that records who removed it and why. If legal or contractual retention applies, replace deletion with a retention workflow rather than physically removing the evidence immediately.\n\nAvoid three common pitfalls. First, an unprotected file URL can become a data leak even when the job API is correctly filtered. Second, a multi-file field makes per-photo retries and metadata awkward. Third, a mobile-only upload success flag can lie when the server accepted the record but the image transform or subsequent sync failed. The UI should distinguish local capture, server record creation, file availability, thumbnail availability, and final review.\n\nFor the shared React and Expo implementation, keep a platform-neutral `PhotoRepository` and `UploadQueue` interface. The browser adapter can use browser file objects; the Expo adapter can translate camera output into the multipart shape expected by the Records API. Keep camera permissions, image resizing, background transfer, and secure local persistence in the native adapter instead of leaking them into the web gallery component.\n\n**Decision:** Use one PocketBase photo record per asset, protected access, server-returned status, and a retryable mobile queue; use thumbnails for the gallery and originals only on demand.",
+      "4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates": "Treat outbound SMS as a policy decision followed by a transport call. Twilio's Messaging Policy and compliance material address consent and revocation, its opt-in/opt-out guidance distinguishes explicit opt-in for marketing messages, and its Advanced Opt-Out documentation provides controls for opt-out behavior. Twilio also publishes a Compliance Toolkit describing automatic quiet-hours enforcement and timezone-aware scheduling. These are not substitutes for legal review, but they show why a raw `sendMessage` button is an incomplete CRM feature ([4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates[0]] [87], [4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates[1]] [20], Twilio Advanced Opt-Out, [4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates[2]] [82]).\n\nThe current eCFR text at 47 CFR 64.1200 includes a restriction on calls to residential telephone subscribers before **8 a.m.** or after **9 p.m.** at the called party's local time. The rule is written as a calling restriction, so do not turn this sentence into a blanket legal conclusion for every service or marketing text. Engineer a configurable local-time gate, use the stricter customer preference when available, and have counsel map transactional texts, automated texts, and marketing texts to the applicable federal and state rules ([4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates[3]] [83]).\n\n| Send decision | Required data | Default behavior |\n|---|---|---|\n| Transactional appointment or service update | Customer phone, purpose, consent or permitted basis, recipient timezone, message template | Queue for allowed local hours; record the job and template |\n| Marketing or review request | Explicit opt-in source, timestamp, disclosure version, sender identity, campaign classification | Block when consent is missing, expired by policy, or suppressed |\n| Customer reply | Inbound message, thread, current suppression state | Store in the same conversation and stop outbound automation if an opt-out is detected |\n| Manual desk message | Authenticated sender, purpose, preview, quiet-hours result, approval if needed | Require an override reason and log it; do not let browser code bypass policy |\n| `STOP` or equivalent opt-out | Phone, keyword, timestamp, provider status | Suppress future non-permitted messages immediately and make the suppression visible to every sender |\n\nStore `sms_consent`, `sms_suppression`, and `sms_delivery_event` as separate audit records. A consent record should contain the phone number, source, text or disclosure version, timestamp, purpose, and evidence; a suppression record should include the inbound keyword or manual request and the effective scope. The send service should recheck these records immediately before enqueueing, not only when the contact page was opened.\n\n### Case study - Twilio's compliance-toolkit pattern\n\nTwilio's Compliance Toolkit page is a useful architectural signal because it frames quiet hours as timezone-aware enforcement and scheduling rather than as a visual warning on the compose screen. The outcome is a system that can defer a message instead of forcing a desk user to remember the recipient's local time ([4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates[2]] [82]).\n\nThe FCC's February 16, 2024 order also states that it clarifies and strengthens consumer rights to grant and revoke consent for robocalls and robotexts. Use that as a reason to make revocation a first-class event, not a note hidden in a contact timeline; do not represent the order alone as a complete statement of current law ([4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates[4]] [84]). For applicable US application-to-person traffic, include A2P 10DLC registration and campaign data in launch planning, using Twilio's current requirements rather than hard-coding assumptions from an old onboarding flow ([4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates[5]] [88]).\n\nKeep Twilio credentials and send calls on a server-side worker. The worker should attach an idempotency key, save the provider message ID, accept delivery and failure webhooks, and expose `queued`, `sent`, `delivered`, `failed`, `undelivered`, and `suppressed` states to both desk and mobile. A quiet-hours override should be exceptional, permissioned, and auditable; it should never be an undocumented client-side flag.\n\n**Decision:** Make SMS a server-side, timezone-aware, consent-checked workflow with durable opt-out and delivery logs. This is an implementation pattern, not legal advice; review the final policy with counsel.",
+      "5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state": "Invoice parity should separate operational capture from financial finalization. Jobber's invoice documentation covers adding images and attachments, saving and updating an invoice, and sending it by email or text. Housecall Pro describes professional invoice creation, automated reminders, and customer payment, while its Customer Portal allows customers to view appointments, view past invoices, pay invoices, and send a message. The common pattern is a single invoice workflow with multiple delivery surfaces, not a separate mobile invoice database ([5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state[0]] [23], [5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state[1]] [24], [5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state[2]] [21]).\n\nUse these states: `draft`, `pending_review`, `finalized`, `sent`, `partially_paid`, `paid`, `void`, and `credited`. The exact names are a design proposal. A draft may change; a finalized invoice should be a snapshot of customer identity, line items, tax, totals, payment terms, and job evidence. Corrections should create a new version, credit, or void event instead of mutating the artifact a customer already received.\n\n| Responsibility | Desk | Mobile | Shared outcome |\n|---|---|---|---|\n| Build draft | Edit lines, taxes, terms, attachments, and internal notes | Add labor, parts, photos, signature, and customer-visible notes | Same draft revision and validation errors |\n| Finalize | Review, approve, generate PDF, and send | Review totals and request desk approval if required | One immutable version and hash |\n| Collect | Reconcile payment, resend, refund or credit | Capture payment or signature where supported | Payment status and provider reference |\n| Customer access | Open portal, resend link, see delivery history | Share link only through approved action | Link is scoped to the customer and invoice |\n| Correction | Issue version, credit, or void | Flag a correction request | Original artifact remains auditable |\n\nGenerate PDFs in a server-side job. Render from the finalized snapshot, persist the PDF storage key, version, content hash, locale, and generation status, and make the job idempotent. Do not generate the only copy on a phone where an app close, network loss, or locale mismatch can leave the desk with a different document. If a PDF is regenerated because of a template change, retain the prior version and show which version was sent.\n\n### Case study - Housecall Pro's portal-oriented customer surface\n\nHousecall Pro's portal is explicit about the customer tasks: upcoming and past appointments, invoice payment, past invoices, and messaging. That is a strong reference for a field-service portal because it reduces the need for a dispatcher to answer routine status and billing questions ([5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state[2]] [21]).\n\nFor link architecture, Stripe's Hosted Invoice Page documentation describes a secure private URL where customers can view invoice details, amounts, and status and pay the invoice. It is not a claim that the CRM must use Stripe, but it is a concrete reference for separating a customer link from an internal record URL ([5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state[3]] [73]).\n\nImplement a portal token containing only an opaque identifier or signed access grant. Store the grant's organization, customer, invoice version, creation time, expiry, revocation state, and last-used audit data. Require a fresh server-side authorization check when the link is opened, and do not put a PocketBase superuser token or unrestricted record query in the URL. A no-login link can be convenient, but its scope and revocation must be narrower than a staff session.\n\nThe desk can own finalization and delivery. The mobile app can add evidence and charges, review the calculated total, collect a payment or signature, and request finalization. Both surfaces must show whether the PDF is still generating, which version is customer-visible, and whether payment is pending or complete.\n\n**Decision:** Make the finalized invoice snapshot and PDF the durable artifact, and make the portal link a scoped, revocable access layer rather than a shortcut to internal data.",
+      "6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned": "ServiceTitan's Inventory module says it tracks stock levels across trucks and warehouses in real time. Its inventory and purchase-order documentation also calls out receipts, returns, expenses, monitoring truck and warehouse levels, and minimum stock levels. These are the important reference concepts: inventory is not one number for the company, and a low-stock signal is a policy over location and replenishment data ([6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned[0]] [15], [6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned[1]] [60]).\n\nUse a part master plus location-scoped state. The minimum useful model is `parts`, `locations`, `stock_ledger`, `stock_balances`, `reservations`, `transfers`, `job_part_usage`, and `inventory_alerts`. Keep `on_hand`, `reserved`, `available`, and `in_transit` distinct. `available` should be calculated or transactionally maintained as `on_hand - reserved`, not copied from a stale mobile read.\n\n| Event | Desk behavior | Mobile behavior | Ledger result |\n|---|---|---|---|\n| Reserve for a job | Approve or see a shortage before dispatch | Reserve from assigned truck or request a source location | Reservation with job, quantity, actor, and revision |\n| Consume on site | See cost and margin impact | Scan or select part, confirm quantity, attach to job | Consumption event and reduced truck balance |\n| Return unused part | Approve exception if required | Return to truck or warehouse and record reason | Return event and increased destination balance |\n| Transfer | Create, approve, and track origin/destination | Confirm pickup or receipt | In-transit event followed by receipt event |\n| Receive purchase order | Enter or reconcile receipt | Confirm physical receipt if assigned | Receipt event and vendor reference |\n| Low stock | See threshold, location, open transfer, and recommended action | See shortage before promising work | Debounced alert based on available quantity |\n\n### Case study - ServiceTitan's truck and warehouse model\n\nServiceTitan's documentation explicitly names trucks and warehouses and describes real-time stock tracking. That choice exposes a key operational fact: a part can be available in the company but unavailable to the technician who is about to start a job ([6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned[0]] [15]).\n\nTranslate that into the mobile experience. Show the technician's assigned vehicle first, nearby locations second, and company-wide stock only as a discovery result. The desk should see reservations and in-transit transfers before assigning a job that depends on a part. The outcome is fewer false promises caused by aggregating all locations into one balance.\n\nDo not implement stock by allowing both clients to write `quantity` directly. Use an append-only or append-mostly event path with server transactions, expected revisions, and idempotency keys. Offline mobile consumption should enter an outbox with a client event ID; when it reconnects, the server either applies the event once or returns a conflict that the technician can resolve. A low-stock alert should fire after the committed balance changes, be debounced, and include location, threshold, available quantity, and the event that caused it.\n\nA shared inventory screen does not mean identical permissions. A dispatcher may initiate a transfer, a warehouse role may receive it, and a technician may consume from a truck but not edit a warehouse balance. Enforce these permissions in the API and reflect them in both clients. Realtime updates can reduce surprises, but they do not replace a transactional server decision when two users consume the last unit.\n\n**Decision:** Model parts as a location-aware ledger with reservations and transfers. Let mobile report physical events and let the server decide the resulting balance and alert state.",
+      "7_react_spa_and_expo_should_share_domain_code_not_trust_the_client": "PocketBase documents that API rules also act as record filters. That means authorization can determine what records a request is allowed to list or view, rather than merely hiding buttons after data has already been returned. A PocketBase community discussion describes a separate relation collection for users and organizations with role information; use that as an illustrative multi-tenant pattern, then validate the exact rules against the deployed PocketBase version ([7_react_spa_and_expo_should_share_domain_code_not_trust_the_client[0]] [27], [7_react_spa_and_expo_should_share_domain_code_not_trust_the_client[1]] [28]).\n\nA robust tenancy layout is:\n\n1. `organizations` stores tenant identity and policy settings.\n2. `organization_memberships` stores user, organization, role, status, and optional permission overrides.\n3. Every business collection, including jobs, assignments, photos, messages, invoices, parts, and ledger events, stores an immutable `org_id` relation.\n4. The server derives the active organization from the authenticated user and membership. It does not accept a free-form client `org_id` as authorization.\n5. List, view, create, update, delete, and realtime access rules all check membership and record scope.\n6. Protected file access checks the parent photo or invoice record, not only the filename.\n\nThe React SPA and Expo app can share TypeScript types, repositories, command names, validation schemas, design tokens, and error codes. They should use platform adapters for authentication persistence, camera and file selection, notifications, background transfer, and secure storage. A web local-storage adapter and a native secure-storage adapter should not be hidden behind assumptions that make one platform persist another platform's session incorrectly.\n\n### Case study - PocketBase rules as a boundary, not a filter decoration\n\nPocketBase's documented rule behavior means an organization filter can become part of the backend's record visibility rather than a frontend convention. The outcome is valuable only if every collection and file path uses the same boundary; one unscoped collection or privileged client can undo the model ([7_react_spa_and_expo_should_share_domain_code_not_trust_the_client[0]] [27], [7_react_spa_and_expo_should_share_domain_code_not_trust_the_client[2]] [6]).\n\nUse a membership relation when a person can belong to more than one organization. When the user switches organizations, clear cached records, unsubscribe from the previous realtime scope, refresh the active membership, and establish a new session context. Never use a client-side `filter=org_id` as the only control. It is useful for query efficiency and defense in depth, but the rule must still deny a cross-tenant record when the filter is removed or manipulated.\n\nTreat realtime as an authorization surface. Subscribe only to records the current user can access, revalidate subscriptions after role or tenant changes, and handle a missing event as a possible permission or connectivity issue rather than assuming the record did not change. PocketBase's realtime API is a transport; it does not remove the need for an explicit conflict and sync design (PocketBase Realtime API).\n\nFor mobile, add an outbox with `client_mutation_id`, entity ID, expected revision, command type, payload, and retry count. For web, use optimistic presentation only where rollback is safe. Twilio sends, PDF generation, file transforms, and inventory events should run in server-side workers or controlled endpoints, never with privileged credentials embedded in the SPA or Expo bundle.\n\nTest tenancy with a matrix: read another organization by guessed ID, upload a file to another job, subscribe before and after tenant switch, retry a mutation twice, downgrade a role during an open session, and open an old portal link after revocation. A passing UI screenshot is not a passing isolation test.\n\n**Decision:** Share a typed domain layer across React and Expo, but enforce `org_id`, membership, file access, and realtime scope on the server for every request and subscription.",
+      "8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns": "The products should be treated as reference implementations of workflow emphasis, not as interchangeable feature checklists. The cited pages make different claims and expose different levels of operational detail.\n\n| Product | Desk pattern in cited material | Mobile or customer pattern | What to borrow | What not to assume |\n|---|---|---|---|---|\n| Jobber | Quote, schedule, invoice, and payment are presented as one operating flow; scheduling includes drag-and-drop reschedule and reassign | Jobber's app listing says it helps businesses schedule jobs, send invoices, and get paid | Low-friction calendar movement and a connected job-to-cash flow | A simple gesture removes the need for server conflict checks or explicit assignment states |\n| Housecall Pro | Product pages show a business dashboard and job management, with scheduling, invoicing, and follow-ups | Mobile app manages jobs and payments; portal shows appointments, invoices, payments, and messaging | Mobile completion plus a customer self-service surface | Marketing reach and time-saved claims are not a parity or quality benchmark |\n| ServiceTitan | Daily and Weekly Dispatch Boards, Job Tray, Schedule Board, Assigned tab, and Dispatch Pro assignment optimization | Field Mobile App is positioned as an all-in-one technician app; inventory spans trucks and warehouses | Explicit dispatch states, location-aware stock, and a dense control plane | Complexity and automation are not automatically appropriate for a small team |\n\nThe scale claims also illustrate why vendor numbers need context. Jobber's site reports **29M+** jobs, **100K+** businesses, **12+** hours saved on average per week, and **44%** average first-year revenue growth. Housecall Pro reports **200K+** pros, **100M+** pro jobs, **35%** average pro revenue growth, **8+** hours saved per week, teams from **1 to 100+**, and **50+** industries. These are self-reported marketing figures with different populations and methods; use them as context, not as comparative proof ([8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns[0]] [47], [8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns[1]] [1]).\n\n### Case study - Contrasting the three control planes\n\nJobber is the clearest reference for a small-team control plane: a calendar gesture directly changes a schedule, and the broader product story connects quote, schedule, invoice, and payment. Housecall Pro adds a strong mobile and customer-portal emphasis, explicitly describing work and payments at the office or in the field and self-service access for appointments and invoices ([8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns[2]] [72], [8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns[3]] [81], [8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns[4]] [21]).\n\nServiceTitan is the stronger reference for a larger dispatch and inventory control plane because its documentation names multiple board views, scheduled-versus-assigned work, and stock across trucks and warehouses. The design lesson is not to choose one winner. It is to decide whether your first customer needs Jobber-like speed, Housecall Pro-like field and customer continuity, or ServiceTitan-like explicit operational control, then implement the underlying state model so the product can grow without a rewrite ([8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns[5]] [35], [8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns[6]] [15]).\n\nCommon failure modes cut across all three references:\n\n- **Pixel parity**: putting a desktop board on a phone creates a slow operator flow. Use shared capabilities with different compositions.\n- **Client-owned truth**: direct record updates allow stale assignment, stock, or invoice data to win. Use commands, revisions, and idempotency.\n- **Unscoped media**: a correct job rule does not automatically make every raw file URL safe. Protect and authorize the file path.\n- **SMS as a utility call**: a compose box without consent, suppression, local time, and delivery state is not a compliance feature.\n- **Mutable finalized billing**: changing a PDF after sending destroys auditability. Version and credit instead.\n- **One company-wide stock number**: aggregate stock hides truck and warehouse shortages. Keep location state.\n- **Fake offline support**: a cached screen without an outbox and conflict UI is not an offline workflow.\n\n**Decision:** Borrow Jobber's direct scheduling gesture, Housecall Pro's field and portal continuity, and ServiceTitan's explicit dispatch and inventory states. Do not import their complexity or marketing claims without matching your operating model.",
+      "synthesis_choose_a_canonical_core_then_optimize_each_surface": "The material points to a non-obvious conclusion: the best parity architecture is intentionally asymmetric at the UI layer and intentionally strict at the data layer. Jobber emphasizes a fast calendar and connected job-to-cash workflow. Housecall Pro emphasizes the ability to manage jobs and payments from office or field and gives customers a portal. ServiceTitan emphasizes dispatch-board vocabulary, explicit scheduled-versus-assigned work, and location-aware inventory. Their mechanisms, scope, trade-offs, and time horizons differ, so a single visual pattern would lose the reason each is useful.\n\n| Dimension | Jobber signal | Housecall Pro signal | ServiceTitan signal | Recommended product decision |\n|---|---|---|---|---|\n| Mechanism | Drag/drop calendar and connected quote-to-payment flow | Mobile job/payment actions plus customer self-service | Boards, Job Tray, assignment states, and dispatch optimization | Use commands and state transitions beneath role-specific views |\n| Scope | Fast scheduling and job-to-cash | Field execution, administration, and portal continuity | Dispatch and inventory control at operational depth | Start with one job lifecycle, then add depth by role and plan |\n| Trade-off | Speed can hide assignment complexity | Broad continuity can create many surfaces | Explicit control can increase configuration burden | Progressive disclosure and role-based permissions |\n| Evidence base | Product pages and workflow documentation | Product pages, mobile documentation, and portal help | Detailed dispatch and inventory documentation | Cite vendor claims as examples, not as neutral benchmarks |\n| Time horizon | Immediate reschedule and collection workflow | Same-day field/customer continuity | Daily/weekly planning plus replenishment | Design for immediate actions and eventual reconciliation |\n\nThe core tension is immediacy versus correctness. Dispatchers want a drag to take effect now; inventory and billing need transactional integrity; mobile may be offline; SMS may be legally deferred by local time. Resolve the tension by acknowledging intent quickly, committing through a server command, and showing a durable pending or conflict state when the result is not yet final.\n\nThe second tension is convenience versus privacy. A customer portal should remove friction, but a no-login link must not become an unrestricted invoice or photo URL. Use scoped access grants, expiry and revocation, and a server authorization check. The third tension is automation versus explainability: ServiceTitan's cited Dispatch Pro page describes machine-learning assignment optimization, but an automated suggestion still needs a visible reason, override path, and audit trail for a dispatcher ([synthesis_choose_a_canonical_core_then_optimize_each_surface[0]] [38], [synthesis_choose_a_canonical_core_then_optimize_each_surface[1]] [73]).\n\nA phased delivery plan keeps the architecture honest:\n\n1. **Foundation**: organizations, memberships, `org_id` rules, job state machine, assignment command, revision and audit fields, and shared React/Expo types.\n2. **Field evidence**: PocketBase photo records, protected access, thumbnails, native upload queue, retry and sync status.\n3. **Communication**: server-side Twilio worker, consent and suppression records, local-time quiet-hours gate, A2P onboarding, delivery webhooks, and desk audit UI.\n4. **Billing**: finalized invoice snapshot, idempotent PDF worker, versioned artifact storage, portal grant, payment status, and mobile review/capture actions.\n5. **Inventory**: location master, ledger, reservations, transfers, mobile consumption, stock thresholds, and debounced alerts.\n6. **Hardening**: cross-tenant tests, replay tests, offline conflict tests, provider failure tests, link revocation tests, accessibility review, and a capability matrix that records what is intentionally desk-only or mobile-only.\n\nThe release gate should be scenario-based: assign on desk while mobile is offline; upload two photos with one retry; attempt a text during quiet hours; revise a draft after a PDF is generated; consume the last part on two devices; switch organizations while a realtime subscription is active; and revoke a portal link after it was sent. If each scenario ends with one authorized, explainable state, the product has meaningful parity.\n\n**Decision:** Build a server-authoritative, tenant-scoped workflow core and expose three optimized experiences: dense dispatch desk, focused operator app, and constrained customer portal. That combination preserves the useful asymmetry of the reference products while avoiding their most common implementation traps."
+    },
+    "type": "json",
+    "beta_fields": null,
+    "mcp_tool_calls": null,
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "executive_summary": {
+          "type": "string",
+          "title": "Executive Summary"
+        },
+        "1_a_two_surface_state_machine_prevents_feature_drift": {
+          "type": "string",
+          "title": "1. A Two-Surface State Machine Prevents Feature Drift"
+        },
+        "2_desk_roster_density_and_mobile_next_action_need_different_ux": {
+          "type": "string",
+          "title": "2. Desk Roster Density and Mobile Next Action Need Different UX"
+        },
+        "3_pocketbase_photo_records_make_gallery_security_and_sync_manageable": {
+          "type": "string",
+          "title": "3. PocketBase Photo Records Make Gallery Security and Sync Manageable"
+        },
+        "4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates": {
+          "type": "string",
+          "title": "4. Desk-Originated Twilio SMS Needs Consent, Timezone, and Suppression Gates"
+        },
+        "5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state": {
+          "type": "string",
+          "title": "5. Immutable Invoice PDFs and Revocable Portal Links Protect Billing State"
+        },
+        "6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned": {
+          "type": "string",
+          "title": "6. A Location-Aware Inventory Ledger Keeps Desk and Mobile Aligned"
+        },
+        "7_react_spa_and_expo_should_share_domain_code_not_trust_the_client": {
+          "type": "string",
+          "title": "7. React SPA and Expo Should Share Domain Code, Not Trust the Client"
+        },
+        "8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns": {
+          "type": "string",
+          "title": "8. Jobber, Housecall Pro, and ServiceTitan Offer Three Useful Reference Patterns"
+        },
+        "synthesis_choose_a_canonical_core_then_optimize_each_surface": {
+          "type": "string",
+          "title": "Synthesis: Choose a Canonical Core, Then Optimize Each Surface"
+        }
+      },
+      "required": [
+        "executive_summary",
+        "1_a_two_surface_state_machine_prevents_feature_drift",
+        "2_desk_roster_density_and_mobile_next_action_need_different_ux",
+        "3_pocketbase_photo_records_make_gallery_security_and_sync_manageable",
+        "4_desk_originated_twilio_sms_needs_consent_timezone_and_suppression_gates",
+        "5_immutable_invoice_pdfs_and_revocable_portal_links_protect_billing_state",
+        "6_a_location_aware_inventory_ledger_keeps_desk_and_mobile_aligned",
+        "7_react_spa_and_expo_should_share_domain_code_not_trust_the_client",
+        "8_jobber_housecall_pro_and_servicetitan_offer_three_useful_reference_patterns",
+        "synthesis_choose_a_canonical_core_then_optimize_each_surface"
+      ]
+    }
+  }
+}

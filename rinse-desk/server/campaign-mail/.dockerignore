@@ -1,0 +1,6 @@
+node_modules
+.env
+.git
+*.md
+scripts/ensure-*.mjs
+.DS_Store

@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/map-tiles/carto/:path*",
+      "destination": "https://a.basemaps.cartocdn.com/rastertiles/voyager/:path*"
+    },
+    {
+      "source": "/map-tiles/osm/:path*",
+      "destination": "https://tile.openstreetmap.org/:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

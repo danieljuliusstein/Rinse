@@ -1,0 +1,889 @@
+@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@theme {
+  --color-rinse-green: #22C55E;
+  --color-rinse-green-hover: #16A34A;
+  --color-rinse-green-text: #16A34A;
+  --color-rinse-green-soft: #EAF9EF;
+  --color-rinse-green-border: #bbf7d0;
+  --color-rinse-bg: #F4F5F3;
+  --color-rinse-surface: #FFFFFF;
+  --color-rinse-text: #111827;
+  --color-rinse-muted: #6B7280;
+  --color-rinse-border: #E5E7EB;
+  --color-rinse-sidebar-from: #0B1F14;
+  --color-rinse-sidebar-to: #071407;
+  --color-rinse-sidebar-active: #16301F;
+  --color-rinse-teal: #14b8a6;
+  --color-rinse-amber: #f59e0b;
+  --color-rinse-blue: #2563eb;
+  --color-rinse-danger: #ef4444;
+
+  /* Cars / bolt mockup tokens */
+  --color-brand-50: #ECFDF3;
+  --color-brand-100: #D1FAE5;
+  --color-brand-200: #A7F3D0;
+  --color-brand-300: #6EE7A8;
+  --color-brand-400: #4ADE80;
+  --color-brand-500: #22C55E;
+  --color-brand-600: #16A34A;
+  --color-brand-700: #15803D;
+  --color-brand-900: #0B1F14;
+  --color-ink-50: #F7F8F6;
+  --color-ink-100: #F4F5F3;
+  --color-ink-200: #E8EAE5;
+  --color-ink-300: #D4D7CF;
+  --color-ink-400: #9CA39A;
+  --color-ink-500: #6B716A;
+  --color-ink-600: #4A4F49;
+  --color-ink-700: #343833;
+  --color-ink-800: #1F231F;
+  --color-ink-900: #121512;
+  --color-rust-50: #FFF7ED;
+  --color-rust-100: #FFEDD5;
+  --color-rust-500: #F97316;
+  --color-rust-600: #EA580C;
+  --color-rust-700: #C2410C;
+  --shadow-card: 0 1px 2px rgba(16, 24, 20, 0.04), 0 8px 24px -12px rgba(16, 24, 20, 0.1);
+  --shadow-settings-card-hover: 0 4px 16px rgba(15, 28, 20, 0.06), 0 1px 2px rgba(15, 28, 20, 0.04);
+  --shadow-settings-save: 0 -1px 0 rgba(15, 28, 20, 0.06), 0 -6px 24px rgba(15, 28, 20, 0.06);
+
+  /* Routes / bolt mockup tokens */
+  --color-atmosphere: #F4F5F3;
+  --color-depot-500: #475569;
+  --color-depot-600: #334155;
+  --color-depot-700: #1E293B;
+  --shadow-lift: 0 18px 40px -18px rgba(16, 40, 24, 0.28), 0 4px 10px -6px rgba(16, 40, 24, 0.12);
+  --shadow-chip: 0 6px 16px -6px rgba(16, 40, 24, 0.35);
+  --shadow-dock: 0 24px 60px -20px rgba(16, 40, 24, 0.30), 0 8px 20px -10px rgba(16, 40, 24, 0.18);
+  --shadow-ring: 0 0 0 1px rgba(22, 163, 74, 0.35), 0 0 0 4px rgba(34, 197, 94, 0.18);
+}
+
+@keyframes cars-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cars-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cars-pin-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.55;
+  }
+}
+
+@utility animate-cars-fade-up {
+  animation: cars-fade-up 0.4s ease both;
+}
+
+@utility animate-cars-pop-in {
+  animation: cars-pop-in 0.25s ease both;
+}
+
+@utility animate-cars-pin-pulse {
+  animation: cars-pin-pulse 2.4s ease-in-out infinite;
+}
+
+/* Receipts / bolt mockup motion */
+@keyframes receipts-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes receipts-header-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes receipts-pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes receipts-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes receipts-glow-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  33% {
+    transform: translate(20px, -15px) scale(1.1);
+    opacity: 0.7;
+  }
+  66% {
+    transform: translate(-15px, 10px) scale(0.95);
+    opacity: 0.4;
+  }
+}
+
+@keyframes receipts-wiggle {
+  0%,
+  100% {
+    transform: rotate(var(--tw-rotate, 0deg)) translateY(0);
+  }
+  50% {
+    transform: rotate(calc(var(--tw-rotate, 0deg) + 1.5deg)) translateY(-6px);
+  }
+}
+
+@keyframes receipts-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes receipts-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes receipts-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes receipts-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@utility animate-receipts-fade-up {
+  animation: receipts-fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-receipts-header-in {
+  animation: receipts-header-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-receipts-pulse-ring {
+  animation: receipts-pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@utility animate-receipts-glow-drift {
+  animation: receipts-glow-drift 12s ease-in-out infinite;
+}
+
+@utility animate-receipts-wiggle {
+  animation: receipts-wiggle 5.5s ease-in-out infinite;
+}
+
+@utility animate-receipts-pop-in {
+  animation: receipts-pop-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-receipts-slide-in {
+  animation: receipts-slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility animate-receipts-fade-in {
+  animation: receipts-fade-in 0.2s ease-out;
+}
+
+@utility animate-receipts-scale-in {
+  animation: receipts-scale-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Invoices / bolt mockup motion */
+@keyframes invoices-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes invoices-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes invoices-row-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes invoices-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@utility animate-invoices-fade-up {
+  animation: invoices-fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-invoices-fade-in {
+  animation: invoices-fade-in 0.2s ease-out;
+}
+
+@utility animate-invoices-row-expand {
+  animation: invoices-row-expand 0.18s ease-out;
+}
+
+@utility animate-invoices-pop-in {
+  animation: invoices-pop-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Contacts / bolt mockup */
+@keyframes contacts-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes contacts-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-contacts-fade-in {
+  animation: contacts-fade-in 0.18s ease-out both;
+}
+
+@utility animate-contacts-slide-down {
+  animation: contacts-slide-down 0.16s ease-out both;
+}
+
+/* Campaigns / bolt mockup motion */
+@keyframes campaigns-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-campaigns-fade-up {
+  animation: campaigns-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.campaigns-fade-up-stagger > * {
+  animation: campaigns-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.campaigns-fade-up-stagger > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+.campaigns-fade-up-stagger > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.campaigns-fade-up-stagger > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.campaigns-fade-up-stagger > *:nth-child(4) {
+  animation-delay: 0.16s;
+}
+.campaigns-fade-up-stagger > *:nth-child(5) {
+  animation-delay: 0.2s;
+}
+.campaigns-fade-up-stagger > *:nth-child(6) {
+  animation-delay: 0.24s;
+}
+
+/* Routes / bolt mockup motion */
+@keyframes routes-ring-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.08;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes routes-soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes routes-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes routes-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-routes-ring-pulse {
+  animation: routes-ring-pulse 2.6s ease-in-out infinite;
+}
+
+@utility animate-routes-soft-float {
+  animation: routes-soft-float 5s ease-in-out infinite;
+}
+
+@utility animate-routes-shimmer {
+  animation: routes-shimmer 2.2s linear infinite;
+}
+
+@utility animate-routes-fade-up {
+  animation: routes-fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.routes-scroll-thin::-webkit-scrollbar {
+  width: 8px;
+}
+.routes-scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(15, 26, 18, 0.14);
+  border-radius: 999px;
+}
+.routes-scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Dense contacts table — fits typical desk content width without 1560px min */
+.contacts-row-grid {
+  grid-template-columns:
+    36px
+    36px
+    minmax(140px, 1.2fr)
+    minmax(100px, 0.9fr)
+    88px
+    minmax(120px, 1.1fr)
+    minmax(100px, 0.9fr);
+}
+
+@media (min-width: 1024px) {
+  .contacts-row-grid {
+    grid-template-columns:
+      36px
+      36px
+      minmax(150px, 1.15fr)
+      minmax(110px, 0.85fr)
+      88px
+      minmax(130px, 1.1fr)
+      110px
+      minmax(140px, 1fr)
+      minmax(110px, 0.95fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .contacts-row-grid {
+    grid-template-columns:
+      36px
+      36px
+      minmax(150px, 1.1fr)
+      minmax(110px, 0.8fr)
+      92px
+      minmax(100px, 0.7fr)
+      minmax(130px, 1fr)
+      110px
+      minmax(140px, 0.95fr)
+      minmax(120px, 0.9fr);
+  }
+}
+
+@utility receipts-shimmer-bar {
+  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.18), transparent);
+  background-size: 200% 100%;
+  animation: receipts-shimmer 2.5s ease-in-out infinite;
+}
+
+@utility receipts-paper-grain {
+  background-image: radial-gradient(circle at 1px 1px, rgba(11, 31, 20, 0.025) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility thin-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(16, 24, 20, 0.14);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-rinse-bg);
+  color: var(--color-rinse-text);
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Automations journey stack — light enter / hover motion */
+@keyframes automations-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.automations-stats-strip {
+  animation: automations-fade-up 0.45s ease-out both;
+}
+
+.automations-journey-card {
+  animation: automations-fade-up 0.4s ease-out both;
+}
+
+.automations-journey-card:hover .automation-flow-nodes {
+  transform: translateX(2px);
+}
+
+.automations-journey-card .automation-flow-nodes {
+  transition: transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .automations-stats-strip,
+  .automations-journey-card {
+    animation: none;
+  }
+
+  .automations-journey-card .automation-flow-nodes {
+    transition: none;
+  }
+
+  .soft-blob-drift,
+  .soft-blob-drift-delay,
+  .soft-blob-drift-slow,
+  .soft-blob-mark {
+    animation: none !important;
+  }
+}
+
+/* Soft blob graphic language */
+@keyframes soft-blob-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(3px, -4px) scale(1.02);
+  }
+}
+
+@keyframes soft-blob-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+.soft-blob-art .soft-blob-drift {
+  transform-origin: center;
+  animation: soft-blob-drift 7s ease-in-out infinite;
+}
+
+.soft-blob-art .soft-blob-drift-delay {
+  animation-delay: -2.2s;
+  animation-duration: 8.5s;
+}
+
+.soft-blob-art .soft-blob-drift-slow {
+  animation-delay: -4s;
+  animation-duration: 10s;
+}
+
+.soft-blob-mark {
+  animation: soft-blob-pulse 5s ease-in-out infinite;
+}
+
+/* Activities / bolt mockup */
+@keyframes activities-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-activities-fade-in {
+  animation: activities-fade-in 0.25s ease-out both;
+}
+
+.activities-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.activities-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.activities-scroll::-webkit-scrollbar-thumb {
+  background: #d4d7cf;
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.activities-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a8ad9f;
+  background-clip: padding-box;
+  border: 3px solid transparent;
+}
+
+/* Workflow canvas: keep ghost add-buttons / menus outside node bounds visible */
+.automation-flow-canvas .react-flow__node {
+  overflow: visible;
+}
+
+.automation-flow-canvas .react-flow__handle {
+  width: 11px;
+  height: 11px;
+  min-width: 11px;
+  min-height: 11px;
+  background: #fff;
+  border-width: 2.5px;
+}
+
+/* Calendar blocked-time hatch (Bolt schedule/day views) */
+.cal-blocked-hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(100, 116, 139, 0.16) 0px,
+    rgba(100, 116, 139, 0.16) 6px,
+    rgba(100, 116, 139, 0.06) 6px,
+    rgba(100, 116, 139, 0.06) 12px
+  );
+}
+
+/* AI Assist / bolt mockup motion */
+@keyframes assist-blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(12px, -16px) scale(1.08);
+  }
+  66% {
+    transform: translate(-10px, 10px) scale(0.94);
+  }
+}
+
+@keyframes assist-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes assist-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-assist-blob {
+  animation: assist-blob 18s ease-in-out infinite;
+}
+
+@utility animate-assist-fade-up {
+  animation: assist-fade-up 0.5s ease-out both;
+}
+
+@utility animate-assist-fade-in {
+  animation: assist-fade-in 0.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-assist-blob,
+  .animate-assist-fade-up,
+  .animate-assist-fade-in {
+    animation: none !important;
+  }
+}
+
+/* Settings / bolt mockup motion */
+@keyframes settings-fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes settings-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes settings-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility animate-settings-fade-rise {
+  animation: settings-fade-rise 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-settings-pulse-dot {
+  animation: settings-pulse-dot 2.4s ease-in-out infinite;
+}
+
+@utility animate-settings-spin {
+  animation: settings-spin 0.8s linear infinite;
+}
+
+.settings-thin-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.settings-thin-scroll::-webkit-scrollbar-thumb {
+  background: #cfd3cc;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+.settings-thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: #b3b8af;
+  background-clip: content-box;
+}
+.settings-thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-settings-fade-rise,
+  .animate-settings-pulse-dot,
+  .animate-settings-spin {
+    animation: none !important;
+  }
+}
+
+/* Help / bolt mockup motion */
+@keyframes help-blob-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(28px, -22px) scale(1.08);
+  }
+  66% {
+    transform: translate(-22px, 18px) scale(0.94);
+  }
+}
+
+@keyframes help-fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes help-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-help-blob-float {
+  animation: help-blob-float 18s ease-in-out infinite;
+}
+
+@utility animate-help-blob-float-slow {
+  animation: help-blob-float 26s ease-in-out infinite;
+}
+
+@utility animate-help-fade-rise {
+  animation: help-fade-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-help-fade-in {
+  animation: help-fade-in 0.4s ease both;
+}
+
+.help-thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.help-thin-scroll::-webkit-scrollbar-thumb {
+  background: #cdd3c8;
+  border-radius: 999px;
+}
+.help-thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: #b9c0b2;
+}
+.help-thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-help-blob-float,
+  .animate-help-blob-float-slow,
+  .animate-help-fade-rise,
+  .animate-help-fade-in {
+    animation: none !important;
+  }
+}

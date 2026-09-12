@@ -1,0 +1,12 @@
+.env
+.env.local
+node_modules
+dist
+.DS_Store
+.cursor/
+Untitled/
+
+# Campaign mail secrets
+server/campaign-mail/.env
+.vercel
+.env*
