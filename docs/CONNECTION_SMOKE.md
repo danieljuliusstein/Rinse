@@ -7,7 +7,7 @@ Run after production Git reconnect (or against preview URLs first).
 - [x] Desk (`desk.rinsehq.com`) loads
 - [ ] Desk sign-in against `https://detailing-pb.fly.dev` (manual)
 - [ ] Desk can call API (`VITE_APP_API_URL` unchanged) (manual)
-- [x] `https://app.rinsehq.com/book/` loads (308 → followed; bare `/book` is 404)
+- [ ] `https://app.rinsehq.com/book/` — currently 404 after `/book/`→`/book` redirect (pre-existing; not landing cutover)
 - [x] Admin / privacy on `app.rinsehq.com` load
 - [ ] Cron: `curl -H "Authorization: Bearer $CRON_SECRET" https://<api-host>/api/cron/notifications` (or project’s auth header)
 - [ ] Mobile / TestFlight login against same PB + API
@@ -39,6 +39,7 @@ Env **values** must match pre-cutover inventory — only Root Directory / git re
 | Ignored Build Step | Set (`git diff … ./rinse-landing ./packages/core`) |
 | `https://rinsehq.com` | 200 |
 | `https://desk.rinsehq.com` | 200 |
-| `https://app.rinsehq.com/book/` | 200 (after redirect) |
+| `https://app.rinsehq.com/book/` | **404** after redirect to `/book` (pre-existing API routing; not landing) |
 | `https://app.rinsehq.com/admin` | 200 |
+| `https://app.rinsehq.com/privacy` | 200 |
 | Old remote `detailing-landing` archived | **No** — wait until **2026-09-15** (see docs/ROLLBACK.md); Moved README at `archive/old-repo-readmes/detailing-landing.md` |
