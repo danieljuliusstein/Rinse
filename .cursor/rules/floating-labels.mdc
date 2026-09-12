@@ -1,0 +1,84 @@
+---
+description: Floating label inputs — reliable pattern
+globs: ["**/*.css", "**/*.html", "**/*.jsx", "**/*.tsx", "**/*.vue"]
+alwaysApply: true
+---
+
+# Floating label inputs
+
+When generating floating label inputs (label that sits inside the field and
+rises on focus/fill), always follow this pattern.
+
+## HTML
+
+Every input and textarea MUST have `placeholder=" "` (a single space).
+Never use `placeholder=""` or omit the attribute — `:placeholder-shown`
+won't work without it.
+
+```html
+<div class="f-field">
+  <input class="f-input" id="name" placeholder=" " />
+  <label class="f-label" for="name">Name</label>
+</div>
+```
+
+Prefer `FloatingField` from `@/components/forms` which adds the checkmark icon.
+
+## CSS — the label trigger
+
+Use `:not(:placeholder-shown)` as the primary CSS hook for the floated
+state. Also include `:focus` and a `.hv` class for pre-filled values set
+by JavaScript. Never rely on `.hv` alone — it races with rendering.
+
+```css
+.f-input:focus ~ .f-label,
+.f-input:not(:placeholder-shown) ~ .f-label,
+.f-input.hv ~ .f-label {
+  top: 9px;
+  transform: translateY(0);   /* Must be translateY(0), NOT transform:none */
+  font-size: 10px;
+  font-weight: 700;
+}
+```
+
+## JS — sync prefill
+
+Use `syncPrefilledFloatingLabels(container)` from `@/lib/floating-label` on
+value changes. For selects and date inputs, always set `.hv` when value is
+non-empty.
+
+## Money / affix fields
+
+Use `FloatingAffixField` from `@/components/forms` for `$` prefix fields.
+The label must be a **direct sibling after the input** inside `.f-affix-wrap`
+(component handles this). Resting label uses `left: 28px` to clear the prefix.
+
+## Pill selectors
+
+Use `PillGroup` from `@/components/forms` for short enums (≤9 options).
+Class names: `form-pill-block`, `form-pill`, `form-pill--on`.
+
+## Bottom sheets
+
+Use `BottomSheet` with `variant="light"` (default) for all operator sheets.
+`variant="premium"` is an alias. Footer: `SheetFooter` or `SheetSubmitButton`.
+
+Submit states: `.sheet-submit` → `.sheet-submit--ready` (green) →
+`.sheet-submit--done` (success).
+
+## Full-page forms
+
+Wrap in `.page-form-card.page-form`. Save button in `.page-form-save` with
+`SheetSubmitButton`.
+
+## Light theme (booking / auth)
+
+Inside `.client-light-root` or `.auth-screen`, floating labels use overrides
+in `app/forms/light-form.css`.
+
+## Common mistakes to avoid
+
+- `transform: none` instead of `transform: translateY(0)`
+- Missing `placeholder=" "`
+- Using `.hv` as the only trigger for typed input
+- Using `inv-field-label` / `inv-field-input` (deprecated — use `f-*`)

@@ -1,0 +1,41 @@
+---
+description: CSS pattern owners — extend shared styles, use tokens, no duplicates
+globs: "detailing-app/**/*.css"
+alwaysApply: false
+---
+
+# CSS pattern owners
+
+Before adding or changing CSS, read `detailing-app/docs/ui-css-audit.md`.
+
+## Rules
+
+1. **Extend owners — don't duplicate.** Add overrides in the owner file or a scoped extend block; never copy full `.card`, `.job-card`, `.inv-sheet-*`, `.page-header`, or `.bottom-nav` rules into feature CSS.
+
+2. **Tokens only.** Use `tokens.css` variables (`--green`, `--bg-surface`, `--border`, etc.). Banned legacy greens `#16a34a`, `#4caf50` — guarded by `src/lib/css-accent-guard.test.ts`. Exception: `--inv-ok: #3dc97a` (inventory semantic).
+
+3. **Screen shell.** List/detail pages use `screen page-content body`. Do not revive deleted wrappers (`.clients-screen`, `.pipeline-screen`, etc.).
+
+4. **Settings hub.** Use `ListRow` / `SettingsMenuListRow` from `@/components/ui`. No `.settings-menu-item` / `.settings-row-link`.
+
+5. **Forms.** Use `f-*` floating labels — never `.inv-field-*` (deleted). See `floating-labels` rule.
+
+## Quick owner map
+
+| Pattern | Owner |
+|---------|-------|
+| `.card`, `.card-pressable` | `globals.css` |
+| `.job-card`, `.client-card` | `app-ui.css` |
+| `.page-header`, `.icon-btn` | `app-ui.css` |
+| `.bottom-nav`, FAB | `globals.css` |
+| `.inv-sheet-*` | `globals.css` + `light-sheet.css` |
+| `.sheet-submit` | `light-sheet.css` / `premium-sheet.css` |
+| Settings hub | `settings.css` + `ListRow` |
+
+## Components & layout
+
+Prefer `@/components/ui` and `@/components/forms` — see `ui-styling` rule.
+
+## Motion
+
+Check `design-motion` rule and `STYLE_PLAN.md` before adding animations.

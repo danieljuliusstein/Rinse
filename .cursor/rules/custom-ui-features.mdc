@@ -1,0 +1,15 @@
+---
+description: Prefer custom in-app UI for new product features — never browser prompt/confirm or bare system dialogs for operator flows.
+alwaysApply: true
+---
+
+# Custom UI for new features
+
+When adding or changing product UX in `apps/rinse-mobile/`:
+
+- **Always** use existing design-system surfaces (`AppSheet`, `Card`, list rows, pills, tokens) — not `window.prompt`, `window.confirm`, or numbered browser dialogs.
+- Prefer a dedicated sheet/component (e.g. action list in `AppSheet` with `presentation="modal"`) over `Alert.alert` / `ActionSheetIOS` for multi-option product choices operators will see often.
+- Native `Alert` / `ActionSheetIOS` are acceptable only for rare destructive confirms (sign out, delete) where a system dialog is already the pattern — still avoid them on web when a custom sheet exists.
+- Match operator light tokens (`colors.*`, `spacing`, `radii`) and existing sheet motion; do not invent one-off chrome.
+
+If a helper currently falls back to `prompt`/`confirm` for web, replace that path with custom UI when the flow is user-facing product UI.

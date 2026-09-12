@@ -1,0 +1,52 @@
+---
+description: Premium UX toolkit — Wave A–C packages, owners, and constraints
+globs: detailing-app/**/*
+alwaysApply: false
+---
+
+# Premium UX toolkit
+
+Extend Rinse's design system — do **not** replace it with Radix/Shadcn/cva.
+
+## Allowed packages (behavior only)
+
+| Package | Wave | Owner |
+|---------|------|-------|
+| `motion-number` | A | `@/components/ui/CurrencyAmount` (`counter` archetype) |
+| `nextjs-toploader` | A | `AppShell.tsx` (operator routes only) |
+| `use-debounce` | A | `@/hooks/useDebouncedSearch` (300ms) |
+| `zod`, `react-hook-form`, `@hookform/resolvers` | B | Form validation behind existing `f-*` chrome |
+| `libphonenumber-js` | B | `FloatingAffixField` / phone fields |
+| `@tanstack/react-virtual` | B | Long lists (>50) — invoices, clients, jobs |
+| `@hello-pangea/dnd` | C | Line-item reorder (pin exact version) |
+| `qrcode.react` | C | `@/components/ui/QrCode` or isolated owner |
+| `react-day-picker` v9 | C | Booking + operator schedule calendars |
+| `@tailwindcss/typography` | C | `.rinse-prose` custom class |
+
+## Forbidden
+
+Radix, Shadcn, `cva`, `tailwindcss-animate`, Sonner, Lucide as primary icons, new bottom-sheet libs, `cmdk`, signature rewrite, Tesseract, `react-to-print`, contacts API.
+
+## Pattern owners (Wave A)
+
+| Pattern | Owner |
+|---------|-------|
+| Skeleton shimmer + blocks | `components.css` `.skeleton*` |
+| Screen loading shells | `@/components/ui/ScreenLoading` + `ScreenSkeletons` |
+| Rolling money totals | `@/components/ui/CurrencyAmount` + `MOTION_SPEC.md` `counter` |
+| Route progress bar | `AppShell.tsx` + `globals.css` `#nprogress` overrides |
+| Search debounce | `@/hooks/useDebouncedSearch` (300ms) |
+
+## Rules
+
+1. **Two lanes:** operator `--bg-*` / `--green`; client `/book`, `/portal` → `--cl-*` only.
+2. **Forms:** keep `FloatingField`, `BottomSheet`, `SheetSubmitButton` — validation wires in, chrome stays.
+3. **Motion:** extend archetypes in `MOTION_SPEC.md`; every animation needs `prefers-reduced-motion` + `useReducedMotion` where applicable.
+4. **Haptics:** `@/lib/haptics` only.
+5. **Writes:** optimistic UI composes with `@/lib/api` + offline-queue — no parallel paths.
+6. **Docs:** update `ui-css-audit.md`, `MOTION_SPEC.md`, `STYLE_PLAN.md` when adding a **new shared owner**; skip for one-off uses of existing owners.
+7. **Smallest diff:** no drive-by refactors, no per-page animation CSS files.
+
+## Hands-off
+
+Auth logic, PocketBase schema, PDF layout structure, Stripe integration — visual/UX/interaction only.

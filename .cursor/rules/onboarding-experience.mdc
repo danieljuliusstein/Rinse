@@ -1,0 +1,46 @@
+---
+description: Global onboarding & product psychology — read full cheat sheet before funnel/trial/paywall work
+alwaysApply: true
+---
+
+# Onboarding & experience reference
+
+**Before onboarding, signup, trial, paywall, tour, activation, or offboarding work — read the full cheat sheet.** Do not improvise from memory; do not condense.
+
+**Canonical (full, uncompacted):** `detailing-app/design-references/ONBOARDING_EXPERIENCE_CHEATSHEET.md`  
+**Implementation mirror:** `rinse-mobile/docs/onboarding-experience-sheet.md`
+
+## Related rules
+
+| Rule | Covers |
+|------|--------|
+| `design-systems` | Operator vs client lanes |
+| `design-motion` | Celebration, sheets, tour motion |
+| `ui-styling` | Components, CTAs, layout |
+| `native-pwa-reference` | PWA source of truth for native screens |
+| `floating-labels` | Setup forms and sheets |
+
+## What the cheat sheet contains (read it all)
+
+- North star + funnel order
+- 10 non-negotiable rules (with **why** column)
+- Full psychology → screen map (Welcome through tour, with lessons)
+- Loading, trial ethics, offboarding
+- Reference inspirations (Mine, Loom, SparkLoop, Grammarly, Hopper, Headspace, etc.)
+- Printable per-screen audit grid (0–1–2 scoring)
+- Metrics with target intuition
+- Full principles glossary (27+ principles)
+- Deep principles: Spark, loss aversion, priming, progressive disclosure, user-driven prompts, information overload, framing, personalization clarity, personalized paywall (+10%), Conway’s Law, reciprocity, Tim Cook / habits
+- Grammarly 5 do’s, Hopper permissions, paywall rules
+- Priority backlog + code owners
+- Personal site vs in-app onboarding (not Framer)
+
+## Hard rules (from cheat sheet — do not violate)
+
+- Value before ask · endowment before trial
+- One green CTA per screen (squint test)
+- Real loss only post-activation — no fake urgency
+- User-driven permissions — never pre-aha
+- Personalized paywall: recap → map features → trial CTA
+- Conway’s Law: one funnel owner, no duplicate collects
+- Psychology only works if aha is **real** (live invoice, real booking link)

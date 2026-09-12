@@ -1,0 +1,42 @@
+---
+description: Design reference — Invoice Fly / ScreenDesigns for CSS and motion polish
+globs: "**/*.{css,tsx}"
+alwaysApply: false
+---
+
+# Design reference
+
+Before CSS/UI polish, consult:
+
+- `.cursor/rules/ui-styling.mdc` — components, layout, elements (always on)
+- `detailing-app/design-references/` — ScreenDesigns replay frames
+- `detailing-app/design-references/MOTION_SPEC.md` — archetypes + animation spec template
+- `.cursor/rules/design-motion.mdc` — always-on motion reference (archetypes, frame workflow)
+- `detailing-app/design-references/STYLE_PLAN.md` — phased polish plan (read before implementing)
+- `detailing-app/design-references/ONBOARDING_EXPERIENCE_CHEATSHEET.md` — onboarding, trial, paywall psychology
+- `detailing-app/docs/ui-css-audit.md` — pattern owners; extend, don't duplicate
+- `detailing-app/src/app/tokens.css` — surfaces, shadows, motion tokens
+
+## North star: Invoice Fly
+
+Match **depth + motion**, not just colors. Reference frames live in
+`design-references/invoice-fly/` (218 webp replay captures).
+
+## When improving a screen
+
+1. Find closest replay frames in `design-references/invoice-fly/`
+2. Note motion type: enter, press, success, progress, empty state
+3. Check `STYLE_PLAN.md` for phase/priority before coding
+4. Extend existing CSS owners from `ui-css-audit.md` — no one-off animation files per page
+5. Respect `prefers-reduced-motion`
+
+## Adding new ScreenDesigns exports
+
+1. Create `design-references/{app-slug}/`
+2. Add a README with screen names and frame ID ranges
+3. Update `design-references/README.md` index
+
+## Do not
+
+- Change tokens or animations unless explicitly asked
+- Duplicate card/sheet/header rules outside their pattern owners

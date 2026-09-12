@@ -1,0 +1,41 @@
+---
+description: Accessibility requirements for bottom sheets and modal dialogs
+globs: ["**/BottomSheet.tsx", "**/VaulSheet.tsx", "**/QuickActionMenu.tsx", "**/JobPhotoLightbox.tsx"]
+alwaysApply: false
+---
+
+# Sheet & modal a11y
+
+Full audit: `detailing-app/docs/a11y-audit-phase2.md`
+
+## Required on every new sheet/modal
+
+1. **`role="dialog"`** + **`aria-modal="true"`**
+2. **`aria-label`** — use `ariaLabel` prop or `title` (BottomSheet defaults to title)
+3. **Escape** closes the overlay
+4. **Focus trap** via `trapFocus()` from `@/lib/focus-trap`
+5. **Initial focus** — close button (BottomSheet: `.inv-sheet-close`) or first focusable
+6. **Body scroll lock** — `lockBodyScroll` / `unlockBodyScroll` (BottomSheet)
+7. **Close control** — visible button with `aria-label="Close"`; overlay dismiss is a `<button>`, not a div
+
+## BottomSheet (`src/components/BottomSheet.tsx`)
+
+- Portal to `document.body`
+- Drag handle is visual only — close button remains the primary dismiss affordance for keyboard/SR users
+- Errors inside sheet body: `role="alert"` + `aria-live="assertive"`
+
+## VaulSheet (`src/components/ui/VaulSheet.tsx`)
+
+- Trap focus on `.vaul-body` ref when open
+- `Drawer.Title` when `title` prop provided
+- Use for pickers only — full forms use `BottomSheet`
+
+## Tap targets
+
+Minimum **44px** (`--tap-target-min` in tokens). Footer actions use `.sheet-submit` / `.btn-primary` patterns.
+
+## Do not regress
+
+- Skip link → `#main-content` in `AppShell.tsx`
+- FAB menu: `role="menu"` / `menuitem`, focus trap, Escape
+- Booking/auth errors: live regions (see `a11y-high-contrast.css`)

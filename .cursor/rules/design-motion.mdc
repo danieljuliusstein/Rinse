@@ -1,0 +1,68 @@
+---
+description: Motion & animation reference — ScreenDesigns replays, archetypes, how to spec animations without pasting
+alwaysApply: true
+---
+
+# Design motion reference
+
+Always consult before CSS/UI polish or animation work.
+
+## Reference assets
+
+- `detailing-app/design-references/invoice-fly/` — 218 ScreenDesigns replay frames (webp)
+- `detailing-app/design-references/MOTION_SPEC.md` — archetypes + spec template
+- `detailing-app/design-references/STYLE_PLAN.md` — phased polish plan (read before implementing)
+- `detailing-app/docs/ui-css-audit.md` — CSS pattern owners (extend, don't duplicate)
+- `detailing-app/src/app/tokens.css` — surfaces + motion tokens
+
+## How to read animations (user cannot paste motion)
+
+ScreenDesigns replays = sequential webp frames. To understand a motion:
+
+1. User @-attaches 3–5 consecutive frames (start / mid / end), OR cites frame IDs
+2. Read `invoice-fly/README.md` screen index for tagged ranges
+3. Map to an archetype from `MOTION_SPEC.md`
+
+## 12 motion archetypes (cover ~95% of Invoice Fly)
+
+`sheet-enter` · `sheet-exit` · `list-stagger` · `press-depth` · `pill-spring` ·
+`progress-fill` · `success-pop` · `tab-active` · `swipe-reveal` · `empty-enter` ·
+`counter` · `attention-pulse`
+
+Full definitions: `detailing-app/design-references/MOTION_SPEC.md`
+
+## Motion spec template (when frames aren't attached)
+
+- **Screen / flow** name
+- **Frame range** (e.g. 274877–274890)
+- **Trigger** — tap, load, success
+- **What moves** — sheet, scrim, list rows, button
+- **Feel** — snappy / spring / gentle, ~duration
+- **Archetype** name
+
+## Existing patterns to extend (don't reinvent)
+
+| Archetype | Owner |
+|-----------|-------|
+| sheet-enter | `globals.css` `inv-sheet-up` |
+| step-enter | `onboarding.css` `setup-step-in` |
+| pill-spring | `premium-sheet.css` `form-pill-pop` |
+| list-stagger | `pipeline.css` `pipeline-stage-in` |
+| fade-in | `globals.css` `quick-action-fade-in` |
+| ripple | `premium-sheet.css` `sheet-ripple` |
+| pulse | `pipeline.css` `pipeline-stepper-pulse` |
+
+## Implementation rules
+
+1. Check `STYLE_PLAN.md` for active wave (40–54) before coding
+2. Extend pattern owners in `ui-css-audit.md` — no per-page animation files
+3. Add reusable tokens to `tokens.css` before one-off keyframes
+4. Every new animation: `@media (prefers-reduced-motion: reduce)` fallback
+5. Settings = snappy/subtle; home/lists = stagger; sheets = spring
+6. Client-facing (`book.css`, `portal.css`) uses `--cl-*` lane — separate from operator
+
+## Do not
+
+- Implement motion unless explicitly asked or within an active STYLE_PLAN phase
+- Duplicate card/sheet rules outside their owners
+- Use `transform: none` on floated labels (see `floating-labels` rule)

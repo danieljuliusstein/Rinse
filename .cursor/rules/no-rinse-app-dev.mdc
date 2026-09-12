@@ -1,0 +1,30 @@
+---
+description: No operator PWA UI in apps/api — native apps/rinse-mobile only for operator product
+alwaysApply: true
+---
+
+# No operator PWA development in apps/api
+
+**Do not rebuild the legacy operator PWA UI** (jobs/clients/settings shells, PWA tour, service worker operator chrome) in `apps/api/`.
+
+## Forbidden without an explicit ask
+
+- Operator UI pages, CSS, sheets, onboarding PWA, paywall operator chrome
+- “Parity” ports of native screens back into Next operator routes
+- Asking whether to implement operator features on PWA vs native
+
+## Allowed in `apps/api` (when product needs it)
+
+- `/api/*` routes used by mobile or customers
+- `/book/*`, `/portal/*`, `/embed/*`, `/admin/*`, legal pages
+- Shared `@rinse/core` (`packages/core`) and PocketBase (`apps/pocketbase`)
+
+## Do instead
+
+- **Operator product work → `apps/rinse-mobile/` only**
+- Shared types/schemas → `packages/core`
+- Backend/customer web → `apps/api` only for API / book / portal / admin
+
+## If unsure
+
+Stop and ask. Default for operator UI: **`apps/rinse-mobile/` only.**

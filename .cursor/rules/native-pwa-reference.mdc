@@ -1,0 +1,29 @@
+---
+description: Native apps/rinse-mobile is the primary operator app; do not rebuild operator PWA UI
+globs: apps/rinse-mobile/**/*
+alwaysApply: true
+---
+
+# Native operator app (primary)
+
+**Operator work is native-only (`apps/rinse-mobile/`).** Do not ask whether to implement on PWA.
+
+`apps/api` is the **Next.js API + customer web** (book, portal, admin) — not an operator UI target. Do not rebuild the legacy operator PWA screens there.
+
+## Default workflow
+
+1. **Build in `apps/rinse-mobile/`** — routes in `app/`, UI in `src/components/`, tokens in `src/theme/tokens.ts`.
+2. **Reuse shared logic** — `@rinse/core` (`packages/core`), existing native lib patterns, `EXPO_PUBLIC_APP_API_URL` for backend APIs.
+3. **API changes** — only in `apps/api` when the native app or customer book/portal needs a server change (explicit or clearly required).
+
+## RN Web pitfalls (already hit in this project)
+
+- `ScrollView`: put `alignItems` / `gap` / `flexDirection` on **`contentContainerStyle`**, not `style`.
+- `Pressable` + `accessibilityRole="button"` on web → `<button>` UA styles. Use `webPressableReset` (full-width rows) or `webInlinePressableReset` (pills/chips).
+- Hidden Expo tabs stay mounted — reset list filters/stage when screen regains focus on tab focus.
+
+## Do not
+
+- Ask "PWA or native?" for operator features — **native only**.
+- Mix client-light booking/portal tokens into operator native screens.
+- Recreate operator jobs/clients/settings shells inside `apps/api`.

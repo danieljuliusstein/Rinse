@@ -1,0 +1,23 @@
+stamp=20260911-2330
+created=2026-09-12T03:34:30Z
+path=/Users/danny/Backups/rinse-monorepo-20260911-2330
+
+mirrors (GitHub history):
+  detailing-CRM.git  -> rinse-desk
+  detailing.git      -> rinse-api (+ pocketbase)
+  Rinse-App.git      -> rinse-mobile
+
+required extras:
+  packages-core.tgz  — @rinse/core NOT on GitHub; restore to Rinse/packages/core
+
+WIP safety (local dirty trees at backup time):
+  worktree-rinse-mobile-lean.tgz — source only (excludes ios/android/node_modules)
+  mobile-wip-tracked.diff / mobile-untracked.txt / mobile-HEAD.txt
+  worktree-api-lean.tgz — excludes node_modules/.next/tmp
+  api-status-porcelain.txt / api-HEAD.txt
+
+mirror tags (local only, not pushed to origin):
+  pre-rinse-monorepo-20260911-2330 on each mirror's main
+
+do NOT use for restore without review:
+  (removed) full worktree-rinse-mobile.tgz was 3.6G+ including ios builds — deleted

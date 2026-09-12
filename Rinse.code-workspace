@@ -1,0 +1,10 @@
+{
+  "folders": [
+    { "name": "rinse-desk", "path": "rinse-desk" },
+    { "name": "rinse-mobile", "path": "rinse-mobile" },
+    { "name": "rinse-api", "path": "rinse-api" },
+    { "name": "pocketbase", "path": "pocketbase" },
+    { "name": "core", "path": "packages/core" }
+  ],
+  "settings": {}
+}

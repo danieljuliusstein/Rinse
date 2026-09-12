@@ -1,0 +1,15 @@
+# Root — apps keep their own ignores
+node_modules/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+.vercel
+.next
+dist
+.expo
+ios/build
+android/build
+**/pb_data/
+archive/*.tgz

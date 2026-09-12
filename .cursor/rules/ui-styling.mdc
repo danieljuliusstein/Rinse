@@ -1,0 +1,90 @@
+---
+description: Global UI/UX — components, layout, elements, styling conventions for detailing-app
+alwaysApply: true
+---
+
+# UI styling & elements
+
+Use existing building blocks before inventing new markup or CSS.
+North star: Invoice Fly — see `design-references/` and `design-motion` rule.
+
+## Related rules (read together)
+
+| Rule | Covers |
+|------|--------|
+| `design-systems` | Operator vs client token lanes |
+| `css-pattern-owners` | CSS file ownership, tokens |
+| `floating-labels` | Forms, sheets, pills |
+| `design-motion` | Animation archetypes, ScreenDesigns frames |
+| `onboarding-experience` | Funnel, trial, paywall, activation psychology |
+| `a11y-sheets` | Dialog focus trap, Escape, aria |
+
+## Screen layout (operator)
+
+```tsx
+<div className="screen page-content body">
+  <header className="page-header">…</header>
+  {/* content */}
+</div>
+```
+
+- Max content feel: mobile-first, ~420px column
+- Bottom padding for nav: `.body` includes `90px` safe area
+- Page titles: `.page-header` + `h1` / `h1.lg` — owner `app-ui.css`
+
+## Prefer components over one-off markup
+
+### `@/components/ui`
+
+| Component | Use for |
+|-----------|---------|
+| `ListRow` | Settings rows, grouped lists, menu items |
+| `SectionGroup` | iOS-style section + `.ui-list-group` card |
+| `Button` | `primary` / `ghost` / `secondary` / `danger` → `.btn-*` |
+| `Badge` | Status chips — `statusToBadgeTone()` |
+| `EmptyState` + `EmptyIllustration` | Zero-data screens |
+| `ScreenLoading` / `ScreenMessage` | Loading and error shells |
+| `ActionDock` | Sticky bottom CTA bar |
+| `Card` | Generic elevated surface |
+| `VaulSheet` | Lightweight pickers only |
+| `MonthCarousel` | Month/date carousels |
+
+### `@/components/forms`
+
+| Component | Use for |
+|-----------|---------|
+| `FloatingField` | Text inputs (operator + client) |
+| `FloatingAffixField` | Money `$` fields |
+| `PillGroup` | Short enums (≤9 options) |
+| `SetupRowField` | Onboarding iOS settings rows |
+| `BottomSheet` | Full operator forms (`variant="light"`) |
+| `SheetSubmitButton` | Sheet/page save with ready/done states |
+
+### Other shells
+
+- `SwipeableRow` / `InvoiceSwipeableRow` — swipe actions on list rows
+- `BottomNav` — operator shell nav (don't duplicate)
+
+## Visual patterns
+
+- **Section labels:** uppercase, ~11px, muted — via `SectionGroup` or `.ui-section__title`
+- **Cards:** `.card` or `.card-pressable` — don't redefine in feature CSS
+- **Icons:** `@phosphor-icons/react`, duotone, ~20–22px in lists
+- **Accent:** `--green` (`#22c55e`) — never `#4caf50` / `#16a34a`
+- **Press feedback:** use `.card-pressable` or component `onClick` on `ListRow`
+- **Errors:** `role="alert"` + `aria-live="assertive"` on banners
+
+## When adding new UI
+
+1. Check `@/components/ui` and `@/components/forms` first
+2. Check `docs/ui-css-audit.md` for CSS owner
+3. Use correct design lane (`design-systems` rule)
+4. Match Invoice Fly depth/motion when polishing (`MOTION_SPEC.md`)
+5. New shared styles → extend owner file, not a new per-page CSS file
+
+## Do not
+
+- Raw `<input>` without `FloatingField` on operator forms
+- New bottom-sheet implementations — use `BottomSheet` or `VaulSheet`
+- Inline styles for colors/spacing — use tokens
+- Bootstrap/MUI/shadcn — not in this project

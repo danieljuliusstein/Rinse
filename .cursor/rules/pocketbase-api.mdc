@@ -1,0 +1,38 @@
+---
+description: PocketBase and API layer conventions — tenant scope, writes, mappers
+globs: ["apps/api/src/lib/api/**", "apps/api/src/lib/server/**", "apps/api/src/app/api/**", "apps/pocketbase/**"]
+alwaysApply: false
+---
+
+# PocketBase & API conventions
+
+Docs: `apps/pocketbase/README.md`, `apps/api/README.md`, root `README.md`
+
+## Data access layers
+
+| Layer | Use for |
+|-------|---------|
+| `@/lib/api` (`index.ts`) | **UI/components** — reads, writes, sync status |
+| `*-pocketbase.ts` | PB-specific CRUD per domain |
+| `*-local.ts` | Offline/localStorage fallback |
+| `write-router.ts` | `executeWrite()` — PB write with offline queue fallback |
+| `@/lib/server/pocketbase-admin.ts` | **Server routes only** — admin auth, cron, email |
+
+**Do not** call `getPocketBase()` directly from React components — go through `@/lib/api`.
+
+## Multi-tenant (required)
+
+Every org-scoped query and create:
+
+```typescript
+import { tenantFilter, withOrganization } from './tenant-pocketbase'
+import { escapeFilterValue } from './mappers'
+```
+
+Use `tenantFilter` on list/get filters and `withOrganization` on creates. Never trust client-supplied `organization_id` without auth checks on the server.
+
+## Server routes
+
+- Authenticate with user JWT (`Authorization: Bearer`) for operator actions
+- Cron / internal: `verifyApiSecret` / `CRON_SECRET`
+- Admin cross-tenant: platform admin email allowlist + server admin PB client
