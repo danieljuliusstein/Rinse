@@ -1,12 +1,13 @@
 # Rinse
 
-One git repo for the Rinse product. **Separate deploys** !!!!! do not confuse them.
+One git repo for the Rinse product. **Separate deploys** — do not confuse them.
 
 | Path | Role | Deploy |
 |------|------|--------|
-| [`rinse-desk`](rinse-desk) | Landing + Desk (Vite) | Vercel → `desk.rinsehq.com` / landing |
+| [`rinse-landing`](rinse-landing) | Marketing site (Vite) | Vercel → `rinsehq.com` |
+| [`rinse-desk`](rinse-desk) | Desktop CRM (Vite) | Vercel → `desk.rinsehq.com` |
 | [`rinse-mobile`](rinse-mobile) | iOS/Android operator (Expo) | EAS |
-| [`rinse-api`](rinse-api) | Next.js API + book + portal + admin | Vercel |
+| [`rinse-api`](rinse-api) | Next.js API + book + portal + admin | Vercel → `app.rinsehq.com` |
 | [`pocketbase`](pocketbase) | DB migrations / Fly config | Fly `detailing-pb` |
 | [`packages/core`](packages/core) | Shared `@rinse/core` | workspace package |
 

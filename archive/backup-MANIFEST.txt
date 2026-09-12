@@ -21,3 +21,19 @@ mirror tags (local only, not pushed to origin):
 
 do NOT use for restore without review:
   (removed) full worktree-rinse-mobile.tgz was 3.6G+ including ios builds — deleted
+
+---
+
+stamp=20260912-0439
+created=2026-09-12T04:39:00Z
+path=/Users/danny/Backups/rinse-landing-merge-20260912-0439
+
+mirrors (GitHub history):
+  detailing-landing.git  -> rinse-landing
+
+WIP safety:
+  worktree-detailing-landing-lean.tgz — source only (excludes node_modules, dist/assets, .cursor)
+  landing-wip-tracked.diff / landing-untracked.txt / landing-HEAD.txt / landing-status-porcelain.txt
+
+mirror tags (local only, not pushed to origin):
+  pre-rinse-landing-merge-20260912-0439 on detailing-landing.git main

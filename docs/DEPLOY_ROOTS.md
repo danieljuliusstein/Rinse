@@ -2,15 +2,15 @@
 
 **Rule:** one git repo (`danieljuliusstein/Rinse`). Separate host projects. Domains and env **values** stay the same; only Git connection + Root Directory change.
 
-## Phase 0 inventory (2026-09-11)
+## Phase 0 inventory
 
 | Vercel project | Live URL (from CLI) | Framework | Intended monorepo Root Directory |
 |----------------|---------------------|-----------|----------------------------------|
+| `detailing-landing` | `https://rinsehq.com` | Vite | `rinse-landing` |
 | `detailing-crm` | `https://desk.rinsehq.com` | Vite | `rinse-desk` |
-| `detailing-landing` | `https://rinsehq.com` | Vite | `rinse-desk` (same Desk/landing app unless you intentionally split) |
-| `detailing` | `*.vercel.app` (Next API) | Next.js | `rinse-api` |
+| `detailing` | `https://app.rinsehq.com` (Next API + book/portal/admin) | Next.js | `rinse-api` |
 
-Also present (out of scope for v1 cutover): `detailing-website`, legacy `detailing-app`.
+Also present (out of scope for this cutover): `detailing-website`, legacy `detailing-app`.
 
 | Host | App | Root / path | Notes |
 |------|-----|-------------|--------|
@@ -34,7 +34,10 @@ Do not change `EXPO_PUBLIC_*` values during the git move. Old `Rinse-App` remote
 ## Connection map (unchanged after move)
 
 ```text
-rinse-mobile  --EXPO_PUBLIC_APP_API_URL-->  live API host (often rinsehq.com)
+rinse-landing --SPA-------------------->  rinsehq.com
+rinse-landing --/api rewrite---------->  app.rinsehq.com
+rinse-landing --Sign in--------------->  desk.rinsehq.com
+rinse-mobile  --EXPO_PUBLIC_APP_API_URL-->  live API host (often app.rinsehq.com)
 rinse-mobile  --EXPO_PUBLIC_PB_URL------>  detailing-pb.fly.dev
 rinse-desk    --VITE_APP_API_URL------->  live API host
 rinse-desk    --VITE_PB_URL------------>  detailing-pb.fly.dev
@@ -42,18 +45,43 @@ rinse-desk    --VITE_CAMPAIGN_MAIL_URL->  rinse-campaign-mail.fly.dev
 rinse-api     --PB / Stripe / Apple---->  same secrets, same webhook URLs
 ```
 
+## Ignored Build Step (Vercel)
+
+Exit `0` = skip build; exit `1` = proceed. Set per project:
+
+**`detailing-landing`** (Root = `rinse-landing`):
+
+```bash
+git diff --quiet HEAD^ HEAD -- ./rinse-landing ./packages/core || exit 1
+exit 0
+```
+
+**`detailing-crm`** (Root = `rinse-desk`):
+
+```bash
+git diff --quiet HEAD^ HEAD -- ./rinse-desk || exit 1
+exit 0
+```
+
+**`detailing`** (Root = `rinse-api`):
+
+```bash
+git diff --quiet HEAD^ HEAD -- ./rinse-api ./packages/core ./pocketbase || exit 1
+exit 0
+```
+
 ## Cutover checklist
 
-1. Preview deploy Desk from `rinse-desk` and API from `rinse-api` **before** reconnecting production.
+1. Preview deploy from the new Root Directory **before** reconnecting production.
 2. Switch Git on each Vercel project to `danieljuliusstein/Rinse` + Root Directory above.
-3. Add **Ignored Build Step** so Desk commits do not rebuild API and vice versa.
+3. Add **Ignored Build Step** (scripts above) so sibling commits do not rebuild unrelated hosts.
 4. Relink EAS to `Rinse` with app directory `rinse-mobile`; do not change `EXPO_PUBLIC_*` values.
-5. Keep old remotes (`detailing-CRM`, `detailing`, `Rinse-App`) **unarchived for 72h**.
-6. Smoke: Desk login, book/portal, cron curl, mobile login.
+5. Keep old remotes (`detailing-landing`, `detailing-CRM`, `detailing`, `Rinse-App`) **unarchived for 72h**.
+6. Smoke: landing hero, Desk login, book/portal on `app.rinsehq.com`, cron curl, mobile login.
 
 ## Rollback (fastest first)
 
 1. Vercel → Redeploy last known-good production deployment.
-2. Reconnect that project’s Git to the old repo (`detailing-CRM` / `detailing` / `Rinse-App`).
-3. Restore from `~/Backups/rinse-monorepo-20260911-2330` mirrors / `packages-core.tgz` if history or core was lost.
+2. Reconnect that project’s Git to the old repo (`detailing-landing` / `detailing-CRM` / `detailing` / `Rinse-App`).
+3. Restore from `~/Backups/rinse-monorepo-20260911-2330` or `~/Backups/rinse-landing-merge-*` mirrors / `packages-core.tgz` if history or core was lost.
 4. Touch Cloudflare DNS only if a domain was dropped from Vercel.

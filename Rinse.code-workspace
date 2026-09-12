@@ -1,5 +1,6 @@
 {
   "folders": [
+    { "name": "rinse-landing", "path": "rinse-landing" },
     { "name": "rinse-desk", "path": "rinse-desk" },
     { "name": "rinse-mobile", "path": "rinse-mobile" },
     { "name": "rinse-api", "path": "rinse-api" },
