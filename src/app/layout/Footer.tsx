@@ -1,4 +1,5 @@
 import { SECTIONS, scrollToSection } from "../shared/scroll";
+import rinseLogo from "../../assets/rinse-logo.svg";
 
 export const FOOTER_LINKS: Record<
   string,

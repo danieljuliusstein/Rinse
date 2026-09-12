@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from "motion/react";
 import { Calendar, BarChart2, Users, Bell, Check, Car, FileText, TrendingUp, CheckCircle, Route, Plus, CreditCard } from "lucide-react";
+import { EASE, TRANSITION_MACRO, TRANSITION_MICRO } from "../shared/motion";
+import rinseLogo from "../../assets/rinse-logo.svg";
 
 export const WinDots = () => (
   <div className="flex gap-[5px] items-center flex-shrink-0">

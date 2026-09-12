@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { FadeUpWhenVisible } from "../shared/motion";
+import { EASE, fadeUp, stagger } from "../shared/motion";
 import { SECTIONS, scrollToSection } from "../shared/scroll";
 import { HeroDashboard, HeroWindowCluster } from "./HeroVisuals";
 
