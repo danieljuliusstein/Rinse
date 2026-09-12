@@ -887,3 +887,61 @@ body {
     animation: none !important;
   }
 }
+
+/* Home (marketing) page motion */
+@keyframes home-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes home-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes home-grid-drift {
+  from {
+    background-position: 0px 0px;
+  }
+  to {
+    background-position: 20px 20px;
+  }
+}
+
+@utility animate-home-blink {
+  animation: home-blink 1s step-end infinite;
+}
+
+@utility animate-home-marquee {
+  animation: home-marquee 32s linear infinite;
+}
+
+@utility animate-home-marquee-slow {
+  animation: home-marquee 50s linear infinite;
+}
+
+@utility animate-home-grid-drift {
+  animation: home-grid-drift 6s linear infinite;
+}
+
+.home-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-home-blink,
+  .animate-home-marquee,
+  .animate-home-marquee-slow,
+  .animate-home-grid-drift {
+    animation: none !important;
+  }
+}

@@ -4,7 +4,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import { RinseLockup } from '@/components/brand/RinseLogo'
 import { BRAND } from '@/lib/brand-assets'
 
-export default function LoginPage() {
+export default function LoginPage({ onBack }: { onBack?: () => void }) {
   const { signIn, backendHealthy } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,6 +33,16 @@ export default function LoginPage() {
         onSubmit={onSubmit}
         className="w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-xl p-8 space-y-5"
       >
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            ← Back to home
+          </button>
+        )}
+
         <div className="space-y-3">
           <RinseLockup height={32} />
           <div>

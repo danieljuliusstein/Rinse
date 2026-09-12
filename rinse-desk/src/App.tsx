@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import MoneyOverview from './pages/MoneyOverview'
 import Dashboard from './pages/Dashboard'
 import SalesPipeline from './pages/SalesPipeline'
@@ -17,6 +17,7 @@ import ReceiptsPage from './pages/ReceiptsPage'
 import CarsPage from './pages/CarsPage'
 import RoutesPage from './pages/RoutesPage'
 import LoginPage from './pages/LoginPage'
+import HomePage from './pages/HomePage'
 import { colors } from './theme/colors'
 import { AuthProvider, useAuth } from './providers/AuthProvider'
 import { DataProvider, useData } from './providers/DataProvider'
@@ -811,6 +812,14 @@ function Shell() {
 
 function Gate() {
   const { user, loading } = useAuth()
+  const [view, setView] = useState<'home' | 'login'>('home')
+  const prevUser = useRef(user)
+
+  useEffect(() => {
+    if (prevUser.current && !user) setView('home')
+    prevUser.current = user
+  }, [user])
+
   if (loading) {
     return (
       <div
@@ -822,7 +831,10 @@ function Gate() {
       </div>
     )
   }
-  if (!user) return <LoginPage />
+  if (!user) {
+    if (view === 'login') return <LoginPage onBack={() => setView('home')} />
+    return <HomePage onSignIn={() => setView('login')} />
+  }
   return (
     <UiProvider>
       <DataProvider>
