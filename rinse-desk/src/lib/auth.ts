@@ -42,6 +42,11 @@ function hasOrganization(record: RecordModel): boolean {
   )
 }
 
+export function isEmailVerified(record: RecordModel | null): boolean {
+  if (!record) return true
+  return Boolean((record as { verified?: unknown }).verified)
+}
+
 function pocketBaseErrorMessage(err: unknown, fallback: string): string {
   const e = err as { message?: string; data?: { data?: Record<string, { message?: string }> } }
   const fields = e.data?.data
@@ -127,7 +132,7 @@ export async function signUpWithEmail(input: {
   email: string
   password: string
   businessName: string
-}): Promise<void> {
+}): Promise<{ verificationEmailSent: boolean }> {
   const apiUrl = getAppApiUrl()
   let res: Response
   try {
@@ -143,11 +148,39 @@ export async function signUpWithEmail(input: {
   } catch {
     throw new Error('Could not reach the signup service. Check your connection and try again.')
   }
-  const data = (await res.json().catch(() => ({}))) as { error?: string }
+  const data = (await res.json().catch(() => ({}))) as { error?: string; verificationEmailSent?: boolean }
   if (!res.ok) {
     throw new Error(data.error ?? 'Could not create account')
   }
   await signInWithEmail(input.email, input.password)
+  return { verificationEmailSent: data.verificationEmailSent !== false }
+}
+
+/** Re-sends the verification email. Safe to call whether or not one was sent already. */
+export async function resendVerificationEmail(email: string): Promise<void> {
+  try {
+    await getPocketBase().collection('users').requestVerification(email.trim().toLowerCase())
+  } catch (err) {
+    throw new Error(pocketBaseErrorMessage(err, 'Could not send verification email. Try again shortly.'))
+  }
+}
+
+/** Confirms the token from the verification email link and refreshes the local session if signed in. */
+export async function confirmEmailVerification(token: string): Promise<void> {
+  const pb = getPocketBase()
+  try {
+    await pb.collection('users').confirmVerification(token)
+  } catch (err) {
+    throw new Error(pocketBaseErrorMessage(err, 'This verification link is invalid or has expired.'))
+  }
+  if (pb.authStore.isValid) {
+    try {
+      await pb.collection('users').authRefresh()
+      if (pb.authStore.token && pb.authStore.record) persistAuth(pb.authStore.token, pb.authStore.record)
+    } catch {
+      /* the confirm still succeeded — a fresh sign-in will pick up verified: true */
+    }
+  }
 }
 
 /** After OAuth2 sign-in, new accounts have no organization yet — provision one via apps/api (superuser-only operation). */

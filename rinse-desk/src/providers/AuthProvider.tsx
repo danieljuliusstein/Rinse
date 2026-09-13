@@ -8,11 +8,14 @@ interface AuthContextValue {
   user: RecordModel | null
   loading: boolean
   backendHealthy: boolean | null
+  emailVerified: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (input: { email: string; password: string; businessName: string }) => Promise<void>
+  signUp: (input: { email: string; password: string; businessName: string }) => Promise<{ verificationEmailSent: boolean }>
   signInWithOAuth: (provider: OAuthProvider, opts?: { businessName?: string }) => Promise<void>
   signOut: () => Promise<void>
   refreshUser: () => void
+  resendVerification: () => Promise<void>
+  confirmVerification: (token: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -53,8 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = useCallback(async (input: { email: string; password: string; businessName: string }) => {
-    await auth.signUpWithEmail(input)
+    const result = await auth.signUpWithEmail(input)
     setUser(auth.getCurrentUser())
+    return result
   }, [])
 
   const signInWithOAuth = useCallback(async (provider: OAuthProvider, opts?: { businessName?: string }) => {
@@ -67,9 +71,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
+  const resendVerification = useCallback(async () => {
+    const email = (user as { email?: string } | null)?.email
+    if (!email) throw new Error('Not signed in')
+    await auth.resendVerificationEmail(email)
+  }, [user])
+
+  const confirmVerification = useCallback(async (token: string) => {
+    await auth.confirmEmailVerification(token)
+    setUser(auth.getCurrentUser())
+  }, [])
+
+  const emailVerified = useMemo(() => auth.isEmailVerified(user), [user])
+
   const value = useMemo(
-    () => ({ user, loading, backendHealthy, signIn, signUp, signInWithOAuth, signOut, refreshUser }),
-    [user, loading, backendHealthy, signIn, signUp, signInWithOAuth, signOut, refreshUser],
+    () => ({
+      user,
+      loading,
+      backendHealthy,
+      emailVerified,
+      signIn,
+      signUp,
+      signInWithOAuth,
+      signOut,
+      refreshUser,
+      resendVerification,
+      confirmVerification,
+    }),
+    [
+      user,
+      loading,
+      backendHealthy,
+      emailVerified,
+      signIn,
+      signUp,
+      signInWithOAuth,
+      signOut,
+      refreshUser,
+      resendVerification,
+      confirmVerification,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

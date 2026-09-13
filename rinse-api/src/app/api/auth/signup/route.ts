@@ -53,7 +53,10 @@ export async function POST(request: Request) {
       slug: body.slug ? String(body.slug) : undefined,
     })
 
-    return NextResponse.json({ ok: true, slug: result.slug, email: result.email }, { headers })
+    return NextResponse.json(
+      { ok: true, slug: result.slug, email: result.email, verificationEmailSent: result.verificationEmailSent },
+      { headers },
+    )
   } catch (e) {
     const raw = e instanceof Error ? e.message : 'Signup failed'
     const error = formatAuthApiError(raw)

@@ -18,6 +18,7 @@ import CarsPage from './pages/CarsPage'
 import RoutesPage from './pages/RoutesPage'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
+import VerifyEmailPage, { VerifyEmailConfirmPage } from './pages/VerifyEmailPage'
 import { colors } from './theme/colors'
 import { AuthProvider, useAuth } from './providers/AuthProvider'
 import { DataProvider, useData } from './providers/DataProvider'
@@ -811,14 +812,28 @@ function Shell() {
 }
 
 function Gate() {
-  const { user, loading } = useAuth()
+  const { user, loading, emailVerified } = useAuth()
   const [view, setView] = useState<'home' | 'login'>('home')
   const prevUser = useRef(user)
+  const [verifyToken, setVerifyToken] = useState(() => new URLSearchParams(window.location.search).get('verify_token'))
 
   useEffect(() => {
     if (prevUser.current && !user) setView('home')
     prevUser.current = user
   }, [user])
+
+  if (verifyToken) {
+    return (
+      <VerifyEmailConfirmPage
+        token={verifyToken}
+        onDone={() => {
+          window.history.replaceState(null, '', window.location.pathname)
+          setVerifyToken(null)
+          setView('login')
+        }}
+      />
+    )
+  }
 
   if (loading) {
     return (
@@ -835,6 +850,7 @@ function Gate() {
     if (view === 'login') return <AuthPage onBack={() => setView('home')} />
     return <HomePage onSignIn={() => setView('login')} />
   }
+  if (!emailVerified) return <VerifyEmailPage />
   return (
     <UiProvider>
       <DataProvider>
