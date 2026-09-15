@@ -81,7 +81,15 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
     setError(null)
     setBusy(provider)
     signInWithOAuth(provider, mode === 'signup' ? { businessName: businessName.trim() || undefined } : undefined)
-      .catch((err) => setError(err instanceof Error ? err.message : `Could not sign in with ${provider}`))
+      .catch((err) => {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : typeof err === 'object' && err && 'message' in err
+              ? String((err as { message: unknown }).message)
+              : `Could not sign in with ${provider}`
+        setError(msg || `Could not sign in with ${provider}`)
+      })
       .finally(() => setBusy(null))
   }
 
@@ -262,6 +270,19 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
                 </button>
               </>
             )}
+          </p>
+
+          <p className="text-center text-xs text-black/40">
+            By signing up, you are agreeing to our{' '}
+            <a
+              href="https://app.rinsehq.com/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-600 hover:underline"
+            >
+              Terms
+            </a>
+            .
           </p>
         </div>
       </div>

@@ -48,15 +48,55 @@ export function isEmailVerified(record: RecordModel | null): boolean {
 }
 
 function pocketBaseErrorMessage(err: unknown, fallback: string): string {
-  const e = err as { message?: string; data?: { data?: Record<string, { message?: string }> } }
-  const fields = e.data?.data
+  const e = err as {
+    message?: string
+    response?: { message?: string; data?: Record<string, { message?: string }> }
+    data?: { message?: string; data?: Record<string, { message?: string }> }
+    originalError?: { message?: string }
+  }
+  const fields = e.response?.data ?? e.data?.data
   if (fields) {
     for (const key of ['businessName', 'email', 'password', 'passwordConfirm']) {
       const msg = fields[key]?.message
       if (msg) return msg
     }
   }
-  return e.message ?? fallback
+  const raw =
+    e.response?.message ||
+    e.data?.message ||
+    e.message ||
+    e.originalError?.message ||
+    ''
+
+  const status = (err as { status?: number }).status
+  const mfaId =
+    (e.response as { mfaId?: string } | undefined)?.mfaId ||
+    (e.data as { mfaId?: string } | undefined)?.mfaId ||
+    (err as { response?: { mfaId?: string } }).response?.mfaId
+  if (status === 401 && mfaId) {
+    return (
+      'PocketBase MFA is enabled on users, so Google alone is not enough. ' +
+      'In PocketBase Admin → Collections → users → Options, disable Multi-factor authentication, then try again.'
+    )
+  }
+  if (status === 401 && (raw === 'Something went wrong.' || raw.includes('Something went wrong'))) {
+    return (
+      'Sign-in was rejected (401). If Multi-factor auth is enabled on the users collection in PocketBase, ' +
+      'disable it for operator Google/Apple signup, then try again.'
+    )
+  }
+
+  if (raw.includes('Failed to fetch OAuth2 token')) {
+    return (
+      'Google rejected the login token. In PocketBase → users → OAuth2 → Google, ' +
+      're-paste the Client Secret from the same Web client whose redirect URI is ' +
+      'https://detailing-pb.fly.dev/api/oauth2-redirect, then try again.'
+    )
+  }
+  if (!raw || raw === 'Something went wrong while processing your request.' || raw === 'ClientResponseError') {
+    return fallback
+  }
+  return raw
 }
 
 export function clearAuth() {
@@ -244,10 +284,8 @@ export async function signInWithOAuth(provider: OAuthProvider, opts?: { business
     if (!authData?.token || !pb.authStore.record) throw new Error(`Could not sign in with ${label}.`)
     persistAuth(pb.authStore.token!, pb.authStore.record)
   } catch (err) {
-    if (err instanceof ClientResponseError) {
-      throw new Error(pocketBaseErrorMessage(err, `Could not sign in with ${label}.`))
-    }
-    throw err instanceof Error ? err : new Error(`Could not sign in with ${label}.`)
+    console.error(`[oauth:${provider}]`, err)
+    throw new Error(pocketBaseErrorMessage(err, `Could not sign in with ${label}.`))
   }
   await ensureOAuthProvisioned(opts?.businessName)
 }
