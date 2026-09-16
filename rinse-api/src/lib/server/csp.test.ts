@@ -2,9 +2,13 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildContentSecurityPolicyReportOnly, embedFrameAncestors } from './csp'
 
 describe('buildContentSecurityPolicyReportOnly', () => {
-  const prevPb = process.env.NEXT_PUBLIC_PB_URL
+  // csp.ts resolves `PB_URL ?? NEXT_PUBLIC_PB_URL` — PB_URL must be stubbed
+  // too, or CI's placeholder PB_URL (set at the job level) silently wins.
+  const prevPbUrl = process.env.PB_URL
+  const prevPublicPb = process.env.NEXT_PUBLIC_PB_URL
 
   beforeAll(() => {
+    process.env.PB_URL = 'https://detailing-pb.fly.dev'
     process.env.NEXT_PUBLIC_PB_URL = 'https://detailing-pb.fly.dev'
   })
 
@@ -13,8 +17,10 @@ describe('buildContentSecurityPolicyReportOnly', () => {
   })
 
   afterAll(() => {
-    if (prevPb === undefined) delete process.env.NEXT_PUBLIC_PB_URL
-    else process.env.NEXT_PUBLIC_PB_URL = prevPb
+    if (prevPbUrl === undefined) delete process.env.PB_URL
+    else process.env.PB_URL = prevPbUrl
+    if (prevPublicPb === undefined) delete process.env.NEXT_PUBLIC_PB_URL
+    else process.env.NEXT_PUBLIC_PB_URL = prevPublicPb
   })
 
   it('uses self frame-ancestors on operator routes', () => {
