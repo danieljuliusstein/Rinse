@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import MoneyOverview from './pages/MoneyOverview'
 import Dashboard from './pages/Dashboard'
 import SalesPipeline from './pages/SalesPipeline'
@@ -16,7 +16,9 @@ import InvoicesPage from './pages/InvoicesPage'
 import ReceiptsPage from './pages/ReceiptsPage'
 import CarsPage from './pages/CarsPage'
 import RoutesPage from './pages/RoutesPage'
-import LoginPage from './pages/LoginPage'
+import AuthPage from './pages/AuthPage'
+import HomePage from './pages/HomePage'
+import VerifyEmailPage, { VerifyEmailConfirmPage } from './pages/VerifyEmailPage'
 import { colors } from './theme/colors'
 import { AuthProvider, useAuth } from './providers/AuthProvider'
 import { DataProvider, useData } from './providers/DataProvider'
@@ -810,7 +812,29 @@ function Shell() {
 }
 
 function Gate() {
-  const { user, loading } = useAuth()
+  const { user, loading, emailVerified } = useAuth()
+  const [view, setView] = useState<'home' | 'login'>('home')
+  const prevUser = useRef(user)
+  const [verifyToken, setVerifyToken] = useState(() => new URLSearchParams(window.location.search).get('verify_token'))
+
+  useEffect(() => {
+    if (prevUser.current && !user) setView('home')
+    prevUser.current = user
+  }, [user])
+
+  if (verifyToken) {
+    return (
+      <VerifyEmailConfirmPage
+        token={verifyToken}
+        onDone={() => {
+          window.history.replaceState(null, '', window.location.pathname)
+          setVerifyToken(null)
+          setView('login')
+        }}
+      />
+    )
+  }
+
   if (loading) {
     return (
       <div
@@ -822,7 +846,11 @@ function Gate() {
       </div>
     )
   }
-  if (!user) return <LoginPage />
+  if (!user) {
+    if (view === 'login') return <AuthPage onBack={() => setView('home')} />
+    return <HomePage onSignIn={() => setView('login')} />
+  }
+  if (!emailVerified) return <VerifyEmailPage />
   return (
     <UiProvider>
       <DataProvider>

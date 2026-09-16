@@ -163,7 +163,7 @@ async function provisionPlatformAdminUser(
 
   const org = await findOrCreateInternalOrg(pb)
   await ensureMinimalInternalAppSettings(pb, org.id, email)
-  await pb.collection('users').update(userId, { organization_id: org.id })
+  await pb.collection('users').update(userId, { organization_id: org.id, verified: true })
 
   return {
     organizationId: String(org.id),
@@ -210,8 +210,11 @@ export async function provisionOrganizationForOAuthUser(input: OAuthProvisionInp
 
   await seedOrganizationData(pb, org.id, businessName, email)
 
+  // OAuth2 providers (Google/Apple) already verify the email address, so
+  // these accounts skip the email/password verify-by-link flow.
   await pb.collection('users').update(input.userId, {
     organization_id: org.id,
+    verified: true,
   })
 
   void logPlatformEvent('org_created', {
@@ -254,15 +257,25 @@ export async function registerOrganization(input: SignupInput) {
     trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   })
 
+  // Not verified yet — the user must click the link in the verification
+  // email before rinse-desk lets them past the auth gate.
   const user = await pb.collection('users').create<PbRecord>({
     email,
     password,
     passwordConfirm: password,
     organization_id: org.id,
-    verified: true,
+    verified: false,
   })
 
   await seedOrganizationData(pb, org.id, businessName, email)
+
+  let verificationEmailSent = true
+  try {
+    await pb.collection('users').requestVerification(email)
+  } catch (e) {
+    verificationEmailSent = false
+    console.error('[signup] requestVerification failed', e)
+  }
 
   void logPlatformEvent('org_created', {
     organizationId: String(org.id),
@@ -276,5 +289,6 @@ export async function registerOrganization(input: SignupInput) {
     slug: String(org.slug),
     userId: String(user.id),
     email,
+    verificationEmailSent,
   }
 }
