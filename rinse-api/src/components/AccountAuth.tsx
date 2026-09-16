@@ -243,8 +243,7 @@ export default function AccountAuth({ onAuthenticated, variant = 'operator' }: A
 
         {!isAdminVariant ? (
           <p className="auth-legal">
-            By continuing, you agree to the <Link href="/terms">Terms of Service</Link> and{' '}
-            <Link href="/privacy">Privacy Policy</Link>.
+            By signing up, you are agreeing to our <Link href="/terms">Terms</Link>.
           </p>
         ) : null}
       </div>

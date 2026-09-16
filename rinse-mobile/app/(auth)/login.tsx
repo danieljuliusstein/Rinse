@@ -146,9 +146,17 @@ export default function LoginScreen() {
         ) : null}
 
         {mode !== 'forgot' ? (
-          <View style={styles.oauthRow}>
-            <SecondaryButton label="Google" onPress={() => void onOAuth('google')} disabled={busy} />
-            <SecondaryButton label="Apple" onPress={() => void onOAuth('apple')} disabled={busy} />
+          <View style={styles.oauthCol}>
+            <SecondaryButton
+              label="Continue with Google"
+              onPress={() => void onOAuth('google')}
+              disabled={busy}
+            />
+            <SecondaryButton
+              label="Continue with Apple"
+              onPress={() => void onOAuth('apple')}
+              disabled={busy}
+            />
           </View>
         ) : null}
 
@@ -232,13 +240,9 @@ export default function LoginScreen() {
         </Pressable>
 
         <AppText variant="caption" style={styles.legal}>
-          By continuing, you agree to the{' '}
+          By signing up, you are agreeing to our{' '}
           <AppText variant="caption" style={styles.legalLink} onPress={() => openLegal('/terms')}>
-            Terms of Service
-          </AppText>{' '}
-          and{' '}
-          <AppText variant="caption" style={styles.legalLink} onPress={() => openLegal('/privacy')}>
-            Privacy Policy
+            Terms
           </AppText>
           .
         </AppText>
@@ -338,8 +342,7 @@ const styles = StyleSheet.create({
   info: {
     color: colors.greenText,
   },
-  oauthRow: {
-    flexDirection: 'row',
+  oauthCol: {
     gap: spacing.sm,
   },
   modeLink: {

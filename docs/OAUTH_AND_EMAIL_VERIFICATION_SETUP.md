@@ -56,7 +56,7 @@ membership ($99/yr).
    - Enable **Sign In with Apple**, click **Configure**:
      - Primary App ID: the App ID from step 1.
      - Domains and Subdomains: `rinsehq.com`
-     - Return URLs: `https://detailing-pb.fly.dev/api/oauth2-redirect`
+     - Return URLs: `w`
    - Apple will ask you to verify domain ownership — download the
      verification file it gives you and host it at the exact path Apple
      specifies on `rinsehq.com` (this needs whoever manages that domain's
@@ -80,7 +80,11 @@ membership ($99/yr).
    - **Apple**: paste the Services ID as Client ID, and the Team ID / Key ID
      / private key content into their respective fields (PocketBase builds
      the signed client secret JWT internally and re-signs it as it expires).
-4. Save. Verify it worked:
+4. **Disable MFA** on the same `users` collection (Options → Multi-factor
+   authentication). If MFA is on, Google/Apple alone returns **401** after a
+   successful provider login — Desk/mobile do not implement a second factor
+   yet. OTP can stay enabled for later; MFA must be off for social signup.
+5. Save. Verify it worked:
    ```bash
    curl 'https://detailing-pb.fly.dev/api/collections/users/auth-methods?fields=oauth2'
    ```
@@ -88,6 +92,12 @@ membership ($99/yr).
    instead of `"providers":[]`. Once that's true, the "Continue with
    Google"/"Continue with Apple" buttons on `desk.rinsehq.com` work
    immediately — no further code changes needed.
+
+   Also confirm MFA is off:
+   ```bash
+   curl -sS 'https://detailing-pb.fly.dev/api/collections/users/auth-methods' | grep -A2 '"mfa"'
+   ```
+   Expect `"enabled": false` under `mfa`.
 
    (You don't need to touch the "auto-verify OAuth2 accounts" toggle if
    there is one — `rinse-api` already force-sets `verified: true` on any
