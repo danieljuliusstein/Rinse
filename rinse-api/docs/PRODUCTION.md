@@ -168,15 +168,25 @@ Deploy. Note your production URL, e.g. `https://detailing-app.vercel.app`.
 
 ### Google & Apple sign-in (OAuth2)
 
-In PocketBase admin → **Collections → users → Settings → OAuth2**:
+Full step-by-step (Google Cloud, Apple Developer, PocketBase Admin):
+[`docs/OAUTH_AND_EMAIL_VERIFICATION_SETUP.md`](../../docs/OAUTH_AND_EMAIL_VERIFICATION_SETUP.md).
 
-1. Enable OAuth2 auth for the collection
-2. Add providers:
-   - **Google** — Client ID + secret from Google Cloud Console (OAuth consent + redirect URI)
-   - **Apple** — Services ID, team ID, key ID, and private key from Apple Developer
-3. Set redirect URLs (must match the app callback exactly):
-   - `https://your-app.vercel.app/auth/oauth/callback`
-   - `http://localhost:3000/auth/oauth/callback`
+Summary:
+
+1. Register Google/Apple apps with redirect URI
+   `https://detailing-pb.fly.dev/api/oauth2-redirect` (PocketBase — not the app callback).
+2. In PocketBase admin → **Collections → users → OAuth2**: enable providers and paste
+   Client ID/secret (Google) and Services ID / Team ID / Key ID / `.p8` (Apple).
+3. Confirm providers are live:
+   ```bash
+   curl 'https://detailing-pb.fly.dev/api/collections/users/auth-methods?fields=oauth2'
+   ```
+   Expect `"enabled":true` and both `google` and `apple` in `providers`.
+
+App callbacks (after PocketBase finishes the IdP hop):
+
+- Web: `{app origin}/auth/oauth/callback`
+- Native: `rinse://oauth/callback`
 
 After OAuth login, new users without an `organization_id` are provisioned via `POST /api/auth/oauth-provision` (Starter trial org + seeded packages). They then enter the onboarding wizard at `/onboarding?step=business`.
 

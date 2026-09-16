@@ -74,8 +74,6 @@ export function Nav({ onStartTrial }: { onStartTrial: () => void }) {
           {SIGN_IN_URL && (
             <a
               href={SIGN_IN_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className="text-sm text-black/50 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)]"
             >
               Sign in
@@ -120,8 +118,6 @@ export function Nav({ onStartTrial }: { onStartTrial: () => void }) {
           {SIGN_IN_URL && (
             <a
               href={SIGN_IN_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => setOpen(false)}
               className="block w-full text-left text-sm text-black/50 hover:text-neutral-900 py-1.5"
             >
