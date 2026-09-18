@@ -54,6 +54,11 @@ pocketbase/pb.zip
 # Accidental iCloud duplicate service workers
 public/sw\ *.js
 
+# next-pwa build output (regenerated on every production build)
+public/sw.js
+public/workbox-*.js
+public/fallback-*.js
+
 # Marketing captures (commit stock photos + scripts; ignore raw/export)
 marketing/raw/
 marketing/export/
