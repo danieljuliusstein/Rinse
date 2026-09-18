@@ -1,6 +1,6 @@
 /**
  * Authenticated product — Desktop CRM (Rinse Desk).
- * Set this once Desk is deployed; Sign in stays hidden while unset.
+ * Marketing stays on rinsehq.com; Sign in / Start trial go here.
  */
 export const DESK_URL: string | null = "https://desk.rinsehq.com";
 

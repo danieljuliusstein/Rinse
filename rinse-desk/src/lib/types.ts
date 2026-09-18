@@ -11,6 +11,7 @@ export type PageId =
   | 'deals'
   | 'money'
   | 'invoices'
+  | 'quotes'
   | 'receipts'
   | 'cars'
   | 'contacts'
@@ -24,6 +25,8 @@ export type PageId =
   | 'ai'
   | 'settings'
   | 'help'
+
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired'
 
 export interface DeskClient {
   id: string
@@ -108,6 +111,16 @@ export interface DeskLead {
   created?: string
 }
 
+export interface DeskInvoiceLineItem {
+  id: string
+  description: string
+  quantity?: number
+  unit_price?: number
+  /** Legacy / computed line total */
+  default_amount: number
+  unit?: 'each' | 'hour' | 'flat'
+}
+
 export interface DeskInvoice {
   id: string
   invoice_number: string
@@ -122,6 +135,12 @@ export interface DeskInvoice {
   paid_at?: string
   sent_at?: string
   created?: string
+  discount_amount?: number
+  tax_rate?: number
+  tax_amount?: number
+  po_number?: string
+  notes?: string
+  extra_line_items?: DeskInvoiceLineItem[]
 }
 
 export interface DeskQuote {
@@ -131,8 +150,18 @@ export interface DeskQuote {
   client_id: string
   package_id: string
   subtotal: number
-  status: string
+  status: QuoteStatus
   date?: string
+  vehicle_type?: VehicleType
+  location_type?: 'mobile' | 'shop'
+  notes?: string
+  valid_until?: string
+  sent_at?: string
+  created?: string
+  extra_line_items?: DeskInvoiceLineItem[]
+  /** Expanded / joined display helpers (not always persisted). */
+  clientName?: string
+  packageName?: string
 }
 
 export interface DeskExpense {

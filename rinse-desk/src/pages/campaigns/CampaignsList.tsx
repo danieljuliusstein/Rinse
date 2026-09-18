@@ -116,6 +116,7 @@ function CampaignRow({
 
   return (
     <tr
+      data-tour-target={c.id.includes('spring') || c.name.includes('Spring') ? 'campaigns-row' : undefined}
       className="group cursor-pointer border-t border-ink-200/70 transition-colors duration-150 hover:bg-brand-50"
       onClick={() => onOpen(c.id)}
     >

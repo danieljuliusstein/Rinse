@@ -110,6 +110,7 @@ function NavButton({
     <li>
       <button
         type="button"
+        data-tour-target={item.id === 'schedule' ? 'settings-schedule-tab' : undefined}
         onClick={onSelect}
         className={`group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] transition-all duration-150 ${
           active

@@ -18,6 +18,8 @@ import { Header } from '../App'
 import { useData } from '@/providers/DataProvider'
 import { useDeskNav } from '@/providers/DeskNavProvider'
 import { useUi } from '@/providers/UiProvider'
+import { useCreateActions } from '@/hooks/useCreateActions'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 import { PanelEdgeToggle } from '@/components/automations/PanelEdgeToggle'
 import { EventPopover } from '@/components/calendar/EventPopover'
 import { EventDetailSidebar } from '@/components/calendar/EventDetailSidebar'
@@ -327,7 +329,9 @@ export default function CalendarPage() {
   const now = new Date()
   const { jobs, setJobs, clients, setClients, packages } = useData()
   const { alert, toast, promptForm, confirm } = useUi()
+  const { ensureClientsAndPackages } = useCreateActions()
   const { calendarDraft, clearCalendarDraft, setPage } = useDeskNav()
+  const tour = useOptionalTour()
   const calendarRef = useRef<FullCalendar | null>(null)
   const calendarHostRef = useRef<HTMLDivElement | null>(null)
   const panelHeadingRef = useRef<HTMLHeadingElement | null>(null)
@@ -376,7 +380,7 @@ export default function CalendarPage() {
     }
     if (!packages.length) {
       clearCalendarDraft()
-      alert('Add a package first to schedule a meeting.', 'Calendar')
+      void ensureClientsAndPackages('schedule a meeting')
       return
     }
     const pkg = packages.filter((p) => p.active)[0] ?? packages[0]!
@@ -928,6 +932,13 @@ export default function CalendarPage() {
     const id = selected.id
     setSaving(true)
     try {
+      if (selected.id.startsWith('tour-') || selected.id.startsWith('dummy-') || tour?.active) {
+        clearEventMeta(id)
+        setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: 'cancelled' as const } : j)))
+        setSelected(null)
+        toast('Event deleted')
+        return
+      }
       await api.deleteJob(id)
       clearEventMeta(id)
       setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: 'cancelled' as const } : j)))
@@ -1000,6 +1011,25 @@ export default function CalendarPage() {
     package_id?: string
   }) {
     if (!selected || isEphemeralEventId(selected.id)) return
+
+    if (selected.id.startsWith('tour-') || selected.id.startsWith('dummy-') || tour?.active) {
+      const client =
+        clients.find((c) => c.id === (patch.client_id ?? selected.job.client_id)) ?? selected.job.client
+      const pkg =
+        packages.find((p) => p.id === (patch.package_id ?? selected.job.package_id))
+      const hydrated = {
+        ...selected.job,
+        ...patch,
+        client: client ?? selected.job.client,
+        packageName: pkg?.name ?? selected.job.packageName,
+      }
+      setJobs((prev) => prev.map((j) => (j.id === hydrated.id ? hydrated : j)))
+      refreshSelected(hydrated)
+      toast('Event saved')
+      tour?.notifyCreated('job')
+      return
+    }
+
     const nextDate = patch.date?.slice(0, 10)
     if (nextDate && nextDate !== selected.date.slice(0, 10)) {
       try {
@@ -1114,7 +1144,7 @@ export default function CalendarPage() {
       packages.filter((p) => p.active)[0] ??
       packages[0]
     if (!client || !pkg) {
-      alert('Add a client and package first.', 'Cannot create event')
+      await ensureClientsAndPackages('create this event')
       return
     }
     try {
@@ -1134,6 +1164,33 @@ export default function CalendarPage() {
         ? draft.job.hours_worked
         : 1
     const notes = draft.title.trim() || 'New event'
+
+    if (tour?.active) {
+      const hydrated: DeskJob = {
+        id: `tour-job-${Date.now()}`,
+        client_id: client.id,
+        package_id: pkg.id,
+        date: draft.date,
+        start_time,
+        notes,
+        revenue: pkg.base_price,
+        hours_worked,
+        status: 'scheduled',
+        tip: 0,
+        client,
+        packageName: pkg.name,
+      }
+      setJobs((prev) => [hydrated, ...prev.filter((j) => j.id !== hydrated.id)])
+      assignEventCategory(hydrated.id, draft.categoryId || categories[0]?.id || 'meeting')
+      if (draft.color) assignEventColor(hydrated.id, draft.color)
+      setCategories(loadCategories())
+      setColorTick((t) => t + 1)
+      select(jobToEvent(hydrated, loadCategories()))
+      toast('Event created')
+      tour?.notifyCreated('job')
+      return
+    }
+
     setSaving(true)
     try {
       const created = await api.createJob({
@@ -1158,6 +1215,7 @@ export default function CalendarPage() {
       setColorTick((t) => t + 1)
       select(jobToEvent(hydrated, loadCategories()))
       toast('Event created')
+      tour?.notifyCreated('job')
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not create event', 'Create failed')
     } finally {
@@ -1167,6 +1225,19 @@ export default function CalendarPage() {
 
   async function persistEventTimes(jobId: string, start: Date, end: Date | null, allDay: boolean) {
     if (isEphemeralEventId(jobId)) return false
+    if (jobId.startsWith('tour-') || jobId.startsWith('dummy-') || tour?.active) {
+      const date = formatDateLocal(start)
+      const startTime = allDay ? '' : formatTimeLocal(start)
+      const hoursWorked = allDay ? 0 : end ? durationHours(start, end) : 1
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === jobId ? { ...j, date, start_time: startTime, hours_worked: hoursWorked } : j,
+        ),
+      )
+      toast('Schedule updated')
+      tour?.notifyCreated('job')
+      return true
+    }
     try {
       const clear = await confirmUnblockDayIfNeeded(formatDateLocal(start), confirm)
       if (!clear) return false
@@ -1272,7 +1343,13 @@ export default function CalendarPage() {
       return
     }
     const job = props.job
-    if (job && !isDraftEventId(job.id)) select(jobToEvent(job, categories))
+    if (job && !isDraftEventId(job.id)) {
+      select(jobToEvent(job, categories))
+      if (tour?.active && tour.stop.id === 'calendar') {
+        toast(`Inspected scheduled job: ${job.packageName || 'Detail'}`)
+        tour?.notifyCreated('job')
+      }
+    }
   }
 
   function openDraftFromRange(start: Date, end: Date | null, allDay: boolean) {
@@ -1319,7 +1396,19 @@ export default function CalendarPage() {
   const slotLabelFormat = { hour: 'numeric' as const, minute: '2-digit' as const, omitZeroMinute: false, meridiem: 'short' as const }
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div
+      className={`flex flex-col flex-1 overflow-hidden ${
+        tour?.isArmed('calendar-panel') || tour?.isArmed('calendar-new')
+          ? 'tour-armed relative z-[55] pointer-events-auto'
+          : ''
+      }`}
+      data-tour-target="calendar-panel"
+      onClick={() => {
+        if (tour?.active && tour.stop.id === 'calendar') {
+          tour.notifyCreated('job')
+        }
+      }}
+    >
       <Header
         title="Calendar"
         subtitle="Jobs & time off (shared with mobile)"
@@ -1336,8 +1425,13 @@ export default function CalendarPage() {
             </button>
             <button
               type="button"
+              data-tour-target="calendar-new"
               onClick={() => openNewEventDraft()}
-              className="inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-medium text-white shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-green-600"
+              className={`inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-medium text-white shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-green-600 ${
+                tour?.isArmed('calendar-new')
+                  ? 'tour-armed relative z-[55] pointer-events-auto ring-2 ring-white/80'
+                  : ''
+              }`}
               style={{ background: colors.green }}
             >
               <Plus className="h-4 w-4" strokeWidth={2} aria-hidden />
@@ -1636,6 +1730,9 @@ export default function CalendarPage() {
               }}
               eventDidMount={(info) => {
                 info.el.setAttribute('data-cal-event-id', info.event.id)
+                if (info.event.id === 'tour-job-1' || info.event.id.startsWith('tour-')) {
+                  info.el.setAttribute('data-tour-target', 'calendar-event')
+                }
                 const kind = (info.event.extendedProps as { kind?: string }).kind
                 if (kind === 'block' || kind === 'schedule-closed') return
                 if (kind === 'draft') {

@@ -11,6 +11,7 @@ import {
   X,
   Pin,
   Wallet,
+  FileText,
   CalendarDays,
   Megaphone,
   type LucideIcon,
@@ -46,6 +47,7 @@ const pageIcons: Partial<Record<PageId, LucideIcon>> = {
   settings: Settings,
   ai: Sparkles,
   invoices: Wallet,
+  quotes: FileText,
   money: Wallet,
   receipts: Wallet,
   routes: CalendarDays,
@@ -58,7 +60,7 @@ const pageIcons: Partial<Record<PageId, LucideIcon>> = {
 }
 
 export function HelpCenter() {
-  const { setPage } = useDeskNav()
+  const { setPage, openOnboardingTour } = useDeskNav()
   const [activeCategory, setActiveCategory] = useState<CategoryId | 'all'>('all')
   const [activeArticleId, setActiveArticleId] = useState<string>(articles[0]!.id)
   const [query, setQuery] = useState('')
@@ -111,6 +113,22 @@ export function HelpCenter() {
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-ink-100 text-ink-900">
       <div className="shrink-0 border-b border-ink-200 bg-white px-5 py-4 sm:px-8">
         <div className="mx-auto max-w-4xl">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-50/80 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-ink-900">Product tour</p>
+              <p className="mt-0.5 text-[12px] text-ink-500">
+                Hands-on walkthrough — add a client, move a deal, book a job, send an invoice.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={openOnboardingTour}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-brand-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
+            >
+              <Sparkles className="size-3.5" strokeWidth={2.25} />
+              Take the tour
+            </button>
+          </div>
           <div className="relative group">
             <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-ink-400 transition-colors group-focus-within:text-brand-600" />
             <input

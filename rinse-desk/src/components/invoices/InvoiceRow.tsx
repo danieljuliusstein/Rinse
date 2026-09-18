@@ -1,4 +1,14 @@
-import { CheckCircle2, ChevronRight, FileText, Pencil, Send, User } from 'lucide-react'
+import {
+  CheckCircle2,
+  ChevronRight,
+  Copy,
+  Download,
+  FileText,
+  Mail,
+  Pencil,
+  Send,
+  User,
+} from 'lucide-react'
 import type { DeskInvoice } from '@/lib/types'
 import { money } from '@/lib/metrics'
 import { StatusChip } from './StatusChip'
@@ -20,6 +30,9 @@ type Props = {
   onEdit: () => void
   onMarkSent: () => void
   onMarkPaid: () => void
+  onOpenPdf: () => void
+  onCopyPortal: () => void
+  onEmail: () => void
 }
 
 export function InvoiceRow({
@@ -32,6 +45,9 @@ export function InvoiceRow({
   onEdit,
   onMarkSent,
   onMarkPaid,
+  onOpenPdf,
+  onCopyPortal,
+  onEmail,
 }: Props) {
   const due = inv.balance_due
   const status = inv.status
@@ -130,8 +146,9 @@ export function InvoiceRow({
                 <button
                   type="button"
                   disabled={busy}
+                  data-tour-target="invoices-send"
                   onClick={onMarkSent}
-                  className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-ink-900 text-white text-[12.5px] font-semibold hover:bg-ink-800 transition-colors shadow-sm disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-ink-900 text-white text-[12.5px] font-semibold hover:bg-ink-800 transition-colors shadow-sm disabled:opacity-50 relative z-[55] pointer-events-auto"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {busy ? 'Working…' : 'Mark sent'}
@@ -155,11 +172,38 @@ export function InvoiceRow({
                 className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-white ring-1 ring-ink-200 text-ink-700 text-[12.5px] font-semibold hover:bg-ink-50 transition-colors disabled:opacity-50"
               >
                 <Pencil className="w-3.5 h-3.5" />
-                Light edit
+                Edit
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onOpenPdf}
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-white ring-1 ring-ink-200 text-ink-700 text-[12.5px] font-semibold hover:bg-ink-50 transition-colors disabled:opacity-50"
+              >
+                <Download className="w-3.5 h-3.5" />
+                PDF
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onCopyPortal}
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-white ring-1 ring-ink-200 text-ink-700 text-[12.5px] font-semibold hover:bg-ink-50 transition-colors disabled:opacity-50"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Copy link
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onEmail}
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-white ring-1 ring-ink-200 text-ink-700 text-[12.5px] font-semibold hover:bg-ink-50 transition-colors disabled:opacity-50"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                Email
               </button>
               <div className="flex-1" />
               <span className="text-[11px] text-ink-400 flex items-center gap-1">
-                <User className="w-3 h-3" /> Created on mobile
+                <User className="w-3 h-3" /> Shared with mobile
               </span>
             </div>
           </div>

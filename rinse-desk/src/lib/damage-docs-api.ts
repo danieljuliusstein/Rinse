@@ -83,11 +83,33 @@ async function listDamageDocs(filter: string): Promise<DeskDamageDoc[]> {
   throw new Error(formatPbError(lastErr, 'Could not load damage docs'))
 }
 
+import { isTourSessionActive } from './onboarding-tour'
+
 /** Damage docs linked to a job (`damage_docs.job_id`) — not job `photos`/`photo_meta`. */
 export async function getDamageDocsForJob(jobId: string): Promise<DeskDamageDoc[]> {
   return listDamageDocs(`job_id = "${escapeFilter(jobId)}"`)
 }
 
 export async function getDamageDocsForVehicle(vehicleId: string): Promise<DeskDamageDoc[]> {
+  if (vehicleId.startsWith('tour-') || isTourSessionActive()) {
+    return [
+      {
+        id: `tour-dam-${vehicleId}-1`,
+        vehicle_id: vehicleId,
+        area: 'front_left',
+        note: 'Micro-scratches along front fender clear coat near headlight. Needs single-stage polish.',
+        date: new Date().toISOString().slice(0, 10),
+        photo_url: null,
+      },
+      {
+        id: `tour-dam-${vehicleId}-2`,
+        vehicle_id: vehicleId,
+        area: 'rear_bumper',
+        note: 'Luggage scuffs on upper bumper shelf. Recommend ceramic coating protection.',
+        date: new Date().toISOString().slice(0, 10),
+        photo_url: null,
+      },
+    ]
+  }
   return listDamageDocs(`vehicle_id = "${escapeFilter(vehicleId)}"`)
 }

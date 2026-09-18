@@ -237,8 +237,9 @@ export function ContactsToolbar({
               <button
                 type="button"
                 disabled={busy}
+                data-tour-target="contacts-add"
                 onClick={onNewContact}
-                className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg bg-rinse-green-text text-white text-[12.5px] font-semibold hover:bg-rinse-green-hover transition shadow-sm disabled:opacity-60"
+                className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg bg-rinse-green-text text-white text-[12.5px] font-semibold hover:bg-rinse-green-hover transition shadow-sm disabled:opacity-60 relative z-[55] pointer-events-auto"
               >
                 <Plus className="h-4 w-4" strokeWidth={2.5} />
                 New contact

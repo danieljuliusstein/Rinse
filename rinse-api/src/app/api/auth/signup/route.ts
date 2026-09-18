@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { formatAuthApiError } from '@/lib/auth-messages'
+import { extractPocketBaseError, formatAuthApiError } from '@/lib/auth-messages'
 import { isPlatformAdminEmail } from '@/lib/platform-admin'
 import { registerOrganization } from '@/lib/server/signup'
 import { getClientIp } from '@/lib/server/client-ip'
@@ -16,6 +16,14 @@ function corsHeaders(request: Request): HeadersInit {
   }
 }
 
+function withCors(response: NextResponse, request: Request): NextResponse {
+  const headers = corsHeaders(request)
+  for (const [key, value] of Object.entries(headers)) {
+    response.headers.set(key, value)
+  }
+  return response
+}
+
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(request) })
 }
@@ -24,11 +32,11 @@ export async function POST(request: Request) {
   const headers = corsHeaders(request)
 
   const tooLarge = rejectOversizedBody(request)
-  if (tooLarge) return tooLarge
+  if (tooLarge) return withCors(tooLarge, request)
 
   const ip = getClientIp(request)
   const limited = await enforceRateLimit(`signup:${ip}`, RATE_LIMITS.signup, 'signup')
-  if (limited) return limited
+  if (limited) return withCors(limited, request)
 
   try {
     const body = (await request.json()) as {
@@ -58,7 +66,8 @@ export async function POST(request: Request) {
       { headers },
     )
   } catch (e) {
-    const raw = e instanceof Error ? e.message : 'Signup failed'
+    const raw = extractPocketBaseError(e, e instanceof Error ? e.message : 'Signup failed')
+    console.error('[signup]', raw, e)
     const error = formatAuthApiError(raw)
     const isConfig =
       raw.includes('PocketBase URL not configured') ||

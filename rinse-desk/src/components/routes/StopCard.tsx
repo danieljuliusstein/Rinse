@@ -22,6 +22,8 @@ type Props = {
   setNodeRef?: (node: HTMLElement | null) => void
   style?: React.CSSProperties
   isDragging?: boolean
+  isTourTarget?: boolean
+  tourArmed?: boolean
 }
 
 /**
@@ -38,17 +40,22 @@ export function StopCard({
   setNodeRef,
   style,
   isDragging,
+  isTourTarget = false,
+  tourArmed = false,
 }: Props) {
   return (
     <div
       ref={setNodeRef}
       style={style}
+      data-tour-target={isTourTarget ? 'routes-stop' : undefined}
       className={`group relative rounded-xl border p-2.5 transition-all duration-200 ${
         isDragging ? 'opacity-40' : ''
       } ${
-        selected
-          ? 'border-brand-400 bg-white shadow-lift ring-2 ring-brand-200'
-          : 'border-ink-200/80 bg-white hover:border-brand-200 hover:shadow-chip'
+        tourArmed
+          ? 'tour-armed relative z-[55] pointer-events-auto border-brand-400 bg-white shadow-lift ring-2 ring-brand-400/80'
+          : selected
+            ? 'border-brand-400 bg-white shadow-lift ring-2 ring-brand-200'
+            : 'border-ink-200/80 bg-white hover:border-brand-200 hover:shadow-chip'
       }`}
     >
       {!isLast && stop.plotted && stop.driveFromPrev ? (

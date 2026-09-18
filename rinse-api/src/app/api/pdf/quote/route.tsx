@@ -7,16 +7,21 @@ import { parseJsonBody } from '@/lib/server/parse-body'
 import { requireUser } from '@/lib/server/route-guard'
 import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 import { pdfQuoteBodySchema } from '@/lib/validation/api-schemas'
+import { deskCorsOptions, withDeskCors } from '@/lib/server/desk-cors'
+
+export async function OPTIONS(request: Request) {
+  return deskCorsOptions(request)
+}
 
 export async function POST(request: Request) {
   const auth = await requireUser(request)
-  if (auth instanceof Response) return auth
+  if (auth instanceof Response) return withDeskCors(auth, request)
 
   const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
-  if (premiumDenied) return premiumDenied
+  if (premiumDenied) return withDeskCors(premiumDenied, request)
 
   const parsed = await parseJsonBody(request, pdfQuoteBodySchema)
-  if (parsed instanceof NextResponse) return parsed
+  if (parsed instanceof NextResponse) return withDeskCors(parsed, request)
   const { quoteId } = parsed.data
 
   try {
@@ -27,21 +32,30 @@ export async function POST(request: Request) {
     )
     const filename = `${quote.quote_number}.pdf`.replace(/[^\w.-]/g, '_')
 
-    return new NextResponse(new Uint8Array(buffer), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-      },
-    })
+    return withDeskCors(
+      new NextResponse(new Uint8Array(buffer), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+        },
+      }),
+      request,
+    )
   } catch (err) {
     if (err instanceof PdfDataError) {
-      return NextResponse.json({ error: err.message }, { status: err.status })
+      return withDeskCors(
+        NextResponse.json({ error: err.message }, { status: err.status }),
+        request,
+      )
     }
     console.error('[api/pdf/quote]', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'PDF generation failed' },
-      { status: 500 }
+    return withDeskCors(
+      NextResponse.json(
+        { error: err instanceof Error ? err.message : 'PDF generation failed' },
+        { status: 500 },
+      ),
+      request,
     )
   }
 }

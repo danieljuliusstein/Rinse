@@ -19,6 +19,7 @@ import type {
   DeskJob,
   DeskLead,
   DeskPackage,
+  DeskQuote,
   DeskVehicle,
 } from '@/lib/types'
 import { useAuth } from './AuthProvider'
@@ -31,6 +32,7 @@ interface DataContextValue {
   jobs: DeskJob[]
   leads: DeskLead[]
   invoices: DeskInvoice[]
+  quotes: DeskQuote[]
   expenses: DeskExpense[]
   overhead: OverheadExpense[]
   packages: DeskPackage[]
@@ -40,6 +42,7 @@ interface DataContextValue {
   setJobs: Dispatch<SetStateAction<DeskJob[]>>
   setLeads: Dispatch<SetStateAction<DeskLead[]>>
   setInvoices: Dispatch<SetStateAction<DeskInvoice[]>>
+  setQuotes: Dispatch<SetStateAction<DeskQuote[]>>
   setExpenses: Dispatch<SetStateAction<DeskExpense[]>>
   setOverhead: Dispatch<SetStateAction<OverheadExpense[]>>
   setPackages: Dispatch<SetStateAction<DeskPackage[]>>
@@ -56,6 +59,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<DeskJob[]>([])
   const [leads, setLeads] = useState<DeskLead[]>([])
   const [invoices, setInvoices] = useState<DeskInvoice[]>([])
+  const [quotes, setQuotes] = useState<DeskQuote[]>([])
   const [expenses, setExpenses] = useState<DeskExpense[]>([])
   const [overhead, setOverhead] = useState<OverheadExpense[]>([])
   const [packages, setPackages] = useState<DeskPackage[]>([])
@@ -67,6 +71,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setJobs([])
       setLeads([])
       setInvoices([])
+      setQuotes([])
       setExpenses([])
       setOverhead([])
       setPackages([])
@@ -81,6 +86,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setJobs([])
       setLeads([])
       setInvoices([])
+      setQuotes([])
       setExpenses([])
       setOverhead([])
       setPackages([])
@@ -99,6 +105,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.listExpenses(),
         api.listOverheadExpenses(),
         api.listPackages(),
+        api.listQuotes(),
       ])
 
       const value = <T,>(r: PromiseSettledResult<T>, fallback: T): T =>
@@ -112,11 +119,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setExpenses(value(settled[5], []))
       setOverhead(value(settled[6], []))
       setPackages(value(settled[7], []))
+      setQuotes(value(settled[8], []))
 
       const failed = settled
         .map((r, i) => ({
           r,
-          name: ['clients', 'vehicles', 'jobs', 'leads', 'invoices', 'expenses', 'overhead', 'packages'][i]!,
+          name: [
+            'clients',
+            'vehicles',
+            'jobs',
+            'leads',
+            'invoices',
+            'expenses',
+            'overhead',
+            'packages',
+            'quotes',
+          ][i]!,
         }))
         .filter((x) => x.r.status === 'rejected')
 
@@ -153,6 +171,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       jobs,
       leads,
       invoices,
+      quotes,
       expenses,
       overhead,
       packages,
@@ -162,6 +181,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setJobs,
       setLeads,
       setInvoices,
+      setQuotes,
       setExpenses,
       setOverhead,
       setPackages,
@@ -174,6 +194,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       jobs,
       leads,
       invoices,
+      quotes,
       expenses,
       overhead,
       packages,

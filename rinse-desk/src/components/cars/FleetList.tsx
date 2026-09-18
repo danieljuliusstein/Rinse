@@ -1,7 +1,22 @@
+import { useMemo } from 'react'
 import { Search, Plus, SlidersHorizontal, AlertCircle } from 'lucide-react'
 import { FLEET_TYPES, TYPE_META } from '@/components/cars/VehicleTypeModels'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 import type { DeskVehicle, VehicleType } from '@/lib/types'
 import { colors } from '@/theme/colors'
+
+/** Prefer Marcus’s Porsche from tour dummy data; fall back to any tour vehicle. */
+function resolveTourSpotlightVehicleId(vehicles: DeskVehicle[]): string | null {
+  const porsche =
+    vehicles.find((v) => v.id === 'tour-veh-porsche') ??
+    vehicles.find(
+      (v) =>
+        v.make.toLowerCase() === 'porsche' &&
+        `${v.model}`.toLowerCase().includes('gt3'),
+    )
+  if (porsche) return porsche.id
+  return vehicles.find((v) => v.id.startsWith('tour-'))?.id ?? null
+}
 
 export type FleetSort = 'name' | 'damage' | 'type'
 
@@ -42,6 +57,11 @@ export function FleetList({
   onAddVehicle,
   paintFor,
 }: Props) {
+  const tour = useOptionalTour()
+  const tourSpotlightId = useMemo(
+    () => (tour?.active ? resolveTourSpotlightVehicleId(allVehicles) : null),
+    [tour?.active, allVehicles],
+  )
   const filters: { id: VehicleType | 'all'; label: string }[] = [
     { id: 'all', label: 'All' },
     ...FLEET_TYPES.map((t) => ({ id: t, label: TYPE_META[t].label })),
@@ -139,15 +159,20 @@ export function FleetList({
             const damage = damageCounts[v.id] ?? 0
             const flagged = damage > 0
             const paint = paintFor(v)
+            const isTourTarget = tourSpotlightId != null && v.id === tourSpotlightId
+            const tourArmed = isTourTarget && !!tour?.isArmed('cars-vehicle')
             return (
               <button
                 key={v.id}
                 type="button"
+                data-tour-target={isTourTarget ? 'cars-vehicle' : undefined}
                 onClick={() => onSelect(v.id)}
                 className={`w-full text-left p-3 rounded-xl transition-all border ${
-                  isSel
-                    ? 'bg-brand-50 border-brand-400 ring-1 ring-brand-400/30'
-                    : 'bg-white border-transparent hover:bg-ink-50 hover:border-ink-200'
+                  tourArmed
+                    ? 'tour-armed relative z-[55] pointer-events-auto ring-2 ring-brand-400/80 bg-brand-50 border-brand-400'
+                    : isSel
+                      ? 'bg-brand-50 border-brand-400 ring-1 ring-brand-400/30'
+                      : 'bg-white border-transparent hover:bg-ink-50 hover:border-ink-200'
                 }`}
               >
                 <div className="flex items-start gap-3">

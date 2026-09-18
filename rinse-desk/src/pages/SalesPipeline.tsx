@@ -12,7 +12,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { Plus, Search, Star } from 'lucide-react'
+import { Plus, Search, Star, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Header } from '../App'
 import { useData } from '@/providers/DataProvider'
 import { useUi } from '@/providers/UiProvider'
@@ -24,6 +24,7 @@ import type { DeskLead, LeadStage } from '@/lib/types'
 import { initials, money, todayISO } from '@/lib/metrics'
 import { colors } from '@/theme/colors'
 import { EmptyState } from '@/components/graphics/SoftBlobs'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 interface Deal {
   id: string
@@ -168,11 +169,17 @@ function DraggableDeal({
   onEdit,
   onConvert,
   onDelete,
+  onMoveLeft,
+  onMoveRight,
+  isTourActive,
 }: {
   deal: Deal
   onEdit: (deal: Deal) => void
   onConvert: (deal: Deal) => void
   onDelete: (deal: Deal) => void
+  onMoveLeft?: (deal: Deal) => void
+  onMoveRight?: (deal: Deal) => void
+  isTourActive?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: deal.id,
@@ -185,46 +192,97 @@ function DraggableDeal({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="group relative touch-none outline-none">
+    <div
+      ref={setNodeRef}
+      style={style}
+      data-tour-target="deals-card"
+      className={`group relative touch-none outline-none ${
+        isTourActive ? 'tour-armed pointer-events-auto ring-2 ring-[#22c55e]/50 rounded-xl' : ''
+      }`}
+    >
       <div className="cursor-grab active:cursor-grabbing" {...listeners} {...attributes}>
         <DealCardBody deal={deal} />
       </div>
-      <div className="pointer-events-none absolute inset-x-2 -bottom-3 z-10 flex translate-y-1 items-center justify-center gap-1.5 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
-        <button
-          type="button"
-          title="Edit deal"
-          onClick={(e) => {
-            e.stopPropagation()
-            onEdit(deal)
-          }}
-          className="rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-[11px] font-medium text-[#374151] shadow-sm hover:bg-gray-50"
-        >
-          Edit
-        </button>
-        {deal.stage !== 'booked' && (
+
+      <div
+        className={`absolute inset-x-2 -bottom-3.5 z-10 flex items-center justify-between gap-1 transition-all duration-200 ${
+          isTourActive
+            ? 'pointer-events-auto opacity-100 translate-y-0'
+            : 'pointer-events-none opacity-0 translate-y-1 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-y-0'
+        }`}
+      >
+        <div className="flex items-center gap-1">
+          {onMoveLeft && deal.stage !== 'inquiry' && (
+            <button
+              type="button"
+              title="Move left"
+              data-tour-target="deals-action"
+              onClick={(e) => {
+                e.stopPropagation()
+                onMoveLeft(deal)
+              }}
+              className="tour-armed pointer-events-auto flex items-center gap-0.5 rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-[11px] font-semibold text-[#374151] shadow-sm hover:bg-[#f3f4f6]"
+            >
+              <ChevronLeft size={13} strokeWidth={2.5} />
+              <span>Left</span>
+            </button>
+          )}
+          {onMoveRight && deal.stage !== 'booked' && (
+            <button
+              type="button"
+              title="Move to next stage"
+              data-tour-target="deals-action"
+              onClick={(e) => {
+                e.stopPropagation()
+                onMoveRight(deal)
+              }}
+              className="tour-armed pointer-events-auto flex items-center gap-0.5 rounded-md border border-[#bbf7d0] bg-[#eaf9ef] px-2 py-1 text-[11px] font-semibold text-[#16a34a] shadow-sm hover:bg-[#dcfce7]"
+            >
+              <span>Advance</span>
+              <ChevronRight size={13} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1">
           <button
             type="button"
-            title="Convert to job"
+            title="Edit deal"
             onClick={(e) => {
               e.stopPropagation()
-              onConvert(deal)
+              onEdit(deal)
             }}
-            className="rounded-md border border-[#bbf7d0] bg-[#eaf9ef] px-2 py-1 text-[11px] font-medium text-[#16a34a] shadow-sm hover:bg-[#dcfce7]"
+            className="rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-[11px] font-medium text-[#374151] shadow-sm hover:bg-gray-50"
           >
-            Book
+            Edit
           </button>
-        )}
-        <button
-          type="button"
-          title="Delete deal"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(deal)
-          }}
-          className="rounded-md border border-[#fecaca] bg-white px-2 py-1 text-[11px] font-medium text-[#dc2626] shadow-sm hover:bg-[#fef2f2]"
-        >
-          Delete
-        </button>
+          {deal.stage !== 'booked' && !isTourActive && (
+            <button
+              type="button"
+              title="Convert to job"
+              onClick={(e) => {
+                e.stopPropagation()
+                onConvert(deal)
+              }}
+              className="rounded-md border border-[#bbf7d0] bg-[#eaf9ef] px-2 py-1 text-[11px] font-medium text-[#16a34a] shadow-sm hover:bg-[#dcfce7]"
+            >
+              Book
+            </button>
+          )}
+          {!isTourActive && (
+            <button
+              type="button"
+              title="Delete deal"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(deal)
+              }}
+              className="rounded-md border border-[#fecaca] bg-white px-2 py-1 text-[11px] font-medium text-[#dc2626] shadow-sm hover:bg-[#fef2f2]"
+            >
+              Delete
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -303,7 +361,8 @@ function DropColumn({
         <button
           type="button"
           onClick={onAdd}
-          className="mt-auto flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#d1d5db] py-2.5 text-xs font-medium text-[#9ca3af] transition-colors hover:border-[#22c55e] hover:bg-[#eaf9ef]/40 hover:text-[#16a34a]"
+          data-tour-target="deals-add"
+          className="mt-auto flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#d1d5db] py-2.5 text-xs font-medium text-[#9ca3af] transition-colors hover:border-[#22c55e] hover:bg-[#eaf9ef]/40 hover:text-[#16a34a] relative z-[55] pointer-events-auto"
         >
           <Plus size={13} /> Add Deal
         </button>
@@ -316,6 +375,7 @@ export default function SalesPipeline() {
   const { leads, setLeads, setJobs, setClients, packages } = useData()
   const { alert, confirm, promptForm, toast } = useUi()
   const { setPage } = useDeskNav()
+  const tour = useOptionalTour()
   const [search, setSearch] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -351,6 +411,22 @@ export default function SalesPipeline() {
 
   const totalValue = deals.reduce((sum, d) => sum + d.value, 0)
 
+  const STAGE_ORDER: LeadStage[] = ['inquiry', 'quoted', 'booked']
+
+  function handleMoveLeft(deal: Deal) {
+    const currentIndex = STAGE_ORDER.indexOf(deal.stage)
+    if (currentIndex > 0) {
+      void moveToColumn(deal.id, STAGE_ORDER[currentIndex - 1])
+    }
+  }
+
+  function handleMoveRight(deal: Deal) {
+    const currentIndex = STAGE_ORDER.indexOf(deal.stage)
+    if (currentIndex >= 0 && currentIndex < STAGE_ORDER.length - 1) {
+      void moveToColumn(deal.id, STAGE_ORDER[currentIndex + 1])
+    }
+  }
+
   async function moveToColumn(dealId: string, stage: LeadStage) {
     const deal = allDeals.find((d) => d.id === dealId)
     if (!deal) return
@@ -359,9 +435,16 @@ export default function SalesPipeline() {
 
     setLeads((prev) => prev.map((l) => (l.id === dealId ? { ...l, stage } : l)))
 
+    if (dealId.startsWith('tour-') || dealId.startsWith('dummy-') || tour?.active) {
+      tour?.notifyCreated('deal')
+      toast(`Moved to ${stage.charAt(0).toUpperCase() + stage.slice(1)}`)
+      return
+    }
+
     try {
       const updated = await api.updateLead(dealId, { stage })
       setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)))
+      tour?.notifyCreated('deal')
       void platform.runAutomationsForTrigger('deal_stage_changed', {
         lead_id: updated.id,
         stage: updated.stage,
@@ -401,6 +484,26 @@ export default function SalesPipeline() {
       ],
     })
     if (!values?.name) return
+
+    if (deal.id.startsWith('tour-') || deal.id.startsWith('dummy-') || tour?.active) {
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === deal.id
+            ? {
+                ...l,
+                name: values.name,
+                quote_amount: Number(values.amount) || 0,
+                service_interest: values.interest || undefined,
+                package_id: values.package_id || undefined,
+              }
+            : l,
+        ),
+      )
+      toast('Deal updated')
+      tour?.notifyCreated('deal')
+      return
+    }
+
     try {
       const updated = await api.updateLead(deal.id, {
         name: values.name,
@@ -431,6 +534,29 @@ export default function SalesPipeline() {
       ],
     })
     if (!values?.date) return
+
+    if (deal.id.startsWith('tour-') || deal.id.startsWith('dummy-') || tour?.active) {
+      setLeads((prev) => prev.filter((l) => l.id !== deal.id))
+      const simulatedJob: import('@/lib/types').DeskJob = {
+        id: `tour-job-${Date.now()}`,
+        date: values.date,
+        start_time: values.start_time || '09:00',
+        status: 'scheduled',
+        revenue: deal.value,
+        tip: 0,
+        client_id: deal.lead.client_id || 'tour-client-marcus',
+        package_id: deal.lead.package_id || packages[0]?.id || 'tour-pkg-1',
+        notes: deal.title,
+        hours_worked: 2,
+        packageName: 'Full Detail',
+      }
+      setJobs((prev) => [simulatedJob, ...prev])
+      toast('Lead booked as job')
+      tour?.notifyCreated('deal')
+      setPage('calendar')
+      return
+    }
+
     try {
       const clear = await confirmUnblockDayIfNeeded(values.date, confirm)
       if (!clear) return
@@ -474,6 +600,21 @@ export default function SalesPipeline() {
     })
     if (!values?.name) return
 
+    if (tour?.active) {
+      const created: DeskLead = {
+        id: `tour-lead-${Date.now()}`,
+        name: values.name,
+        stage,
+        quote_amount: Number(values.amount) || 0,
+        service_interest: values.interest || undefined,
+        created: new Date().toISOString(),
+      }
+      setLeads((prev) => [created, ...prev])
+      toast('Deal created')
+      tour?.notifyCreated('deal')
+      return
+    }
+
     try {
       const created = await api.createLead({
         name: values.name,
@@ -483,6 +624,7 @@ export default function SalesPipeline() {
       })
       setLeads((prev) => [created, ...prev])
       toast('Deal created')
+      tour?.notifyCreated('deal')
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not create lead', 'Create failed')
     }
@@ -497,6 +639,13 @@ export default function SalesPipeline() {
       danger: true,
     })
     if (!ok) return
+
+    if (deal.id.startsWith('tour-') || deal.id.startsWith('dummy-') || tour?.active) {
+      setLeads((prev) => prev.filter((l) => l.id !== deal.id))
+      toast('Deal deleted')
+      return
+    }
+
     try {
       await api.deleteLead(deal.id)
       setLeads((prev) => prev.filter((l) => l.id !== deal.id))
@@ -560,7 +709,19 @@ export default function SalesPipeline() {
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-x-auto p-5">
+      <div
+        className={`relative min-h-0 flex-1 overflow-x-auto p-5 ${
+          tour?.isArmed('deals-action') || tour?.isArmed('deals-add') || tour?.isArmed('deals-board')
+            ? 'tour-armed relative z-[55] pointer-events-auto'
+            : ''
+        }`}
+        data-tour-target="deals-board"
+        onClick={() => {
+          if (tour?.active && tour.stop.id === 'deals') {
+            tour.notifyCreated('deal')
+          }
+        }}
+      >
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-[#22c55e]/[0.04] blur-3xl" />
           <div className="absolute top-20 right-10 h-64 w-64 rounded-full bg-[#14b8a6]/[0.04] blur-3xl" />
@@ -601,6 +762,9 @@ export default function SalesPipeline() {
                       onEdit={(d) => void editDeal(d)}
                       onConvert={(d) => void convertDeal(d)}
                       onDelete={(d) => void deleteDeal(d)}
+                      onMoveLeft={handleMoveLeft}
+                      onMoveRight={handleMoveRight}
+                      isTourActive={Boolean(tour?.active && tour.stop.id === 'deals')}
                     />
                   ))
                 )}

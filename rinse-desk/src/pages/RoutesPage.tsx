@@ -8,6 +8,7 @@ import { todayISO } from '@/lib/metrics'
 import { geocodeAddress, isRouteApiConfigured } from '@/lib/route-api'
 import RoutePlanner from '@/components/calendar/RoutePlanner'
 import { DayScrubber } from '@/components/routes/DayScrubber'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 function shiftDate(iso: string, days: number): string {
   const d = new Date(`${iso}T12:00:00`)
@@ -28,9 +29,10 @@ function pickDefaultRouteDate(jobDates: string[], today: string): string {
 }
 
 export default function RoutesPage() {
-  const { jobs, setJobs, setClients } = useData()
+  const { jobs, setJobs, setClients, clients } = useData()
   const { toast } = useUi()
   const { createEvent } = useCreateActions()
+  const tour = useOptionalTour()
   const today = todayISO()
   const [date, setDate] = useState(today)
   const [dateSeeded, setDateSeeded] = useState(false)
@@ -77,33 +79,61 @@ export default function RoutesPage() {
             onPrev={() => {
               setDateSeeded(true)
               setDate((d) => shiftDate(d, -1))
+              if (tour?.active && tour.stop.id === 'routes') {
+                toast('Route date updated')
+                tour.completeStop('routes')
+              }
             }}
             onNext={() => {
               setDateSeeded(true)
               setDate((d) => shiftDate(d, 1))
+              if (tour?.active && tour.stop.id === 'routes') {
+                toast('Route date updated')
+                tour.completeStop('routes')
+              }
             }}
             onToday={() => {
               setDateSeeded(true)
               setDate(today)
+              if (tour?.active && tour.stop.id === 'routes') {
+                toast('Today’s route loaded')
+                tour.completeStop('routes')
+              }
             }}
             onPickDate={(iso) => {
               setDateSeeded(true)
               setDate(iso)
+              if (tour?.active && tour.stop.id === 'routes') {
+                toast('Route date updated')
+                tour.completeStop('routes')
+              }
             }}
           />
         }
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
+          tour?.isArmed('routes-panel') ? 'tour-armed relative z-[55] pointer-events-auto' : ''
+        }`}
+        data-tour-target="routes-panel"
+      >
         <RoutePlanner
           date={date}
           jobs={jobs}
+          clients={clients}
           setJobs={setJobs}
           setClients={setClients}
           businessAddress={businessAddress}
           depotCoords={depotCoords}
           onDepotCoords={setDepotCoords}
           toast={(msg) => toast(msg)}
+          onSelectStop={() => {
+            if (tour?.active && tour.stop.id === 'routes') {
+              toast('Stop selected')
+              tour.notifyCreated('route')
+            }
+          }}
           onSchedule={() => {
             void createEvent({
               navigate: false,

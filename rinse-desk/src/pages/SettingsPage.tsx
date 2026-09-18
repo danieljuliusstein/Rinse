@@ -21,6 +21,7 @@ import { NotificationsSection } from '@/components/settings/sections/Notificatio
 import { AccountSection } from '@/components/settings/sections/AccountSection'
 import { WorkspaceMapSection } from '@/components/settings/sections/WorkspaceMapSection'
 import { colors } from '@/theme/colors'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 function cloneSettings(s: DeskAppSettings): DeskAppSettings {
   return {
@@ -43,6 +44,7 @@ export default function SettingsPage() {
   const { refresh, loading, clients, jobs, leads } = useData()
   const { setPage, focusSettingsSection, clearFocusSettings } = useDeskNav()
   const { toast, alert } = useUi()
+  const tour = useOptionalTour()
   const email = typeof user?.email === 'string' ? user.email : '—'
 
   const [section, setSection] = useState<SectionId>('business')
@@ -98,10 +100,18 @@ export default function SettingsPage() {
   const workspaceName = settings.business_name.trim() || getCachedBusinessName() || 'Workspace'
 
   function patchSettings(patch: Partial<DeskAppSettings>) {
+    if (tour?.active && tour.stop.id === 'settings') {
+      toast('Setting updated')
+      tour.completeStop('settings')
+    }
     setSettings((s) => ({ ...s, ...patch }))
   }
 
   function patchSchedule(patch: Partial<DeskAppSettings['booking_schedule']>) {
+    if (tour?.active && tour.stop.id === 'settings') {
+      toast('Schedule updated')
+      tour.completeStop('settings')
+    }
     setSettings((s) => ({
       ...s,
       booking_schedule: { ...s.booking_schedule, ...patch },
@@ -150,6 +160,16 @@ export default function SettingsPage() {
       return
     }
     setSaving(true)
+
+    if (tour?.active) {
+      setBaseline(cloneSettings(settings))
+      notifyBusinessUpdated(settings.business_name)
+      toast('Settings saved — synced with mobile')
+      tour.completeStop('settings')
+      setSaving(false)
+      return
+    }
+
     try {
       const saved = await saveAppSettings(settings)
       const next = cloneSettings(saved)
@@ -184,10 +204,26 @@ export default function SettingsPage() {
         }
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div
+        className={`flex flex-1 overflow-hidden ${
+          tour?.isArmed('settings-panel') ? 'tour-armed relative z-[55] pointer-events-auto' : ''
+        }`}
+        data-tour-target="settings-panel"
+        onClick={() => {
+          if (tour?.active && tour.stop.id === 'settings') {
+            tour.completeStop('settings')
+          }
+        }}
+      >
         <LeftRail
           active={section}
-          onSelect={setSection}
+          onSelect={(s) => {
+            setSection(s)
+            if (tour?.active && tour.stop.id === 'settings') {
+              toast('Settings section opened')
+              tour.completeStop('settings')
+            }
+          }}
           query={search}
           onQuery={setSearch}
         />

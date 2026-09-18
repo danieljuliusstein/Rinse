@@ -8,6 +8,7 @@ import type {
   DeskClient,
   DeskExpense,
   DeskInvoice,
+  DeskInvoiceLineItem,
   DeskJob,
   DeskLead,
   DeskPackage,
@@ -18,6 +19,7 @@ import type {
   InvoiceStatus,
   JobStatus,
   LeadStage,
+  QuoteStatus,
   RecurrenceCadence,
   VehicleType,
 } from './types'
@@ -179,6 +181,27 @@ function mapLead(record: Record<string, unknown>, expand?: Record<string, unknow
   }
 }
 
+function mapInvoiceLine(raw: unknown): DeskInvoiceLineItem {
+  const r = (raw ?? {}) as Record<string, unknown>
+  const qty =
+    typeof r.quantity === 'number' && Number.isFinite(r.quantity) ? Math.max(0, r.quantity) : 1
+  const unitPrice =
+    typeof r.unit_price === 'number' && Number.isFinite(r.unit_price)
+      ? r.unit_price
+      : Number(r.default_amount ?? 0)
+  const unit =
+    r.unit === 'hour' || r.unit === 'flat' || r.unit === 'each' ? r.unit : ('each' as const)
+  const default_amount = Math.round(qty * unitPrice * 100) / 100
+  return {
+    id: String(r.id ?? ''),
+    description: String(r.description ?? ''),
+    quantity: qty,
+    unit_price: unitPrice,
+    unit,
+    default_amount,
+  }
+}
+
 function mapInvoice(record: Record<string, unknown>): DeskInvoice {
   const rawStatus = String(record.status ?? 'draft')
   const status: InvoiceStatus =
@@ -191,6 +214,11 @@ function mapInvoice(record: Record<string, unknown>): DeskInvoice {
     rawStatus === 'cancelled'
       ? rawStatus
       : 'draft'
+  const extras = Array.isArray(record.extra_line_items)
+    ? record.extra_line_items
+        .map(mapInvoiceLine)
+        .filter((l) => l.description.trim().length > 0)
+    : undefined
   return normalizeDeskInvoice({
     id: String(record.id),
     invoice_number: String(record.invoice_number ?? ''),
@@ -205,6 +233,13 @@ function mapInvoice(record: Record<string, unknown>): DeskInvoice {
     paid_at: record.paid_at ? String(record.paid_at) : undefined,
     sent_at: record.sent_at ? String(record.sent_at) : undefined,
     created: record.created ? String(record.created) : undefined,
+    discount_amount:
+      record.discount_amount != null ? Number(record.discount_amount) : undefined,
+    tax_rate: record.tax_rate != null ? Number(record.tax_rate) : undefined,
+    tax_amount: record.tax_amount != null ? Number(record.tax_amount) : undefined,
+    po_number: record.po_number ? String(record.po_number) : undefined,
+    notes: record.notes ? String(record.notes) : undefined,
+    extra_line_items: extras,
   })
 }
 
@@ -236,7 +271,37 @@ function mapExpense(record: Record<string, unknown>, fileToken?: string): DeskEx
   }
 }
 
-function mapQuote(record: Record<string, unknown>): DeskQuote {
+function mapQuote(
+  record: Record<string, unknown>,
+  expand?: Record<string, unknown>,
+): DeskQuote {
+  const rawStatus = String(record.status ?? 'draft')
+  const status: QuoteStatus =
+    rawStatus === 'draft' ||
+    rawStatus === 'sent' ||
+    rawStatus === 'accepted' ||
+    rawStatus === 'declined' ||
+    rawStatus === 'expired'
+      ? rawStatus
+      : 'draft'
+  const clientExpand = expand?.client_id as Record<string, unknown> | undefined
+  const packageExpand = expand?.package_id as Record<string, unknown> | undefined
+  const extras = Array.isArray(record.extra_line_items)
+    ? record.extra_line_items
+        .map(mapInvoiceLine)
+        .filter((l) => l.description.trim().length > 0)
+    : undefined
+  const vehicleRaw = String(record.vehicle_type ?? 'sedan')
+  const vehicle_type: VehicleType =
+    vehicleRaw === 'sedan' ||
+    vehicleRaw === 'suv' ||
+    vehicleRaw === 'truck' ||
+    vehicleRaw === 'van' ||
+    vehicleRaw === 'boat' ||
+    vehicleRaw === 'other'
+      ? vehicleRaw
+      : 'other'
+  const locationRaw = String(record.location_type ?? 'mobile')
   return {
     id: String(record.id),
     quote_number: String(record.quote_number ?? ''),
@@ -244,8 +309,17 @@ function mapQuote(record: Record<string, unknown>): DeskQuote {
     client_id: String(record.client_id ?? ''),
     package_id: String(record.package_id ?? ''),
     subtotal: Number(record.subtotal ?? 0),
-    status: String(record.status ?? 'draft'),
+    status,
     date: record.date ? String(record.date).slice(0, 10) : undefined,
+    vehicle_type,
+    location_type: locationRaw === 'shop' ? 'shop' : 'mobile',
+    notes: record.notes ? String(record.notes) : undefined,
+    valid_until: record.valid_until ? String(record.valid_until).slice(0, 10) : undefined,
+    sent_at: record.sent_at ? String(record.sent_at) : undefined,
+    created: record.created ? String(record.created) : undefined,
+    extra_line_items: extras,
+    clientName: clientExpand ? String(clientExpand.name ?? '') : undefined,
+    packageName: packageExpand ? String(packageExpand.name ?? '') : undefined,
   }
 }
 
@@ -395,11 +469,120 @@ export async function listInvoices(): Promise<DeskInvoice[]> {
 
 export async function listQuotes(): Promise<DeskQuote[]> {
   try {
-    const items = await listOrgRecords('quotes', { sort: '-id', limit: 500 })
-    return items.map((r) => mapQuote(r as unknown as Record<string, unknown>))
+    const items = await listOrgRecords('quotes', {
+      sort: '-id',
+      limit: 500,
+      expand: 'client_id,package_id',
+    })
+    return items.map((r) =>
+      mapQuote(
+        r as unknown as Record<string, unknown>,
+        (r as { expand?: Record<string, unknown> }).expand,
+      ),
+    )
   } catch {
     return []
   }
+}
+
+export async function createQuote(input: {
+  client_id: string
+  package_id: string
+  vehicle_type?: VehicleType
+  location_type?: 'mobile' | 'shop'
+  date: string
+  subtotal: number
+  notes?: string
+  valid_until?: string
+  extra_line_items?: DeskInvoice['extra_line_items']
+}): Promise<DeskQuote> {
+  const pb = getPocketBase()
+  const created = await pb.collection('quotes').create({
+    organization_id: requireOrganizationId(),
+    quote_number: 'PENDING',
+    client_id: input.client_id,
+    package_id: input.package_id,
+    vehicle_type: input.vehicle_type ?? 'sedan',
+    location_type: input.location_type ?? 'mobile',
+    date: input.date,
+    subtotal: input.subtotal,
+    extra_line_items: input.extra_line_items ?? [],
+    notes: input.notes ?? '',
+    status: 'draft',
+    valid_until: input.valid_until ?? '',
+  })
+  return mapQuote(created as unknown as Record<string, unknown>)
+}
+
+export async function updateQuote(
+  id: string,
+  patch: {
+    status?: QuoteStatus
+    subtotal?: number
+    notes?: string
+    date?: string
+    valid_until?: string | null
+    vehicle_type?: VehicleType
+    location_type?: 'mobile' | 'shop'
+    package_id?: string
+    extra_line_items?: DeskInvoice['extra_line_items']
+    sent_at?: string | null
+    job_id?: string
+  },
+): Promise<DeskQuote> {
+  const pb = getPocketBase()
+  const updated = await pb.collection('quotes').update(id, patch)
+  return mapQuote(updated as unknown as Record<string, unknown>)
+}
+
+export async function markQuoteSent(id: string): Promise<DeskQuote> {
+  return updateQuote(id, {
+    status: 'sent',
+    sent_at: new Date().toISOString().slice(0, 10),
+  })
+}
+
+/** Mobile parity: accept quote → create scheduled job + link. */
+export async function acceptQuote(quoteId: string): Promise<{ quote: DeskQuote; job: DeskJob }> {
+  const pb = getPocketBase()
+  const record = await pb.collection('quotes').getOne(quoteId, { expand: 'client_id,package_id' })
+  const quote = mapQuote(
+    record as unknown as Record<string, unknown>,
+    (record as { expand?: Record<string, unknown> }).expand,
+  )
+  if (quote.job_id) {
+    const existing = await pb.collection('jobs').getOne(quote.job_id, { expand: 'client_id,package_id' })
+    return {
+      quote,
+      job: mapJob(
+        existing as unknown as Record<string, unknown>,
+        (existing as { expand?: Record<string, unknown> }).expand,
+      ),
+    }
+  }
+  if (quote.status === 'declined' || quote.status === 'expired') {
+    throw new Error('This quote cannot be accepted')
+  }
+
+  const job = await createJob({
+    client_id: quote.client_id,
+    package_id: quote.package_id,
+    date: quote.date || new Date().toISOString().slice(0, 10),
+    notes: quote.notes,
+    revenue: quote.subtotal,
+    vehicle_type: quote.vehicle_type,
+  })
+
+  const updated = await updateQuote(quoteId, {
+    status: 'accepted',
+    job_id: job.id,
+  })
+  return { quote: { ...updated, job_id: job.id }, job }
+}
+
+export async function deleteQuote(id: string): Promise<void> {
+  const pb = getPocketBase()
+  await pb.collection('quotes').delete(id)
 }
 
 export async function listExpenses(): Promise<DeskExpense[]> {
@@ -1074,6 +1257,12 @@ export async function updateInvoice(
     paid_at?: string | null
     sent_at?: string | null
     payments?: Array<{ amount: number; method: string; date: string; note?: string }>
+    discount_amount?: number
+    tax_rate?: number
+    tax_amount?: number
+    po_number?: string
+    notes?: string
+    extra_line_items?: DeskInvoice['extra_line_items']
   },
 ): Promise<DeskInvoice> {
   const pb = getPocketBase()
@@ -1087,6 +1276,85 @@ export async function markInvoiceSent(id: string): Promise<DeskInvoice> {
     status: 'sent',
     sent_at: new Date().toISOString(),
   })
+}
+
+/**
+ * Create (or return existing) draft invoice for a job — Desk parity with mobile
+ * `createInvoiceForJob` (rinse-api invoices-pocketbase).
+ */
+export async function createInvoiceForJob(jobId: string): Promise<DeskInvoice> {
+  const pb = getPocketBase()
+  const jobFilter = `${orgFilter()} && job_id = "${escapeFilter(jobId)}"`
+  try {
+    const existing = await pb.collection('invoices').getFullList({
+      filter: jobFilter,
+    })
+    if (existing.length > 0) {
+      return mapInvoice(existing[0] as unknown as Record<string, unknown>)
+    }
+  } catch {
+    /* fall through to create */
+  }
+
+  const job = await pb.collection('jobs').getOne(jobId)
+  const clientId = String((job as { client_id?: unknown }).client_id ?? '')
+  if (!clientId) throw new Error('This job has no client — assign a contact first.')
+
+  const revenue = Number((job as { revenue?: unknown }).revenue ?? 0)
+  const tip = Number((job as { tip?: unknown }).tip ?? 0)
+  const total = revenue + tip
+
+  const body: Record<string, unknown> = {
+    invoice_number: 'PENDING',
+    job_id: jobId,
+    client_id: clientId,
+    subtotal: revenue,
+    tip,
+    total,
+    status: 'draft',
+    payments: [],
+    amount_paid: 0,
+    balance_due: total,
+    terms: 'Due on receipt',
+    organization_id: requireOrganizationId(),
+  }
+
+  let created
+  try {
+    created = await pb.collection('invoices').create(body)
+  } catch (err) {
+    if (err instanceof ClientResponseError && err.status === 400 && 'organization_id' in body) {
+      delete body.organization_id
+      created = await pb.collection('invoices').create(body)
+    } else {
+      throw err
+    }
+  }
+
+  try {
+    await pb.collection('jobs').update(jobId, {
+      invoice_id: (created as { id: string }).id,
+      status: 'invoiced',
+    })
+  } catch {
+    /* job status / invoice_id may be restricted — invoice still created */
+  }
+
+  return mapInvoice(created as unknown as Record<string, unknown>)
+}
+
+/**
+ * Prefer an existing draft for the job (or any draft); otherwise create from job.
+ */
+export async function ensureDraftInvoiceForJob(
+  jobId: string,
+  invoices: DeskInvoice[],
+): Promise<DeskInvoice> {
+  const forJob = invoices.find((i) => i.job_id === jobId && i.status === 'draft')
+  if (forJob) return forJob
+  const anyDraft = invoices.find((i) => i.status === 'draft')
+  if (anyDraft) return anyDraft
+  return createInvoiceForJob(jobId)
 }
 
 /**

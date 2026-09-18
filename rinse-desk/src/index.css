@@ -886,62 +886,55 @@ body {
   .animate-help-fade-in {
     animation: none !important;
   }
-}
-
-/* Home (marketing) page motion */
-@keyframes home-blink {
-  0%,
-  100% {
-    opacity: 1;
+  .tour-ring {
+    animation: none !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.9), 0 0 0 9999px rgba(9, 15, 12, 0.55);
   }
-  50% {
-    opacity: 0;
-  }
-}
-
-@keyframes home-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes home-grid-drift {
-  from {
-    background-position: 0px 0px;
-  }
-  to {
-    background-position: 20px 20px;
-  }
-}
-
-@utility animate-home-blink {
-  animation: home-blink 1s step-end infinite;
-}
-
-@utility animate-home-marquee {
-  animation: home-marquee 32s linear infinite;
-}
-
-@utility animate-home-marquee-slow {
-  animation: home-marquee 50s linear infinite;
-}
-
-@utility animate-home-grid-drift {
-  animation: home-grid-drift 6s linear infinite;
-}
-
-.home-marquee-track:hover {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-home-blink,
-  .animate-home-marquee,
-  .animate-home-marquee-slow,
-  .animate-home-grid-drift {
+  .tour-flash {
     animation: none !important;
   }
 }
+
+/* Tour spotlight cutout + completion flash (onboarding tour chrome only). */
+@keyframes tour-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.9), 0 0 0 9999px rgba(9, 15, 12, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(34, 197, 94, 0.45), 0 0 0 9999px rgba(9, 15, 12, 0.55);
+  }
+}
+.tour-ring {
+  animation: tour-ring 1.9s ease-in-out infinite;
+}
+
+@keyframes tour-flash {
+  0% {
+    background-color: rgba(34, 197, 94, 0);
+  }
+  35% {
+    background-color: rgba(34, 197, 94, 0.16);
+  }
+  100% {
+    background-color: rgba(34, 197, 94, 0);
+  }
+}
+.tour-flash {
+  animation: tour-flash 1.1s ease-out;
+}
+
+/* Armed controls opt back into pointer events while the tour locks the shell. */
+.tour-shell-locked .tour-armed {
+  pointer-events: auto !important;
+}
+
+/* Allow scrolling on page containers during tour so users can move the screen freely */
+.tour-shell-locked [class*="overflow-y-auto"],
+.tour-shell-locked [class*="overflow-x-auto"],
+.tour-shell-locked main {
+  pointer-events: auto !important;
+}
+
+
+

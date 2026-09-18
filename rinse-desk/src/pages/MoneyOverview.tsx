@@ -14,6 +14,8 @@ import { Header } from '../App'
 import { useData } from '@/providers/DataProvider'
 import { useCreateActions } from '@/hooks/useCreateActions'
 import { useDeskNav } from '@/providers/DeskNavProvider'
+import { useUi } from '@/providers/UiProvider'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 import {
   MONEY_RANGE_CHIPS,
   buildMoneyChartSeries,
@@ -87,6 +89,8 @@ export default function MoneyOverview() {
   const { invoices, expenses, overhead, jobs } = useData()
   const { createExpense } = useCreateActions()
   const { setPage, openReceipts } = useDeskNav()
+  const { toast } = useUi()
+  const tour = useOptionalTour()
   const [range, setRange] = useState<MoneyRangeKey>('this_month')
 
   const bundle = useMemo(
@@ -164,7 +168,13 @@ export default function MoneyOverview() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-5" style={{ background: colors.bg }}>
+      <div
+        className={`flex-1 overflow-y-auto p-5 space-y-5 ${
+          tour?.isArmed('money-panel') ? 'tour-armed relative z-[55] pointer-events-auto' : ''
+        }`}
+        data-tour-target="money-panel"
+        style={{ background: colors.bg }}
+      >
         <div className="flex flex-wrap gap-2">
           {MONEY_RANGE_CHIPS.map((chip) => {
             const active = chip.key === range
@@ -172,8 +182,15 @@ export default function MoneyOverview() {
               <button
                 key={chip.key}
                 type="button"
-                onClick={() => setRange(chip.key)}
-                className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors"
+                data-tour-target={chip.key === 'this_month' ? 'money-range' : undefined}
+                onClick={() => {
+                  setRange(chip.key)
+                  if (tour?.active && tour.stop.id === 'money') {
+                    toast(`Filtered by ${chip.label}`)
+                    tour.completeStop('money')
+                  }
+                }}
+                className="text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors cursor-pointer"
                 style={{
                   background: active ? colors.green : '#fff',
                   color: active ? '#fff' : colors.text,
@@ -189,7 +206,14 @@ export default function MoneyOverview() {
         <div className="grid grid-cols-4 gap-3">
           <button
             type="button"
-            onClick={() => setPage('invoices')}
+            onClick={() => {
+              if (tour?.active && tour.stop.id === 'money') {
+                toast('Revenue breakdown inspected')
+                tour.completeStop('money')
+                return
+              }
+              setPage('invoices')
+            }}
             className="bg-white rounded-xl p-4 border text-left transition-colors hover:border-green-200"
             style={{ borderColor: colors.border }}
           >
@@ -213,7 +237,14 @@ export default function MoneyOverview() {
 
           <button
             type="button"
-            onClick={() => openReceipts('expenses')}
+            onClick={() => {
+              if (tour?.active && tour.stop.id === 'money') {
+                toast('Expenses breakdown inspected')
+                tour.completeStop('money')
+                return
+              }
+              openReceipts('expenses')
+            }}
             className="bg-white rounded-xl p-4 border text-left transition-colors hover:border-green-200"
             style={{ borderColor: colors.border }}
           >
@@ -235,7 +266,16 @@ export default function MoneyOverview() {
             </p>
           </button>
 
-          <div className="bg-white rounded-xl p-4 border" style={{ borderColor: colors.border }}>
+          <div
+            className="bg-white rounded-xl p-4 border cursor-pointer"
+            style={{ borderColor: colors.border }}
+            onClick={() => {
+              if (tour?.active && tour.stop.id === 'money') {
+                toast('Net profit inspected')
+                tour.completeStop('money')
+              }
+            }}
+          >
             <div className="flex justify-between items-start">
               <div
                 className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
@@ -262,7 +302,14 @@ export default function MoneyOverview() {
 
           <button
             type="button"
-            onClick={() => setPage('invoices')}
+            onClick={() => {
+              if (tour?.active && tour.stop.id === 'money') {
+                toast('Collectibles inspected')
+                tour.completeStop('money')
+                return
+              }
+              setPage('invoices')
+            }}
             className="rounded-xl p-4 border text-left transition-colors"
             style={{
               background: arClear ? colors.greenSoft : '#FFFBEB',

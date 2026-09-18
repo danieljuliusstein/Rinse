@@ -1,15 +1,17 @@
 import { useState, useCallback } from "react";
 import { Routes, Route } from "react-router";
-import { SECTIONS, scrollToSection } from "./shared/scroll";
 import { DemoModal } from "./layout/DemoModal";
 import { HomePage } from "./pages/HomePage";
 import { FeaturesPage } from "./pages/FeaturesPage";
+import { DESK_URL } from "./shared/urls";
 
 export default function App() {
   const [demoOpen, setDemoOpen] = useState(false);
 
   const handleStartTrial = useCallback(() => {
-    scrollToSection(SECTIONS.cta);
+    if (DESK_URL) {
+      window.location.assign(DESK_URL);
+    }
   }, []);
 
   const handleBookDemo = useCallback(() => {

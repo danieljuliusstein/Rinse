@@ -1,5 +1,5 @@
+import { Platform } from 'react-native'
 import * as WebBrowser from 'expo-web-browser'
-import * as AuthSession from 'expo-auth-session'
 import { ClientResponseError } from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import { getAppApiUrl, getPocketBase } from './pocketbase'
@@ -11,9 +11,9 @@ import { clearOrgSubscriptionCache } from './subscription-fetch'
 
 WebBrowser.maybeCompleteAuthSession()
 
-const OAUTH_REDIRECT_PATH = 'oauth/callback'
-
 export type OAuthProvider = 'google' | 'apple'
+
+const OAUTH_PROVIDER_LABEL: Record<OAuthProvider, string> = { google: 'Google', apple: 'Apple' }
 
 export class SignOutBlockedError extends Error {
   readonly pendingCount: number
@@ -25,8 +25,73 @@ export class SignOutBlockedError extends Error {
   }
 }
 
-export function oauthRedirectUri(): string {
-  return AuthSession.makeRedirectUri({ scheme: 'rinse', path: OAUTH_REDIRECT_PATH })
+function oauthUserMessage(provider: OAuthProvider, err: unknown): string {
+  const label = OAUTH_PROVIDER_LABEL[provider]
+  if (isOAuthCancelled(err)) return 'OAuth sign-in was cancelled'
+
+  const raw = err instanceof Error ? err.message : ''
+  if (/Missing or invalid provider/i.test(raw)) {
+    return `${label} sign-in isn't set up yet. Configure it in the PocketBase admin dashboard first.`
+  }
+  if (/realtime connection interrupted/i.test(raw)) {
+    return `${label} sign-in lost connection. Close any leftover auth tabs, then try again.`
+  }
+  if (raw.includes('Failed to fetch OAuth2 token')) {
+    if (provider === 'apple') {
+      return (
+        'Apple rejected the login token. In PocketBase → users → OAuth2 → Apple, use Generate secret with Team ID / Key ID / .p8 (Client Secret must be the JWT, not the .p8). Return URL: https://detailing-pb.fly.dev/api/oauth2-redirect.'
+      )
+    }
+    return (
+      'Google rejected the login token. In PocketBase → users → OAuth2 → Google, re-paste the Client Secret for the Web client whose redirect URI is https://detailing-pb.fly.dev/api/oauth2-redirect.'
+    )
+  }
+  return raw || `Could not sign in with ${label}.`
+}
+
+export function isOAuthCancelled(err: unknown): boolean {
+  return (
+    (err instanceof ClientResponseError && err.isAbort) ||
+    (err instanceof Error && /abort|cancel|manually cancelled/i.test(err.message))
+  )
+}
+
+/** Open provider auth UI; `onDismiss` runs if the user closes it before auth finishes. */
+function openOAuthUrl(url: string, onDismiss: () => void): { close: () => void } {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const popup = window.open(url, 'rinse_oauth', 'width=520,height=720')
+    if (!popup) {
+      window.location.assign(url)
+      return { close: () => undefined }
+    }
+    const timer = window.setInterval(() => {
+      if (popup.closed) {
+        window.clearInterval(timer)
+        onDismiss()
+      }
+    }, 300)
+    return {
+      close: () => {
+        window.clearInterval(timer)
+        try {
+          popup.close()
+        } catch {
+          /* ignore */
+        }
+      },
+    }
+  }
+
+  let dismissed = false
+  void WebBrowser.openBrowserAsync(url).then(() => {
+    if (!dismissed) onDismiss()
+  })
+  return {
+    close: () => {
+      dismissed = true
+      void WebBrowser.dismissBrowser()
+    },
+  }
 }
 
 function isDefinitiveAuthFailure(err: unknown): boolean {
@@ -174,7 +239,7 @@ export async function signUpWithEmail(input: {
   password: string
   businessName: string
 }): Promise<void> {
-  const apiUrl = getAppApiUrl().replace(/\/$/, '')
+  const apiUrl = getAuthApiBase()
   if (!apiUrl) throw new Error('EXPO_PUBLIC_APP_API_URL is not configured')
 
   const res = await fetch(`${apiUrl}/api/auth/signup`, {
@@ -227,46 +292,75 @@ function formatLoginError(err: unknown): string {
 
 export async function signInWithOAuth(provider: OAuthProvider): Promise<void> {
   const pb = getPocketBase()
-  const redirectUrl = oauthRedirectUri()
+  const label = OAUTH_PROVIDER_LABEL[provider]
 
-  const methods = await pb.collection('users').listAuthMethods()
-  const providerInfo = methods.oauth2?.providers?.find((p) => p.name === provider)
-  if (!providerInfo?.authURL || !providerInfo.codeVerifier) {
-    throw new Error(`${provider} sign-in is not available`)
+  // PocketBase all-in-one OAuth2 (redirect https://detailing-pb.fly.dev/api/oauth2-redirect).
+  // Don't preflight listAuthMethods — authWithOAuth2 already fetches it once.
+  // Settle our own promise on popup dismiss (cancelRequest alone can hang).
+  const requestKey = `oauth2-${provider}`
+  let browser: { close: () => void } | null = null
+  type Outcome = 'pending' | 'done'
+  let outcome: Outcome = 'pending'
+
+  try {
+    const authData = await new Promise<{ token?: string }>((resolve, reject) => {
+      const finishCancel = () => {
+        if (outcome !== 'pending') return
+        outcome = 'done'
+        try {
+          pb.cancelRequest(requestKey)
+        } catch {
+          /* ignore */
+        }
+        reject(new Error('OAuth sign-in was cancelled'))
+      }
+
+      void pb
+        .collection('users')
+        .authWithOAuth2({
+          provider,
+          requestKey,
+          urlCallback: (url) => {
+            browser = openOAuthUrl(url, finishCancel)
+          },
+        })
+        .then((data) => {
+          if (outcome !== 'pending') return
+          outcome = 'done'
+          // Close auth UI immediately so the app doesn't wait on the leftover success page.
+          browser?.close()
+          resolve(data)
+        })
+        .catch((err: unknown) => {
+          if (outcome !== 'pending') return
+          outcome = 'done'
+          browser?.close()
+          reject(err)
+        })
+    })
+
+    if (!authData?.token || !pb.authStore.record) {
+      throw new Error(`Could not sign in with ${label}.`)
+    }
+    await saveAuthFromStore()
+  } catch (err) {
+    outcome = 'done'
+    browser?.close()
+    if (isOAuthCancelled(err)) {
+      throw new Error('OAuth sign-in was cancelled')
+    }
+    console.error(`[oauth:${provider}]`, err)
+    throw new Error(oauthUserMessage(provider, err))
   }
 
-  await authStore.storeOAuthPkce(providerInfo.codeVerifier, providerInfo.state)
-
-  const browserResult = await WebBrowser.openAuthSessionAsync(providerInfo.authURL, redirectUrl)
-  if (browserResult.type !== 'success' || !browserResult.url) {
-    throw new Error('OAuth sign-in was cancelled')
-  }
-
-  const parsed = new URL(browserResult.url)
-  const code = parsed.searchParams.get('code')
-  const state = parsed.searchParams.get('state')
-  if (!code) {
-    throw new Error('OAuth callback missing code')
-  }
-
-  const codeVerifier = await authStore.consumeOAuthPkce(state)
-  if (!codeVerifier) {
-    throw new Error('OAuth sign-in interrupted — try again')
-  }
-
-  const authData = await pb.collection('users').authWithOAuth2Code(
-    provider,
-    code,
-    codeVerifier,
-    redirectUrl
-  )
-
-  if (!authData?.token) {
-    throw new Error('OAuth sign-in failed')
-  }
-
-  await saveAuthFromStore()
   await ensureOAuthProvisioned()
+}
+
+/** Prefer direct API host — skip Metro /api-proxy hop (CORS is enabled on auth routes). */
+function getAuthApiBase(): string {
+  const configured = getAppApiUrl().replace(/\/$/, '')
+  if (configured.includes('/api-proxy')) return 'https://app.rinsehq.com'
+  return configured || 'https://app.rinsehq.com'
 }
 
 async function ensureOAuthProvisioned(): Promise<void> {
@@ -276,7 +370,7 @@ async function ensureOAuthProvisioned(): Promise<void> {
   const record = pb.authStore.record as { organization_id?: string } | null
   if (record?.organization_id) return
 
-  const apiUrl = getAppApiUrl()
+  const apiUrl = getAuthApiBase()
   const token = pb.authStore.token
   if (!apiUrl || !token) return
 

@@ -52,6 +52,19 @@ export function markActivityOutbound(id: string): void {
   patchActivityMeta(id, { outbound: true })
 }
 
+export function clearTourActivityMeta(): void {
+  const isTourId = (id: string) => id.startsWith('tour-') || id.startsWith('dummy-') || id.startsWith('temp-')
+  const all = readAll()
+  let changed = false
+  for (const k of Object.keys(all)) {
+    if (isTourId(k)) {
+      delete all[k]
+      changed = true
+    }
+  }
+  if (changed) writeAll(all)
+}
+
 /** Sent folder: explicit outbound flag, direction field, or legacy campaign-send subject prefix. */
 export function isOutboundEmailActivity(a: {
   id: string

@@ -10,15 +10,20 @@ import { assertOrgAccess, requireUser } from '@/lib/server/route-guard'
 import { getAppBaseUrl, getRequestAppBaseUrl, resolveClientOrgId } from '@/lib/server/portal-tokens'
 import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 import { portalSendBodySchema } from '@/lib/validation/api-schemas'
+import { deskCorsOptions, withDeskCors } from '@/lib/server/desk-cors'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
+export async function OPTIONS(request: Request) {
+  return deskCorsOptions(request)
+}
+
 export async function POST(request: Request) {
   const auth = await requireUser(request)
-  if (auth instanceof Response) return auth
+  if (auth instanceof Response) return withDeskCors(auth, request)
 
   const parsed = await parseJsonBody(request, portalSendBodySchema)
-  if (parsed instanceof NextResponse) return parsed
+  if (parsed instanceof NextResponse) return withDeskCors(parsed, request)
 
   const { to, clientName, businessName, portalUrl, subject, message, organizationId, clientId } =
     parsed.data
@@ -35,13 +40,13 @@ export async function POST(request: Request) {
     organizationId: orgId,
     ...(clientId ? { clientId } : {}),
   })
-  if (denied) return denied
+  if (denied) return withDeskCors(denied, request)
 
   const premiumDenied = await requirePremiumSubscription(auth.pb, orgId)
-  if (premiumDenied) return premiumDenied
+  if (premiumDenied) return withDeskCors(premiumDenied, request)
 
   if (!resend) {
-    return NextResponse.json({ error: 'Email not configured' }, { status: 503 })
+    return withDeskCors(NextResponse.json({ error: 'Email not configured' }, { status: 503 }), request)
   }
 
   const requestBase = await getRequestAppBaseUrl()
@@ -51,7 +56,10 @@ export async function POST(request: Request) {
   ])
   const safePortalHref = validatePortalEmailHref(portalUrl, [...allowedOrigins])
   if (!safePortalHref) {
-    return NextResponse.json({ error: 'Invalid portal URL' }, { status: 400 })
+    return withDeskCors(
+      NextResponse.json({ error: 'Invalid portal URL' }, { status: 400 }),
+      request,
+    )
   }
 
   const safeClientName = escapeHtml(clientName ?? 'there')
@@ -79,14 +87,20 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return withDeskCors(
+        NextResponse.json({ error: error.message }, { status: 500 }),
+        request,
+      )
     }
 
-    return NextResponse.json({ ok: true })
+    return withDeskCors(NextResponse.json({ ok: true }), request)
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Send failed' },
-      { status: 500 }
+    return withDeskCors(
+      NextResponse.json(
+        { error: e instanceof Error ? e.message : 'Send failed' },
+        { status: 500 },
+      ),
+      request,
     )
   }
 }

@@ -7,7 +7,7 @@ import { useUi } from '@/providers/UiProvider'
 import * as api from '@/lib/api'
 import { getJobPhotos } from '@/lib/job-photos-api'
 import { jobHasBeforeAndAfter, transformationPdfMissingMessage } from '@/lib/job-photos'
-import { money } from '@/lib/metrics'
+import { money, todayISO } from '@/lib/metrics'
 import {
   AGING_FILTER_BUCKETS,
   AGING_LABELS,
@@ -26,10 +26,21 @@ import {
   buildInvoiceUpdatePatch,
   type InvoiceEditValues,
 } from '@/lib/invoice-edit'
+import {
+  copyTextToClipboard,
+  createPortalLink,
+  downloadInvoicePdf,
+  isValidContactEmail,
+  sendDocumentLink,
+  shareErrorMessage,
+} from '@/lib/document-share'
+import { getCachedBusinessName } from '@/lib/business-brand'
 import type { DeskInvoice } from '@/lib/types'
 import { EmptyInvoices } from '@/components/invoices/EmptyInvoices'
 import { InvoiceEditModal } from '@/components/invoices/InvoiceEditModal'
 import { InvoiceRow } from '@/components/invoices/InvoiceRow'
+import { useOptionalTour } from '@/components/tour/tour-provider'
+import { useCreateActions } from '@/hooks/useCreateActions'
 
 function monthKey(inv: DeskInvoice): string {
   if (inv.status === 'draft' && !inv.sent_at) return 'Drafts'
@@ -62,9 +73,11 @@ function groupByMonth(list: DeskInvoice[]) {
 }
 
 export default function InvoicesPage() {
-  const { invoices, clients, jobs, setInvoices } = useData()
+  const { invoices, clients, jobs, setInvoices, setJobs, setClients } = useData()
   const { focusInvoiceId, clearFocusInvoice, setPage } = useDeskNav()
-  const { toast, alert } = useUi()
+  const { toast, alert, promptForm } = useUi()
+  const tour = useOptionalTour()
+  const { createEvent } = useCreateActions()
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<InvoiceFilterKey>('open')
@@ -72,8 +85,10 @@ export default function InvoicesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editing, setEditing] = useState<DeskInvoice | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
 
   const clientMap = useMemo(() => new Map(clients.map((c) => [c.id, c.name])), [clients])
+  const clientById = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients])
   const jobService = useMemo(() => {
     const map = new Map(jobs.map((j) => [j.id, j.packageName || j.vehicle_type || '']))
     return (jobId: string) => map.get(jobId) || undefined
@@ -147,6 +162,143 @@ export default function InvoicesPage() {
     clearFocusInvoice()
   }, [focusInvoiceId, clearFocusInvoice])
 
+  // Tour: ensure a draft exists (create from latest job), then expand for Mark sent.
+  useEffect(() => {
+    if (!tour?.active || tour.stop.id !== 'invoices') return
+    const draft = invoices.find((i) => i.status === 'draft')
+    if (draft) {
+      setFilter('all')
+      setAgingFilter(null)
+      setExpandedId(draft.id)
+      return
+    }
+    const invoiced = new Set(invoices.map((i) => i.job_id).filter(Boolean))
+    const candidate =
+      jobs.find((j) => j.status !== 'cancelled' && !invoiced.has(j.id)) ??
+      jobs.find((j) => j.status !== 'cancelled')
+    if (!candidate) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const inv = await api.ensureDraftInvoiceForJob(candidate.id, invoices)
+        if (cancelled) return
+        setInvoices((prev) => (prev.some((i) => i.id === inv.id) ? prev : [inv, ...prev]))
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === candidate.id ? { ...j, invoice_id: inv.id, status: 'invoiced' as const } : j,
+          ),
+        )
+        setFilter('all')
+        setAgingFilter(null)
+        setExpandedId(inv.id)
+      } catch {
+        /* user can tap Create invoice */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [tour?.active, tour?.stop.id, invoices, jobs, setInvoices, setJobs])
+
+  const jobsWithoutInvoice = useMemo(() => {
+    const invoiced = new Set(invoices.map((i) => i.job_id).filter(Boolean))
+    return jobs.filter((j) => j.status !== 'cancelled' && !invoiced.has(j.id))
+  }, [jobs, invoices])
+
+  const canCreateInvoice = jobsWithoutInvoice.length > 0
+
+  async function createDraftForJobId(jobId: string, jobHint?: { client_id?: string; revenue?: number }) {
+    setCreating(true)
+    if (tour?.active || jobId.startsWith('tour-') || jobId.startsWith('dummy-') || jobId.startsWith('temp-')) {
+      const candidateJob = jobHint ?? jobs.find((j) => j.id === jobId)
+      const inv: DeskInvoice = {
+        id: `tour-inv-${Date.now()}`,
+        invoice_number: `INV-${1000 + invoices.length + 1}`,
+        job_id: jobId,
+        client_id: candidateJob?.client_id || 'tour-client-marcus',
+        subtotal: candidateJob?.revenue || 250,
+        tip: 0,
+        status: 'draft',
+        total: candidateJob?.revenue || 250,
+        amount_paid: 0,
+        balance_due: candidateJob?.revenue || 250,
+        created: todayISO(),
+      }
+      setInvoices((prev) => (prev.some((i) => i.id === inv.id) ? prev : [inv, ...prev]))
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === jobId ? { ...j, invoice_id: inv.id, status: 'invoiced' as const } : j,
+        ),
+      )
+      setFilter('all')
+      setAgingFilter(null)
+      setExpandedId(inv.id)
+      setCreating(false)
+      toast('Draft invoice created')
+      return
+    }
+    try {
+      const inv = await api.createInvoiceForJob(jobId)
+      setInvoices((prev) => (prev.some((i) => i.id === inv.id) ? prev : [inv, ...prev]))
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === jobId ? { ...j, invoice_id: inv.id, status: 'invoiced' as const } : j,
+        ),
+      )
+      setFilter('all')
+      setAgingFilter(null)
+      setExpandedId(inv.id)
+      toast('Draft invoice created')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not create invoice', 'Create failed')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  async function onCreateInvoice() {
+    if (creating) return
+    const candidates = jobsWithoutInvoice
+    if (candidates.length === 0) {
+      await onScheduleJobForInvoice()
+      return
+    }
+    let jobId = candidates[0]!.id
+    if (candidates.length > 1) {
+      const values = await promptForm({
+        title: 'Create invoice',
+        submitLabel: 'Create draft',
+        fields: [
+          {
+            name: 'job_id',
+            label: 'Job',
+            type: 'select',
+            required: true,
+            defaultValue: candidates[0]!.id,
+            options: candidates.map((j) => ({
+              value: j.id,
+              label: `${j.date} · ${clientMap.get(j.client_id) ?? 'Client'} · ${money(j.revenue)}`,
+            })),
+          },
+        ],
+      })
+      if (!values?.job_id) return
+      jobId = values.job_id
+    }
+    await createDraftForJobId(jobId)
+  }
+
+  async function onScheduleJobForInvoice() {
+    if (creating) return
+    const job = await createEvent({
+      navigate: false,
+      formTitle: 'Schedule job to invoice',
+      submitLabel: 'Create job & invoice',
+    })
+    if (!job) return
+    await createDraftForJobId(job.id, job)
+  }
+
   const patchLocal = useCallback(
     (updated: DeskInvoice) => {
       setInvoices((prev) => prev.map((i) => (i.id === updated.id ? updated : i)))
@@ -157,7 +309,19 @@ export default function InvoicesPage() {
   async function onMarkSent(inv: DeskInvoice) {
     setBusyId(inv.id)
     try {
-      if (inv.job_id) {
+      if (inv.id.startsWith('tour-') || inv.id.startsWith('dummy-') || tour?.active) {
+        const updated: DeskInvoice = {
+          ...inv,
+          status: 'sent',
+          sent_at: todayISO(),
+        }
+        patchLocal(updated)
+        toast('Marked sent')
+        tour?.notifyCreated('invoice')
+        return
+      }
+
+      if (inv.job_id && !tour?.skipInvoicePhotoGate) {
         const photos = await getJobPhotos(inv.job_id)
         if (!jobHasBeforeAndAfter(photos)) {
           alert(
@@ -171,6 +335,7 @@ export default function InvoicesPage() {
       const updated = await api.markInvoiceSent(inv.id)
       patchLocal(updated)
       toast('Marked sent')
+      tour?.notifyCreated('invoice')
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not mark sent', 'Mark sent failed')
     } finally {
@@ -181,6 +346,19 @@ export default function InvoicesPage() {
   async function onMarkPaid(inv: DeskInvoice) {
     setBusyId(inv.id)
     try {
+      if (inv.id.startsWith('tour-') || inv.id.startsWith('dummy-') || tour?.active) {
+        const updated: DeskInvoice = {
+          ...inv,
+          status: 'paid',
+          paid_at: todayISO(),
+          amount_paid: inv.total,
+          balance_due: 0,
+        }
+        patchLocal(updated)
+        toast('Marked paid')
+        return
+      }
+
       const updated = await api.markInvoicePaid(inv.id, 'cash')
       patchLocal(updated)
       toast('Marked paid')
@@ -195,6 +373,24 @@ export default function InvoicesPage() {
     if (!editing || busyId) return
     setBusyId(editing.id)
     try {
+      if (editing.id.startsWith('tour-') || editing.id.startsWith('dummy-') || tour?.active) {
+        const patch = buildInvoiceUpdatePatch(editing, values)
+        const updated: DeskInvoice = {
+          ...editing,
+          ...patch,
+          paid_at: patch.paid_at || undefined,
+          discount_amount: patch.discount_amount,
+          tax_rate: patch.tax_rate,
+          tax_amount: patch.tax_amount,
+          po_number: patch.po_number,
+          extra_line_items: patch.extra_line_items,
+        }
+        patchLocal(updated)
+        setEditing(null)
+        toast('Invoice updated')
+        return
+      }
+
       const patch = buildInvoiceUpdatePatch(editing, values)
       const updated = await api.updateInvoice(editing.id, patch)
       patchLocal(updated)
@@ -202,6 +398,131 @@ export default function InvoicesPage() {
       toast('Invoice updated')
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not update invoice', 'Update failed')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  function isSynthetic(id: string) {
+    return id.startsWith('tour-') || id.startsWith('dummy-') || Boolean(tour?.active)
+  }
+
+  async function ensureContactEmail(clientId: string, current?: string): Promise<string | null> {
+    const existing = current?.trim()
+    if (existing && isValidContactEmail(existing)) return existing
+
+    const values = await promptForm({
+      title: existing ? 'Fix contact email' : 'Add contact email',
+      submitLabel: 'Save & continue',
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+          defaultValue: existing || '',
+          placeholder: 'client@email.com',
+        },
+      ],
+    })
+    if (!values) return null
+    const next = values.email?.trim() || ''
+    if (!isValidContactEmail(next)) {
+      alert('Enter a valid email address (name@domain.com).', 'Invalid email')
+      return null
+    }
+    const updated = await api.updateClient(clientId, { email: next })
+    setClients((prev) => prev.map((c) => (c.id === clientId ? updated : c)))
+    return next
+  }
+
+  async function onOpenPdf(inv: DeskInvoice) {
+    if (isSynthetic(inv.id)) {
+      alert('PDF export runs against live invoices outside the tour.', 'Tour mode')
+      return
+    }
+    setBusyId(inv.id)
+    try {
+      let portalUrl: string | undefined
+      try {
+        const link = await createPortalLink({
+          clientId: inv.client_id,
+          scope: 'invoice',
+          jobId: inv.job_id,
+        })
+        portalUrl = link.url
+      } catch {
+        /* portal URL is optional on the PDF */
+      }
+      await downloadInvoicePdf(inv, portalUrl)
+      toast('PDF downloaded')
+    } catch (err) {
+      alert(shareErrorMessage(err, 'Could not export PDF'), 'PDF failed')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function onCopyPortal(inv: DeskInvoice) {
+    if (isSynthetic(inv.id)) {
+      alert('Portal links need a live invoice outside the tour.', 'Tour mode')
+      return
+    }
+    setBusyId(inv.id)
+    try {
+      const link = await createPortalLink({
+        clientId: inv.client_id,
+        scope: 'invoice',
+        jobId: inv.job_id,
+      })
+      await copyTextToClipboard(link.url)
+      toast('Portal link copied')
+    } catch (err) {
+      alert(shareErrorMessage(err, 'Could not create link'), 'Copy link failed')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function onEmail(inv: DeskInvoice) {
+    if (isSynthetic(inv.id)) {
+      alert('Email send needs a live invoice outside the tour.', 'Tour mode')
+      return
+    }
+    const client = clientById.get(inv.client_id)
+    let to: string
+    try {
+      const resolved = await ensureContactEmail(inv.client_id, client?.email)
+      if (!resolved) return
+      to = resolved
+    } catch (err) {
+      alert(shareErrorMessage(err, 'Could not save email'), 'Email failed')
+      return
+    }
+
+    setBusyId(inv.id)
+    try {
+      const link = await createPortalLink({
+        clientId: inv.client_id,
+        scope: 'invoice',
+        jobId: inv.job_id,
+      })
+      const businessName = getCachedBusinessName() || 'Rinse'
+      const clientName = clientById.get(inv.client_id)?.name || client?.name || 'there'
+      const subject = `Invoice ${inv.invoice_number} from ${businessName}`
+      const message = `Hi ${clientName},\n\nHere is your invoice ${inv.invoice_number}.`
+      const via = await sendDocumentLink({
+        to,
+        clientName,
+        businessName,
+        portalUrl: link.url,
+        subject,
+        message,
+        clientId: inv.client_id,
+      })
+      toast(via === 'api' ? 'Email sent' : 'Opened mail app')
+    } catch (err) {
+      alert(shareErrorMessage(err, 'Could not email link'), 'Email failed')
     } finally {
       setBusyId(null)
     }
@@ -221,16 +542,95 @@ export default function InvoicesPage() {
 
   if (invoices.length === 0) {
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-ink-100">
-        <Header title="Invoices" subtitle="0 shown" />
-        <EmptyInvoices />
+      <div
+        className={`flex-1 flex flex-col overflow-hidden bg-ink-100 ${
+          tour?.isArmed('invoices-panel') || tour?.isArmed('invoices-create')
+            ? 'tour-armed relative z-[55] pointer-events-auto'
+            : ''
+        }`}
+        data-tour-target="invoices-panel"
+      >
+        <Header
+          title="Invoices"
+          subtitle="0 shown"
+          actions={
+            canCreateInvoice ? (
+              <button
+                type="button"
+                data-tour-target="invoices-create"
+                disabled={creating}
+                onClick={() => void onCreateInvoice()}
+                className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 text-white text-[12.5px] font-semibold hover:bg-brand-600 transition shadow-sm disabled:opacity-60 relative z-[55] pointer-events-auto"
+              >
+                {creating ? 'Creating…' : 'Create invoice'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                data-tour-target="invoices-create"
+                disabled={creating}
+                onClick={() => void onScheduleJobForInvoice()}
+                className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 text-white text-[12.5px] font-semibold hover:bg-brand-600 transition shadow-sm relative z-[55] pointer-events-auto disabled:opacity-60"
+              >
+                {creating ? 'Creating…' : 'Create invoice'}
+              </button>
+            )
+          }
+        />
+        <EmptyInvoices
+          createInvoiceAvailable={canCreateInvoice}
+          creating={creating}
+          onCreateInvoice={() => void onCreateInvoice()}
+          onScheduleJob={() => void onScheduleJobForInvoice()}
+        />
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-ink-100">
-      <Header title="Invoices" subtitle={`${filtered.length} shown`} />
+    <div
+      className={`flex-1 flex flex-col overflow-hidden bg-ink-100 ${
+        tour?.isArmed('invoices-send') || tour?.isArmed('invoices-panel')
+          ? 'tour-armed relative z-[55] pointer-events-auto'
+          : ''
+      }`}
+      data-tour-target="invoices-panel"
+      onClick={() => {
+        if (tour?.active && tour.stop.id === 'invoices') {
+          tour.notifyCreated('invoice')
+        }
+      }}
+    >
+      <Header
+        title="Invoices"
+        subtitle={`${filtered.length} shown`}
+        actions={
+          canCreateInvoice ? (
+            <button
+              type="button"
+              data-tour-target="invoices-create"
+              disabled={creating}
+              onClick={() => void onCreateInvoice()}
+              className={`h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 text-white text-[12.5px] font-semibold hover:bg-brand-600 transition shadow-sm disabled:opacity-60 ${
+                tour?.isArmed('invoices-create')
+                  ? 'tour-armed relative z-[55] pointer-events-auto'
+                  : ''
+              }`}
+            >
+              {creating ? 'Creating…' : 'Create invoice'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={creating}
+              onClick={() => void onScheduleJobForInvoice()}
+              className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 text-white text-[12.5px] font-semibold hover:bg-brand-600 transition shadow-sm disabled:opacity-60"
+            >
+              {creating ? 'Creating…' : 'Create invoice'}
+            </button>
+          )
+        }
+      />
 
       <div className="flex-1 overflow-y-auto thin-scrollbar">
         <div className="max-w-[1180px] mx-auto px-6 py-6">
@@ -433,6 +833,9 @@ export default function InvoicesPage() {
                           onEdit={() => setEditing(inv)}
                           onMarkSent={() => void onMarkSent(inv)}
                           onMarkPaid={() => void onMarkPaid(inv)}
+                          onOpenPdf={() => void onOpenPdf(inv)}
+                          onCopyPortal={() => void onCopyPortal(inv)}
+                          onEmail={() => void onEmail(inv)}
                         />
                       ))}
                     </div>

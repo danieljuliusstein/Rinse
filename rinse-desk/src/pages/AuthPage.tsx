@@ -34,7 +34,7 @@ function AppleIcon() {
   )
 }
 
-export default function AuthPage({ onBack }: { onBack?: () => void }) {
+export default function AuthPage() {
   const { signIn, signUp, signInWithOAuth, backendHealthy } = useAuth()
   const [mode, setMode] = useState<Mode>('signin')
   const [businessName, setBusinessName] = useState('')
@@ -110,16 +110,6 @@ export default function AuthPage({ onBack }: { onBack?: () => void }) {
       />
 
       <div className="relative w-full max-w-md">
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="mb-6 text-xs font-medium text-black/40 hover:text-neutral-900 transition-colors"
-          >
-            ← Back to home
-          </button>
-        )}
-
         <div className="bg-white rounded-2xl border border-black/8 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.15)] p-8 space-y-6">
           <div className="space-y-3">
             <RinseLockup height={28} />

@@ -75,11 +75,26 @@ async function seedOrganizationData(
   })
 
   for (const pkg of DEFAULT_PACKAGES) {
-    await pb.collection('packages').create({ ...pkg, organization_id: orgId })
+    try {
+      await pb.collection('packages').create({
+        name: pkg.name,
+        base_price: pkg.base_price,
+        active: pkg.active,
+        description: pkg.description,
+        duration_minutes: pkg.duration_minutes,
+        organization_id: orgId,
+      })
+    } catch (e) {
+      console.error('[signup] package seed failed', pkg.name, e)
+    }
   }
 
   for (const supply of DEFAULT_SUPPLIES) {
-    await pb.collection('supplies').create({ ...supply, organization_id: orgId })
+    try {
+      await pb.collection('supplies').create({ ...supply, organization_id: orgId })
+    } catch (e) {
+      console.error('[signup] supply seed failed', supply.name, e)
+    }
   }
 }
 

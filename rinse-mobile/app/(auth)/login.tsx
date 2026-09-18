@@ -14,7 +14,7 @@ import { useAuth } from '@/src/providers/AuthProvider'
 import { RinseLockupAnimated } from '@/src/components/onboarding/RinseLogo'
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui'
 import { AppText } from '@/src/components/ui/AppText'
-import { requestPasswordReset } from '@/src/lib/auth'
+import { isOAuthCancelled, requestPasswordReset } from '@/src/lib/auth'
 import { markTourPending } from '@/src/lib/product-tour'
 import { colors, radii, spacing } from '@/src/theme/colors'
 import { fonts } from '@/src/theme/typography'
@@ -101,7 +101,9 @@ export default function LoginScreen() {
     try {
       await signInOAuth(provider)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'OAuth sign-in failed')
+      if (!isOAuthCancelled(e)) {
+        setError(e instanceof Error ? e.message : 'OAuth sign-in failed')
+      }
     } finally {
       setBusy(false)
     }

@@ -20,12 +20,14 @@ import { RecentActivitiesCard } from '@/components/dashboard/RecentActivitiesCar
 import { JobStatusCard } from '@/components/dashboard/JobStatusCard'
 import { ContactTrendCard } from '@/components/dashboard/ContactTrendCard'
 import { getCachedBusinessName, onBusinessUpdated } from '@/lib/business-brand'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 export default function Dashboard() {
   const { clients, jobs, leads, invoices, packages, setPackages, loading: dataLoading } = useData()
   const { setPage, openContact } = useDeskNav()
   const { alert, promptForm, toast } = useUi()
   const { createPackage, createActivity } = useCreateActions()
+  const tour = useOptionalTour()
   const [businessName, setBusinessName] = useState(getCachedBusinessName)
   const [activities, setActivities] = useState<DeskActivity[]>([])
   const [campaigns, setCampaigns] = useState<DeskCampaign[]>([])
@@ -101,6 +103,19 @@ export default function Dashboard() {
       ],
     })
     if (!values?.name) return
+
+    if (tour?.active) {
+      setPackages((prev) =>
+        prev.map((p) =>
+          p.id === pkg.id
+            ? { ...p, name: values.name, base_price: Number(values.base_price) || 0 }
+            : p,
+        ),
+      )
+      toast('Package updated')
+      return
+    }
+
     try {
       const updated = await api.updatePackage(pkg.id, {
         name: values.name,
@@ -116,6 +131,13 @@ export default function Dashboard() {
   async function archivePackage(pkg: DeskPackage) {
     if (pkg.id === 'x') return
     if (!window.confirm(`Archive “${pkg.name}”? It will be hidden from new bookings.`)) return
+
+    if (tour?.active) {
+      setPackages((prev) => prev.map((p) => (p.id === pkg.id ? { ...p, active: false } : p)))
+      toast('Package archived')
+      return
+    }
+
     try {
       const updated = await api.updatePackage(pkg.id, { active: false })
       setPackages((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
@@ -132,9 +154,7 @@ export default function Dashboard() {
     }
   }
 
-  const collectible = invoices.filter(
-    (i) => i.sent_at || i.status === 'sent' || i.status === 'paid' || i.status === 'overdue',
-  )
+  const collectible = invoices.filter((i) => i.status === 'sent')
   const emailStats = useMemo(() => emailOutreachStats(campaigns, activities), [campaigns, activities])
 
   const recentActivities = useMemo(() => {
@@ -143,9 +163,7 @@ export default function Dashboard() {
       .slice(0, 4)
   }, [activities])
 
-  const subtitle = businessName.trim()
-    ? `${businessName.trim()} · sales overview`
-    : 'Sales overview'
+  const subtitle = `${businessName.trim() || 'Sales overview'} · ${clients.length} contacts · ${jobs.length} jobs · ${leads.length} leads`
 
   function contactName(id: string) {
     return clients.find((c) => c.id === id)?.name || 'Contact'
@@ -157,45 +175,66 @@ export default function Dashboard() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
+  const tourCardClick = (navAction?: () => void) => {
+    if (tour?.active && tour.stop.id === 'dashboard') {
+      toast('Metric explored')
+      tour.completeStop('dashboard')
+      return
+    }
+    navAction?.()
+  }
+
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <Header title="Dashboard" subtitle={subtitle} />
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 relative flex flex-col gap-2.5">
+      <div
+        className={`flex-1 min-h-0 overflow-y-auto p-3 relative flex flex-col gap-2.5 ${
+          tour?.isArmed('dashboard-panel') ? 'tour-armed relative z-[55] pointer-events-auto' : ''
+        }`}
+        data-tour-target="dashboard-panel"
+        onClick={() => tourCardClick()}
+      >
         <SoftBlobBackdrop className="pointer-events-none absolute -top-4 right-0 w-[420px] h-[200px] opacity-90" />
         <div className="grid grid-cols-3 grid-rows-4 gap-2.5 relative flex-1 min-h-0 min-w-0 overflow-hidden [&>*]:min-h-0 [&>*]:min-w-0">
-          <NewContactsCard clients={clients} onOpen={() => setPage('contacts')} />
+          <NewContactsCard clients={clients} onOpen={() => tourCardClick(() => setPage('contacts'))} />
 
-          <div className="row-span-2 min-h-0">
+          <div
+            className={`row-span-2 min-h-0 cursor-pointer ${
+              tour?.isArmed('dashboard-revenue') ? 'tour-armed relative z-[55] pointer-events-auto' : ''
+            }`}
+            data-tour-target="dashboard-revenue"
+            onClick={() => tourCardClick()}
+          >
             <RevenueWonCard
               jobs={jobs}
               invoices={invoices}
               invoicesSent={collectible.length}
-              onOpenInvoices={() => setPage('invoices')}
+              onOpenInvoices={() => tourCardClick(() => setPage('invoices'))}
             />
           </div>
 
           <div className="row-span-2 min-h-0">
             <ContactsByLabelCard
               clients={clients}
-              onOpen={() => setPage('contacts')}
-              onOpenLabel={() => setPage('contacts')}
-              onOpenContact={(id) => openContact(id)}
+              onOpen={() => tourCardClick(() => setPage('contacts'))}
+              onOpenLabel={() => tourCardClick(() => setPage('contacts'))}
+              onOpenContact={(id) => tourCardClick(() => openContact(id))}
             />
           </div>
 
           <InvoiceCollectionCard
             invoices={invoices}
-            onOpen={() => setPage('invoices')}
-            onOpenPaid={() => setPage('invoices')}
-            onOpenDueSoon={() => setPage('invoices')}
-            onOpenOverdue={() => setPage('invoices')}
-            onSendReminders={() => setPage('invoices')}
+            onOpen={() => tourCardClick(() => setPage('invoices'))}
+            onOpenPaid={() => tourCardClick(() => setPage('invoices'))}
+            onOpenDueSoon={() => tourCardClick(() => setPage('invoices'))}
+            onOpenOverdue={() => tourCardClick(() => setPage('invoices'))}
+            onSendReminders={() => tourCardClick(() => setPage('invoices'))}
           />
 
           <DealsByPipelineCard
             leads={leads}
-            onOpen={() => setPage('deals')}
-            onOpenStage={() => setPage('deals')}
+            onOpen={() => tourCardClick(() => setPage('deals'))}
+            onOpenStage={() => tourCardClick(() => setPage('deals'))}
           />
 
           <EmailStatsCard
@@ -203,19 +242,28 @@ export default function Dashboard() {
             opened={emailStats.opened}
             clicked={emailStats.clicked}
             campaignCount={emailStats.campaignCount}
-            onOpen={() => setPage('campaigns')}
+            onOpen={() => tourCardClick(() => setPage('campaigns'))}
           />
 
           <PackagesCard
             packages={packages}
-            onEdit={(pkg) => void editPackage(pkg)}
-            onArchive={(pkg) => void archivePackage(pkg)}
-            onCreate={() => void createPackage()}
+            onEdit={(pkg) => {
+              if (tour?.active && tour.stop.id === 'dashboard') tour.completeStop('dashboard')
+              void editPackage(pkg)
+            }}
+            onArchive={(pkg) => {
+              if (tour?.active && tour.stop.id === 'dashboard') tour.completeStop('dashboard')
+              void archivePackage(pkg)
+            }}
+            onCreate={() => {
+              if (tour?.active && tour.stop.id === 'dashboard') tour.completeStop('dashboard')
+              void createPackage()
+            }}
           />
 
           <ContactTrendCard
             clients={clients}
-            onOpen={() => setPage('contacts')}
+            onOpen={() => tourCardClick(() => setPage('contacts'))}
           />
 
           <RecentActivitiesCard
@@ -223,15 +271,18 @@ export default function Dashboard() {
             loading={activitiesLoading}
             contactName={contactName}
             formatWhen={formatActivityWhen}
-            onViewAll={() => setPage('activities')}
-            onNew={() => void onNewActivity()}
-            onOpenActivity={(a) => (a.contact_id ? openContact(a.contact_id) : setPage('activities'))}
+            onViewAll={() => tourCardClick(() => setPage('activities'))}
+            onNew={() => {
+              if (tour?.active && tour.stop.id === 'dashboard') tour.completeStop('dashboard')
+              void onNewActivity()
+            }}
+            onOpenActivity={(a) => tourCardClick(() => (a.contact_id ? openContact(a.contact_id) : setPage('activities')))}
           />
 
           <JobStatusCard
             jobs={jobs}
-            onOpen={() => setPage('calendar')}
-            onOpenStatus={() => setPage('calendar')}
+            onOpen={() => tourCardClick(() => setPage('calendar'))}
+            onOpenStatus={() => tourCardClick(() => setPage('calendar'))}
           />
         </div>
       </div>

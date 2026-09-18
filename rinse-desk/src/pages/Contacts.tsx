@@ -25,6 +25,7 @@ import {
 } from '@/components/contacts/ContactsTable'
 import { EmptyNoContacts, EmptyNoMatches } from '@/components/contacts/EmptyContacts'
 import { AVATAR_TONE_KEYS } from '@/components/contacts/identifierMeta'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 const PAGE_SIZE = 25
 
@@ -33,6 +34,7 @@ export default function Contacts() {
   const { focusContactId, clearFocusContact } = useDeskNav()
   const { alert, toast } = useUi()
   const { createContact } = useCreateActions()
+  const tour = useOptionalTour()
 
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -209,6 +211,30 @@ export default function Contacts() {
         patch.geocoded_at = null
       }
 
+      if (tour?.active || id.startsWith('tour-') || id.startsWith('dummy-')) {
+        const simulated: typeof existing = {
+          ...existing,
+          name: draft.name.trim(),
+          phone: draft.phone.trim(),
+          email: draft.email.trim(),
+          address: draft.address.trim(),
+          notes: draft.notes.trim(),
+          tags,
+          lat: patch.lat ?? existing.lat,
+          lng: patch.lng ?? existing.lng,
+          geocoded_at: patch.geocoded_at ?? existing.geocoded_at,
+        }
+        setClients((prev) =>
+          prev
+            .map((c) => (c.id === id ? simulated : c))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        )
+        toast(pinned ? 'Contact updated · address pinned' : 'Contact updated')
+        setEditingId(null)
+        tour?.completeStop('contacts')
+        return
+      }
+
       const updated = await api.updateClient(id, patch)
       setClients((prev) =>
         prev
@@ -228,6 +254,18 @@ export default function Contacts() {
     if (!window.confirm(`Delete “${name}”? This cannot be undone.`)) return
     setBusy(true)
     try {
+      if (tour?.active || id.startsWith('tour-') || id.startsWith('dummy-')) {
+        setClients((prev) => prev.filter((c) => c.id !== id))
+        setSelected((prev) => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+        if (editingId === id) setEditingId(null)
+        toast('Contact deleted')
+        return
+      }
+
       await api.deleteClient(id)
       setClients((prev) => prev.filter((c) => c.id !== id))
       setSelected((prev) => {
@@ -249,6 +287,14 @@ export default function Contacts() {
     setBusy(true)
     try {
       const ids = [...selected]
+      if (tour?.active) {
+        setClients((prev) =>
+          prev.map((c) => (selected.has(c.id) ? { ...c, notes: '' } : c)),
+        )
+        setSelected(new Set())
+        toast(`Cleared notes on ${ids.length} contact${ids.length === 1 ? '' : 's'}`)
+        return
+      }
       await Promise.all(ids.map((id) => api.updateClient(id, { notes: '' })))
       setClients((prev) =>
         prev.map((c) => (selected.has(c.id) ? { ...c, notes: '' } : c)),
@@ -315,23 +361,43 @@ export default function Contacts() {
               onClear={clearSearchAndFilters}
             />
           ) : (
-            <ContactsTable
-              contacts={paged}
-              selected={selected}
-              setSelected={setSelected}
-              editingId={editingId}
-              setEditingId={setEditingId}
-              groupBy={toolbar.groupBy}
-              businessAddress={businessAddress}
-              busy={busy}
-              totalFiltered={filtered.length}
-              page={safePage}
-              pageCount={pageCount}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPage}
-              onSave={saveEdit}
-              onDelete={deleteContact}
-            />
+            <div
+              className={`flex-1 flex flex-col min-h-0 ${
+                tour?.isArmed('contacts-panel') || tour?.isArmed('contacts-table') || tour?.isArmed('contacts-row')
+                  ? 'tour-armed relative z-[55] pointer-events-auto'
+                  : ''
+              }`}
+              data-tour-target="contacts-panel"
+              onClick={() => {
+                if (tour?.active && tour.stop.id === 'contacts') {
+                  tour.notifyCreated('contact')
+                }
+              }}
+            >
+              <ContactsTable
+                contacts={paged}
+                selected={selected}
+                setSelected={setSelected}
+                editingId={editingId}
+                setEditingId={setEditingId}
+                groupBy={toolbar.groupBy}
+                businessAddress={businessAddress}
+                busy={busy}
+                totalFiltered={filtered.length}
+                page={safePage}
+                pageCount={pageCount}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+                onSave={saveEdit}
+                onDelete={deleteContact}
+                onInspectContact={(c) => {
+                  if (tour?.active && tour.stop.id === 'contacts') {
+                    toast(`Inspected client: ${c.name}`)
+                    tour.notifyCreated('contact')
+                  }
+                }}
+              />
+            </div>
           )}
         </>
       )}

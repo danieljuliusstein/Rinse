@@ -52,4 +52,12 @@ export const orgStore = {
       readAll(collection).filter((r) => r.id !== id),
     )
   },
+  purgeTourData(collection: string): void {
+    writeAll(
+      collection,
+      readAll(collection).filter(
+        (r) => !r.id.startsWith('tour-') && !r.id.startsWith('dummy-') && !r.id.startsWith('temp-'),
+      ),
+    )
+  },
 }

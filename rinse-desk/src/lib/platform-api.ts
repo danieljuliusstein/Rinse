@@ -5,6 +5,8 @@ import { formatPbError, orgFilter, requireOrganizationId } from './org'
 import { newId, orgStore } from './orgStore'
 import { mergeChatThreadMeta, patchChatThreadMeta } from './chat-thread-meta'
 import { markActivityOutbound } from './activity-meta'
+import { getTourDummyActivities, getTourDummyCampaigns } from '@/data/tour/tour-dummy-data'
+import { isTourSessionActive } from './onboarding-tour'
 import {
   ensureWorkflow,
   evaluateCondition,
@@ -182,8 +184,18 @@ function mapActivity(r: Record<string, unknown>): DeskActivity {
 
 export async function listActivities(): Promise<DeskActivity[]> {
   const remote = await tryPbList('activities')
-  if (remote) return remote.map(mapActivity)
-  return orgStore.list<DeskActivity>('activities')
+  const base = remote ? remote.map(mapActivity) : orgStore.list<DeskActivity>('activities')
+  if (isTourSessionActive()) {
+    const dummy = getTourDummyActivities()
+    const stored = orgStore.list<DeskActivity>('activities').filter((a) => a.id.startsWith('tour-'))
+    const byId = new Map(dummy.map((d) => [d.id, d]))
+    for (const s of stored) {
+      byId.set(s.id, s)
+    }
+    const nonTourBase = base.filter((a) => !a.id.startsWith('tour-'))
+    return [...Array.from(byId.values()), ...nonTourBase]
+  }
+  return base
 }
 
 export async function listActivitiesForContact(contactId: string): Promise<DeskActivity[]> {
@@ -201,6 +213,23 @@ export async function createActivity(input: {
   direction?: 'in' | 'out'
 }): Promise<DeskActivity> {
   const occurred_at = input.occurred_at ?? new Date().toISOString()
+  if (isTourSessionActive() || input.contact_id.startsWith('tour-')) {
+    const created = orgStore.create<DeskActivity>('activities', {
+      id: `tour-${newId()}`,
+      contact_id: input.contact_id,
+      deal_id: input.deal_id,
+      type: input.type,
+      subject: input.subject,
+      body: input.body,
+      occurred_at,
+      direction: input.direction,
+      created: new Date().toISOString(),
+    })
+    if (input.direction === 'out' || (input.type === 'email' && input.direction !== 'in')) {
+      markActivityOutbound(created.id)
+    }
+    return created
+  }
   const body = {
     contact_id: input.contact_id,
     deal_id: input.deal_id || '',
@@ -242,6 +271,30 @@ export async function updateActivity(
     direction?: 'in' | 'out'
   },
 ): Promise<DeskActivity> {
+  const localPatch: Partial<DeskActivity> = {}
+  if (patch.contact_id !== undefined) localPatch.contact_id = patch.contact_id
+  if (patch.deal_id !== undefined) localPatch.deal_id = patch.deal_id || undefined
+  if (patch.type !== undefined) localPatch.type = patch.type
+  if (patch.subject !== undefined) localPatch.subject = patch.subject
+  if (patch.body !== undefined) localPatch.body = patch.body
+  if (patch.occurred_at !== undefined) localPatch.occurred_at = patch.occurred_at
+  if (patch.direction !== undefined) localPatch.direction = patch.direction
+
+  if (id.startsWith('tour-') || id.startsWith('dummy-') || isTourSessionActive()) {
+    const existing = orgStore.get<DeskActivity>('activities', id)
+    if (!existing) {
+      const dummy = getTourDummyActivities().find((a) => a.id === id)
+      if (dummy) {
+        const created = orgStore.create<DeskActivity>('activities', { ...dummy, ...localPatch })
+        if (patch.direction === 'out') markActivityOutbound(id)
+        return created
+      }
+    }
+    const updated = orgStore.update<DeskActivity>('activities', id, localPatch)
+    if (patch.direction === 'out') markActivityOutbound(id)
+    return updated
+  }
+
   const body: Record<string, unknown> = {}
   if (patch.contact_id !== undefined) body.contact_id = patch.contact_id
   if (patch.deal_id !== undefined) body.deal_id = patch.deal_id || ''
@@ -256,20 +309,16 @@ export async function updateActivity(
     if (patch.direction === 'out') markActivityOutbound(id)
     return updated
   }
-  const localPatch: Partial<DeskActivity> = {}
-  if (patch.contact_id !== undefined) localPatch.contact_id = patch.contact_id
-  if (patch.deal_id !== undefined) localPatch.deal_id = patch.deal_id || undefined
-  if (patch.type !== undefined) localPatch.type = patch.type
-  if (patch.subject !== undefined) localPatch.subject = patch.subject
-  if (patch.body !== undefined) localPatch.body = patch.body
-  if (patch.occurred_at !== undefined) localPatch.occurred_at = patch.occurred_at
-  if (patch.direction !== undefined) localPatch.direction = patch.direction
   const updated = orgStore.update<DeskActivity>('activities', id, localPatch)
   if (patch.direction === 'out') markActivityOutbound(id)
   return updated
 }
 
 export async function deleteActivity(id: string): Promise<void> {
+  if (id.startsWith('tour-') || id.startsWith('dummy-')) {
+    orgStore.remove('activities', id)
+    return
+  }
   const ok = await tryPbDelete('activities', id)
   if (!ok) orgStore.remove('activities', id)
 }
@@ -301,8 +350,18 @@ function mapCampaign(r: Record<string, unknown>): DeskCampaign {
 
 export async function listCampaigns(): Promise<DeskCampaign[]> {
   const remote = await tryPbList('campaigns')
-  if (remote) return remote.map(mapCampaign)
-  return orgStore.list<DeskCampaign>('campaigns')
+  const base = remote ? remote.map(mapCampaign) : orgStore.list<DeskCampaign>('campaigns')
+  if (isTourSessionActive()) {
+    const dummy = getTourDummyCampaigns()
+    const stored = orgStore.list<DeskCampaign>('campaigns').filter((c) => c.id.startsWith('tour-'))
+    const byId = new Map(dummy.map((d) => [d.id, d]))
+    for (const s of stored) {
+      byId.set(s.id, s)
+    }
+    const nonTourBase = base.filter((c) => !c.id.startsWith('tour-'))
+    return [...Array.from(byId.values()), ...nonTourBase]
+  }
+  return base
 }
 
 export async function createCampaign(input: {
@@ -324,6 +383,13 @@ export async function createCampaign(input: {
     stats_opened: 0,
     stats_clicked: 0,
   }
+  if (isTourSessionActive()) {
+    return orgStore.create<DeskCampaign>('campaigns', {
+      id: `tour-${newId()}`,
+      ...payload,
+      created: new Date().toISOString(),
+    })
+  }
   const remote = await tryPbCreate('campaigns', {
     ...payload,
     audience_ids: JSON.stringify(payload.audience_ids),
@@ -337,6 +403,16 @@ export async function createCampaign(input: {
 }
 
 export async function updateCampaign(id: string, patch: Partial<DeskCampaign>): Promise<DeskCampaign> {
+  if (id.startsWith('tour-') || id.startsWith('dummy-') || isTourSessionActive()) {
+    const existing = orgStore.get<DeskCampaign>('campaigns', id)
+    if (!existing) {
+      const dummy = getTourDummyCampaigns().find((c) => c.id === id)
+      if (dummy) {
+        return orgStore.create<DeskCampaign>('campaigns', { ...dummy, ...patch })
+      }
+    }
+    return orgStore.update<DeskCampaign>('campaigns', id, patch)
+  }
   const body: Record<string, unknown> = { ...patch }
   if (patch.audience_ids) body.audience_ids = JSON.stringify(patch.audience_ids)
   const remote = await tryPbUpdate('campaigns', id, body)
@@ -345,6 +421,10 @@ export async function updateCampaign(id: string, patch: Partial<DeskCampaign>): 
 }
 
 export async function deleteCampaign(id: string): Promise<void> {
+  if (id.startsWith('tour-') || id.startsWith('dummy-')) {
+    orgStore.remove('campaigns', id)
+    return
+  }
   const ok = await tryPbDelete('campaigns', id)
   if (!ok) orgStore.remove('campaigns', id)
 }

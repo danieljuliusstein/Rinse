@@ -4,20 +4,25 @@ import { parseJsonBody } from '@/lib/server/parse-body'
 import { assertOrgAccess, requireUser } from '@/lib/server/route-guard'
 import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 import { portalCreateBodySchema } from '@/lib/validation/api-schemas'
+import { deskCorsOptions, withDeskCors } from '@/lib/server/desk-cors'
+
+export async function OPTIONS(request: Request) {
+  return deskCorsOptions(request)
+}
 
 export async function POST(request: Request) {
   const auth = await requireUser(request)
-  if (auth instanceof Response) return auth
+  if (auth instanceof Response) return withDeskCors(auth, request)
 
   const parsed = await parseJsonBody(request, portalCreateBodySchema)
-  if (parsed instanceof NextResponse) return parsed
+  if (parsed instanceof NextResponse) return withDeskCors(parsed, request)
   const { clientId, scope, jobId, quoteId } = parsed.data
 
   const denied = await assertOrgAccess(auth, { clientId })
-  if (denied) return denied
+  if (denied) return withDeskCors(denied, request)
 
   const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
-  if (premiumDenied) return premiumDenied
+  if (premiumDenied) return withDeskCors(premiumDenied, request)
 
   try {
     const result = await createPortalToken({
@@ -29,11 +34,14 @@ export async function POST(request: Request) {
       pb: auth.pb,
     })
 
-    return NextResponse.json(result)
+    return withDeskCors(NextResponse.json(result), request)
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Create failed' },
-      { status: 500 }
+    return withDeskCors(
+      NextResponse.json(
+        { error: e instanceof Error ? e.message : 'Create failed' },
+        { status: 500 },
+      ),
+      request,
     )
   }
 }

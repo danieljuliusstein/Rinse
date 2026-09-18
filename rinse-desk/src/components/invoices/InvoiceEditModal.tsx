@@ -1,8 +1,15 @@
-import { useEffect, useState } from 'react'
-import { Check, X } from 'lucide-react'
-import type { DeskInvoice, InvoiceStatus } from '@/lib/types'
+import { useEffect, useMemo, useState } from 'react'
+import { Plus, Trash2, X } from 'lucide-react'
+import type { DeskInvoice, DeskInvoiceLineItem, InvoiceStatus } from '@/lib/types'
 import { money } from '@/lib/metrics'
-import { INVOICE_STATUSES, type InvoiceEditValues } from '@/lib/invoice-edit'
+import {
+  INVOICE_STATUSES,
+  lineAmount,
+  newInvoiceLine,
+  previewInvoiceTotals,
+  valuesFromInvoice,
+  type InvoiceEditValues,
+} from '@/lib/invoice-edit'
 
 const EDITABLE_STATUSES: InvoiceStatus[] = [
   'draft',
@@ -24,15 +31,24 @@ type Props = {
 
 export function InvoiceEditModal({ inv, clientName, saving, onClose, onSave }: Props) {
   const [status, setStatus] = useState<InvoiceStatus>(inv.status)
-  const [total, setTotal] = useState(String(inv.total))
-  const [amountPaid, setAmountPaid] = useState(String(inv.amount_paid))
-  const [tip, setTip] = useState(String(inv.tip))
+  const [tip, setTip] = useState('0')
+  const [amountPaid, setAmountPaid] = useState('0')
+  const [discount, setDiscount] = useState('0')
+  const [taxRate, setTaxRate] = useState('0')
+  const [po, setPo] = useState('')
+  const [jobRevenue, setJobRevenue] = useState('0')
+  const [lines, setLines] = useState<DeskInvoiceLineItem[]>([])
 
   useEffect(() => {
+    const v = valuesFromInvoice(inv)
     setStatus(inv.status)
-    setTotal(String(inv.total))
-    setAmountPaid(String(inv.amount_paid))
-    setTip(String(inv.tip))
+    setTip(v.tip)
+    setAmountPaid(v.amount_paid)
+    setDiscount(v.discount_amount)
+    setTaxRate(v.tax_rate)
+    setPo(v.po_number)
+    setJobRevenue(v.job_revenue)
+    setLines(v.extra_line_items)
   }, [inv])
 
   useEffect(() => {
@@ -43,17 +59,42 @@ export function InvoiceEditModal({ inv, clientName, saving, onClose, onSave }: P
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const totalN = Number(total) || 0
-  const paidN = Number(amountPaid) || 0
-  const balance = Math.max(0, totalN - paidN)
+  const draft: InvoiceEditValues = useMemo(
+    () => ({
+      status,
+      tip,
+      amount_paid: amountPaid,
+      discount_amount: discount,
+      tax_rate: taxRate,
+      po_number: po,
+      job_revenue: jobRevenue,
+      extra_line_items: lines,
+    }),
+    [status, tip, amountPaid, discount, taxRate, po, jobRevenue, lines],
+  )
+
+  const preview = useMemo(() => previewInvoiceTotals(draft), [draft])
+
+  function updateLine(id: string, patch: Partial<DeskInvoiceLineItem>) {
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.id !== id) return l
+        const next = { ...l, ...patch }
+        const quantity = typeof next.quantity === 'number' ? next.quantity : 1
+        const unit_price =
+          typeof next.unit_price === 'number' ? next.unit_price : Number(next.default_amount ?? 0)
+        return {
+          ...next,
+          quantity,
+          unit_price,
+          default_amount: Math.round(quantity * unit_price * 100) / 100,
+        }
+      }),
+    )
+  }
 
   function submit() {
-    onSave({
-      status,
-      total,
-      amount_paid: amountPaid,
-      tip,
-    })
+    onSave(draft)
   }
 
   return (
@@ -62,10 +103,10 @@ export function InvoiceEditModal({ inv, clientName, saving, onClose, onSave }: P
         className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm animate-invoices-fade-in"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-invoices-pop-in">
-        <div className="flex items-center justify-between px-5 h-14 border-b border-ink-100">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[min(90vh,760px)] flex flex-col animate-invoices-pop-in">
+        <div className="flex items-center justify-between px-5 h-14 border-b border-ink-100 shrink-0">
           <div>
-            <div className="text-[15px] font-semibold text-ink-900">Light edit</div>
+            <div className="text-[15px] font-semibold text-ink-900">Edit invoice</div>
             <div className="text-[11px] text-ink-400">
               {inv.invoice_number} · {clientName}
             </div>
@@ -79,7 +120,7 @@ export function InvoiceEditModal({ inv, clientName, saving, onClose, onSave }: P
           </button>
         </div>
 
-        <div className="px-5 py-5 space-y-4">
+        <div className="px-5 py-5 space-y-5 overflow-y-auto thin-scrollbar flex-1 min-h-0">
           <div>
             <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">
               Status
@@ -105,30 +146,158 @@ export function InvoiceEditModal({ inv, clientName, saving, onClose, onSave }: P
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Total" value={total} onChange={setTotal} />
-            <Field label="Amount paid" value={amountPaid} onChange={setAmountPaid} />
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">
+                Line items
+              </label>
+              <button
+                type="button"
+                onClick={() => setLines((prev) => [...prev, newInvoiceLine()])}
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add line
+              </button>
+            </div>
+
+            <div className="grid grid-cols-[1fr_72px_88px_72px_36px] gap-2 mb-1.5 px-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+                Description
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+                Qty
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+                Price
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-400 text-right">
+                Amount
+              </span>
+              <span />
+            </div>
+
+            <div className="space-y-2">
+              <div className="grid grid-cols-[1fr_72px_88px_72px_36px] gap-2 items-center">
+                <input
+                  value="Package / job"
+                  readOnly
+                  className="h-9 px-3 rounded-lg ring-1 ring-ink-200 text-[13px] font-medium text-ink-500 bg-ink-50"
+                />
+                <input
+                  value="1"
+                  readOnly
+                  className="h-9 px-2 rounded-lg ring-1 ring-ink-200 text-[13px] tabular-nums text-ink-400 bg-ink-50 text-center"
+                />
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  value={jobRevenue}
+                  onChange={(e) => setJobRevenue(e.target.value)}
+                  className="h-9 px-2 rounded-lg ring-1 ring-ink-200 text-[13px] font-semibold tabular-nums text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                />
+                <div className="h-9 flex items-center justify-end text-[13px] font-semibold tabular-nums text-ink-700">
+                  {money(Number(jobRevenue) || 0)}
+                </div>
+                <span />
+              </div>
+
+              {lines.map((line) => (
+                <div
+                  key={line.id}
+                  className="grid grid-cols-[1fr_72px_88px_72px_36px] gap-2 items-center"
+                >
+                  <input
+                    value={line.description}
+                    onChange={(e) => updateLine(line.id, { description: e.target.value })}
+                    placeholder="Add-on or fee"
+                    className="h-9 px-3 rounded-lg ring-1 ring-ink-200 text-[13px] font-medium text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                  />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={line.quantity ?? 1}
+                    onChange={(e) =>
+                      updateLine(line.id, { quantity: Number(e.target.value) || 0 })
+                    }
+                    className="h-9 px-2 rounded-lg ring-1 ring-ink-200 text-[13px] tabular-nums text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500/40 text-center"
+                  />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={line.unit_price ?? 0}
+                    onChange={(e) =>
+                      updateLine(line.id, { unit_price: Number(e.target.value) || 0 })
+                    }
+                    className="h-9 px-2 rounded-lg ring-1 ring-ink-200 text-[13px] font-semibold tabular-nums text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                  />
+                  <div className="h-9 flex items-center justify-end text-[13px] font-semibold tabular-nums text-ink-700">
+                    {money(lineAmount(line))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLines((prev) => prev.filter((l) => l.id !== line.id))}
+                    className="h-9 w-9 rounded-lg text-ink-400 hover:text-rust-600 hover:bg-rust-50 flex items-center justify-center transition-colors"
+                    aria-label="Remove line"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <Field label="Discount $" value={discount} onChange={setDiscount} />
+            <Field label="Tax %" value={taxRate} onChange={setTaxRate} />
+            <div className="sm:col-span-1 col-span-2">
+              <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">
+                PO number
+              </label>
+              <input
+                value={po}
+                onChange={(e) => setPo(e.target.value)}
+                placeholder="Optional"
+                className="mt-1.5 w-full h-10 px-3 rounded-lg ring-1 ring-ink-200 text-[14px] font-medium text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+              />
+            </div>
             <Field label="Tip" value={tip} onChange={setTip} />
+            <Field label="Amount paid" value={amountPaid} onChange={setAmountPaid} />
             <div>
               <label className="text-[11px] font-semibold text-ink-500 uppercase tracking-wide">
                 Balance due
               </label>
               <div className="mt-1.5 h-10 px-3 rounded-lg ring-1 ring-ink-200 flex items-center text-[14px] font-semibold tabular-nums bg-ink-50 text-ink-500">
-                {money(balance)}
+                {money(preview.balance_due)}
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg bg-brand-50 border border-brand-200 px-3 py-2.5 text-[11.5px] text-brand-700 flex items-start gap-2">
-            <Check className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-            <span>
-              Desk-light edits only. Line items, packages &amp; tax live on the mobile invoice
-              builder.
+          <div className="rounded-xl bg-ink-50 border border-ink-200 px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-[12px]">
+            <span className="text-ink-500">
+              Subtotal <strong className="text-ink-800 tabular-nums">{money(preview.subtotal)}</strong>
+            </span>
+            {preview.discount > 0 ? (
+              <span className="text-ink-500">
+                Discount{' '}
+                <strong className="text-ink-800 tabular-nums">−{money(preview.discount)}</strong>
+              </span>
+            ) : null}
+            {preview.tax_amount > 0 ? (
+              <span className="text-ink-500">
+                Tax <strong className="text-ink-800 tabular-nums">{money(preview.tax_amount)}</strong>
+              </span>
+            ) : null}
+            <span className="text-ink-500">
+              Total <strong className="text-ink-900 tabular-nums">{money(preview.total)}</strong>
             </span>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 h-16 border-t border-ink-100">
+        <div className="flex items-center justify-end gap-2 px-5 h-16 border-t border-ink-100 shrink-0">
           <button
             type="button"
             onClick={onClose}

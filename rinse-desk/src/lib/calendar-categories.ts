@@ -93,6 +93,29 @@ export function clearEventMeta(jobId: string) {
   clearEventColor(jobId)
 }
 
+export function clearTourCalendarData(): void {
+  const isTourId = (id: string) => id.startsWith('tour-') || id.startsWith('dummy-') || id.startsWith('temp-')
+  const catMap = loadEventCategoryMap()
+  let catChanged = false
+  for (const k of Object.keys(catMap)) {
+    if (isTourId(k)) {
+      delete catMap[k]
+      catChanged = true
+    }
+  }
+  if (catChanged) saveEventCategoryMap(catMap)
+
+  const colMap = loadEventColorMap()
+  let colChanged = false
+  for (const k of Object.keys(colMap)) {
+    if (isTourId(k)) {
+      delete colMap[k]
+      colChanged = true
+    }
+  }
+  if (colChanged) saveEventColorMap(colMap)
+}
+
 export function categoryForJob(
   jobId: string,
   cats: CalCategory[],

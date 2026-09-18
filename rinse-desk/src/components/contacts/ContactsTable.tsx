@@ -72,6 +72,7 @@ type Props = {
   onPageChange: (page: number) => void
   onSave: (id: string, draft: ContactEditDraft) => void | Promise<void>
   onDelete: (id: string, name: string) => void | Promise<void>
+  onInspectContact?: (contact: ContactRowModel) => void
 }
 
 function Avatar({
@@ -340,6 +341,7 @@ function Row({
   onDelete,
   businessAddress,
   busy,
+  onInspectContact,
 }: {
   c: ContactRowModel
   selected: boolean
@@ -351,6 +353,7 @@ function Row({
   onDelete: () => void
   businessAddress: string
   busy: boolean
+  onInspectContact?: (contact: ContactRowModel) => void
 }) {
   if (editing) {
     return (
@@ -367,14 +370,23 @@ function Row({
 
   return (
     <div
-      className={`group grid contacts-row-grid items-center min-h-[48px] border-b border-[#EDEFEA] last:border-b-0 hover:bg-rinse-bg/40 transition-colors ${
+      data-tour-target="contacts-row"
+      onClick={() => {
+        onToggle()
+        onInspectContact?.(c)
+      }}
+      className={`group grid contacts-row-grid items-center min-h-[48px] border-b border-[#EDEFEA] last:border-b-0 hover:bg-rinse-bg/40 transition-colors cursor-pointer ${
         selected ? 'bg-rinse-green-soft/25' : ''
       }`}
     >
       <div className="flex items-center justify-center py-2">
         <button
           type="button"
-          onClick={onToggle}
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggle()
+            onInspectContact?.(c)
+          }}
           className={[
             'h-4 w-4 rounded border grid place-items-center transition',
             selected
@@ -401,7 +413,11 @@ function Row({
       <div className="flex items-center justify-center py-2">
         <button
           type="button"
-          onClick={onEdit}
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit()
+            onInspectContact?.(c)
+          }}
           title="Edit contact"
           aria-label={`Edit ${c.name}`}
           className="h-6 w-6 rounded-md grid place-items-center text-rinse-muted opacity-0 group-hover:opacity-100 hover:bg-rinse-bg hover:text-rinse-text transition"
@@ -487,6 +503,7 @@ export function ContactsTable({
   onPageChange,
   onSave,
   onDelete,
+  onInspectContact,
 }: Props) {
   const toggle = (id: string) => {
     const n = new Set(selected)
@@ -514,6 +531,7 @@ export function ContactsTable({
       onDelete={() => void onDelete(c.id, c.name)}
       businessAddress={businessAddress}
       busy={busy}
+      onInspectContact={onInspectContact}
     />
   )
 

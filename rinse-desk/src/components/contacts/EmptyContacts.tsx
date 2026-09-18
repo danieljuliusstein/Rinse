@@ -63,8 +63,9 @@ export function EmptyNoContacts({ onAdd }: { onAdd: () => void }) {
         <div className="mt-6 flex items-center justify-center">
           <button
             type="button"
+            data-tour-target="contacts-add"
             onClick={onAdd}
-            className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg bg-rinse-green-text text-white text-[13px] font-semibold hover:bg-rinse-green-hover transition shadow-sm"
+            className="tour-armed h-9 px-4 inline-flex items-center gap-1.5 rounded-lg bg-rinse-green-text text-white text-[13px] font-semibold hover:bg-rinse-green-hover transition shadow-sm relative z-[55] pointer-events-auto"
           >
             <UserPlus className="h-4 w-4" strokeWidth={2.4} />
             Add first contact

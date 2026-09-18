@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { extractPocketBaseError, formatAuthApiError } from '@/lib/auth-messages'
 import { provisionOrganizationForOAuthUser } from '@/lib/server/signup'
 import { authenticateRequestUserLoose } from '@/lib/server/request-auth-loose'
 import { rejectOversizedBody } from '@/lib/server/request-body'
@@ -13,6 +14,14 @@ function corsHeaders(request: Request): HeadersInit {
   }
 }
 
+function withCors(response: NextResponse, request: Request): NextResponse {
+  const headers = corsHeaders(request)
+  for (const [key, value] of Object.entries(headers)) {
+    response.headers.set(key, value)
+  }
+  return response
+}
+
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(request) })
 }
@@ -21,7 +30,7 @@ export async function POST(request: Request) {
   const headers = corsHeaders(request)
 
   const tooLarge = rejectOversizedBody(request)
-  if (tooLarge) return tooLarge
+  if (tooLarge) return withCors(tooLarge, request)
 
   const auth = await authenticateRequestUserLoose(request)
   if (!auth) {
@@ -53,7 +62,8 @@ export async function POST(request: Request) {
       { headers },
     )
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Provisioning failed'
-    return NextResponse.json({ error: message }, { status: 400, headers })
+    const raw = extractPocketBaseError(e, e instanceof Error ? e.message : 'Provisioning failed')
+    console.error('[oauth-provision]', raw, e)
+    return NextResponse.json({ error: formatAuthApiError(raw) }, { status: 400, headers })
   }
 }

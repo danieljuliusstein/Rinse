@@ -337,3 +337,58 @@ export function ConfirmModal({
     </Modal>
   )
 }
+
+export type ChoiceAction = {
+  id: string
+  label: string
+  primary?: boolean
+}
+
+/** Multi-action dialog — e.g. Add contact / Add package when gating creates. */
+export function ChoiceModal({
+  open,
+  title = 'Choose',
+  message,
+  actions,
+  cancelLabel = 'Not now',
+  onCancel,
+  onPick,
+}: {
+  open: boolean
+  title?: string
+  message: string
+  actions: ChoiceAction[]
+  cancelLabel?: string
+  onCancel: () => void
+  onPick: (id: string) => void
+}) {
+  return (
+    <Modal open={open} title={title} onClose={onCancel}>
+      <p className="text-sm text-gray-600 leading-relaxed">{message}</p>
+      <div className="flex flex-col gap-2 mt-4">
+        {actions.map((action) => (
+          <button
+            key={action.id}
+            type="button"
+            onClick={() => onPick(action.id)}
+            className={`w-full py-2.5 text-sm font-semibold rounded-lg transition ${
+              action.primary
+                ? 'text-white'
+                : 'border border-gray-200 text-gray-800 hover:bg-gray-50'
+            }`}
+            style={action.primary ? { background: colors.green } : undefined}
+          >
+            {action.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800"
+        >
+          {cancelLabel}
+        </button>
+      </div>
+    </Modal>
+  )
+}

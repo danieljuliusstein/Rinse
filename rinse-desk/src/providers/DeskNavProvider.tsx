@@ -44,6 +44,8 @@ interface DeskNavContextValue {
   focusVehicleId: string | null
   openVehicle: (id: string) => void
   clearFocusVehicle: () => void
+  /** Open the interactive product tour (Help → Take the tour). */
+  openOnboardingTour: () => void
 }
 
 const DeskNavContext = createContext<DeskNavContextValue | null>(null)
@@ -51,10 +53,12 @@ const DeskNavContext = createContext<DeskNavContextValue | null>(null)
 export function DeskNavProvider({
   page,
   setPage,
+  openOnboardingTour,
   children,
 }: {
   page: PageId
   setPage: (id: PageId) => void
+  openOnboardingTour: () => void
   children: ReactNode
 }) {
   const [focusContactId, setFocusContactId] = useState<string | null>(null)
@@ -146,6 +150,7 @@ export function DeskNavProvider({
       focusVehicleId,
       openVehicle,
       clearFocusVehicle,
+      openOnboardingTour,
     }),
     [
       page,
@@ -168,6 +173,7 @@ export function DeskNavProvider({
       focusVehicleId,
       openVehicle,
       clearFocusVehicle,
+      openOnboardingTour,
     ],
   )
 

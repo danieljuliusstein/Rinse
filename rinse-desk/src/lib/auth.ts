@@ -47,7 +47,7 @@ export function isEmailVerified(record: RecordModel | null): boolean {
   return Boolean((record as { verified?: unknown }).verified)
 }
 
-function pocketBaseErrorMessage(err: unknown, fallback: string): string {
+function pocketBaseErrorMessage(err: unknown, fallback: string, provider?: OAuthProvider): string {
   const e = err as {
     message?: string
     response?: { message?: string; data?: Record<string, { message?: string }> }
@@ -75,7 +75,7 @@ function pocketBaseErrorMessage(err: unknown, fallback: string): string {
     (err as { response?: { mfaId?: string } }).response?.mfaId
   if (status === 401 && mfaId) {
     return (
-      'PocketBase MFA is enabled on users, so Google alone is not enough. ' +
+      'PocketBase MFA is enabled on users, so social sign-in alone is not enough. ' +
       'In PocketBase Admin → Collections → users → Options, disable Multi-factor authentication, then try again.'
     )
   }
@@ -87,6 +87,13 @@ function pocketBaseErrorMessage(err: unknown, fallback: string): string {
   }
 
   if (raw.includes('Failed to fetch OAuth2 token')) {
+    if (provider === 'apple') {
+      return (
+        'Apple rejected the login token. In PocketBase → users → OAuth2 → Apple, confirm ' +
+        'Client ID is your Services ID, and Team ID / Key ID / .p8 private key are from the same ' +
+        'Sign in with Apple key. Return URL must be https://detailing-pb.fly.dev/api/oauth2-redirect.'
+      )
+    }
     return (
       'Google rejected the login token. In PocketBase → users → OAuth2 → Google, ' +
       're-paste the Client Secret from the same Web client whose redirect URI is ' +
@@ -285,7 +292,7 @@ export async function signInWithOAuth(provider: OAuthProvider, opts?: { business
     persistAuth(pb.authStore.token!, pb.authStore.record)
   } catch (err) {
     console.error(`[oauth:${provider}]`, err)
-    throw new Error(pocketBaseErrorMessage(err, `Could not sign in with ${label}.`))
+    throw new Error(pocketBaseErrorMessage(err, `Could not sign in with ${label}.`, provider))
   }
   await ensureOAuthProvisioned(opts?.businessName)
 }

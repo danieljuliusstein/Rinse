@@ -4,16 +4,79 @@ import { confirmUnblockDayIfNeeded } from '@/lib/confirm-unblock-day'
 import { geocodeAddressOnce } from '@/lib/geocode-once'
 import { todayISO } from '@/lib/metrics'
 import { loadAppSettings } from '@/lib/settings-api'
-import type { ActivityType, DeskActivity } from '@/lib/types'
+import type {
+  ActivityType,
+  DeskActivity,
+  DeskClient,
+  DeskExpense,
+  DeskJob,
+  DeskLead,
+  DeskPackage,
+} from '@/lib/types'
 import { useData } from '@/providers/DataProvider'
 import { useDeskNav } from '@/providers/DeskNavProvider'
 import { useUi } from '@/providers/UiProvider'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 /** Shared create flows used by Header and page CTAs. */
 export function useCreateActions() {
   const { clients, packages, setClients, setJobs, setLeads, setExpenses, setPackages } = useData()
-  const { alert, confirm, promptForm, toast } = useUi()
+  const { alert, confirm, promptChoice, promptForm, toast } = useUi()
   const { setPage, openContact } = useDeskNav()
+  const tour = useOptionalTour()
+
+  /**
+   * When contact/package catalogs are empty, offer buttons that jump to the
+   * right place (Contacts / Dashboard packages) and open the create form.
+   * Returns true when both catalogs already have rows.
+   */
+  async function ensureClientsAndPackages(purpose = 'continue'): Promise<boolean> {
+    if (clients.length > 0 && packages.length > 0) return true
+
+    const missingBoth = clients.length === 0 && packages.length === 0
+    const actions = [
+      ...(clients.length === 0
+        ? [{ id: 'contact', label: 'Add contact', primary: true as const }]
+        : []),
+      ...(packages.length === 0
+        ? [
+            {
+              id: 'package',
+              label: 'Add package',
+              primary: clients.length > 0,
+            },
+          ]
+        : []),
+    ]
+
+    const pick = await promptChoice({
+      title: 'Almost ready',
+      message: missingBoth
+        ? `Add a contact and a service package before you can ${purpose}.`
+        : clients.length === 0
+          ? `Add a contact before you can ${purpose}.`
+          : `Add a service package before you can ${purpose}.`,
+      actions,
+      cancelLabel: 'Not now',
+    })
+
+    if (pick === 'contact') {
+      setPage('contacts')
+      // Defer so navigation paints, then open the create form.
+      window.setTimeout(() => {
+        void createContact({ navigate: true })
+      }, 0)
+      return false
+    }
+    if (pick === 'package') {
+      setPage('dashboard')
+      window.setTimeout(() => {
+        void createPackageAction()
+      }, 0)
+      return false
+    }
+    return false
+  }
 
   async function createContact(opts?: { navigate?: boolean }) {
     let businessContext: string | undefined
@@ -58,6 +121,25 @@ export function useCreateActions() {
       }
     }
 
+    if (tour?.active) {
+      const created: DeskClient = {
+        id: `tour-client-${Date.now()}`,
+        name: values.name,
+        phone: values.phone || '',
+        email: values.email || '',
+        address: address || '',
+        tags: ['id:Client'],
+        notes: '',
+        created: new Date().toISOString(),
+        ...(hasPin ? { lat, lng, geocoded_at: new Date().toISOString() } : {}),
+      }
+      setClients((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)))
+      toast(hasPin ? 'Contact created · address pinned' : 'Contact created')
+      tour?.notifyCreated('contact')
+      if (opts?.navigate !== false) openContact(created.id)
+      return created
+    }
+
     try {
       const created = await api.createClient({
         name: values.name,
@@ -71,6 +153,7 @@ export function useCreateActions() {
       })
       setClients((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)))
       toast(hasPin ? 'Contact created · address pinned' : 'Contact created')
+      tour?.notifyCreated('contact')
       if (opts?.navigate !== false) openContact(created.id)
       return created
     } catch (err) {
@@ -110,6 +193,25 @@ export function useCreateActions() {
       ],
     })
     if (!values?.name) return null
+    if (tour?.active) {
+      const created: DeskLead = {
+        id: `tour-lead-${Date.now()}`,
+        name: values.name,
+        quote_amount: Number(values.amount) || 0,
+        package_id: packages[0]?.id,
+        stage: opts?.stage ?? 'inquiry',
+        service_interest: values.interest || undefined,
+        client_id: opts?.clientId,
+        phone: opts?.phone,
+        email: opts?.email,
+        created: new Date().toISOString(),
+      }
+      setLeads((prev) => [created, ...prev])
+      toast('Deal created')
+      tour?.notifyCreated('deal')
+      if (opts?.navigate !== false) setPage('deals')
+      return created
+    }
     try {
       const created = await api.createLead({
         name: values.name,
@@ -123,6 +225,7 @@ export function useCreateActions() {
       })
       setLeads((prev) => [created, ...prev])
       toast('Deal created')
+      tour?.notifyCreated('deal')
       if (opts?.navigate !== false) setPage('deals')
       return created
     } catch (err) {
@@ -147,7 +250,7 @@ export function useCreateActions() {
     skipForm?: boolean
   }) {
     if (!clients.length || !packages.length) {
-      alert('Add a client and package first.', 'Cannot create event')
+      await ensureClientsAndPackages('schedule a job')
       return null
     }
 
@@ -223,6 +326,28 @@ export function useCreateActions() {
 
     if (!title) title = 'New event'
 
+    if (tour?.active) {
+      const created: DeskJob = {
+        id: `tour-job-${Date.now()}`,
+        date,
+        start_time,
+        status: 'scheduled',
+        revenue: pkg.base_price,
+        tip: 0,
+        client_id: client.id,
+        package_id: pkg.id,
+        notes: title,
+        hours_worked,
+        client,
+        packageName: pkg.name,
+      }
+      setJobs((prev) => [created, ...prev])
+      toast(opts?.navigate === false ? 'Stop scheduled' : 'Event created')
+      tour?.notifyCreated('job')
+      if (opts?.navigate !== false) setPage('calendar')
+      return created
+    }
+
     try {
       const clear = await confirmUnblockDayIfNeeded(date, confirm)
       if (!clear) return null
@@ -266,6 +391,7 @@ export function useCreateActions() {
       }
       setJobs((prev) => [hydrated, ...prev.filter((j) => j.id !== tempId && j.id !== hydrated.id)])
       toast(opts?.navigate === false ? 'Stop scheduled' : 'Event created')
+      tour?.notifyCreated('job')
       if (opts?.navigate !== false) setPage('calendar')
       return hydrated
     } catch (err) {
@@ -310,6 +436,20 @@ export function useCreateActions() {
       ],
     })
     if (!values?.contact_id || !values.subject) return null
+    if (tour?.active) {
+      const created: DeskActivity = {
+        id: `tour-act-${Date.now()}`,
+        contact_id: values.contact_id,
+        type: (values.type as ActivityType) || 'note',
+        subject: values.subject.trim(),
+        body: values.body?.trim() || undefined,
+        occurred_at: new Date().toISOString(),
+        created: new Date().toISOString(),
+      }
+      toast('Activity logged')
+      if (opts?.navigate !== false) setPage('activities')
+      return created
+    }
     try {
       const created = await platform.createActivity({
         contact_id: values.contact_id,
@@ -351,6 +491,20 @@ export function useCreateActions() {
       if (file) receipt = file
     }
 
+    if (tour?.active) {
+      const created: DeskExpense = {
+        id: `tour-exp-${Date.now()}`,
+        name: values.description,
+        description: values.description,
+        amount: Number(values.amount) || 0,
+        date: values.date || todayISO(),
+      }
+      setExpenses((prev) => [created, ...prev])
+      toast(receipt ? 'Expense logged with receipt' : 'Expense logged')
+      if (opts?.navigate !== false) setPage('receipts')
+      return created
+    }
+
     try {
       const created = await api.createExpense({
         description: values.description,
@@ -378,6 +532,17 @@ export function useCreateActions() {
       ],
     })
     if (!values?.name) return null
+    if (tour?.active) {
+      const created: DeskPackage = {
+        id: `tour-pkg-${Date.now()}`,
+        name: values.name,
+        base_price: Number(values.base_price) || 0,
+        active: true,
+      }
+      setPackages((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)))
+      toast('Package created')
+      return created
+    }
     try {
       const created = await api.createPackage({
         name: values.name,
@@ -399,5 +564,6 @@ export function useCreateActions() {
     createExpense,
     createPackage: createPackageAction,
     createActivity: createActivityAction,
+    ensureClientsAndPackages,
   }
 }

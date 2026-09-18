@@ -159,6 +159,7 @@ export function ScheduleListView({
                         <button
                           key={`j-${it.id}`}
                           type="button"
+                          data-tour-target={it.id === 'tour-job-1' ? 'calendar-event' : undefined}
                           onClick={() => onSelectJob(it.job)}
                           className={`flex w-full items-center gap-3 border-b border-ink-50 px-4 py-2.5 text-left last:border-b-0 transition-colors ${
                             sel ? 'bg-brand-50/50' : 'hover:bg-ink-50/60'

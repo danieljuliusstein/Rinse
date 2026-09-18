@@ -55,8 +55,9 @@ membership ($99/yr).
    PocketBase will use.
    - Enable **Sign In with Apple**, click **Configure**:
      - Primary App ID: the App ID from step 1.
-     - Domains and Subdomains: `rinsehq.com`
-     - Return URLs: `w`
+     - Domains and Subdomains: `detailing-pb.fly.dev` (and `rinsehq.com` if Apple asks for your brand domain)
+     - Return URLs: exactly
+       `https://detailing-pb.fly.dev/api/oauth2-redirect`
    - Apple will ask you to verify domain ownership — download the
      verification file it gives you and host it at the exact path Apple
      specifies on `rinsehq.com` (this needs whoever manages that domain's

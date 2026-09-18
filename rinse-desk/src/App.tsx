@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import MoneyOverview from './pages/MoneyOverview'
 import Dashboard from './pages/Dashboard'
 import SalesPipeline from './pages/SalesPipeline'
@@ -13,11 +13,11 @@ import AutomationsPage from './pages/AutomationsPage'
 import ChatPage from './pages/ChatPage'
 import AiAssistPage from './pages/AiAssistPage'
 import InvoicesPage from './pages/InvoicesPage'
+import QuotesPage from './pages/QuotesPage'
 import ReceiptsPage from './pages/ReceiptsPage'
 import CarsPage from './pages/CarsPage'
 import RoutesPage from './pages/RoutesPage'
 import AuthPage from './pages/AuthPage'
-import HomePage from './pages/HomePage'
 import VerifyEmailPage, { VerifyEmailConfirmPage } from './pages/VerifyEmailPage'
 import { colors } from './theme/colors'
 import { AuthProvider, useAuth } from './providers/AuthProvider'
@@ -38,6 +38,7 @@ import {
   Handshake,
   Wallet,
   FileText,
+  ScrollText,
   ReceiptText,
   Car,
   Users,
@@ -51,6 +52,13 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { PageId } from './lib/types'
+import { TourSession } from './components/tour/OnboardingTour'
+import { useOptionalTour } from './components/tour/tour-provider'
+import { markTourDone, readTourDone } from './lib/onboarding-tour'
+import { clearTourCalendarData } from './lib/calendar-categories'
+import { clearTourActivityMeta } from './lib/activity-meta'
+import { clearTourChatThreadMeta } from './lib/chat-thread-meta'
+import { orgStore } from './lib/orgStore'
 
 export type { PageId }
 
@@ -66,6 +74,7 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
       { id: 'deals', label: 'Deals', icon: Handshake },
       { id: 'money', label: 'Money', icon: Wallet },
       { id: 'invoices', label: 'Invoices', icon: FileText },
+      { id: 'quotes', label: 'Quotes', icon: ScrollText },
       { id: 'receipts', label: 'Receipts', icon: ReceiptText },
     ],
   },
@@ -109,12 +118,15 @@ function readSidebarCollapsed(): boolean {
 
 export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (id: PageId) => void }) {
   const { signOut } = useAuth()
+  const tour = useOptionalTour()
   const [menuOpen, setMenuOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readSidebarCollapsed)
   const [businessName, setBusinessName] = useState(getCachedBusinessName)
   const name = getDisplayName()
   const initials = getInitials(name)
   const brandName = businessName || 'My Business'
+  const forceExpanded = !!tour?.active
+  const showCollapsed = collapsed && !forceExpanded
 
   useEffect(() => {
     try {
@@ -147,20 +159,28 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
 
   function navButton({ id, label, icon: Icon }: NavItem, opts?: { compact?: boolean }) {
     const isActive = active === id
-    const compact = opts?.compact ?? collapsed
+    const compact = opts?.compact ?? showCollapsed
+    const targetId = `nav-${id}`
+    const armed = tour?.isArmed(targetId)
     return (
       <button
         key={id}
         type="button"
         title={compact ? label : undefined}
-        onClick={() => onNavigate(id)}
+        data-tour-target={targetId}
+        onClick={() => {
+          onNavigate(id)
+          if (tour?.active && tour.isArmed(targetId) && tour.stop.completion === 'click-target') {
+            tour.completeStop(tour.stop.id)
+          }
+        }}
         className={`w-full flex items-center rounded-lg text-[13px] font-medium transition-colors ${
           compact ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-1.5'
         } ${
           isActive
             ? 'text-white bg-brand-500/15'
             : 'text-white/55 hover:text-white/90 hover:bg-white/5'
-        }`}
+        } ${armed ? 'tour-armed relative z-[55] pointer-events-auto ring-2 ring-brand-400/80' : ''}`}
       >
         <Icon
           className={`w-[18px] h-[18px] shrink-0 ${isActive ? 'text-brand-400' : 'text-white/40'}`}
@@ -179,18 +199,19 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
 
   return (
     <aside
-      className={`flex flex-col min-h-screen flex-shrink-0 transition-[width] duration-200 ${collapsed ? 'w-14' : 'w-[210px]'}`}
+      data-tour-target="sidebar"
+      className={`flex flex-col min-h-screen flex-shrink-0 transition-[width] duration-200 ${showCollapsed ? 'w-14' : 'w-[210px]'}`}
       style={{ background: `linear-gradient(180deg, ${colors.sidebarFrom} 0%, ${colors.sidebarTo} 100%)` }}
     >
-      <div className={`border-b border-white/10 ${collapsed ? 'px-2 py-3' : 'px-5 py-4'}`}>
+      <div className={`border-b border-white/10 ${showCollapsed ? 'px-2 py-3' : 'px-5 py-4'}`}>
         <button
           type="button"
           title={`${BRAND.product}${businessName ? ` · ${brandName}` : ''}`}
           onClick={() => onNavigate('settings')}
-          className={`w-full flex items-center rounded-lg hover:bg-white/5 transition-colors ${collapsed ? 'justify-center px-1 py-1' : 'gap-2.5 px-1 py-0.5'}`}
+          className={`w-full flex items-center rounded-lg hover:bg-white/5 transition-colors ${showCollapsed ? 'justify-center px-1 py-1' : 'gap-2.5 px-1 py-0.5'}`}
         >
           <RinseLogo size={28} title={BRAND.name} />
-          {!collapsed && (
+          {!showCollapsed && (
             <span className="min-w-0 flex-1 text-left">
               <span className="block text-white font-semibold text-sm tracking-tight truncate">
                 {BRAND.product}
@@ -203,8 +224,8 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
         </button>
       </div>
 
-      <nav className={`flex-1 overflow-y-auto thin-scrollbar py-2 ${collapsed ? 'px-1.5 space-y-0.5' : 'px-3 space-y-3'}`}>
-        {collapsed
+      <nav className={`flex-1 overflow-y-auto thin-scrollbar py-2 ${showCollapsed ? 'px-1.5 space-y-0.5' : 'px-3 space-y-3'}`}>
+        {showCollapsed
           ? NAV_SECTIONS.flatMap((s) => s.items).map((item) => navButton(item))
           : NAV_SECTIONS.map((section) => (
               <div key={section.title}>
@@ -218,22 +239,23 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
             ))}
       </nav>
 
-      <div className={`${collapsed ? 'px-1.5' : 'px-3'} pb-1`}>
+      <div className={`${showCollapsed ? 'px-1.5' : 'px-3'} pb-1`}>
         <button
           type="button"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={showCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           onClick={() => setCollapsed((v) => !v)}
-          className={`w-full flex items-center rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 py-2 ${collapsed ? 'justify-center' : 'justify-center gap-2 px-3'}`}
+          disabled={forceExpanded}
+          className={`w-full flex items-center rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 py-2 ${showCollapsed ? 'justify-center' : 'justify-center gap-2 px-3'}`}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={collapsed ? '' : 'rotate-180'}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={showCollapsed ? '' : 'rotate-180'}>
             <polyline points="13 17 18 12 13 7" />
             <polyline points="6 17 11 12 6 7" />
           </svg>
         </button>
       </div>
 
-      <div className={`border-t border-white/10 py-1.5 space-y-px ${collapsed ? 'px-1.5' : 'px-3'}`}>
-        {!collapsed && (
+      <div className={`border-t border-white/10 py-1.5 space-y-px ${showCollapsed ? 'px-1.5' : 'px-3'}`}>
+        {!showCollapsed && (
           <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/25">
             Setup
           </div>
@@ -241,19 +263,19 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
         {BOTTOM_ITEMS.map((item) => navButton(item))}
       </div>
 
-      <div className={`border-t border-white/10 relative ${collapsed ? 'px-1.5 py-2' : 'px-3 py-3'}`}>
+      <div className={`border-t border-white/10 relative ${showCollapsed ? 'px-1.5 py-2' : 'px-3 py-3'}`}>
         <button
           type="button"
-          title={collapsed ? name : undefined}
+          title={showCollapsed ? name : undefined}
           onClick={() => setMenuOpen((v) => !v)}
           className={`w-full flex items-center rounded-lg hover:bg-white/5 cursor-pointer transition-colors text-left ${
-            collapsed ? 'justify-center px-1 py-1.5' : 'gap-2.5 px-2 py-1.5'
+            showCollapsed ? 'justify-center px-1 py-1.5' : 'gap-2.5 px-2 py-1.5'
           }`}
         >
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: `linear-gradient(135deg, ${colors.green}, ${colors.teal})`, fontSize: '10px' }}>
             {initials}
           </div>
-          {!collapsed && (
+          {!showCollapsed && (
             <>
               <div className="min-w-0 flex-1">
                 <p className="text-white text-xs font-medium leading-tight truncate">{name}</p>
@@ -266,7 +288,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
           )}
         </button>
         {menuOpen && (
-          <div className={`absolute bottom-full mb-1 bg-[#0f2418] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50 ${collapsed ? 'left-full ml-1 w-40' : 'left-3 right-3'}`}>
+          <div className={`absolute bottom-full mb-1 bg-[#0f2418] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50 ${showCollapsed ? 'left-full ml-1 w-40' : 'left-3 right-3'}`}>
             <button
               type="button"
               className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-white/10"
@@ -710,6 +732,12 @@ export function Header({
                 { label: 'New Contact', fn: () => createContact() },
                 { label: 'New Deal', fn: () => createDeal() },
                 { label: 'New Event', fn: () => createEvent() },
+                {
+                  label: 'New Invoice',
+                  fn: () => {
+                    setPage('invoices')
+                  },
+                },
                 { label: 'Log Expense', fn: () => createExpense() },
               ].map((item) => (
                 <button
@@ -772,17 +800,74 @@ export function Header({
 
 function Shell() {
   const [page, setPage] = useState<PageId>('dashboard')
-  const { loading, error } = useData()
+  const [tourOpen, setTourOpen] = useState(() => !readTourDone())
+  const [tourSession, setTourSession] = useState(0)
+  const {
+    loading,
+    error,
+    refresh,
+    setClients,
+    setVehicles,
+    setJobs,
+    setLeads,
+    setInvoices,
+    setPackages,
+    setExpenses,
+  } = useData()
 
   useEffect(() => {
     if (HIDDEN_NAV_PAGES.has(page)) setPage('dashboard')
   }, [page])
+
+  // One-time safety check on mount: if tour is already done, ensure local storage maps are clean of any stale tour items
+  useEffect(() => {
+    if (readTourDone()) {
+      clearTourCalendarData()
+      clearTourActivityMeta()
+      clearTourChatThreadMeta()
+      orgStore.purgeTourData('activities')
+      orgStore.purgeTourData('campaigns')
+    }
+  }, [])
+
+  const openOnboardingTour = useMemo(
+    () => () => {
+      setTourSession((n) => n + 1)
+      setTourOpen(true)
+    },
+    [],
+  )
+
+  const closeTour = useCallback(() => {
+    markTourDone()
+    setTourOpen(false)
+    setPage('dashboard')
+
+    const isTourId = (id: string) =>
+      id.startsWith('tour-') || id.startsWith('dummy-') || id.startsWith('temp-')
+    setLeads((prev) => prev.filter((l) => !isTourId(l.id)))
+    setClients((prev) => prev.filter((c) => !isTourId(c.id)))
+    setVehicles((prev) => prev.filter((v) => !isTourId(v.id)))
+    setJobs((prev) => prev.filter((j) => !isTourId(j.id)))
+    setInvoices((prev) => prev.filter((i) => !isTourId(i.id)))
+    setPackages((prev) => prev.filter((p) => !isTourId(p.id)))
+    setExpenses((prev) => prev.filter((e) => !isTourId(e.id)))
+
+    clearTourCalendarData()
+    clearTourActivityMeta()
+    clearTourChatThreadMeta()
+    orgStore.purgeTourData('activities')
+    orgStore.purgeTourData('campaigns')
+
+    void refresh().catch(() => {})
+  }, [refresh, setClients, setExpenses, setInvoices, setJobs, setLeads, setPackages, setVehicles])
 
   const pages: Record<PageId, ReactNode> = {
     dashboard: <Dashboard />,
     deals: <SalesPipeline />,
     money: <MoneyOverview />,
     invoices: <InvoicesPage />,
+    quotes: <QuotesPage />,
     receipts: <ReceiptsPage />,
     cars: <CarsPage />,
     contacts: <Contacts />,
@@ -797,30 +882,41 @@ function Shell() {
     settings: <SettingsPage />,
     help: <HelpPage />,
   }
-  return (
-    <DeskNavProvider page={page} setPage={setPage}>
-      <div className="flex h-screen bg-gray-50 overflow-hidden">
-        <Sidebar active={page} onNavigate={setPage} />
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-          {error && <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 text-xs bg-red-50 text-red-700 border border-red-200 px-3 py-1.5 rounded-lg shadow">{error}</div>}
-          {loading && <div className="absolute top-14 right-4 z-50 text-xs bg-white text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg shadow">Syncing…</div>}
-          {pages[page]}
-        </div>
+  const shellBody = (
+    <>
+      <Sidebar active={page} onNavigate={setPage} />
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {error && (
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 text-xs bg-red-50 text-red-700 border border-red-200 px-3 py-1.5 rounded-lg shadow">
+            {error}
+          </div>
+        )}
+        {loading && (
+          <div className="absolute top-14 right-4 z-50 text-xs bg-white text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg shadow">
+            Syncing…
+          </div>
+        )}
+        {pages[page]}
       </div>
+    </>
+  )
+
+  return (
+    <DeskNavProvider page={page} setPage={setPage} openOnboardingTour={openOnboardingTour}>
+      {tourOpen ? (
+        <TourSession key={tourSession} onExit={closeTour}>
+          <div className="flex h-full w-full bg-gray-50 overflow-hidden">{shellBody}</div>
+        </TourSession>
+      ) : (
+        <div className="flex h-screen bg-gray-50 overflow-hidden">{shellBody}</div>
+      )}
     </DeskNavProvider>
   )
 }
 
 function Gate() {
   const { user, loading, emailVerified } = useAuth()
-  const [view, setView] = useState<'home' | 'login'>('home')
-  const prevUser = useRef(user)
   const [verifyToken, setVerifyToken] = useState(() => new URLSearchParams(window.location.search).get('verify_token'))
-
-  useEffect(() => {
-    if (prevUser.current && !user) setView('home')
-    prevUser.current = user
-  }, [user])
 
   if (verifyToken) {
     return (
@@ -829,7 +925,6 @@ function Gate() {
         onDone={() => {
           window.history.replaceState(null, '', window.location.pathname)
           setVerifyToken(null)
-          setView('login')
         }}
       />
     )
@@ -846,10 +941,7 @@ function Gate() {
       </div>
     )
   }
-  if (!user) {
-    if (view === 'login') return <AuthPage onBack={() => setView('home')} />
-    return <HomePage onSignIn={() => setView('login')} />
-  }
+  if (!user) return <AuthPage />
   if (!emailVerified) return <VerifyEmailPage />
   return (
     <UiProvider>

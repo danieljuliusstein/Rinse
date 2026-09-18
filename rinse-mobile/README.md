@@ -47,7 +47,7 @@ npm run mobile
 | `EXPO_PUBLIC_OFFLINE_ENABLED` | Set `0` to disable offline enqueue |
 | `EAS_PROJECT_ID` | `a603bec9-0ac7-432a-b24a-9d100f9fd884` |
 
-OAuth redirect: `rinse://oauth/callback`
+OAuth: Google/Apple use PocketBase’s redirect (`https://detailing-pb.fly.dev/api/oauth2-redirect`) via `authWithOAuth2` — same as Desk.
 
 ## App Store
 

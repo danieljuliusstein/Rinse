@@ -66,3 +66,16 @@ export function mergeChatThreadMeta<T extends { id: string } & ChatThreadMeta>(t
     label_ids: thread.label_ids ?? meta.label_ids ?? [],
   }
 }
+
+export function clearTourChatThreadMeta(): void {
+  const isTourId = (id: string) => id.startsWith('tour-') || id.startsWith('dummy-') || id.startsWith('temp-')
+  const all = readAll()
+  let changed = false
+  for (const k of Object.keys(all)) {
+    if (isTourId(k)) {
+      delete all[k]
+      changed = true
+    }
+  }
+  if (changed) writeAll(all)
+}

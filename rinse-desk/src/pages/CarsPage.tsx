@@ -17,6 +17,7 @@ import {
 } from '@/lib/job-photos-api'
 import { getDamageDocsForVehicle, type DeskDamageDoc } from '@/lib/damage-docs-api'
 import type { DeskVehicle, VehicleType } from '@/lib/types'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 function vehicleLabel(v: DeskVehicle): string {
   return [v.year, v.make, v.model].filter(Boolean).join(' ') || 'Vehicle'
@@ -28,7 +29,8 @@ export default function CarsPage() {
   const { vehicles, clients, jobs, setVehicles } = useData()
   const { focusVehicleId, clearFocusVehicle, openContact } = useDeskNav()
   const { promptForm, toast, alert } = useUi()
-  const { createEvent } = useCreateActions()
+  const { createEvent, ensureClientsAndPackages } = useCreateActions()
+  const tour = useOptionalTour()
 
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<VehicleType | 'all'>('all')
@@ -194,7 +196,7 @@ export default function CarsPage() {
 
   async function createVehicle() {
     if (clients.length === 0) {
-      alert('Add a contact first, then attach a vehicle.', 'No clients')
+      await ensureClientsAndPackages('add a vehicle')
       return
     }
     const values = await promptForm({
@@ -232,6 +234,25 @@ export default function CarsPage() {
       ],
     })
     if (!values?.client_id || !values.make || !values.model) return
+
+    if (tour?.active) {
+      const created: DeskVehicle = {
+        id: `tour-veh-${Date.now()}`,
+        client_id: values.client_id,
+        make: values.make,
+        model: values.model,
+        year: values.year ? Number(values.year) : 2023,
+        type: (values.type as VehicleType) || 'sedan',
+        color: values.color || 'Silver',
+        plate: values.plate || 'ABC-123',
+        vin: values.vin || undefined,
+      }
+      setVehicles((prev) => [created, ...prev])
+      setSelectedId(created.id)
+      toast('Vehicle created')
+      return
+    }
+
     try {
       const created = await api.createVehicle({
         client_id: values.client_id,
@@ -254,6 +275,22 @@ export default function CarsPage() {
   async function onUpload(fileList: FileList | null) {
     if (!selectedJobId || !fileList?.length) return
     setUploading(true)
+
+    if (tour?.active) {
+      const mockPhotos: JobPhoto[] = Array.from(fileList).map((f, i) => ({
+        id: `tour-photo-${Date.now()}-${i}`,
+        filename: `mock-${Date.now()}-${i}.jpg`,
+        url: URL.createObjectURL(f),
+        type: uploadType,
+        job_id: selectedJobId,
+        created: new Date().toISOString(),
+      }))
+      setPhotos((prev) => [...mockPhotos, ...prev])
+      toast('Photos uploaded')
+      setUploading(false)
+      return
+    }
+
     try {
       for (const file of Array.from(fileList)) {
         await uploadJobPhoto(selectedJobId, file, uploadType)
@@ -270,6 +307,13 @@ export default function CarsPage() {
   async function onDeletePhoto(photo: JobPhoto) {
     if (!selectedJobId) return
     if (!window.confirm('Delete this photo? It will also disappear on mobile.')) return
+
+    if (tour?.active) {
+      setPhotos((prev) => prev.filter((p) => p.filename !== photo.filename))
+      toast('Photo deleted')
+      return
+    }
+
     try {
       await deleteJobPhoto(selectedJobId, photo.filename)
       await refreshPhotos(selectedJobId)
@@ -283,12 +327,23 @@ export default function CarsPage() {
     <div className="flex-1 flex flex-col overflow-hidden bg-ink-100">
       <Header title="Cars" subtitle={`${vehicles.length} vehicles`} />
 
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      <div
+        className={`flex-1 flex overflow-hidden min-h-0 ${
+          tour?.isArmed('cars-panel') ? 'tour-armed relative z-[55] pointer-events-auto' : ''
+        }`}
+        data-tour-target="cars-panel"
+      >
         <FleetList
           vehicles={filtered}
           allVehicles={vehicles}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={(id) => {
+            setSelectedId(id)
+            if (tour?.active && tour.stop.id === 'cars') {
+              toast('Vehicle selected')
+              tour.notifyCreated('vehicle')
+            }
+          }}
           query={query}
           onQuery={setQuery}
           typeFilter={typeFilter}
@@ -299,7 +354,9 @@ export default function CarsPage() {
           }
           damageCounts={damageCounts}
           clientName={clientName}
-          onAddVehicle={() => void createVehicle()}
+          onAddVehicle={() => {
+            void createVehicle()
+          }}
           paintFor={paintHexFor}
         />
 
@@ -309,7 +366,13 @@ export default function CarsPage() {
             jobs={jobs}
             damageCounts={damageCounts}
             clientName={clientName}
-            onPick={setSelectedId}
+            onPick={(id) => {
+              setSelectedId(id)
+              if (tour?.active && tour.stop.id === 'cars') {
+                toast('Vehicle selected')
+                tour.notifyCreated('vehicle')
+              }
+            }}
           />
         ) : (
           <CarVehicleDetail
@@ -319,18 +382,26 @@ export default function CarsPage() {
             damageDocs={damageDocs}
             damageError={damageError}
             selectedArea={selectedDamageArea}
-            onSelectArea={setSelectedDamageArea}
+            onSelectArea={(area) => {
+              setSelectedDamageArea(area)
+            }}
             clientJobs={clientJobs}
             selectedJobId={selectedJobId}
-            onSelectJob={setSelectedJobId}
+            onSelectJob={(jid) => {
+              setSelectedJobId(jid)
+            }}
             photos={photos}
             photoLoading={photoLoading}
             photoError={photoError}
             uploadType={uploadType}
             onUploadType={setUploadType}
             uploading={uploading}
-            onUpload={(files) => void onUpload(files)}
-            onDeletePhoto={(p) => void onDeletePhoto(p)}
+            onUpload={(files) => {
+              void onUpload(files)
+            }}
+            onDeletePhoto={(p) => {
+              void onDeletePhoto(p)
+            }}
             onBack={() => setSelectedId(null)}
             onOpenContact={() => {
               if (selected.client_id) openContact(selected.client_id)

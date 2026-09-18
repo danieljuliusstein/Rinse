@@ -4,6 +4,7 @@ import { useUi } from '@/providers/UiProvider'
 import * as platform from '@/lib/platform-api'
 import type { CampaignChannel, CampaignStatus, DeskCampaign } from '@/lib/types'
 import { colors } from '@/theme/colors'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 
 const STATUSES: CampaignStatus[] = ['draft', 'active', 'paused', 'completed']
 const CHANNELS: CampaignChannel[] = ['email', 'sms', 'ads', 'other']
@@ -28,6 +29,7 @@ type Props = {
 export default function CampaignEditor({ campaign, onBack, onSaved, onDeleted }: Props) {
   const { clients } = useData()
   const { alert, toast } = useUi()
+  const tour = useOptionalTour()
   const [name, setName] = useState(campaign.name)
   const [status, setStatus] = useState<CampaignStatus>(campaign.status)
   const [channel, setChannel] = useState<CampaignChannel>(campaign.channel)
@@ -81,6 +83,14 @@ export default function CampaignEditor({ campaign, onBack, onSaved, onDeleted }:
 
   async function onSave() {
     setBusy(true)
+    if (tour?.active || campaign.id.startsWith('tour-')) {
+      toast('Campaign saved')
+      tour?.completeStop('campaigns')
+      setBusy(false)
+      await onSaved()
+      return
+    }
+
     try {
       await platform.updateCampaign(campaign.id, {
         name: name.trim() || campaign.name,
@@ -101,6 +111,14 @@ export default function CampaignEditor({ campaign, onBack, onSaved, onDeleted }:
 
   async function onSend() {
     setBusy(true)
+    if (tour?.active || campaign.id.startsWith('tour-')) {
+      toast('Logged outreach to 4 contact(s)')
+      tour?.completeStop('campaigns')
+      setBusy(false)
+      await onSaved()
+      return
+    }
+
     try {
       await platform.updateCampaign(campaign.id, {
         name: name.trim() || campaign.name,
@@ -131,6 +149,13 @@ export default function CampaignEditor({ campaign, onBack, onSaved, onDeleted }:
   async function onDelete() {
     if (!window.confirm(`Delete “${campaign.name}”? This cannot be undone.`)) return
     setBusy(true)
+    if (tour?.active || campaign.id.startsWith('tour-')) {
+      toast('Campaign deleted')
+      setBusy(false)
+      onDeleted()
+      return
+    }
+
     try {
       await platform.deleteCampaign(campaign.id)
       toast('Campaign deleted')

@@ -1,11 +1,24 @@
-import { ArrowRight, Receipt, Search, Smartphone } from 'lucide-react'
+import { ArrowRight, CalendarPlus, Plus, Receipt, Search, Smartphone } from 'lucide-react'
 
 type Props = {
   variant?: 'none' | 'no-match'
   onClearFilters?: () => void
+  /** Create draft from an existing calendar job. */
+  onCreateInvoice?: () => void
+  createInvoiceAvailable?: boolean
+  creating?: boolean
+  /** When no jobs exist yet — send the operator to Calendar. */
+  onScheduleJob?: () => void
 }
 
-export function EmptyInvoices({ variant = 'none', onClearFilters }: Props) {
+export function EmptyInvoices({
+  variant = 'none',
+  onClearFilters,
+  onCreateInvoice,
+  createInvoiceAvailable = false,
+  creating = false,
+  onScheduleJob,
+}: Props) {
   if (variant === 'no-match') {
     return (
       <div className="rounded-2xl bg-white ring-1 ring-ink-200/80 py-16 flex flex-col items-center text-center animate-invoices-fade-up">
@@ -31,7 +44,10 @@ export function EmptyInvoices({ variant = 'none', onClearFilters }: Props) {
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center px-6 py-10">
+    <div
+      className="flex-1 flex items-center justify-center px-6 py-10"
+      data-tour-target="invoices-panel"
+    >
       <div className="max-w-lg w-full text-center animate-invoices-fade-up">
         <div className="relative mx-auto w-44 h-44 mb-8">
           <div className="absolute left-6 top-4 w-24 h-40 rounded-[20px] bg-brand-900 shadow-xl flex flex-col items-center justify-center gap-2 p-3">
@@ -64,18 +80,56 @@ export function EmptyInvoices({ variant = 'none', onClearFilters }: Props) {
 
         <h2 className="text-[22px] font-semibold text-ink-900 tracking-tight">No invoices yet</h2>
         <p className="text-[14px] text-ink-500 mt-2 leading-relaxed">
-          Invoices your detailers create in the Rinse mobile app will show up here automatically. The
-          desk collects them — you search, review what&apos;s owed, and nudge status along.
+          {createInvoiceAvailable
+            ? 'Pick a calendar job to create a draft, then mark it sent and track what’s owed here.'
+            : 'Create your first invoice in one step — we’ll schedule a job and open the draft.'}
         </p>
+
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2">
+          {createInvoiceAvailable && onCreateInvoice ? (
+            <button
+              type="button"
+              data-tour-target="invoices-create"
+              disabled={creating}
+              onClick={onCreateInvoice}
+              className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 text-white text-[13px] font-semibold hover:bg-brand-600 transition shadow-sm relative z-[55] pointer-events-auto disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" strokeWidth={2.5} />
+              {creating ? 'Creating…' : 'Create invoice'}
+            </button>
+          ) : onScheduleJob ? (
+            <button
+              type="button"
+              data-tour-target="invoices-create"
+              disabled={creating}
+              onClick={onScheduleJob}
+              className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 text-white text-[13px] font-semibold hover:bg-brand-600 transition shadow-sm relative z-[55] pointer-events-auto disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" strokeWidth={2.5} />
+              {creating ? 'Creating…' : 'Create invoice'}
+            </button>
+          ) : null}
+          {createInvoiceAvailable && onScheduleJob ? (
+            <button
+              type="button"
+              disabled={creating}
+              onClick={onScheduleJob}
+              className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg bg-white ring-1 ring-ink-200 text-ink-700 text-[13px] font-semibold hover:bg-ink-50 transition disabled:opacity-60"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              New job + invoice
+            </button>
+          ) : null}
+        </div>
 
         <div className="grid grid-cols-2 gap-3 mt-7 text-left">
           <div className="rounded-xl bg-white ring-1 ring-ink-200 p-4">
             <div className="w-8 h-8 rounded-lg bg-ink-900 flex items-center justify-center mb-2.5">
               <Smartphone className="w-4 h-4 text-brand-500" />
             </div>
-            <div className="text-[12.5px] font-semibold text-ink-900">Created on mobile</div>
+            <div className="text-[12.5px] font-semibold text-ink-900">Mobile or Desk</div>
             <div className="text-[11.5px] text-ink-500 mt-0.5 leading-snug">
-              Field crews build invoices with line items, packages &amp; photos.
+              Field crews and Desk both create drafts from completed jobs.
             </div>
           </div>
           <div className="rounded-xl bg-white ring-1 ring-ink-200 p-4">
@@ -84,14 +138,9 @@ export function EmptyInvoices({ variant = 'none', onClearFilters }: Props) {
             </div>
             <div className="text-[12.5px] font-semibold text-ink-900">Collected at the desk</div>
             <div className="text-[11.5px] text-ink-500 mt-0.5 leading-snug">
-              You track balances, aging &amp; light status actions — no builder needed.
+              Track balances, aging &amp; mark invoices sent or paid.
             </div>
           </div>
-        </div>
-
-        <div className="mt-6 inline-flex items-center gap-1.5 text-[12px] text-ink-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
-          Waiting for the first invoice from mobile…
         </div>
       </div>
     </div>

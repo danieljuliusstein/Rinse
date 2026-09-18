@@ -6,7 +6,14 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { AlertModal, ConfirmModal, FormModal, type FormField } from '@/components/Modal'
+import {
+  AlertModal,
+  ChoiceModal,
+  ConfirmModal,
+  FormModal,
+  type ChoiceAction,
+  type FormField,
+} from '@/components/Modal'
 
 type AlertState = { title?: string; message: string } | null
 type FormState = {
@@ -23,6 +30,13 @@ type ConfirmState = {
   danger?: boolean
   resolve: (ok: boolean) => void
 } | null
+type ChoiceState = {
+  title?: string
+  message: string
+  actions: ChoiceAction[]
+  cancelLabel?: string
+  resolve: (id: string | null) => void
+} | null
 
 export type ConfirmOptions = {
   title?: string
@@ -32,9 +46,17 @@ export type ConfirmOptions = {
   danger?: boolean
 }
 
+export type ChoiceOptions = {
+  title?: string
+  message: string
+  actions: ChoiceAction[]
+  cancelLabel?: string
+}
+
 interface UiContextValue {
   alert: (message: string, title?: string) => void
   confirm: (opts: ConfirmOptions) => Promise<boolean>
+  promptChoice: (opts: ChoiceOptions) => Promise<string | null>
   promptForm: (opts: {
     title: string
     fields: FormField[]
@@ -48,6 +70,7 @@ const UiContext = createContext<UiContextValue | null>(null)
 export function UiProvider({ children }: { children: ReactNode }) {
   const [alertState, setAlertState] = useState<AlertState>(null)
   const [confirmState, setConfirmState] = useState<ConfirmState>(null)
+  const [choiceState, setChoiceState] = useState<ChoiceState>(null)
   const [formState, setFormState] = useState<FormState>(null)
   const [formBusy, setFormBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
@@ -70,6 +93,14 @@ export function UiProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const promptChoice = useCallback(
+    (opts: ChoiceOptions) =>
+      new Promise<string | null>((resolve) => {
+        setChoiceState({ ...opts, resolve })
+      }),
+    [],
+  )
+
   const promptForm = useCallback(
     (opts: { title: string; fields: FormField[]; submitLabel?: string }) =>
       new Promise<Record<string, string> | null>((resolve) => {
@@ -81,13 +112,18 @@ export function UiProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ alert, confirm, promptForm, toast }),
-    [alert, confirm, promptForm, toast],
+    () => ({ alert, confirm, promptChoice, promptForm, toast }),
+    [alert, confirm, promptChoice, promptForm, toast],
   )
 
   function settleConfirm(ok: boolean) {
     confirmState?.resolve(ok)
     setConfirmState(null)
+  }
+
+  function settleChoice(id: string | null) {
+    choiceState?.resolve(id)
+    setChoiceState(null)
   }
 
   return (
@@ -110,6 +146,16 @@ export function UiProvider({ children }: { children: ReactNode }) {
         danger={confirmState?.danger}
         onCancel={() => settleConfirm(false)}
         onConfirm={() => settleConfirm(true)}
+      />
+
+      <ChoiceModal
+        open={!!choiceState}
+        title={choiceState?.title}
+        message={choiceState?.message ?? ''}
+        actions={choiceState?.actions ?? []}
+        cancelLabel={choiceState?.cancelLabel}
+        onCancel={() => settleChoice(null)}
+        onPick={(id) => settleChoice(id)}
       />
 
       <FormModal

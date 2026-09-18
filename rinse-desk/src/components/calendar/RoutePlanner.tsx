@@ -18,6 +18,7 @@ import { Plus } from 'lucide-react'
 import type { DeskClient, DeskJob } from '@/lib/types'
 import { saveRouteOrder, updateClient } from '@/lib/api'
 import { sortJobsByRoute } from '@/lib/metrics'
+import { useOptionalTour } from '@/components/tour/tour-provider'
 import {
   addressesLookSame,
   geocodeAddress,
@@ -38,6 +39,7 @@ import { StopCard, type StopCardModel } from '@/components/routes/StopCard'
 type Props = {
   date: string
   jobs: DeskJob[]
+  clients: DeskClient[]
   setJobs: React.Dispatch<React.SetStateAction<DeskJob[]>>
   setClients: React.Dispatch<React.SetStateAction<DeskClient[]>>
   businessAddress: string
@@ -45,6 +47,11 @@ type Props = {
   onDepotCoords: (c: { lat: number; lng: number } | null) => void
   toast: (msg: string) => void
   onSchedule?: () => void
+  onSelectStop?: (jobId: string) => void
+}
+
+function isSyntheticId(id: string): boolean {
+  return id.startsWith('tour-') || id.startsWith('dummy-')
 }
 
 /** e.g. 45 → "45 min", 60 → "1 hr", 111 → "1 hr 51 min" */
@@ -92,6 +99,7 @@ function SortableStopCard({
   onSelect: () => void
   isLast: boolean
 }) {
+  const tour = useOptionalTour()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: stop.id,
   })
@@ -99,6 +107,8 @@ function SortableStopCard({
     transform: CSS.Transform.toString(transform),
     transition,
   }
+  const tourTarget = index === 0
+  const tourArmed = tourTarget && !!tour?.isArmed('routes-stop')
   return (
     <StopCard
       stop={stop}
@@ -110,6 +120,8 @@ function SortableStopCard({
       style={style}
       isDragging={isDragging}
       dragHandleProps={{ ...listeners, ...attributes }}
+      tourArmed={tourArmed}
+      isTourTarget={tourTarget}
     />
   )
 }
@@ -117,6 +129,7 @@ function SortableStopCard({
 export default function RoutePlanner({
   date,
   jobs,
+  clients,
   setJobs,
   setClients,
   businessAddress,
@@ -124,13 +137,27 @@ export default function RoutePlanner({
   onDepotCoords,
   toast,
   onSchedule,
+  onSelectStop,
 }: Props) {
   const [busy, setBusy] = useState(false)
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [roadGeometry, setRoadGeometry] = useState<Array<[number, number]> | null>(null)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
-  const dayJobs = useMemo(() => sortJobsByRoute(jobsForDate(jobs, date)), [jobs, date])
+  /** Prefer live client list coords/address over stale job.expand snapshots. */
+  const hydratedJobs = useMemo(() => {
+    const byId = new Map(clients.map((c) => [c.id, c]))
+    return jobs.map((j) => {
+      const c = byId.get(j.client_id)
+      if (!c) return j
+      return { ...j, client: { ...j.client, ...c } }
+    })
+  }, [jobs, clients])
+
+  const dayJobs = useMemo(
+    () => sortJobsByRoute(jobsForDate(hydratedJobs, date)),
+    [hydratedJobs, date],
+  )
   const stops = useMemo(() => buildRouteStops(dayJobs), [dayJobs])
   const ids = useMemo(() => dayJobs.map((j) => j.id), [dayJobs])
   const needsPlot = stops.some((s) => Boolean(s.address) && !s.plottable)
@@ -164,7 +191,10 @@ export default function RoutePlanner({
 
   const persistOrder = useCallback(
     async (orderedIds: string[]) => {
-      await saveRouteOrder(orderedIds)
+      const realIds = orderedIds.filter((id) => !isSyntheticId(id))
+      if (realIds.length > 0) {
+        await saveRouteOrder(realIds)
+      }
       setJobs((prev) =>
         prev.map((j) => {
           const idx = orderedIds.indexOf(j.id)
@@ -272,11 +302,13 @@ export default function RoutePlanner({
         }
 
         try {
-          await updateClient(client.id, {
-            lat: top.lat,
-            lng: top.lng,
-            geocoded_at,
-          })
+          if (!isSyntheticId(client.id)) {
+            await updateClient(client.id, {
+              lat: top.lat,
+              lng: top.lng,
+              geocoded_at,
+            })
+          }
         } catch {
           /* still use coords this session */
         }
@@ -315,12 +347,14 @@ export default function RoutePlanner({
         for (const c of pendingCorrections) {
           const geocoded_at = new Date().toISOString()
           try {
-            await updateClient(c.clientId, {
-              address: c.to,
-              lat: c.lat,
-              lng: c.lng,
-              geocoded_at,
-            })
+            if (!isSyntheticId(c.clientId)) {
+              await updateClient(c.clientId, {
+                address: c.to,
+                lat: c.lat,
+                lng: c.lng,
+                geocoded_at,
+              })
+            }
             corrected += 1
             setClients((prev) =>
               prev.map((row) =>
@@ -521,7 +555,10 @@ export default function RoutePlanner({
                       stop={stop}
                       index={idx}
                       selected={stop.id === selectedJobId}
-                      onSelect={() => setSelectedJobId(stop.id)}
+                      onSelect={() => {
+                        setSelectedJobId(stop.id)
+                        onSelectStop?.(stop.id)
+                      }}
                       isLast={idx === cardModels.length - 1}
                     />
                   ))}
