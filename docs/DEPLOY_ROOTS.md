@@ -47,29 +47,37 @@ rinse-api     --PB / Stripe / Apple---->  same secrets, same webhook URLs
 
 ## Ignored Build Step (Vercel)
 
-Exit `0` = skip build; exit `1` = proceed. Set per project:
+Exit `0` = skip build; exit `1` = proceed. Set per project.
 
-**`detailing-landing`** (Root = `rinse-landing`):
-
-```bash
-git diff --quiet HEAD^ HEAD -- ./rinse-landing ./packages/core || exit 1
-exit 0
-```
+**Critical:** With **Root Directory** set (`rinse-desk`, etc.), Vercel runs this
+command *inside that folder*. Paths like `./rinse-desk` then look for
+`rinse-desk/rinse-desk` → no diff → **every deploy is Canceled** (skipped).
+Use `.` for the app folder, and `../…` for siblings outside the root.
 
 **`detailing-crm`** (Root = `rinse-desk`):
 
 ```bash
-git diff --quiet HEAD^ HEAD -- ./rinse-desk || exit 1
+git diff --quiet HEAD^ HEAD -- . || exit 1
+exit 0
+```
+
+**`detailing-landing`** (Root = `rinse-landing`):
+
+```bash
+git diff --quiet HEAD^ HEAD -- . ../packages/core || exit 1
 exit 0
 ```
 
 **`detailing`** (Root = `rinse-api`):
 
 ```bash
-git diff --quiet HEAD^ HEAD -- ./rinse-api ./packages/core ./pocketbase || exit 1
+git diff --quiet HEAD^ HEAD -- . ../packages/core ../pocketbase || exit 1
 exit 0
 ```
 
+After changing these in Vercel → Project → Settings → Git → Ignored Build Step,
+**Redeploy** the latest production commit (or push an empty commit) so Desk/API
+pick up `05a309a` and later.
 ## Cutover checklist
 
 1. Preview deploy from the new Root Directory **before** reconnecting production.
