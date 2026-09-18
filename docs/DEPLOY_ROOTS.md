@@ -47,37 +47,28 @@ rinse-api     --PB / Stripe / Apple---->  same secrets, same webhook URLs
 
 ## Ignored Build Step (Vercel)
 
-Exit `0` = skip build; exit `1` = proceed. Set per project.
+**Disabled (2026-09-17).** All three projects had an Ignored Build Step that
+ran *inside* the Root Directory (`rinse-desk` / `rinse-api` / `rinse-landing`),
+so path filters like `rinse-desk` never matched and every git push was
+**Canceled**. `commandForIgnoringBuildStep` is now cleared on:
 
-**Critical:** With **Root Directory** set (`rinse-desk`, etc.), Vercel runs this
-command *inside that folder*. Paths like `./rinse-desk` then look for
-`rinse-desk/rinse-desk` → no diff → **every deploy is Canceled** (skipped).
-Use `.` for the app folder, and `../…` for siblings outside the root.
+- `detailing-crm`
+- `detailing`
+- `detailing-landing`
 
-**`detailing-crm`** (Root = `rinse-desk`):
+Every push to `main` rebuilds all three. That uses more build minutes; fine at
+this stage. If you re-enable skip later, the command must use `.` (and
+`../packages/core` etc.) because it runs from the Root Directory — not
+`./rinse-desk` from the repo root.
 
-```bash
-git diff --quiet HEAD^ HEAD -- . || exit 1
-exit 0
-```
+## Previous (do not use as-is)
 
-**`detailing-landing`** (Root = `rinse-landing`):
-
-```bash
-git diff --quiet HEAD^ HEAD -- . ../packages/core || exit 1
-exit 0
-```
-
-**`detailing`** (Root = `rinse-api`):
+Broken examples that caused silent skips with Root Directory set:
 
 ```bash
-git diff --quiet HEAD^ HEAD -- . ../packages/core ../pocketbase || exit 1
-exit 0
+# WRONG when Root Directory = rinse-desk (looks for rinse-desk/rinse-desk)
+git diff --quiet HEAD^ HEAD -- rinse-desk packages/core .github || exit 1
 ```
-
-After changing these in Vercel → Project → Settings → Git → Ignored Build Step,
-**Redeploy** the latest production commit (or push an empty commit) so Desk/API
-pick up `05a309a` and later.
 ## Cutover checklist
 
 1. Preview deploy from the new Root Directory **before** reconnecting production.
