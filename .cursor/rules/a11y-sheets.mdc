@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Sheet & modal a11y
 
-Full audit: `detailing-app/docs/a11y-audit-phase2.md`
+Full audit: `rinse-api/docs/a11y-audit-phase2.md`
 
 ## Required on every new sheet/modal
 

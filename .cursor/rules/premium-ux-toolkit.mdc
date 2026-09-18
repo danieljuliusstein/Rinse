@@ -1,6 +1,6 @@
 ---
 description: Premium UX toolkit — Wave A–C packages, owners, and constraints
-globs: detailing-app/**/*
+globs: rinse-api/**/*
 alwaysApply: false
 ---
 

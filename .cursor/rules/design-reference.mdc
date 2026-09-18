@@ -9,13 +9,13 @@ alwaysApply: false
 Before CSS/UI polish, consult:
 
 - `.cursor/rules/ui-styling.mdc` — components, layout, elements (always on)
-- `detailing-app/design-references/` — ScreenDesigns replay frames
-- `detailing-app/design-references/MOTION_SPEC.md` — archetypes + animation spec template
+- `rinse-api/design-references/` — ScreenDesigns replay frames
+- `rinse-api/design-references/MOTION_SPEC.md` — archetypes + animation spec template
 - `.cursor/rules/design-motion.mdc` — always-on motion reference (archetypes, frame workflow)
-- `detailing-app/design-references/STYLE_PLAN.md` — phased polish plan (read before implementing)
-- `detailing-app/design-references/ONBOARDING_EXPERIENCE_CHEATSHEET.md` — onboarding, trial, paywall psychology
-- `detailing-app/docs/ui-css-audit.md` — pattern owners; extend, don't duplicate
-- `detailing-app/src/app/tokens.css` — surfaces, shadows, motion tokens
+- `rinse-api/design-references/STYLE_PLAN.md` — phased polish plan (read before implementing)
+- `rinse-api/design-references/ONBOARDING_EXPERIENCE_CHEATSHEET.md` — onboarding, trial, paywall psychology
+- `rinse-api/docs/ui-css-audit.md` — pattern owners; extend, don't duplicate
+- `rinse-api/src/app/tokens.css` — surfaces, shadows, motion tokens
 
 ## North star: Invoice Fly
 

@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Custom UI for new features
 
-When adding or changing product UX in `apps/rinse-mobile/`:
+When adding or changing product UX in `rinse-mobile/`:
 
 - **Always** use existing design-system surfaces (`AppSheet`, `Card`, list rows, pills, tokens) — not `window.prompt`, `window.confirm`, or numbered browser dialogs.
 - Prefer a dedicated sheet/component (e.g. action list in `AppSheet` with `presentation="modal"`) over `Alert.alert` / `ActionSheetIOS` for multi-option product choices operators will see often.

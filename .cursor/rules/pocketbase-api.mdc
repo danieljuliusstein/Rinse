@@ -1,12 +1,12 @@
 ---
 description: PocketBase and API layer conventions — tenant scope, writes, mappers
-globs: ["apps/api/src/lib/api/**", "apps/api/src/lib/server/**", "apps/api/src/app/api/**", "apps/pocketbase/**"]
+globs: ["rinse-api/src/lib/api/**", "rinse-api/src/lib/server/**", "rinse-api/src/app/api/**", "pocketbase/**"]
 alwaysApply: false
 ---
 
 # PocketBase & API conventions
 
-Docs: `apps/pocketbase/README.md`, `apps/api/README.md`, root `README.md`
+Docs: `pocketbase/README.md`, `rinse-api/README.md`, root `README.md`
 
 ## Data access layers
 

@@ -7,7 +7,7 @@ alwaysApply: true
 
 **Before onboarding, signup, trial, paywall, tour, activation, or offboarding work — read the full cheat sheet.** Do not improvise from memory; do not condense.
 
-**Canonical (full, uncompacted):** `detailing-app/design-references/ONBOARDING_EXPERIENCE_CHEATSHEET.md`  
+**Canonical (full, uncompacted):** `rinse-api/design-references/ONBOARDING_EXPERIENCE_CHEATSHEET.md`  
 **Implementation mirror:** `rinse-mobile/docs/onboarding-experience-sheet.md`
 
 ## Related rules

@@ -1,12 +1,12 @@
 ---
 description: CSS pattern owners — extend shared styles, use tokens, no duplicates
-globs: "detailing-app/**/*.css"
+globs: "rinse-api/**/*.css"
 alwaysApply: false
 ---
 
 # CSS pattern owners
 
-Before adding or changing CSS, read `detailing-app/docs/ui-css-audit.md`.
+Before adding or changing CSS, read `rinse-api/docs/ui-css-audit.md`.
 
 ## Rules
 
