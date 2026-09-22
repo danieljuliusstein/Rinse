@@ -1,3 +1,4 @@
+import PocketBase from 'pocketbase'
 import { businessLogoApiUrl, pocketBaseRecordHasLogo } from '../business-logo'
 import { authenticateServerAdmin } from './pocketbase-admin'
 import { escapeFilterValue, appJobCreateToPb, pbClientToApp, pbJobToApp, pbPackageToApp, type PbRecord } from '../api/mappers'
@@ -133,8 +134,12 @@ export async function getAvailabilityForOrg(
   })
 }
 
-export async function createPublicBookingForOrg(organizationId: string, input: PublicBookingInput) {
-  const pb = await authenticateServerAdmin()
+export async function createPublicBookingForOrg(
+  organizationId: string,
+  input: PublicBookingInput,
+  pbOverride?: { collection: (name: string) => unknown },
+) {
+  const pb = pbOverride ? (pbOverride as unknown as PocketBase) : await authenticateServerAdmin()
 
   const pkg = await pb.collection('packages').getOne<PbRecord>(input.packageId)
   if (String(pkg.organization_id) !== organizationId) {
@@ -191,10 +196,17 @@ export async function createPublicBookingForOrg(organizationId: string, input: P
     notes: input.notes?.trim() ? `Web booking: ${input.notes.trim()}` : 'Web booking',
   })
 
-  const jobRecord = await pb.collection('jobs').create<PbRecord>({
-    ...(payload as Record<string, unknown>),
-    organization_id: organizationId,
-  })
+  let jobRecord: PbRecord
+  try {
+    jobRecord = await pb.collection('jobs').create<PbRecord>({
+      ...(payload as Record<string, unknown>),
+      organization_id: organizationId,
+    })
+  } catch (error) {
+    throw new Error(
+      `Failed to create job during public booking: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
   const job = pbJobToApp(jobRecord)
 
   try {
