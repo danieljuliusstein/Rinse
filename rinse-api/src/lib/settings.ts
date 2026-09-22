@@ -1,3 +1,4 @@
+import { normalizeDocumentLocale, type DocumentLocale } from '@rinse/core'
 import { normalizeBookingSchedule, type BookingSchedule } from './booking-availability'
 import type { HomeModulePrefs } from './home-modules'
 import { DEMO_BOOKING_SCHEDULE, DEMO_TRAVEL_RATE_PER_MILE } from './demo-schedule'
@@ -13,6 +14,7 @@ export interface AppSettings {
   business_email: string
   business_address: string
   invoice_terms_footer: string
+  document_locale?: DocumentLocale
   notifications: {
     job_reminder: boolean
     morning_reminder: boolean
@@ -63,6 +65,7 @@ const DEFAULTS: AppSettings = {
   },
   appearance: 'light',
   invoice_template: 'rinse',
+  document_locale: 'en',
 }
 
 const DEV_DEMO_SETTINGS: Partial<AppSettings> = {
@@ -82,6 +85,7 @@ export function loadSettings(): AppSettings {
     return { ...DEFAULTS, ...(useDevDemoSettings() ? DEV_DEMO_SETTINGS : {}) }
   }
   const parsed = { ...DEFAULTS, ...JSON.parse(raw) } as AppSettings
+  parsed.document_locale = normalizeDocumentLocale(parsed.document_locale)
   if (parsed.booking_schedule) {
     parsed.booking_schedule = normalizeBookingSchedule(parsed.booking_schedule)
   }

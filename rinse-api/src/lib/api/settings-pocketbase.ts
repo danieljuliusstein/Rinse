@@ -1,3 +1,4 @@
+import { normalizeDocumentLocale } from '@rinse/core'
 import { businessLogoApiUrl, DEFAULT_BUSINESS_LOGO_PATH, pocketBaseRecordHasLogo } from '../business-logo'
 import { getPocketBase, isPocketBaseConfigured } from '../pocketbase'
 import { checkPocketBaseHealth } from '../pocketbase'
@@ -50,6 +51,7 @@ function recordToSettings(
     business_email: String(record.business_email ?? ''),
     business_address: String(record.business_address ?? ''),
     invoice_terms_footer: String(record.invoice_terms_footer ?? ''),
+    document_locale: normalizeDocumentLocale(record.document_locale ?? fallback?.document_locale),
     notifications,
     last_backup_at: record.last_backup_at ? String(record.last_backup_at) : undefined,
     logo_url: logoUrl,
@@ -162,6 +164,9 @@ export async function saveSettingsToPocketBase(
     business_address: settings.business_address,
     invoice_terms_footer: settings.invoice_terms_footer,
     notifications,
+  }
+  if (settings.document_locale !== undefined) {
+    payload.document_locale = normalizeDocumentLocale(settings.document_locale)
   }
   if (settings.accent_color !== undefined) {
     payload.accent_color = settings.accent_color?.trim() || ''

@@ -1,3 +1,4 @@
+import { normalizeDocumentLocale } from '@rinse/core'
 import type PocketBase from 'pocketbase'
 import { computePLReport, rangeFor } from '@/lib/api/aggregates'
 import {
@@ -79,6 +80,7 @@ async function loadOrgSettings(pb: PocketBase, organizationId: string): Promise<
       business_email: '',
       business_address: '',
       invoice_terms_footer: '',
+      document_locale: 'en',
       notifications: notificationsFromRecord(null),
       logo_url: DEFAULT_BUSINESS_LOGO_PATH,
     }
@@ -94,6 +96,7 @@ async function loadOrgSettings(pb: PocketBase, organizationId: string): Promise<
     business_email: String(record.business_email ?? ''),
     business_address: String(record.business_address ?? ''),
     invoice_terms_footer: String(record.invoice_terms_footer ?? ''),
+    document_locale: normalizeDocumentLocale(record.document_locale),
     notifications: notificationsFromRecord(record.notifications),
     last_backup_at: record.last_backup_at ? String(record.last_backup_at) : undefined,
     logo_url: logoUrl,
