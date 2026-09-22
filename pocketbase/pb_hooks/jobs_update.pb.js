@@ -6,7 +6,17 @@ onRecordUpdateRequest((e) => {
   const shouldDeduct = completed.indexOf(old.getString('status')) < 0 && completed.indexOf(record.getString('status')) >= 0
   e.next()
   if (!shouldDeduct) return
-  const supplies = record.get('supplies_used')
+  // record.get() on a JSON field returns the raw JSON bytes (an array-like
+  // of byte codes, not a parsed value) in this PB 0.39 JSVM — Array.isArray()
+  // on it is true, but iterating it yields byte values, not the usage
+  // objects. String(...) converts it to the JSON text, so it must be
+  // explicitly parsed.
+  let supplies
+  try {
+    supplies = JSON.parse(String(record.get('supplies_used') || '[]'))
+  } catch (err) {
+    supplies = []
+  }
   if (!Array.isArray(supplies)) return
   for (const usage of supplies) {
     if (!usage.supply_id || !(Number(usage.quantity_used) > 0)) continue
