@@ -5,9 +5,16 @@ function readHeadBytes(file, maxLen) {
   if (!file || !file.reader) return null
   try {
     const rc = file.reader.open()
-    const head = rc.read(maxLen)
+    // rc.read() follows Go's io.Reader convention exposed to the JSVM: it
+    // fills a []uint8 buffer passed in and returns the byte count, it does
+    // NOT take a length and return a slice (rc.read(maxLen) throws
+    // "could not convert 12 to []uint8" — confirmed empirically). That
+    // exception was being swallowed by the catch below, so every real photo
+    // upload was silently treated as a magic-byte mismatch and rejected.
+    const buf = new Uint8Array(maxLen)
+    const n = rc.read(buf)
     rc.close()
-    return head
+    return n > 0 ? buf.subarray(0, n) : null
   } catch (err) {
     console.warn('jobs_photo_validate: could not read file head', err)
     return null
