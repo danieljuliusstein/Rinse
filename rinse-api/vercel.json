@@ -1,4 +1,5 @@
 {
+  "installCommand": "npm ci --prefix ../packages/core && npm ci",
   "crons": [
     {
       "path": "/api/cron/notifications",

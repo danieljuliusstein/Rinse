@@ -4,6 +4,8 @@ import { Check, ArrowRight, X, Star, Plus } from "lucide-react";
 import { SECTIONS } from "../shared/scroll";
 import { FadeUpWhenVisible } from "../shared/motion";
 
+type BillingCycle = "monthly" | "annual";
+
 export const COMPARISON_FEATURES: {
   label: string;
   starter: boolean;

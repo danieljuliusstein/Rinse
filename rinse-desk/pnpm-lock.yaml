@@ -37,7 +37,7 @@ importers:
         version: 6.1.21(@fullcalendar/core@6.1.21)
       '@rinse/core':
         specifier: file:../packages/core
-        version: file:../packages/core(libphonenumber-js@1.13.13)(zod@4.6.5)
+        version: file:../packages/core
       '@tabler/icons-react':
         specifier: ^3.46.0
         version: 3.46.0(react@19.2.4)
@@ -470,9 +470,6 @@ packages:
 
   '@rinse/core@file:../packages/core':
     resolution: {directory: ../packages/core, type: directory}
-    peerDependencies:
-      libphonenumber-js: ^1.13.8
-      zod: ^4.4.3
 
   '@rolldown/binding-android-arm64@1.0.0-rc.12':
     resolution: {integrity: sha512-pv1y2Fv0JybcykuiiD3qBOBdz6RteYojRFY1d+b95WVuzx211CRh+ytI/+9iVyWQ6koTh5dawe4S/yRfOFjgaA==}
@@ -1998,7 +1995,7 @@ snapshots:
       react: 19.2.4
       react-redux: 9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1)
 
-  '@rinse/core@file:../packages/core(libphonenumber-js@1.13.13)(zod@4.6.5)':
+  '@rinse/core@file:../packages/core':
     dependencies:
       libphonenumber-js: 1.13.13
       zod: 4.6.5
