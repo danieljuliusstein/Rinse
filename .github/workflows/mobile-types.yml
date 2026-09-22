@@ -1,0 +1,34 @@
+name: Mobile and shared core checks
+
+on:
+  pull_request:
+    paths:
+      - 'rinse-mobile/**'
+      - 'packages/core/**'
+      - '.github/workflows/mobile-types.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - 'rinse-mobile/**'
+      - 'packages/core/**'
+      - '.github/workflows/mobile-types.yml'
+  workflow_dispatch:
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            packages/core/package-lock.json
+            rinse-mobile/package-lock.json
+      - run: npm ci --prefix packages/core
+      - run: npm ci --prefix rinse-mobile
+      - run: npm run typecheck --prefix packages/core
+      - run: npm run typecheck --prefix rinse-mobile
+      - run: npm run test:validation --prefix rinse-mobile

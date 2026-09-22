@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Platform, StyleSheet, TextInput, View, type ViewStyle } from 'react-native'
+import { Platform, StyleSheet, TextInput, View, type ViewStyle, type StyleProp, type TextInputProps } from 'react-native'
 import { CheckCircle } from '@/src/icons'
 import { AppText } from '@/src/components/ui/AppText'
 import { colors, radii, spacing } from '@/src/theme/colors'
@@ -23,12 +23,12 @@ export function FormField({
   value: string
   onChangeText: (v: string) => void
   placeholder?: string
-  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'decimal-pad'
+  keyboardType?: TextInputProps['keyboardType']
   multiline?: boolean
   error?: string
   secureTextEntry?: boolean
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
 }) {
   const [focused, setFocused] = useState(false)
   const filled = value.trim().length > 0
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: fonts.body,
     color: colors.textPrimary,
-    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as ViewStyle) : null),
+    ...(Platform.OS === 'web' ? { outlineWidth: 0 } : null),
   },
   multiline: {
     flexGrow: 1,

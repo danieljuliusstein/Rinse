@@ -8,7 +8,7 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.e2e.json --noEmit",
     "sync-qa": "tsx scripts/sync-qa.ts",
     "native-smoke": "tsx scripts/native-smoke.ts",
     "money-parity": "tsx scripts/money-parity-test.ts",
@@ -25,7 +25,8 @@
     "motion-smoke:capture": "MOTION_CAPTURE=1 playwright test e2e/motion-smoke.spec.ts --project=motion-smoke",
     "marketing:capture": "playwright test e2e/marketing-capture.spec.ts --project=marketing-capture",
     "marketing:export": "node scripts/export-waitlist-assets.mjs",
-    "design:scrape": "node scripts/scrape-saas-design.mjs"
+    "design:scrape": "node scripts/scrape-saas-design.mjs",
+    "test:validation": "tsx --tsconfig tsconfig.e2e.json --test tests/validation.test.ts"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
@@ -81,13 +82,14 @@
     "react-native-svg": "^15.15.5",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.0",
-    "zod": "^4.4.3"
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@types/react": "~19.2.4",
     "sharp": "^0.34.5",
     "tsx": "^4.21.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "@types/node": "^22.0.0"
   }
 }

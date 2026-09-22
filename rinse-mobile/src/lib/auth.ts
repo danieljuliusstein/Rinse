@@ -298,7 +298,7 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<void> {
   // Don't preflight listAuthMethods — authWithOAuth2 already fetches it once.
   // Settle our own promise on popup dismiss (cancelRequest alone can hang).
   const requestKey = `oauth2-${provider}`
-  let browser: { close: () => void } | null = null
+  const browser: { current: { close: () => void } | null } = { current: null }
   type Outcome = 'pending' | 'done'
   let outcome: Outcome = 'pending'
 
@@ -321,20 +321,20 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<void> {
           provider,
           requestKey,
           urlCallback: (url) => {
-            browser = openOAuthUrl(url, finishCancel)
+            browser.current = openOAuthUrl(url, finishCancel)
           },
         })
         .then((data) => {
           if (outcome !== 'pending') return
           outcome = 'done'
           // Close auth UI immediately so the app doesn't wait on the leftover success page.
-          browser?.close()
+          browser.current?.close()
           resolve(data)
         })
         .catch((err: unknown) => {
           if (outcome !== 'pending') return
           outcome = 'done'
-          browser?.close()
+          browser.current?.close()
           reject(err)
         })
     })
@@ -345,7 +345,7 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<void> {
     await saveAuthFromStore()
   } catch (err) {
     outcome = 'done'
-    browser?.close()
+    browser.current?.close()
     if (isOAuthCancelled(err)) {
       throw new Error('OAuth sign-in was cancelled')
     }

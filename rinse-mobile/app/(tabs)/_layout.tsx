@@ -56,7 +56,6 @@ export default function TabLayout() {
           backBehavior="history"
           screenOptions={{
             headerShown: false,
-            safeAreaInsets: { bottom: 0 },
           }}
         >
           <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />

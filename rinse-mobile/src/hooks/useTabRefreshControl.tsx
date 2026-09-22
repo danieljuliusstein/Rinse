@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { RefreshControl } from 'react-native'
+import { RefreshControl, type RefreshControlProps } from 'react-native'
 import { useQuickAction } from '@/src/providers/QuickActionProvider'
 import { colors } from '@/src/theme/colors'
 
@@ -11,7 +11,7 @@ import { colors } from '@/src/theme/colors'
 export function useTabRefreshControl(
   refreshing: boolean,
   onRefresh: () => void,
-): ReactElement {
+): ReactElement<RefreshControlProps> {
   const { menuOpen } = useQuickAction()
   return (
     <RefreshControl

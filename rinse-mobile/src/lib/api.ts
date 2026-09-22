@@ -266,7 +266,7 @@ export async function getClient(id: string): Promise<Client | null> {
   return cached ? mapClient(cached) : null
 }
 
-export async function createClient(input: ClientFormValues): Promise<Client> {
+export async function createClient(input: ClientInput): Promise<Client> {
   const orgId = await requireOrganizationIdForWrite()
   const recordId = generatePocketBaseId()
   const payload: ClientInput = {

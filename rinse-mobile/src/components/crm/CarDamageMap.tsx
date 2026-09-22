@@ -214,17 +214,18 @@ export function CarDamageMap({
         {...(calibrate ? mapPan.panHandlers : {})}
       >
         {mapLayout.width > 0 ? (
-          <Image
-            source={carTopView}
-            style={[
-              styles.carImage,
-              { width: mapLayout.width, height: mapLayout.height },
-              !pinsReady ? styles.carImageLoading : null,
-            ]}
-            resizeMode="contain"
-            accessibilityLabel="Car body map"
-            pointerEvents="none"
-          />
+          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <Image
+              source={carTopView}
+              style={[
+                styles.carImage,
+                { width: mapLayout.width, height: mapLayout.height },
+                !pinsReady ? styles.carImageLoading : null,
+              ]}
+              resizeMode="contain"
+              accessibilityLabel="Car body map"
+            />
+          </View>
         ) : null}
 
         {calibrate && tapProbe ? (

@@ -1,5 +1,7 @@
 import { Platform, type ViewProps } from 'react-native'
 
+type WebSurfaceProps = Partial<ViewProps> & { dataSet?: Record<string, string> }
+
 const HIDE_SCROLLBAR_SURFACE_CSS = `
 [data-hide-scrollbar],
 [data-hide-scrollbar] *,
@@ -30,11 +32,11 @@ export function installInvoiceSurfaceScrollbarStyles(): void {
 }
 
 /** Marks a view tree — web hides scrollbars via installInvoiceSurfaceScrollbarStyles. */
-export const hideScrollbarSurfaceProps: Partial<ViewProps> =
+export const hideScrollbarSurfaceProps: WebSurfaceProps =
   Platform.OS === 'web' ? { dataSet: { hideScrollbar: '' } } : {}
 
 /** @deprecated Use hideScrollbarSurfaceProps — kept for invoice screens. */
-export const invoiceSurfaceProps: Partial<ViewProps> =
+export const invoiceSurfaceProps: WebSurfaceProps =
   Platform.OS === 'web' ? { dataSet: { invoiceSurface: '' } } : {}
 
 export const noScrollbarScrollProps = {

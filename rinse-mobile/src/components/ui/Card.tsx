@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
-import { StyleSheet, View, type ViewStyle } from 'react-native'
+import { StyleSheet, View, type ViewStyle, type StyleProp } from 'react-native'
 import { PressableSurface } from '@/src/components/ui/PressableSurface'
 import { colors, radii, shadows, spacing, webPressableReset } from '@/src/theme/colors'
 
 interface CardProps {
   children: ReactNode
   onPress?: () => void
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
 }
 
 export function Card({ children, onPress, style }: CardProps) {

@@ -1,5 +1,5 @@
 import { Check } from '@/src/icons'
-import { StyleSheet, TextInput, View } from 'react-native'
+import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native'
 import { AppText } from '@/src/components/ui'
 import { accentBorder, accentTint, normalizeAccentColor } from '@/src/lib/brand-color'
 import { colors, radii, spacing } from '@/src/theme/colors'
@@ -18,7 +18,7 @@ export function BusinessFilledField({
   value: string
   onChangeText: (v: string) => void
   optional?: boolean
-  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'decimal-pad'
+  keyboardType?: TextInputProps['keyboardType']
   multiline?: boolean
   prefix?: string
 }) {

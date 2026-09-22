@@ -47,10 +47,10 @@ export function setSentryUser(user: { id: string; orgId?: string } | null): void
 }
 
 /** Wrap root only when DSN is configured; never throw on wrap failure. */
-export function wrapRoot(Component: ComponentType<object>): ComponentType<object> {
+export function wrapRoot<P extends Record<string, unknown>>(Component: ComponentType<P>): ComponentType<P> {
   if (!dsn) return Component
   try {
-    return Sentry.wrap(Component) as ComponentType<object>
+    return Sentry.wrap(Component)
   } catch (e) {
     console.warn('[sentry] wrap failed', e)
     return Component

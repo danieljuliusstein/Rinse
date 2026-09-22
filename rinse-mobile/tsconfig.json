@@ -3,10 +3,18 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
-    "moduleSuffixes": [".native", ".web", ""],
+    "moduleSuffixes": [
+      ".native",
+      ".web",
+      ""
+    ],
     "paths": {
-      "@/*": ["./*"],
-      "@rinse/core": ["../packages/core/src/index.ts"]
+      "@/*": [
+        "./*"
+      ],
+      "@rinse/core": [
+        "../packages/core/src/index.ts"
+      ]
     }
   },
   "include": [
@@ -15,5 +23,11 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ],
-  "exclude": ["scripts/**"]
+  "exclude": [
+    "node_modules",
+    "scripts/**",
+    "e2e/**",
+    "playwright.config.mjs",
+    "tests/**"
+  ]
 }
