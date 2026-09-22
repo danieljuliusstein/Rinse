@@ -1,4 +1,4 @@
-import type { JobPhoto, PhotoMeta, PhotoType } from './types'
+import type { PhotoMeta, PhotoType } from './types'
 
 export const MAX_JOB_PHOTOS_PER_TYPE = 6
 export const JOB_PHOTO_MAX_EDGE_PX = 1600

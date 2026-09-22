@@ -16,7 +16,7 @@ import PocketBase, { ClientResponseError } from 'pocketbase'
 import { createIntegrationAccount, deleteIntegrationAccount } from './pocketbase-integration'
 
 describe('Phase 1: Job Creation Diagnostics', () => {
-  const accounts: ReturnType<typeof createIntegrationAccount>[] = []
+  const accounts: Awaited<ReturnType<typeof createIntegrationAccount>>[] = []
   let testAccount: Awaited<ReturnType<typeof createIntegrationAccount>>
 
   beforeAll(async () => {

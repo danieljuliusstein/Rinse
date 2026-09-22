@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import MoneyOverview from './pages/MoneyOverview'
 import Dashboard from './pages/Dashboard'
 import SalesPipeline from './pages/SalesPipeline'
@@ -122,6 +123,7 @@ function readSidebarCollapsed(): boolean {
 }
 
 export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (id: PageId) => void }) {
+  const { t } = useTranslation()
   const { signOut } = useAuth()
   const tour = useOptionalTour()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -132,6 +134,16 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
   const brandName = businessName || 'My Business'
   const forceExpanded = !!tour?.active
   const showCollapsed = collapsed && !forceExpanded
+
+  const getSectionTitle = (title: string) => {
+    switch (title) {
+      case 'Workspace': return t('nav.sections.workspace', title)
+      case 'Fleet': return t('nav.sections.fleet', title)
+      case 'People & schedule': return t('nav.sections.peopleSchedule', title)
+      case 'Reach': return t('nav.sections.reach', title)
+      default: return title
+    }
+  }
 
   useEffect(() => {
     try {
@@ -167,11 +179,12 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
     const compact = opts?.compact ?? showCollapsed
     const targetId = `nav-${id}`
     const armed = tour?.isArmed(targetId)
+    const translatedLabel = t(`nav.items.${id}`, label)
     return (
       <button
         key={id}
         type="button"
-        title={compact ? label : undefined}
+        title={compact ? translatedLabel : undefined}
         data-tour-target={targetId}
         onClick={() => {
           onNavigate(id)
@@ -192,7 +205,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
         />
         {!compact && (
           <>
-            <span className="truncate">{label}</span>
+            <span className="truncate">{translatedLabel}</span>
             {isActive && (
               <span className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0 bg-brand-400" />
             )}
@@ -235,7 +248,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
           : NAV_SECTIONS.map((section) => (
               <div key={section.title}>
                 <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/25">
-                  {section.title}
+                  {getSectionTitle(section.title)}
                 </div>
                 <div className="space-y-px">
                   {section.items.map((item) => navButton(item))}
@@ -247,7 +260,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
       <div className={`${showCollapsed ? 'px-1.5' : 'px-3'} pb-1`}>
         <button
           type="button"
-          title={showCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={showCollapsed ? t('nav.expand', 'Expand sidebar') : t('nav.collapse', 'Collapse sidebar')}
           onClick={() => setCollapsed((v) => !v)}
           disabled={forceExpanded}
           className={`w-full flex items-center rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 py-2 ${showCollapsed ? 'justify-center' : 'justify-center gap-2 px-3'}`}
@@ -284,7 +297,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
             <>
               <div className="min-w-0 flex-1">
                 <p className="text-white text-xs font-medium leading-tight truncate">{name}</p>
-                <p className="text-white/40 text-xs leading-tight">Signed in</p>
+                <p className="text-white/40 text-xs leading-tight">{t('common.signedIn', 'Signed in')}</p>
               </div>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/40 transition-transform ${menuOpen ? 'rotate-180' : ''}`}>
                 <polyline points="6 9 12 15 18 9" />
@@ -302,7 +315,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
                 onNavigate('settings')
               }}
             >
-              Settings
+              {t('nav.items.settings', 'Settings')}
             </button>
             <button
               type="button"
@@ -312,7 +325,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
                 onNavigate('dashboard')
               }}
             >
-              Dashboard
+              {t('nav.items.dashboard', 'Dashboard')}
             </button>
             <div className="border-t border-white/10" />
             <button
@@ -323,7 +336,7 @@ export function Sidebar({ active, onNavigate }: { active: PageId; onNavigate: (i
                 void signOut()
               }}
             >
-              Sign out
+              {t('common.signOut', 'Sign out')}
             </button>
           </div>
         )}

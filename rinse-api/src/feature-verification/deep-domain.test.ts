@@ -51,9 +51,9 @@ describe('portal and signature authorization invariants', () => {
 
 describe('subscription and premium authorization invariants', () => {
   it('recognizes active trial and subscription states', () => {
-    expect(isSubscriptionActive({ plan: 'pro', subscription_status: 'active' })).toBe(true)
-    expect(isSubscriptionActive({ plan: 'pro', subscription_status: 'canceled' })).toBe(false)
-    expect(isSubscriptionActive({ plan: 'free', subscription_status: 'trialing', trial_ends_at: '2099-01-01' })).toBe(true)
+    expect(isSubscriptionActive({ plan: 'pro', subscription_status: 'active', founding_member: false })).toBe(true)
+    expect(isSubscriptionActive({ plan: 'pro', subscription_status: 'canceled', founding_member: false })).toBe(false)
+    expect(isSubscriptionActive({ plan: 'free', subscription_status: 'trialing', trial_ends_at: '2099-01-01', founding_member: false })).toBe(true)
   })
 
   it('returns explicit authorization responses for missing or insufficient plans', async () => {

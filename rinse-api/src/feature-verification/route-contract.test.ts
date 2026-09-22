@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from 'vitest'
 const state = vi.hoisted(() => ({
   organizations: [{ id: 'org-1', slug: 'rinse-test' }],
   bookings: [] as Record<string, unknown>[],
-  quotes: new Map([['quote-1', { id: 'quote-1', status: 'sent' }]]),
+  quotes: new Map<string, Record<string, unknown>>([['quote-1', { id: 'quote-1', status: 'sent' }]]),
   signatures: [] as Record<string, unknown>[],
-  portal: { token: 'valid-token-123456789', scope: 'quote', quote_id: 'quote-1' } as Record<string, unknown>,
+  portal: { token: 'valid-token-123456789', scope: 'quote', quote_id: 'quote-1' } as { token: string; [key: string]: unknown },
 }))
 
 vi.mock('@/lib/server/organization', () => ({

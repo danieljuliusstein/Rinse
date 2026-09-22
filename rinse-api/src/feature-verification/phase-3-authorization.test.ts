@@ -13,7 +13,7 @@ import PocketBase, { ClientResponseError } from 'pocketbase'
 import { createIntegrationAccount, deleteIntegrationAccount, isPocketBaseUnauthorized } from './pocketbase-integration'
 
 describe('Phase 3: Cross-Tenant Authorization Matrix', () => {
-  const accounts: ReturnType<typeof createIntegrationAccount>[] = []
+  const accounts: Awaited<ReturnType<typeof createIntegrationAccount>>[] = []
   let orgA: Awaited<ReturnType<typeof createIntegrationAccount>>
   let orgB: Awaited<ReturnType<typeof createIntegrationAccount>>
 
