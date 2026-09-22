@@ -37,6 +37,12 @@ function daysAgo(n: number): string {
 
 type Pb = Awaited<ReturnType<typeof authenticateServerPocketBase>>
 
+function nextDay(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + 1)
+  return fmtDate(d)
+}
+
 async function notificationExists(
   pb: Pb,
   orgId: string,
@@ -44,8 +50,18 @@ async function notificationExists(
   referenceId: string,
   scheduledFor: string,
 ): Promise<boolean> {
+  // PocketBase stores `date` fields as full datetime strings
+  // ("2026-09-22 00:00:00.000Z"). A standalone `scheduled_for = "YYYY-MM-DD"`
+  // filter matches loosely, but combined with && via other conditions (as
+  // here) it falls back to strict string equality against the stored value
+  // and never matches a bare date — verified empirically. A day-range
+  // comparison matches regardless of the stored format, so use that instead
+  // of exact equality. Without this, every notification type (job_reminder,
+  // morning_reminder, follow_up, invoice_overdue, low_inventory) creates a
+  // duplicate log entry and duplicate push every time the cron runs, since
+  // the "already notified today" check never finds the earlier entry.
   const records = await pb.collection('notifications_log').getFullList({
-    filter: `organization_id = "${orgId}" && type = "${type}" && reference_id = "${referenceId}" && scheduled_for = "${scheduledFor}"`,
+    filter: `organization_id = "${orgId}" && type = "${type}" && reference_id = "${referenceId}" && scheduled_for >= "${scheduledFor}" && scheduled_for < "${nextDay(scheduledFor)}"`,
     limit: 1,
   })
   return records.length > 0

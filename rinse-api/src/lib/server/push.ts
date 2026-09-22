@@ -129,7 +129,17 @@ export async function sendPushNotificationForOrg(
   organizationId: string,
   payload: { title: string; body: string; url?: string },
 ): Promise<{ sent: number; failed: number }> {
-  ensureVapid()
+  try {
+    ensureVapid()
+  } catch {
+    // No VAPID keys configured at all (not an individual subscription
+    // failure) — degrade to "nothing pushed" rather than throwing. Callers
+    // (the notifications cron) treat push as best-effort on top of the
+    // notifications_log write, which should still happen; previously this
+    // threw uncaught and aborted the whole cron run with a 500, undoing
+    // nothing already written but reporting total failure to the caller.
+    return { sent: 0, failed: 0 }
+  }
   const settings = await getAppNotificationsForOrg(organizationId)
   const subs = settings.push_subscriptions ?? []
 

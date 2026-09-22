@@ -14,7 +14,11 @@ function mapJob(record: PbRecord) {
     organization_id: String(record.organization_id ?? ''),
     client_id: String(record.client_id ?? ''),
     package_id: String(record.package_id ?? ''),
-    date: String(record.date ?? ''),
+    // PocketBase returns date fields as full datetime strings
+    // ("2026-01-05 00:00:00.000Z"), not plain "YYYY-MM-DD" — slice to the
+    // date portion. nextRecurrenceDate() appends "T12:00:00" to build a
+    // Date, and that fails with "Invalid time value" on the raw form.
+    date: String(record.date ?? '').slice(0, 10),
     vehicle_type: String(record.vehicle_type ?? 'sedan'),
     location_type: String(record.location_type ?? 'mobile'),
     revenue: Number(record.revenue ?? 0),
@@ -23,7 +27,7 @@ function mapJob(record: PbRecord) {
     start_time: record.start_time ? String(record.start_time) : undefined,
     recurrence_cadence: record.recurrence_cadence ? String(record.recurrence_cadence) : undefined,
     recurrence_anchor_date: record.recurrence_anchor_date
-      ? String(record.recurrence_anchor_date)
+      ? String(record.recurrence_anchor_date).slice(0, 10)
       : undefined,
   }
 }
