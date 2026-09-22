@@ -1,0 +1,12 @@
+
+/* User-controlled prelaunch dialogs; native dialog supplies modal focus containment. */
+.rinse-dialog { border: 0; border-radius: 24px; padding: 32px; width: min(94vw, 560px); max-height: 90dvh; overflow: auto; margin: auto; color: #17201b; background: #fff; }
+.rinse-dialog::backdrop { background: rgb(0 0 0 / 65%); }
+.dialog-exit { float: right; min-width: 44px; min-height: 44px; font-size: 28px; border-radius: 12px; background: #f0f3f1; }
+.rinse-primary, .rinse-secondary { min-height: 44px; padding: 12px 18px; border-radius: 12px; font-weight: 600; }
+.rinse-primary { background: #17201b; color: white; }
+.rinse-secondary { border: 1px solid #c6cec9; background: white; color: #17201b; }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #278140; outline-offset: 3px; }
+.sample-screen { background: #f5f7f5; border: 1px solid #d5ddd7; border-radius: 16px; padding: 24px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }

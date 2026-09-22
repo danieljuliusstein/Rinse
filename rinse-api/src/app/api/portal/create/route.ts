@@ -18,10 +18,10 @@ export async function POST(request: Request) {
   if (parsed instanceof NextResponse) return withDeskCors(parsed, request)
   const { clientId, scope, jobId, quoteId } = parsed.data
 
-  const denied = await assertOrgAccess(auth, { clientId })
+  const denied = await assertOrgAccess(auth, { clientId, ...(jobId ? { jobId } : {}), ...(quoteId ? { quoteId } : {}) })
   if (denied) return withDeskCors(denied, request)
 
-  const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
+  const premiumDenied = scope === 'invoice' ? null : await requirePremiumSubscription(auth.pb, auth.organizationId)
   if (premiumDenied) return withDeskCors(premiumDenied, request)
 
   try {

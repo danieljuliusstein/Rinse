@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { Calendar, BarChart2, Users, Car, FileText, DollarSign, TrendingUp, CheckCircle, Zap, Route, Smartphone, CreditCard, Plus, Check } from "lucide-react";
 import { SECTIONS } from "../shared/scroll";
 import { EASE, FadeUpWhenVisible } from "../shared/motion";
-import { WorkflowIntegrationStrip } from "./Ecosystem";
+
 
 export function BookingMockup() {
   const fields = [
@@ -654,7 +654,7 @@ export function NodeCanvasSection() {
             ))}
 
             {/* Integration logos marquee — beneath all steps */}
-            <WorkflowIntegrationStrip />
+
           </div>
         </div>
 

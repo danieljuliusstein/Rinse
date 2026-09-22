@@ -5,11 +5,17 @@ import { authenticateServerPocketBase } from '@/lib/server/pocketbase-admin'
 import { resolveConnectDestination } from '@/lib/server/stripe-connect'
 import { getStripe, isStripeConfigured, stripeAppOrigin } from '@/lib/server/stripe'
 
+import type Stripe from 'stripe'
+
 type CheckoutResult =
   | { ok: true; url: string }
   | { ok: false; error: string; status: number }
 
-async function createPortalCheckout(request: Request, token: string): Promise<CheckoutResult> {
+async function createPortalCheckout(
+  request: Request,
+  token: string,
+  tipParam?: number,
+): Promise<CheckoutResult> {
   if (!isStripeConfigured()) {
     return { ok: false, error: 'Online payments are not enabled', status: 503 }
   }
@@ -47,7 +53,14 @@ async function createPortalCheckout(request: Request, token: string): Promise<Ch
       return { ok: false, error: 'Nothing to pay', status: 400 }
     }
 
-    const orgId = String(inv.organization_id ?? record.organization_id ?? '').trim()
+    const orgId = String(inv.organization_id ?? '').trim()
+    if (
+      orgId !== String(record.organization_id) ||
+      orgId !== String(job.organization_id) ||
+      String(inv.job_id) !== String(job.id)
+    ) {
+      return { ok: false, error: 'Invoice ownership mismatch', status: 403 }
+    }
     if (!orgId) {
       return { ok: false, error: 'Invalid invoice', status: 400 }
     }
@@ -61,38 +74,71 @@ async function createPortalCheckout(request: Request, token: string): Promise<Ch
       }
     }
 
+    // Parse and validate tip
+    let tip = tipParam ?? 0
+    if (!tipParam) {
+      const url = new URL(request.url)
+      const rawTip = url.searchParams.get('tip')
+      if (rawTip) tip = parseFloat(rawTip) || 0
+    }
+    if (isNaN(tip) || tip < 0) tip = 0
+    tip = Math.round(tip * 100) / 100
+    if (tip > 1000) tip = 1000
+
     const baseUrl = stripeAppOrigin(request)
     const portalUrl = `${baseUrl}/portal/${token}`
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Invoice ${inv.invoice_number}`,
-              description: 'Detailing service',
-            },
-            unit_amount: Math.round(balanceDue * 100),
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      {
+        price_data: {
+          currency: process.env.STRIPE_PAYMENT_CURRENCY?.trim() || 'usd',
+          product_data: {
+            name: `Invoice ${inv.invoice_number}`,
+            description: 'Detailing service',
           },
-          quantity: 1,
+          unit_amount: Math.round(balanceDue * 100),
         },
-      ],
-      payment_intent_data: {
-        transfer_data: {
-          destination: connectAccountId,
+        quantity: 1,
+      },
+    ]
+
+    if (tip > 0) {
+      lineItems.push({
+        price_data: {
+          currency: process.env.STRIPE_PAYMENT_CURRENCY?.trim() || 'usd',
+          product_data: {
+            name: 'Tip / Gratuity',
+            description: `Gratuity for detailing service (Invoice ${inv.invoice_number})`,
+          },
+          unit_amount: Math.round(tip * 100),
         },
+        quantity: 1,
+      })
+    }
+
+    const metadata: Record<string, string> = {
+      invoice_id: String(inv.id),
+      organization_id: orgId,
+    }
+    if (tip > 0) {
+      metadata.tip_amount = String(tip)
+    }
+
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        payment_intent_data: { metadata },
+        metadata,
+        success_url: `${portalUrl}?paid=1`,
+        cancel_url: portalUrl,
       },
-      metadata: {
-        invoice_id: String(inv.id),
-        organization_id: orgId,
-        portal_token: token,
+      {
+        stripeAccount: connectAccountId,
+        idempotencyKey: `invoice:${inv.id}:${Math.round(balanceDue * 100)}:${Math.round(tip * 100)}:${Math.floor(Date.now() / 1800000)}`,
       },
-      success_url: `${portalUrl}?paid=1`,
-      cancel_url: portalUrl,
-    })
+    )
 
     if (!session.url) {
       return { ok: false, error: 'Could not start checkout', status: 500 }
@@ -110,7 +156,7 @@ async function createPortalCheckout(request: Request, token: string): Promise<Ch
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params
   const result = await createPortalCheckout(request, token)
@@ -125,10 +171,18 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params
-  const result = await createPortalCheckout(request, token)
+  let tipParam: number | undefined = undefined
+  try {
+    const body = (await request.json()) as { tip?: number }
+    if (typeof body?.tip === 'number') tipParam = body.tip
+  } catch {
+    // empty or invalid JSON body
+  }
+
+  const result = await createPortalCheckout(request, token, tipParam)
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status })
   }

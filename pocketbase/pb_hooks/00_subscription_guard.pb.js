@@ -1,142 +1,44 @@
-/// PocketBase hooks — block creates when org subscription is lapsed (server-side paywall).
-/// PB 0.39 JSVM only bundles code inside onRecordCreateRequest callbacks — keep logic inlined.
-
-onRecordCreateRequest((e) => {
-  const record = e.record
-  const orgId = String(record.get('organization_id') ?? '').trim()
-  if (!orgId) {
-    throw new ForbiddenError('Organization required')
-  }
-
-  let org
-  try {
-    org = $app.findRecordById('organizations', orgId)
-  } catch (err) {
-    throw new ForbiddenError('Organization not found')
-  }
-
-  const founding = org.get('founding_member') === true || org.get('plan') === 'founding'
-  if (!founding) {
-    const status = String(org.get('subscription_status') ?? 'none')
-    let active = status === 'active' || status === 'past_due'
-    if (!active && status === 'trialing') {
-      const trialEnd = String(org.get('trial_ends_at') ?? '').trim()
-      if (!trialEnd) {
-        active = true
-      } else {
-        const end = new Date(trialEnd.indexOf('T') >= 0 ? trialEnd : trialEnd + 'T23:59:59')
-        active = end >= new Date()
+// Model hooks also cover server/admin writes and public booking, not just client requests.
+onRecordCreate((e) => require(__hooks + '/pricing.js').guardJob(e, true), 'jobs')
+onRecordUpdate((e) => require(__hooks + '/pricing.js').guardJob(e, false), 'jobs')
+onRecordUpdateRequest((e) => {
+  if (!e.hasSuperuserAuth()) {
+    const fields = require(__hooks + '/pricing.js').protectedFields
+    for (const field of fields) {
+      if (JSON.stringify(e.record.get(field)) !== JSON.stringify(e.record.original().get(field))) {
+        throw new ForbiddenError('Billing fields can only be changed by the server')
       }
     }
-    if (!active) {
-      throw new ForbiddenError('Active subscription required')
-    }
   }
-
   e.next()
-}, 'jobs')
-
+}, 'organizations')
+onRecordUpdateRequest((e) => {
+  if (!e.hasSuperuserAuth() && e.record.get('organization_id') !== e.record.original().get('organization_id')) {
+    throw new ForbiddenError('Organization membership is managed by the server')
+  }
+  e.next()
+}, 'users')
 onRecordCreateRequest((e) => {
-  const record = e.record
-  const orgId = String(record.get('organization_id') ?? '').trim()
-  if (!orgId) {
-    throw new ForbiddenError('Organization required')
-  }
-
-  let org
-  try {
-    org = $app.findRecordById('organizations', orgId)
-  } catch (err) {
-    throw new ForbiddenError('Organization not found')
-  }
-
-  const founding = org.get('founding_member') === true || org.get('plan') === 'founding'
-  if (!founding) {
-    const status = String(org.get('subscription_status') ?? 'none')
-    let active = status === 'active' || status === 'past_due'
-    if (!active && status === 'trialing') {
-      const trialEnd = String(org.get('trial_ends_at') ?? '').trim()
-      if (!trialEnd) {
-        active = true
-      } else {
-        const end = new Date(trialEnd.indexOf('T') >= 0 ? trialEnd : trialEnd + 'T23:59:59')
-        active = end >= new Date()
-      }
-    }
-    if (!active) {
-      throw new ForbiddenError('Active subscription required')
-    }
-  }
-
+  if (!e.hasSuperuserAuth() && e.record.getString('organization_id')) throw new ForbiddenError('Use Rinse signup')
   e.next()
-}, 'clients')
-
+}, 'users')
+onRecordCreate((e) => {
+  const org = e.app.findRecordById('organizations', e.record.getString('organization_id'))
+  if (!require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Starter required')
+  e.next()
+}, 'quotes', 'leads')
 onRecordCreateRequest((e) => {
-  const record = e.record
-  const orgId = String(record.get('organization_id') ?? '').trim()
-  if (!orgId) {
-    throw new ForbiddenError('Organization required')
+  if (!e.hasSuperuserAuth()) {
+    const org = e.app.findRecordById('organizations', e.record.getString('organization_id'))
+    if (e.record.getString('scope') !== 'invoice' && !require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Starter required')
   }
-
-  let org
-  try {
-    org = $app.findRecordById('organizations', orgId)
-  } catch (err) {
-    throw new ForbiddenError('Organization not found')
-  }
-
-  const founding = org.get('founding_member') === true || org.get('plan') === 'founding'
-  if (!founding) {
-    const status = String(org.get('subscription_status') ?? 'none')
-    let active = status === 'active' || status === 'past_due'
-    if (!active && status === 'trialing') {
-      const trialEnd = String(org.get('trial_ends_at') ?? '').trim()
-      if (!trialEnd) {
-        active = true
-      } else {
-        const end = new Date(trialEnd.indexOf('T') >= 0 ? trialEnd : trialEnd + 'T23:59:59')
-        active = end >= new Date()
-      }
-    }
-    if (!active) {
-      throw new ForbiddenError('Active subscription required')
-    }
-  }
-
   e.next()
-}, 'quotes')
+}, 'portal_tokens')
 
-onRecordCreateRequest((e) => {
-  const record = e.record
-  const orgId = String(record.get('organization_id') ?? '').trim()
-  if (!orgId) {
-    throw new ForbiddenError('Organization required')
+onRecordUpdateRequest((e) => {
+  if (!e.hasSuperuserAuth()) {
+    const org = e.app.findRecordById('organizations', e.record.getString('organization_id'))
+    if (e.record.getString('scope') !== 'invoice' && !require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Starter required')
   }
-
-  let org
-  try {
-    org = $app.findRecordById('organizations', orgId)
-  } catch (err) {
-    throw new ForbiddenError('Organization not found')
-  }
-
-  const founding = org.get('founding_member') === true || org.get('plan') === 'founding'
-  if (!founding) {
-    const status = String(org.get('subscription_status') ?? 'none')
-    let active = status === 'active' || status === 'past_due'
-    if (!active && status === 'trialing') {
-      const trialEnd = String(org.get('trial_ends_at') ?? '').trim()
-      if (!trialEnd) {
-        active = true
-      } else {
-        const end = new Date(trialEnd.indexOf('T') >= 0 ? trialEnd : trialEnd + 'T23:59:59')
-        active = end >= new Date()
-      }
-    }
-    if (!active) {
-      throw new ForbiddenError('Active subscription required')
-    }
-  }
-
   e.next()
-}, 'leads')
+}, 'portal_tokens')

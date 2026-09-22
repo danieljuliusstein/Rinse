@@ -87,9 +87,9 @@ Quote-only or photos-only tokens cannot checkout; invoice-only tokens cannot loa
 | Variable | Purpose |
 |----------|---------|
 | `NEXT_PUBLIC_PB_URL` / `PB_URL` | PocketBase origin in `connect-src` and `img-src` |
-| `BOOKING_ALLOWED_ORIGINS` | Comma-separated parent origins for `frame-ancestors` on book/embed (Report-Only); also used for public booking API CORS |
+| `BOOKING_ALLOWED_ORIGINS` | Comma-separated global parent origins for `frame-ancestors` on book/embed (Report-Only); also used for public booking API CORS |
 
-**TODO:** Add each customer marketing-site origin to `BOOKING_ALLOWED_ORIGINS` when they embed `/embed/book/{slug}` on WordPress or similar. Until then, enforcing `frame-ancestors` on book/embed still uses `*` via `next.config.ts`.
+Customer marketing-site origins (e.g. `https://customer-wordpress.com`, Squarespace, Wix) are resolved per tenant from `organizations.allowed_origins` (managed via Settings). The middleware dynamically injects these into `frame-ancestors` and public API CORS headers with tiered caching (in-memory + Upstash Redis). `BOOKING_ALLOWED_ORIGINS` remains available for platform-wide defaults.
 
 Violation reports: `POST /api/csp-report` (rate-limited, structured `console.info` log).
 

@@ -5,7 +5,7 @@ import { Crown, Sparkle } from '@phosphor-icons/react'
 import BottomSheet from '@/components/BottomSheet'
 import { Button } from '@/components/ui'
 import { useOrgSubscription } from '@/hooks/useOrgSubscription'
-import { PRO_PLAN, STARTER_PLAN } from '@/lib/plans'
+import { STARTER_PLAN } from '@/lib/plans'
 
 interface PaywallSheetProps {
   open: boolean
@@ -60,18 +60,7 @@ export default function PaywallSheet({
               </div>
               <span className="paywall-sheet__price">{STARTER_PLAN.priceLabel}</span>
             </div>
-            {PRO_PLAN.comingSoon ? (
-              <p className="paywall-sheet__coming-soon">{PRO_PLAN.name} — coming soon</p>
-            ) : (
-              <div className="paywall-sheet__plan">
-                <div>
-                  <strong>{PRO_PLAN.name}</strong>
-                  <span>{PRO_PLAN.tagline}</span>
-                  {PRO_PLAN.footnote ? <span>{PRO_PLAN.footnote}</span> : null}
-                </div>
-                <span className="paywall-sheet__price">{PRO_PLAN.priceLabel}</span>
-              </div>
-            )}
+
           </div>
         )}
         <Button

@@ -75,7 +75,7 @@ export function StripeConnectCard() {
       </View>
       <AppText variant="body" style={styles.lead}>
         Connect your Stripe account so clients pay you directly when they tap Pay online on invoices.
-        Rinse subscription billing is separate.
+        Available on Free. You pay applicable Stripe processing costs; Rinse adds no transaction commission. Subscription billing is separate.
       </AppText>
 
       {returnNotice === 'checking' ? (
@@ -108,7 +108,7 @@ export function StripeConnectCard() {
       ) : null}
       {!loading && ready ? (
         <AppText variant="body" style={styles.status}>
-          Client invoice payments deposit to your Stripe account.
+          {status?.payoutsEnabled ? 'Payouts enabled. View payout dates, amounts, refunds and disputes in your Stripe dashboard.' : 'Payments enabled; payouts are pending Stripe verification. Open Stripe to review requirements.'}
         </AppText>
       ) : null}
 

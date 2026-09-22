@@ -421,7 +421,33 @@ export function EventDetailSidebar({
             <span className="font-semibold text-ink-500">Save</span>. Esc to discard.
           </div>
         ) : (
-          <p className="text-[11px] text-ink-400">{model.statusLabel}</p>
+          <div className="space-y-2">
+            {(model.depositStatus === 'paid' ||
+              (model.depositAmount != null && model.depositAmount > 0)) && (
+              <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200/70 px-3 py-2 text-xs">
+                <span className="font-medium text-emerald-800">
+                  Deposit{' '}
+                  {model.depositStatus === 'paid'
+                    ? 'Paid'
+                    : model.depositStatus === 'waived'
+                      ? 'Waived'
+                      : 'Due'}
+                </span>
+                <span className="font-semibold text-emerald-900 tabular-nums">
+                  ${(model.depositAmount ?? 0).toFixed(2)}
+                </span>
+              </div>
+            )}
+            {model.tip != null && model.tip > 0 && (
+              <div className="flex items-center justify-between rounded-lg bg-purple-50 border border-purple-200/70 px-3 py-2 text-xs">
+                <span className="font-medium text-purple-800">Tip received</span>
+                <span className="font-semibold text-purple-900 tabular-nums">
+                  +${model.tip.toFixed(2)}
+                </span>
+              </div>
+            )}
+            <p className="text-[11px] text-ink-400">{model.statusLabel}</p>
+          </div>
         )}
       </div>
 

@@ -5,6 +5,7 @@ export interface RequestAuthUser {
   pb: PocketBase
   userId: string
   email: string
+  verified?: boolean
   organizationId: string
 }
 
@@ -25,12 +26,13 @@ export async function authenticateRequestUser(request: Request): Promise<Request
 
   try {
     const auth = await pb.collection('users').authRefresh()
-    const record = auth.record as { id?: string; email?: string; organization_id?: string }
+    const record = auth.record as { id?: string; email?: string; verified?: boolean; organization_id?: string }
     const organizationId = String(record.organization_id ?? '').trim()
     if (!organizationId) return null
     return {
       pb,
       userId: String(record.id),
+      verified: record.verified === true,
       email: String(record.email ?? ''),
       organizationId,
     }

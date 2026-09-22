@@ -1,43 +1,17 @@
-import { useState, useCallback } from "react";
-import { Routes, Route } from "react-router";
-import { DemoModal } from "./layout/DemoModal";
-import { HomePage } from "./pages/HomePage";
-import { FeaturesPage } from "./pages/FeaturesPage";
-import { DESK_URL } from "./shared/urls";
-
+import { useState } from 'react';
+import { Routes, Route } from 'react-router';
+import { MotionConfig } from 'motion/react';
+import { DemoModal } from './layout/DemoModal';
+import { WaitlistModal } from './layout/WaitlistModal';
+import { HomePage } from './pages/HomePage';
+import { FeaturesPage } from './pages/FeaturesPage';
+import { APP_STORE_URL } from './shared/urls';
 export default function App() {
   const [demoOpen, setDemoOpen] = useState(false);
-
-  const handleStartTrial = useCallback(() => {
-    if (DESK_URL) {
-      window.location.assign(DESK_URL);
-    }
-  }, []);
-
-  const handleBookDemo = useCallback(() => {
-    window.open("mailto:hello@rinse.app?subject=Book%20a%20demo", "_blank");
-  }, []);
-
-  const handleOpenDemo = useCallback(() => {
-    setDemoOpen(true);
-  }, []);
-
-  return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <>
-            <HomePage
-              onStartTrial={handleStartTrial}
-              onOpenDemo={handleOpenDemo}
-              onBookDemo={handleBookDemo}
-            />
-            <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
-          </>
-        }
-      />
-      <Route path="/features" element={<FeaturesPage />} />
-    </Routes>
-  );
+  const [interest, setInterest] = useState<'free' | 'starter' | null>(null);
+  const start = (plan: 'free' | 'starter' = 'free') => { if (APP_STORE_URL) window.location.assign(APP_STORE_URL); else setInterest(plan); };
+  return <MotionConfig reducedMotion="user"><Routes>
+    <Route path="/" element={<HomePage onStartTrial={start} onOpenDemo={() => setDemoOpen(true)} onBookDemo={() => setDemoOpen(true)} />} />
+    <Route path="/features" element={<FeaturesPage />} />
+  </Routes><DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} /><WaitlistModal interest={interest} onClose={() => setInterest(null)} /></MotionConfig>;
 }

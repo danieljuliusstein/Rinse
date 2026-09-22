@@ -1,3 +1,5 @@
+import type { DocumentLocale } from '@rinse/core'
+import { getDocumentStrings, normalizeDocumentLocale } from '@rinse/core'
 import type { PortalPayload } from '@/lib/server/portal-data'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import {
@@ -15,6 +17,7 @@ export default function PortalInvoiceCard({
   showPayOnline = false,
   businessPhone,
   businessName,
+  locale,
 }: {
   invoice: NonNullable<PortalPayload['invoice']>
   job?: PortalPayload['job']
@@ -22,9 +25,11 @@ export default function PortalInvoiceCard({
   showPayOnline?: boolean
   businessPhone?: string
   businessName?: string
+  locale?: DocumentLocale
 }) {
+  const s = getDocumentStrings(normalizeDocumentLocale(locale))
   const balanceVariant = portalBalancePanelClass(invoice.status, invoice.balanceDue)
-  const lineDesc = job?.packageName ?? 'Detailing service'
+  const lineDesc = job?.packageName ?? s.detailingService
   const canPay = showPayOnline && invoice.balanceDue > 0 && token
 
   return (
@@ -32,10 +37,10 @@ export default function PortalInvoiceCard({
       <div className="portal-card-inner">
         <div className="portal-card-header-row">
           <div className="portal-section-label portal-section-label--flush">
-            Invoice
+            {s.invoice}
           </div>
           <span className={portalInvoiceBadgeClass(invoice.status)}>
-            {invoice.status === 'paid' || invoice.balanceDue <= 0 ? 'PAID' : invoice.status.toUpperCase()}
+            {invoice.status === 'paid' || invoice.balanceDue <= 0 ? s.statusPaid.toUpperCase() : invoice.status.toUpperCase()}
           </span>
         </div>
         <div className="portal-inv-number">{invoice.invoiceNumber}</div>
@@ -43,8 +48,8 @@ export default function PortalInvoiceCard({
         <table className="portal-invoice-table">
           <thead>
             <tr>
-              <th className="portal-invoice-table__head">Description</th>
-              <th className="portal-invoice-table__head portal-invoice-table__head--amt">Amount</th>
+              <th className="portal-invoice-table__head">{s.description}</th>
+              <th className="portal-invoice-table__head portal-invoice-table__head--amt">{s.amount}</th>
             </tr>
           </thead>
           <tbody>
@@ -54,7 +59,7 @@ export default function PortalInvoiceCard({
             </tr>
             {invoice.tip > 0 && (
               <tr>
-                <td className="portal-line-desc portal-line-desc--sub">Tip</td>
+                <td className="portal-line-desc portal-line-desc--sub">{s.tip}</td>
                 <td className="portal-line-amt portal-line-amt--sub">{portalMoney(invoice.tip)}</td>
               </tr>
             )}
@@ -64,24 +69,24 @@ export default function PortalInvoiceCard({
         <hr className="portal-invoice-divider" />
 
         <div className="portal-total-row">
-          <span className="portal-total-label">Subtotal</span>
+          <span className="portal-total-label">{s.subtotal}</span>
           <span className="portal-total-amount">{portalMoney(invoice.subtotal)}</span>
         </div>
         {invoice.tip > 0 && (
           <div className="portal-total-row">
-            <span className="portal-total-label">Tip</span>
+            <span className="portal-total-label">{s.tip}</span>
             <span className="portal-total-amount">{portalMoney(invoice.tip)}</span>
           </div>
         )}
         <div className="portal-total-row portal-total-border-row">
-          <span className="portal-total-label--strong">Total</span>
+          <span className="portal-total-label--strong">{s.total}</span>
           <span className="portal-total-amount portal-total-amount--grand">
             <CurrencyAmount value={invoice.total} precision="detailed" variant="neutral" />
           </span>
         </div>
         {invoice.amountPaid > 0 && (
           <div className="portal-total-row">
-            <span className="portal-total-label">Paid</span>
+            <span className="portal-total-label">{s.paid}</span>
             <span className="portal-total-amount portal-total-amount--credit">
               {portalMoney(invoice.amountPaid)}
             </span>
@@ -90,7 +95,7 @@ export default function PortalInvoiceCard({
 
         {balanceVariant && (
           <div className={`portal-balance-panel portal-balance-panel--${balanceVariant}`}>
-            <span className="portal-balance-label">Balance due</span>
+            <span className="portal-balance-label">{s.balanceDue}</span>
             <span className="portal-balance-amount">
               <CurrencyAmount value={invoice.balanceDue} precision="detailed" variant="balance" />
             </span>
@@ -103,6 +108,7 @@ export default function PortalInvoiceCard({
             balanceDue={invoice.balanceDue}
             businessPhone={businessPhone}
             businessName={businessName}
+            locale={locale}
           />
         ) : null}
 
@@ -111,6 +117,7 @@ export default function PortalInvoiceCard({
             token={token}
             signatureUrl={invoice.signatureUrl}
             signedAt={invoice.signedAt}
+            locale={locale}
           />
         ) : null}
       </div>

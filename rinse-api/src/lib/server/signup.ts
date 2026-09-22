@@ -216,11 +216,10 @@ export async function provisionOrganizationForOAuthUser(input: OAuthProvisionInp
   const org = await pb.collection('organizations').create<PbRecord>({
     name: businessName,
     slug,
-    plan: 'starter',
+    plan: 'free',
     founding_member: false,
-    booking_enabled: true,
-    subscription_status: 'trialing',
-    trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    booking_enabled: false,
+    subscription_status: 'none',
   })
 
   await seedOrganizationData(pb, org.id, businessName, email)
@@ -265,11 +264,10 @@ export async function registerOrganization(input: SignupInput) {
   const org = await pb.collection('organizations').create<PbRecord>({
     name: businessName,
     slug,
-    plan: 'starter',
+    plan: 'free',
     founding_member: false,
-    booking_enabled: true,
-    subscription_status: 'trialing',
-    trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    booking_enabled: false,
+    subscription_status: 'none',
   })
 
   // Not verified yet — the user must click the link in the verification

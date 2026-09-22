@@ -205,7 +205,7 @@ export default function SettingsBillingScreen() {
           ) : null}
           {!founding && cancelGrace && periodEnd ? (
             <AppText variant="caption" style={styles.statusLine}>
-              Access until {periodEnd}, then read-only vault. No charge after that date.
+              Access until {periodEnd}, then Free. No charge after that date.
             </AppText>
           ) : null}
           {!founding && !cancelGrace && periodEnd && subscribed ? (
@@ -276,8 +276,8 @@ export default function SettingsBillingScreen() {
               />
               <AppText variant="caption" style={styles.webNote}>
                 {Platform.OS === 'ios'
-                  ? `Billed at ${STARTER_PLAN.priceLabel} through your Apple ID. Cancel anytime in Settings → Subscriptions — you keep access until the period ends, then vault.`
-                  : 'Subscribe securely via rinsehq.com (Stripe). Cancel anytime — access until period end, then read-only vault. No post-cancel charge.'}
+                  ? 'Your eligible monthly price is shown by the App Store before purchase. Cancel in Settings → Subscriptions; access continues until period end, then Free.'
+                  : 'Subscribe securely via rinsehq.com (Stripe). Cancel anytime — access until period end, then Free. No post-cancel charge.'}
               </AppText>
               <PrimaryButton
                 label={
@@ -315,8 +315,8 @@ export default function SettingsBillingScreen() {
           <Card style={styles.card}>
             <AppText style={styles.leadTight}>
               {cancelGrace && periodEnd
-                ? `Cancel is scheduled. You keep full access until ${periodEnd}, then read-only vault forever. No charge after that date.`
-                : 'Cancel anytime. You keep access until the current period ends, then your data stays in a read-only vault — no further charges.'}
+                ? `Cancel is scheduled. You keep full access until ${periodEnd}, then Free. No charge after that date.`
+                : 'Cancel anytime. You keep access until the current period ends, then you return to Free and keep your data — no further charges.'}
             </AppText>
             <SecondaryButton
               label={

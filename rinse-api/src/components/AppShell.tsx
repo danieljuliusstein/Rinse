@@ -81,7 +81,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname === '/intro' ||
     pathname === '/onboarding' ||
     pathname.startsWith('/auth/')
-  const isPublicClient = isPortal || isBook || isEmbed
+  const isPublicClient = isPortal || isBook || isEmbed || pathname.startsWith('/billing/') || pathname === '/privacy' || pathname.startsWith('/terms')
   const showOperatorChrome = !isPublicClient && !isAuthFlow && !isDemo && !isAdminLane
   const showProductTour = showOperatorChrome && isLoggedIn
 
@@ -96,6 +96,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   ]
     .filter(Boolean)
     .join(' ')
+
+  if (isPublicClient) return <><ServiceWorkerCleanup />{children}</>
 
   return (
     <SyncProvider>

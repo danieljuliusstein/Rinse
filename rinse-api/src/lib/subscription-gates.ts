@@ -1,3 +1,4 @@
+import { canPerform, hasStarterAccess as starterAccess } from '../../../packages/core/src/pricing'
 import {
   isFoundingMember,
   isSubscriptionActive,
@@ -6,6 +7,8 @@ import {
 } from './subscription'
 
 export type PremiumAction =
+  | 'invoice_pdf'
+  | 'invoice_payment'
   | 'send_invoice'
   | 'send_quote'
   | 'share_portal'
@@ -26,6 +29,8 @@ export const PRO_ACTION_LABELS: Record<ProAction, string> = {
 export type GateReason = 'full' | 'nudge' | 'lapsed' | 'loading'
 
 export const PREMIUM_ACTION_LABELS: Record<PremiumAction, string> = {
+  invoice_pdf: 'Invoice PDF',
+  invoice_payment: 'Invoice payment link',
   send_invoice: 'Sending invoices',
   send_quote: 'Sending quotes',
   share_portal: 'Client portal',
@@ -42,19 +47,9 @@ export const TRIAL_NUDGE_DAYS = 3
 const NUDGE_STORAGE_PREFIX = 'rinse_paywall_nudge_'
 export const TRIAL_BANNER_DISMISS_KEY = 'rinse_trial_banner_dismissed'
 
-export function resolveSubscriptionMode(
-  org: OrgSubscription | null,
-  loading: boolean,
-  now = new Date()
-): GateReason {
-  if (loading) return 'loading'
-  if (!org) return 'full'
-  if (isFoundingMember(org)) return 'full'
-  if (!isSubscriptionActive(org, now)) return 'lapsed'
-
-  const daysLeft = trialDaysLeft(org, now)
-  if (daysLeft != null && daysLeft <= TRIAL_NUDGE_DAYS) return 'nudge'
-  return 'full'
+export function resolveSubscriptionMode(org: OrgSubscription | null, loading: boolean, now = new Date()): GateReason {
+  if (loading || !org) return 'loading'
+  return starterAccess(org, now) ? 'full' : 'lapsed'
 }
 
 export function isSubscriptionLapsed(
@@ -109,50 +104,7 @@ export interface GateResolution {
   blockAction: boolean
 }
 
-export function resolveGate(
-  org: OrgSubscription | null,
-  loading: boolean,
-  action: PremiumAction,
-  options: { nudgeDismissed?: boolean; now?: Date } = {}
-): GateResolution {
-  const featureLabel = PREMIUM_ACTION_LABELS[action]
-  const reason = resolveSubscriptionMode(org, loading, options.now)
-  const nudgeDismissed = options.nudgeDismissed ?? false
-
-  if (reason === 'loading' || reason === 'full') {
-    return {
-      allowed: true,
-      reason,
-      featureLabel,
-      showPaywall: false,
-      blockAction: false,
-    }
-  }
-
-  if (reason === 'nudge') {
-    if (nudgeDismissed) {
-      return {
-        allowed: true,
-        reason,
-        featureLabel,
-        showPaywall: false,
-        blockAction: false,
-      }
-    }
-    return {
-      allowed: false,
-      reason,
-      featureLabel,
-      showPaywall: true,
-      blockAction: true,
-    }
-  }
-
-  return {
-    allowed: false,
-    reason: 'lapsed',
-    featureLabel,
-    showPaywall: true,
-    blockAction: true,
-  }
+export function resolveGate(org: OrgSubscription | null, loading: boolean, action: PremiumAction, options: { nudgeDismissed?: boolean; now?: Date } = {}): GateResolution {
+  const allowed = !loading && canPerform(org, action, options.now)
+  return { allowed, reason: resolveSubscriptionMode(org, loading, options.now), featureLabel: PREMIUM_ACTION_LABELS[action], showPaywall: !allowed && !loading, blockAction: !allowed }
 }

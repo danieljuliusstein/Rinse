@@ -77,6 +77,12 @@ export async function createPortalToken(input: {
   const exp = expiresAt()
   const organizationId = await resolveClientOrgId(pb, input.clientId)
 
+  for (const [collection, id] of [['jobs', input.jobId], ['quotes', input.quoteId]]) {
+    if (!id) continue
+    const linked = await pb.collection(collection!).getOne(id)
+    if (String(linked.organization_id) !== organizationId || String(linked.client_id) !== input.clientId) throw new Error('Linked record does not belong to this client')
+  }
+  if (input.scope === 'invoice' && !input.jobId) throw new Error('Invoice links require a job')
   const payload: Record<string, unknown> = {
     token,
     scope: input.scope,

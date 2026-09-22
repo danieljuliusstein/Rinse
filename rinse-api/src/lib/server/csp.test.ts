@@ -48,6 +48,16 @@ describe('buildContentSecurityPolicyReportOnly', () => {
     expect(csp).toContain('frame-ancestors')
     expect(csp).toContain('https://marketing.test')
   })
+
+  it('includes tenant-specific origins in frame-ancestors', () => {
+    const csp = buildContentSecurityPolicyReportOnly('/embed/book/apex-detail', [
+      'https://apexdetailing.com',
+      'https://www.apexdetailing.com',
+    ])
+    expect(csp).toContain(
+      "frame-ancestors 'self' https://apexdetailing.com https://www.apexdetailing.com",
+    )
+  })
 })
 
 describe('embedFrameAncestors', () => {
@@ -57,5 +67,11 @@ describe('embedFrameAncestors', () => {
 
   it('defaults to self only', () => {
     expect(embedFrameAncestors()).toBe("'self'")
+  })
+
+  it('merges env origins and tenant origins without duplicates', () => {
+    process.env.BOOKING_ALLOWED_ORIGINS = 'https://shared.com,https://duplicate.com'
+    const res = embedFrameAncestors(['https://duplicate.com', 'https://tenant.com'])
+    expect(res).toBe("'self' https://shared.com https://duplicate.com https://tenant.com")
   })
 })

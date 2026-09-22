@@ -26,7 +26,7 @@ describe('aggregateJobsRevenue', () => {
     const jobs = [
       { revenue: 10000, tip: 0, package: { name: 's' }, expenses: [], travel_cost: 0, marketing_cost: 0, equipment_depreciation: 0 },
       { revenue: 10000, tip: 0, package: { name: 's' }, expenses: [], travel_cost: 0, marketing_cost: 0, equipment_depreciation: 0 },
-    ] as JobWithRelations[]
+    ] as unknown as JobWithRelations[]
 
     const stats = aggregateJobsRevenue(jobs)
     expect(stats.services).toHaveLength(1)

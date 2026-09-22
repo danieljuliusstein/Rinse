@@ -1885,6 +1885,10 @@ export default function CalendarPage() {
                 selected.job.client?.name ? ` · ${selected.job.client.name}` : ''
               }${selected.job.packageName ? ` · ${selected.job.packageName}` : ''}`,
               isDraft,
+              revenue: selected.job.revenue,
+              tip: selected.job.tip,
+              depositStatus: selected.job.deposit_status,
+              depositAmount: selected.job.deposit_amount,
             }}
             clients={clients}
             packages={packages}
@@ -2004,6 +2008,10 @@ export default function CalendarPage() {
                 selected.job.client?.name ? ` · ${selected.job.client.name}` : ''
               }${selected.job.packageName ? ` · ${selected.job.packageName}` : ''}`,
               isDraft,
+              revenue: selected.job.revenue,
+              tip: selected.job.tip,
+              depositStatus: selected.job.deposit_status,
+              depositAmount: selected.job.deposit_amount,
             }}
             clients={clients}
             packages={packages}

@@ -1,4 +1,4 @@
-import { Platform } from 'react-native'
+import { Alert, Platform } from 'react-native'
 import { appApiJson } from './app-api'
 import { startBillingCheckout } from './billing-checkout'
 import { IAP_STARTER_PRODUCT_ID, IAP_SUBSCRIPTION_SKUS } from './iap-products'
@@ -35,11 +35,12 @@ async function confirmApplePurchase(signedTransaction: string): Promise<ConfirmR
  */
 export async function startStarterUpgrade(): Promise<'apple' | 'stripe'> {
   if (Platform.OS !== 'ios') {
-    // Server picks Early ($6) while seats remain, otherwise Starter ($12).
+    if (Platform.OS === 'android') throw new IapPurchaseError('Android subscriptions are not available yet.')
     await startBillingCheckout('starter')
     return 'stripe'
   }
 
+    const offer = await appApiJson<{ productId: string; appAccountToken: string }>('/api/billing/apple/prepare', { method: 'POST' })
     const {
       initConnection,
       endConnection,
@@ -54,7 +55,7 @@ export async function startStarterUpgrade(): Promise<'apple' | 'stripe'> {
     await initConnection()
 
     try {
-      const products = await fetchProducts({ skus: [...IAP_SUBSCRIPTION_SKUS], type: 'subs' })
+      const products = await fetchProducts({ skus: [offer.productId], type: 'subs' })
       if (!products?.length) {
         throw new IapPurchaseError(
           'Starter subscription is not available in the App Store yet. Try again after the product is approved.',
@@ -62,8 +63,11 @@ export async function startStarterUpgrade(): Promise<'apple' | 'stripe'> {
         )
       }
 
+      const approved = await new Promise<boolean>(resolve => Alert.alert('Subscribe to Starter', `${products[0].displayPrice} per month. Renews automatically until canceled. Includes all Starter features.`, [{ text: 'Cancel', style: 'cancel', onPress: () => resolve(false) }, { text: 'Continue', onPress: () => resolve(true) }], { cancelable: false }))
+      if (!approved) throw new IapPurchaseError('Purchase cancelled', 'cancelled')
       const purchase = await new Promise<import('expo-iap').Purchase>((resolve, reject) => {
         const successSub = purchaseUpdatedListener((p) => {
+          if (p.productId !== offer.productId) return
           cleanup()
           resolve(p)
         })
@@ -79,7 +83,7 @@ export async function startStarterUpgrade(): Promise<'apple' | 'stripe'> {
 
         void requestPurchase({
           request: {
-            apple: { sku: IAP_STARTER_PRODUCT_ID },
+            apple: { sku: offer.productId, appAccountToken: offer.appAccountToken },
             google: { skus: [IAP_STARTER_PRODUCT_ID] },
           },
           type: 'subs',
@@ -136,7 +140,7 @@ export async function restoreApplePurchases(): Promise<boolean> {
   try {
     await restorePurchases()
     const purchases = await getAvailablePurchases({ onlyIncludeActiveItemsIOS: true })
-    const starter = (purchases ?? []).find((p) => p.productId === IAP_STARTER_PRODUCT_ID)
+    const starter = (purchases ?? []).find((p) => (IAP_SUBSCRIPTION_SKUS as readonly string[]).includes(p.productId))
     if (!starter?.purchaseToken) return false
 
     await confirmApplePurchase(starter.purchaseToken)

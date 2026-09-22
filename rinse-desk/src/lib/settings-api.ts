@@ -33,6 +33,9 @@ export type DeskAppSettings = {
   track_job_supplies: boolean
   invoice_template: 'rinse' | 'classic' | 'minimal'
   booking_schedule: BookingSchedule
+  allowed_origins: string[]
+  deposit_required: boolean
+  default_deposit_amount: number
   notifications: {
     job_reminder: boolean
     morning_reminder: boolean
@@ -59,6 +62,9 @@ export const DEFAULT_SETTINGS: DeskAppSettings = {
   track_job_supplies: false,
   invoice_template: 'rinse',
   booking_schedule: { ...DEFAULT_BOOKING_SCHEDULE, open_dates: [] },
+  allowed_origins: [],
+  deposit_required: false,
+  default_deposit_amount: 0,
   notifications: {
     job_reminder: true,
     morning_reminder: true,
@@ -105,6 +111,13 @@ function fromRecord(record: Record<string, unknown>): DeskAppSettings {
         ? record.invoice_template
         : 'rinse',
     booking_schedule: normalizeBookingSchedule(record.booking_schedule),
+    allowed_origins: Array.isArray(record.allowed_origins)
+      ? (record.allowed_origins as string[]).map(String)
+      : typeof record.allowed_origins === 'string' && record.allowed_origins.trim()
+        ? record.allowed_origins.split(/[,\n]/).map((s) => s.trim()).filter(Boolean)
+        : [],
+    deposit_required: record.deposit_required === true,
+    default_deposit_amount: Number(record.default_deposit_amount ?? 0) || 0,
     notifications: {
       job_reminder: notes.job_reminder !== false,
       morning_reminder: notes.morning_reminder !== false,
@@ -174,6 +187,9 @@ export async function saveAppSettings(next: DeskAppSettings): Promise<DeskAppSet
     track_job_supplies: next.track_job_supplies,
     invoice_template: next.invoice_template,
     booking_schedule: schedule,
+    allowed_origins: next.allowed_origins ?? [],
+    deposit_required: Boolean(next.deposit_required),
+    default_deposit_amount: Number(next.default_deposit_amount) || 0,
   }
 
   let record: Record<string, unknown>
@@ -190,7 +206,10 @@ export async function saveAppSettings(next: DeskAppSettings): Promise<DeskAppSet
   }
 
   try {
-    await pb.collection('organizations').update(orgId, { name })
+    await pb.collection('organizations').update(orgId, {
+      name,
+      allowed_origins: next.allowed_origins ?? [],
+    })
   } catch {
     // non-fatal
   }

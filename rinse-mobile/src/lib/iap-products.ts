@@ -5,4 +5,5 @@
 export const IAP_STARTER_PRODUCT_ID =
   process.env.EXPO_PUBLIC_IAP_STARTER_PRODUCT_ID?.trim() || 'com.rinse.mobile.starter.monthly'
 
-export const IAP_SUBSCRIPTION_SKUS = [IAP_STARTER_PRODUCT_ID] as const
+export const IAP_EARLY_PRODUCT_ID = process.env.EXPO_PUBLIC_IAP_EARLY_PRODUCT_ID?.trim() || 'com.rinse.mobile.early.monthly'
+export const IAP_SUBSCRIPTION_SKUS = [IAP_STARTER_PRODUCT_ID, IAP_EARLY_PRODUCT_ID] as const

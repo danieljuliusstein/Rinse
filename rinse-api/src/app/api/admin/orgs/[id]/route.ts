@@ -1,3 +1,4 @@
+import { billingCommand } from '@/lib/server/billing-store'
 import { NextResponse } from 'next/server'
 import { authenticateServerAdmin } from '@/lib/server/pocketbase-admin'
 import { authenticateRequestUser } from '@/lib/server/request-auth'
@@ -10,7 +11,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function PATCH(request: Request, { params }: Params) {
   const auth = await authenticateRequestUser(request)
-  if (!auth || !isPlatformAdminEmail(auth.email)) {
+  if (!auth || !auth.verified || !isPlatformAdminEmail(auth.email)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -29,9 +30,10 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const payload: Record<string, unknown> = {}
   if (typeof body.booking_enabled === 'boolean') payload.booking_enabled = body.booking_enabled
-  if (body.plan === 'founding' || body.plan === 'starter' || body.plan === 'pro') payload.plan = body.plan
-  if (body.trial_ends_at) payload.trial_ends_at = body.trial_ends_at
-  if (body.subscription_status) payload.subscription_status = body.subscription_status
+  if (body.plan === 'founding') {
+    try { await billingCommand({ action: 'founding', orgId: id }); return NextResponse.json({ ok: true }) }
+    catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : 'Cannot grant Founding' }, { status: 409 }) }
+  }
 
   if (!Object.keys(payload).length) {
     return NextResponse.json({ error: 'No changes' }, { status: 400 })

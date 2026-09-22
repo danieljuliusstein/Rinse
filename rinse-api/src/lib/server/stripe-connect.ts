@@ -13,6 +13,8 @@ export interface StripeConnectStatus {
   accountId: string | null
   chargesEnabled: boolean
   detailsSubmitted: boolean
+  payoutsEnabled: boolean
+  requirements: string[]
   ready: boolean
 }
 
@@ -22,7 +24,7 @@ export function appOriginFromRequest(request: Request): string {
 
 export async function syncConnectAccountToOrg(orgId: string, account: Stripe.Account) {
   const metaOrgId = String(account.metadata?.organization_id ?? '').trim()
-  if (metaOrgId && metaOrgId !== orgId) return
+  if (metaOrgId !== orgId) throw new Error('Connected account organization mismatch')
 
   const admin = await authenticateServerAdmin()
   await admin.collection('organizations').update(orgId, {
@@ -38,7 +40,9 @@ export function connectStatusFromAccount(account: Stripe.Account): StripeConnect
     accountId: account.id,
     chargesEnabled,
     detailsSubmitted,
-    ready: chargesEnabled && detailsSubmitted,
+    payoutsEnabled: account.payouts_enabled === true,
+    requirements: account.requirements?.currently_due ?? [],
+    ready: chargesEnabled && detailsSubmitted && account.controller?.fees?.payer === 'account' && account.controller?.losses?.payments === 'stripe',
   }
 }
 
@@ -78,6 +82,8 @@ export async function refreshConnectStatus(
       accountId: null,
       chargesEnabled: false,
       detailsSubmitted: false,
+      payoutsEnabled: false,
+      requirements: [],
       ready: false,
     }
   }
@@ -86,11 +92,7 @@ export async function refreshConnectStatus(
   if (!stripe) throw new Error('Stripe not configured')
 
   const account = await stripe.accounts.retrieve(accountId)
-  try {
-    await syncConnectAccountToOrg(orgId, account)
-  } catch {
-    // PB may lack stripe_connect_* fields until migration 1761300000 is applied
-  }
+  await syncConnectAccountToOrg(orgId, account)
   return connectStatusFromAccount(account)
 }
 
@@ -110,8 +112,8 @@ export async function ensureConnectAccount(
   if (existing) return existing
 
   const account = await stripe.accounts.create({
-    type: 'express',
-    country: 'US',
+    controller: { fees: { payer: 'account' }, losses: { payments: 'stripe' }, stripe_dashboard: { type: 'full' }, requirement_collection: 'stripe' },
+    country: process.env.STRIPE_CONNECT_COUNTRY?.trim() || (() => { throw new Error('STRIPE_CONNECT_COUNTRY must be configured') })(),
     email: email || undefined,
     business_profile: businessName ? { name: businessName } : undefined,
     capabilities: {
@@ -119,16 +121,9 @@ export async function ensureConnectAccount(
       transfers: { requested: true },
     },
     metadata: { organization_id: orgId },
-  })
+  }, { idempotencyKey: `connect:${orgId}` })
 
-  try {
-    await pb.collection('organizations').update(orgId, {
-      stripe_connect_account_id: account.id,
-      stripe_connect_charges_enabled: false,
-    })
-  } catch {
-    // PB may lack stripe_connect_* fields until migration 1761300000 is applied
-  }
+  await syncConnectAccountToOrg(orgId, account)
 
   return account.id
 }
@@ -141,13 +136,13 @@ export async function resolveConnectDestination(
   return status.ready && status.accountId ? status.accountId : null
 }
 
-const CONNECT_RETURN_PATH = '/settings/invoicing'
+const CONNECT_RETURN_PATH = '/billing/return'
 
 export function connectLinkStrategy(status: StripeConnectStatus): 'login' | 'onboarding' {
   return status.ready ? 'login' : 'onboarding'
 }
 
-/** Express accounts cannot use account_update links — use onboarding or Express Dashboard. */
+/** Stripe-managed accounts use hosted onboarding and the full Stripe Dashboard. */
 export async function buildConnectRedirectUrl(
   accountId: string,
   request: Request,
@@ -161,9 +156,7 @@ export async function buildConnectRedirectUrl(
   const returnUrl = `${origin}${CONNECT_RETURN_PATH}?connect=return`
 
   if (connectLinkStrategy(status) === 'login') {
-    const login = await stripe.accounts.createLoginLink(accountId)
-    if (!login.url) throw new Error('Could not open Stripe dashboard')
-    return login.url
+    return 'https://dashboard.stripe.com/'
   }
 
   const link = await stripe.accountLinks.create({

@@ -7,6 +7,7 @@ import {
 } from '@/lib/invoice-layout'
 import type { AppSettings } from '@/lib/settings'
 import type { Invoice, JobWithRelations } from '@/lib/types'
+import { getDocumentStrings, normalizeDocumentLocale } from '@rinse/core'
 
 const styles = StyleSheet.create({
   page: {
@@ -218,6 +219,7 @@ interface Props {
 }
 
 export default function InvoicePdfDocument({ job, invoice, settings, logoDataUri, portalUrl }: Props) {
+  const s = getDocumentStrings(normalizeDocumentLocale(settings.document_locale))
   const vm = buildInvoiceViewModel(job, invoice, settings, { portalUrl })
 
   return (
@@ -234,34 +236,34 @@ export default function InvoicePdfDocument({ job, invoice, settings, logoDataUri
             </View>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.invoiceLabel}>INVOICE</Text>
+            <Text style={styles.invoiceLabel}>{s.invoice.toUpperCase()}</Text>
             <Text style={styles.invoiceNumber}>{vm.invoiceNumber}</Text>
-            <Text style={styles.issuedDate}>Issued {vm.issuedDateLabel}</Text>
+            <Text style={styles.issuedDate}>{s.issued} {vm.issuedDateLabel}</Text>
             <Text style={[styles.statusChip, statusStyle(vm.statusTone)]}>{vm.statusLabel}</Text>
           </View>
         </View>
 
         <View style={styles.twoCol}>
           <View style={styles.col}>
-            <Text style={styles.label}>Bill to</Text>
+            <Text style={styles.label}>{s.billTo}</Text>
             <Text style={styles.clientName}>{vm.billToName}</Text>
             {vm.billToPhone ? <Text style={styles.muted}>{vm.billToPhone}</Text> : null}
             {vm.billToEmail ? <Text style={styles.muted}>{vm.billToEmail}</Text> : null}
             {vm.billToAddress ? <Text style={styles.muted}>{vm.billToAddress}</Text> : null}
           </View>
           <View style={styles.col}>
-            <Text style={styles.label}>Service details</Text>
-            <Text style={styles.muted}>Date: {vm.serviceDateLabel}</Text>
-            <Text style={styles.muted}>Vehicle: {vm.vehicleLabel}</Text>
-            <Text style={styles.muted}>Location: {vm.locationLabel}</Text>
+            <Text style={styles.label}>{s.serviceDetails}</Text>
+            <Text style={styles.muted}>{s.date}: {vm.serviceDateLabel}</Text>
+            <Text style={styles.muted}>{s.vehicle}: {vm.vehicleLabel}</Text>
+            <Text style={styles.muted}>{s.location}: {vm.locationLabel}</Text>
             <Text style={styles.serviceContext}>{vm.serviceContextLine}</Text>
           </View>
         </View>
 
         <View style={styles.table}>
           <View style={styles.tableHead}>
-            <Text style={[styles.tableHeadText, styles.colDesc]}>Description</Text>
-            <Text style={[styles.tableHeadText, styles.colAmount]}>Amount</Text>
+            <Text style={[styles.tableHeadText, styles.colDesc]}>{s.description}</Text>
+            <Text style={[styles.tableHeadText, styles.colAmount]}>{s.amount}</Text>
           </View>
           {vm.lineItems.map((item, i) => (
             <View key={i} style={styles.tableRow}>
@@ -277,22 +279,22 @@ export default function InvoicePdfDocument({ job, invoice, settings, logoDataUri
         <View style={styles.summaryWrap}>
           <View style={styles.summaryBox}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subtotal</Text>
+              <Text style={styles.summaryLabel}>{s.subtotal}</Text>
               <Text style={styles.summaryValue}>{formatInvoiceMoney(vm.subtotal)}</Text>
             </View>
             {vm.showTip ? (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Tip</Text>
+                <Text style={styles.summaryLabel}>{s.tip}</Text>
                 <Text style={styles.summaryValue}>{formatInvoiceMoney(vm.tip)}</Text>
               </View>
             ) : null}
             <View style={styles.summaryDivider} />
             <View style={styles.summaryRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>{s.total}</Text>
               <Text style={styles.totalValue}>{formatInvoiceMoney(vm.total)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Balance due</Text>
+              <Text style={styles.summaryLabel}>{s.balanceDue}</Text>
               <Text
                 style={[
                   styles.summaryValue,
@@ -307,7 +309,7 @@ export default function InvoicePdfDocument({ job, invoice, settings, logoDataUri
 
         {vm.showPayments ? (
           <View style={styles.paymentsSection}>
-            <Text style={styles.label}>Payments</Text>
+            <Text style={styles.label}>{s.payments}</Text>
             {vm.payments.map((p, i) => (
               <View key={i} style={styles.paymentRow}>
                 <Text style={styles.muted}>
@@ -321,10 +323,10 @@ export default function InvoicePdfDocument({ job, invoice, settings, logoDataUri
 
         {vm.showSignature && vm.signatureUrl ? (
           <View style={styles.signatureSection}>
-            <Text style={styles.label}>Client signature</Text>
+            <Text style={styles.label}>{s.signInvoice}</Text>
             <Image src={vm.signatureUrl} style={styles.signatureImage} />
             {vm.signedAtLabel ? (
-              <Text style={styles.signatureDate}>Signed {vm.signedAtLabel}</Text>
+              <Text style={styles.signatureDate}>{s.signed} {vm.signedAtLabel}</Text>
             ) : null}
           </View>
         ) : null}
@@ -334,7 +336,7 @@ export default function InvoicePdfDocument({ job, invoice, settings, logoDataUri
           {vm.questionsLine ? <Text style={styles.footerText}>{vm.questionsLine}</Text> : null}
           {vm.portalUrl ? (
             <Link src={vm.portalUrl} style={styles.portalLink}>
-              View your invoice online
+              {s.viewOnline}
             </Link>
           ) : null}
         </View>

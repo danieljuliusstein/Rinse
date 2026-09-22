@@ -16,6 +16,7 @@ import InvoicesPage from './pages/InvoicesPage'
 import QuotesPage from './pages/QuotesPage'
 import ReceiptsPage from './pages/ReceiptsPage'
 import CarsPage from './pages/CarsPage'
+import InventoryPage from './pages/InventoryPage'
 import RoutesPage from './pages/RoutesPage'
 import AuthPage from './pages/AuthPage'
 import VerifyEmailPage, { VerifyEmailConfirmPage } from './pages/VerifyEmailPage'
@@ -41,6 +42,7 @@ import {
   ScrollText,
   ReceiptText,
   Car,
+  Package,
   Users,
   CalendarDays,
   Route,
@@ -80,7 +82,10 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
   },
   {
     title: 'Fleet',
-    items: [{ id: 'cars', label: 'Cars', icon: Car }],
+    items: [
+      { id: 'cars', label: 'Cars', icon: Car },
+      { id: 'inventory', label: 'Inventory', icon: Package },
+    ],
   },
   {
     title: 'People & schedule',
@@ -870,6 +875,7 @@ function Shell() {
     quotes: <QuotesPage />,
     receipts: <ReceiptsPage />,
     cars: <CarsPage />,
+    inventory: <InventoryPage />,
     contacts: <Contacts />,
     calendar: <CalendarPage />,
     routes: <RoutesPage />,

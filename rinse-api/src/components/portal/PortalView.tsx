@@ -1,6 +1,12 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
+import {
+  getDocumentStrings,
+  intlLocaleForDocument,
+  isRtlDocumentLocale,
+  normalizeDocumentLocale,
+} from '@rinse/core'
 import type { PortalPayload } from '@/lib/server/portal-data'
 import type { PortalScope } from '@/lib/portal-client'
 import { brandCssVars } from '@/lib/brand-color'
@@ -47,16 +53,21 @@ export default function PortalView({ payload, token }: PortalViewProps) {
   const before = photos.filter((p) => p.type === 'before')
   const after = photos.filter((p) => p.type === 'after')
 
+  const locale = normalizeDocumentLocale(business.locale)
+  const s = getDocumentStrings(locale)
+  const isRtl = isRtlDocumentLocale(locale)
+
   const greetingSub = job
-    ? `${capitalize(job.vehicleType)} · ${job.locationType === 'mobile' ? 'Mobile detail' : 'Shop detail'} · ${formatPortalDate(job.date)}`
+    ? `${capitalize(job.vehicleType)} · ${job.locationType === 'mobile' ? s.mobileDetail : s.shopDetail} · ${formatPortalDate(job.date)}`
     : quote
       ? `${quote.packageName} · ${capitalize(quote.vehicleType)}`
       : invoice
-        ? `Invoice ${invoice.invoiceNumber}`
+        ? `${s.invoice} ${invoice.invoiceNumber}`
         : undefined
 
   return (
     <div
+      dir={isRtl ? 'rtl' : 'ltr'}
       className={`portal-root client-light-root${isPhotosScope ? ' portal-root--photos' : ''}`}
       style={brandCssVars(business.accentColor)}
     >
@@ -65,26 +76,31 @@ export default function PortalView({ payload, token }: PortalViewProps) {
       <div className="portal-body">
         {isPhotosScope && (
           <div>
-            <div className="portal-photos-hero-title">Your detail photos</div>
+            <div className="portal-photos-hero-title">{s.yourPhotos}</div>
             <div className="portal-photos-hero-sub">
               {job
                 ? `${job.packageName} · ${formatPortalDate(job.date)}`
                 : client.name
-                  ? `Prepared for ${client.name}`
-                  : 'Before & after from your detail'}
+                  ? `${s.preparedFor} ${client.name}`
+                  : `${s.before} & ${s.after}`}
             </div>
           </div>
         )}
 
         {!isPhotosScope && (
-          <PortalGreetingCard clientName={client.name} subtitle={greetingSub} />
+          <PortalGreetingCard
+            clientName={client.name}
+            subtitle={greetingSub}
+            preparedForLabel={s.preparedFor}
+            hiNameLabel={s.hiName}
+          />
         )}
 
         {paymentReceived && (
           <div className="portal-success-banner portal-flash">
             <div>
-              <div className="portal-success-banner__title">Payment received</div>
-              <div className="portal-success-banner__sub">Thank you — your payment is being processed.</div>
+              <div className="portal-success-banner__title">{s.paymentReceived}</div>
+              <div className="portal-success-banner__sub">{s.paymentReceivedBody}</div>
             </div>
           </div>
         )}
@@ -95,17 +111,18 @@ export default function PortalView({ payload, token }: PortalViewProps) {
           </p>
         )}
 
-        {showQuote(scope, quote) && quote && <PortalQuoteCard quote={quote} />}
+        {showQuote(scope, quote) && quote && <PortalQuoteCard quote={quote} locale={locale} />}
 
         {showQuote(scope, quote) && quote && (
           <PortalQuoteCTA
             token={token}
             businessPhone={business.phone}
             quoteStatus={quote.status}
+            locale={locale}
           />
         )}
 
-        {showJob(scope, job) && job && !isPhotosScope && <PortalServiceCard job={job} />}
+        {showJob(scope, job) && job && !isPhotosScope && <PortalServiceCard job={job} locale={locale} />}
 
         {showInvoice(scope, invoice) && invoice && (
           <PortalInvoiceCard
@@ -115,13 +132,14 @@ export default function PortalView({ payload, token }: PortalViewProps) {
             showPayOnline={scope === 'invoice' || scope === 'full'}
             businessPhone={business.phone}
             businessName={business.name}
+            locale={locale}
           />
         )}
 
         {showPhotos(scope, photos) && (
           <>
-            <PortalPhotoGrid label="Before" photos={before} dark={isPhotosScope} />
-            <PortalPhotoGrid label="After" photos={after} dark={isPhotosScope} after />
+            <PortalPhotoGrid label={s.before} photos={before} dark={isPhotosScope} />
+            <PortalPhotoGrid label={s.after} photos={after} dark={isPhotosScope} after />
           </>
         )}
       </div>

@@ -33,6 +33,7 @@ export interface SupplyUsage {
 }
 
 export interface Payment {
+  id?: string
   amount: number
   method: string
   date: string
@@ -50,6 +51,7 @@ export interface Package {
   duration_minutes: number
   default_supplies?: { supply_id: string; default_qty: number }[]
   active: boolean
+  deposit_amount?: number
 }
 
 export type SupplyKind = 'chemical' | 'consumable' | 'other'
@@ -238,6 +240,9 @@ export interface Job {
   invoice_id?: string
   recurrence_cadence?: RecurrenceCadence
   recurrence_anchor_date?: string
+  deposit_status?: 'none' | 'due' | 'paid' | 'waived'
+  deposit_amount?: number
+  deposit_paid_at?: string
   created?: string
   updated?: string
 }
@@ -494,6 +499,7 @@ export interface PackageInput {
   duration_minutes?: number
   default_supplies?: { supply_id: string; default_qty: number }[]
   active?: boolean
+  deposit_amount?: number
 }
 
 export interface TimeBlock {

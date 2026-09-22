@@ -1,23 +1,12 @@
+import { appApiJson } from './app-api'
 import { Alert, Linking, Platform } from 'react-native'
-import { appOrigin } from './org-slug'
 import { openNativeSubscriptionManagement } from './iap-purchase'
 import type { OrgSubscription } from './subscription-types'
 
-export function billingSettingsUrl(): string {
-  return `${appOrigin()}/settings/billing`
-}
-
-/** Open web billing settings (Stripe manage / subscribe on rinsehq.com). */
+/** Open the authenticated Stripe management session, never a retired PWA route. */
 export function openBillingSettings(): void {
-  const url = billingSettingsUrl()
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    window.open(url, '_blank', 'noopener,noreferrer')
-    return
-  }
-  Alert.alert('Open rinsehq.com?', 'Manage your Rinse plan in the browser.', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Open', onPress: () => void Linking.openURL(url) },
-  ])
+  if (Platform.OS === 'ios') { Alert.alert('Web subscription', 'Manage or cancel this subscription in Rinse Desk → Settings → Account → Billing.'); return }
+  void appApiJson<{ url: string }>('/api/billing/portal', { method: 'POST' }).then(data => Linking.openURL(data.url)).catch(e => Alert.alert('Billing', e.message))
 }
 
 /**
@@ -32,7 +21,7 @@ export function openManageSubscription(org: OrgSubscription | null): void {
     void openNativeSubscriptionManagement().catch(() => {
       Alert.alert(
         'Manage in Settings',
-        'Open Settings → Apple ID → Subscriptions to change or cancel. You keep access until the period ends, then read-only vault — no further charges.',
+        'Open Settings → Apple ID → Subscriptions to change or cancel. You keep access until the period ends, then Free — no further charges.',
       )
     })
     return

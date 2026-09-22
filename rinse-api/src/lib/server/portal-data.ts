@@ -1,3 +1,5 @@
+import type { DocumentLocale } from '@rinse/core'
+import { normalizeDocumentLocale } from '@rinse/core'
 import { pocketBaseLogoFilename } from '../business-logo'
 import { authenticateServerAdmin } from './pocketbase-admin'
 import { portalScopeAllowsPhotos } from './portal-scope'
@@ -19,6 +21,7 @@ export interface PortalPayload {
     logoUrl?: string
     termsFooter?: string
     accentColor?: string | null
+    locale?: DocumentLocale
   }
   client: { name: string }
   job?: {
@@ -85,6 +88,8 @@ async function loadSettingsForOrg(
       address: '',
       logoUrl: `${base}/api/business-logo${logoQuery}`,
       termsFooter: undefined as string | undefined,
+      accentColor: null as string | null,
+      locale: 'en' as const,
     }
   }
 
@@ -98,6 +103,7 @@ async function loadSettingsForOrg(
     logoUrl,
     termsFooter: String(s.invoice_terms_footer ?? ''),
     accentColor: s.accent_color ? String(s.accent_color) : null,
+    locale: normalizeDocumentLocale(s.document_locale),
   }
 }
 

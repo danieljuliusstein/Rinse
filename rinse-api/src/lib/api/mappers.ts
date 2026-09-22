@@ -69,6 +69,7 @@ export function pbPackageToApp(r: PbRecord): Package {
     duration_minutes: duration > 0 ? duration : 120,
     default_supplies: jsonArray(r.default_supplies),
     active: bool(r.active, true),
+    deposit_amount: num(r.deposit_amount) > 0 ? num(r.deposit_amount) : undefined,
   }
 }
 
@@ -203,6 +204,12 @@ export function pbJobToApp(r: PbRecord): Job {
       return c === 'weekly' || c === 'biweekly' || c === 'monthly' ? c : undefined
     })(),
     recurrence_anchor_date: str(r.recurrence_anchor_date)?.slice(0, 10) || undefined,
+    deposit_status: (() => {
+      const s = str(r.deposit_status)
+      return s === 'due' || s === 'paid' || s === 'waived' ? s : 'none'
+    })(),
+    deposit_amount: num(r.deposit_amount) > 0 ? num(r.deposit_amount) : undefined,
+    deposit_paid_at: str(r.deposit_paid_at) || undefined,
     created: r.created,
     updated: r.updated,
   }

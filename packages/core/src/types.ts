@@ -66,6 +66,7 @@ export interface SupplyUsage {
 }
 
 export interface Payment {
+  id?: string
   amount: number
   method: string
   date: string
@@ -83,6 +84,7 @@ export interface Package {
   duration_minutes: number
   default_supplies?: { supply_id: string; default_qty: number }[]
   active: boolean
+  deposit_amount?: number
 }
 
 export type SupplyKind = 'chemical' | 'consumable' | 'other'
@@ -585,6 +587,7 @@ export interface PackageInput {
   duration_minutes?: number
   default_supplies?: { supply_id: string; default_qty: number }[]
   active?: boolean
+  deposit_amount?: number
 }
 
 export interface TimeBlock {

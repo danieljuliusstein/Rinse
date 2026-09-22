@@ -1,3 +1,4 @@
+import { isSubscriptionActive } from '../../../packages/core/src/pricing'
 import { getPocketBase } from './pocketbase'
 import { requireOrganizationId } from './org'
 import { AppApiError } from './app-api'
@@ -7,7 +8,9 @@ export type OrgSubscription = {
   plan: string
   founding_member: boolean
   subscription_status: string
-  trial_ends_at?: string
+  current_period_end?: string
+  billing_provider?: string
+  stripe_customer_id?: string
 }
 
 let cached: OrgSubscription | null = null
@@ -27,10 +30,12 @@ export async function fetchOrgSubscription(force = false): Promise<OrgSubscripti
     const orgId = requireOrganizationId()
     const record = await getPocketBase().collection('organizations').getOne(orgId)
     cached = {
+      billing_provider: String(record.billing_provider || ''),
+      stripe_customer_id: String(record.stripe_customer_id || ''),
       plan: String(record.plan ?? ''),
       founding_member: record.founding_member === true,
       subscription_status: String(record.subscription_status ?? 'none'),
-      trial_ends_at: record.trial_ends_at ? String(record.trial_ends_at) : undefined,
+      current_period_end: record.current_period_end ? String(record.current_period_end) : undefined,
     }
     cacheAt = now
     return cached
@@ -39,25 +44,7 @@ export async function fetchOrgSubscription(force = false): Promise<OrgSubscripti
   }
 }
 
-export function isFoundingMember(org: OrgSubscription): boolean {
-  return org.founding_member === true || org.plan === 'founding'
-}
-
-/** Same rules as rinse-api `isSubscriptionActive` (portal/PDF gate). */
-export function isSubscriptionActive(org: OrgSubscription, now = new Date()): boolean {
-  if (isFoundingMember(org)) return true
-  const status = String(org.subscription_status ?? 'none')
-  if (status === 'active' || status === 'past_due') return true
-  if (status === 'trialing') {
-    const trialEnd = org.trial_ends_at?.trim()
-    if (!trialEnd) return true
-    const end = new Date(
-      /^\d{4}-\d{2}-\d{2}$/.test(trialEnd) ? `${trialEnd}T23:59:59` : trialEnd,
-    )
-    return !Number.isNaN(end.getTime()) && end >= now
-  }
-  return false
-}
+export { isFoundingMember, isSubscriptionActive } from '../../../packages/core/src/pricing'
 
 /**
  * Desk-side precheck before PDF / portal / send.

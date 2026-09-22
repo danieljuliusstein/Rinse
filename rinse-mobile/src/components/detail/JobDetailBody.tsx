@@ -618,6 +618,24 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
                 </AppText>
               </View>
             </View>
+            {(job.deposit_status === 'paid' || job.tip > 0) && (
+              <View style={styles.depositTipPills}>
+                {job.deposit_status === 'paid' && (
+                  <View style={styles.depositPill}>
+                    <AppText variant="caption" style={styles.depositPillText}>
+                      Deposit: ${(job.deposit_amount ?? 0).toFixed(0)} Paid
+                    </AppText>
+                  </View>
+                )}
+                {job.tip > 0 && (
+                  <View style={styles.tipPill}>
+                    <AppText variant="caption" style={styles.tipPillText}>
+                      Tip: +${job.tip.toFixed(2)}
+                    </AppText>
+                  </View>
+                )}
+              </View>
+            )}
             {isUpcoming ? (
               <SecondaryButton
                 label={completing ? t('jobDetail.markingComplete') : t('jobDetail.markComplete')}
@@ -681,6 +699,18 @@ export function JobDetailBody({ jobId, onClose, variant = 'screen' }: JobDetailB
               </View>
               {depositTone && depositLabel ? <Badge tone={depositTone} label={depositLabel} /> : null}
             </View>
+            {job.tip > 0 ? (
+              <View style={[styles.depositSummary, { marginTop: spacing.xs }]}>
+                <View>
+                  <AppText variant="sectionLabel">TIP RECEIVED</AppText>
+                  <AppText variant="bodySemiBold">${job.tip.toFixed(2)}</AppText>
+                  <AppText variant="caption" style={styles.muted}>
+                    Added by customer
+                  </AppText>
+                </View>
+                <Badge tone="green" label="Tip" />
+              </View>
+            ) : null}
             {(job.deposit_status === 'due' || (!job.deposit_status && depositDueAmount > 0)) && (
               <SecondaryButton label="Collect deposit" onPress={() => setDepositOpen(true)} />
             )}
@@ -991,6 +1021,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: spacing.sm,
+  },
+  depositTipPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  depositPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  depositPillText: {
+    color: '#065f46',
+    fontWeight: '600',
+    fontSize: 11,
+  },
+  tipPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: '#f5f3ff',
+    borderWidth: 1,
+    borderColor: '#ddd6fe',
+  },
+  tipPillText: {
+    color: '#5b21b6',
+    fontWeight: '600',
+    fontSize: 11,
   },
   expenseList: {
     gap: spacing.xs,

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { generatePocketBaseId, type InvoiceLineTemplate } from '@rinse/core'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
 import { FormField } from '@/src/components/FormField'
@@ -20,6 +21,7 @@ const SEEDS = [
 ]
 
 export default function SettingsAddonsScreen() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [addons, setAddons] = useState<InvoiceLineTemplate[]>([])
@@ -49,9 +51,9 @@ export default function SettingsAddonsScreen() {
         })
       }
       await refresh()
-      Alert.alert('Seeded', 'Example add-ons added.')
+      Alert.alert(t('addons.seeded'), t('addons.seededBody'))
     } catch (e) {
-      Alert.alert('Seed failed', e instanceof Error ? e.message : 'Could not seed')
+      Alert.alert(t('addons.seedFailed'), e instanceof Error ? e.message : t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -77,7 +79,7 @@ export default function SettingsAddonsScreen() {
       setPrice('50')
       await refresh()
     } catch (e) {
-      Alert.alert('Add failed', e instanceof Error ? e.message : 'Could not add')
+      Alert.alert(t('addons.addFailed'), e instanceof Error ? e.message : t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -85,21 +87,21 @@ export default function SettingsAddonsScreen() {
 
   if (loading) {
     return (
-      <SettingsScreen title="Add-ons">
+      <SettingsScreen title={t('addons.title')}>
         <ScreenLoading />
       </SettingsScreen>
     )
   }
 
   return (
-    <SettingsScreen title="Add-ons" subtitle="Catalog extras for quotes and jobs">
+    <SettingsScreen title={t('addons.title')} subtitle={t('addons.subtitle')}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {addons.length === 0 ? (
           <>
             <AppText variant="caption" style={styles.muted}>
-              No add-ons yet. Seed examples or create your own.
+              {t('addons.noAddons')}
             </AppText>
-            <SecondaryButton label="Seed examples" loading={saving} onPress={() => void seed()} />
+            <SecondaryButton label={t('addons.seedExamples')} loading={saving} onPress={() => void seed()} />
           </>
         ) : (
           addons.map((item) => (
@@ -108,11 +110,11 @@ export default function SettingsAddonsScreen() {
                 <AppText variant="bodySemiBold">{item.description}</AppText>
                 <AppText variant="caption" style={styles.muted}>
                   ${Number(item.default_amount).toFixed(2)}
-                  {item.active === false ? ' · inactive' : ''}
+                  {item.active === false ? ` · ${t('addons.inactive')}` : ''}
                 </AppText>
               </View>
               <SecondaryButton
-                label="Delete"
+                label={t('common.delete')}
                 onPress={() => {
                   void deleteInvoiceLineTemplate(item.id).then(() => void refresh())
                 }}
@@ -120,9 +122,9 @@ export default function SettingsAddonsScreen() {
             </View>
           ))
         )}
-        <FormField label="Name" value={name} onChangeText={setName} placeholder="Pet hair" />
-        <AffixField label="Price" value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
-        <PrimaryButton label="Add add-on" loading={saving} onPress={() => void add()} />
+        <FormField label={t('addons.name')} value={name} onChangeText={setName} placeholder={t('addons.namePlaceholder')} />
+        <AffixField label={t('addons.price')} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
+        <PrimaryButton label={t('addons.addAddon')} loading={saving} onPress={() => void add()} />
       </ScrollView>
     </SettingsScreen>
   )

@@ -82,8 +82,36 @@ export function buildInvoiceFromJob(params: {
   tip: number
   invoiceNumber: string
   terms?: string
+  deposit_status?: string
+  deposit_amount?: number
+  deposit_paid_at?: string
 }): Omit<Invoice, 'id'> {
   const total = params.revenue + params.tip
+  const depositPaid =
+    params.deposit_status === 'paid' &&
+    typeof params.deposit_amount === 'number' &&
+    params.deposit_amount > 0
+      ? params.deposit_amount
+      : 0
+
+  const payments: Payment[] =
+    depositPaid > 0
+      ? [
+          {
+            id: `dep_${params.jobId}`,
+            amount: depositPaid,
+            method: 'stripe',
+            date: params.deposit_paid_at || new Date().toISOString(),
+            note: 'Deposit paid at booking',
+          },
+        ]
+      : []
+
+  const amount_paid = depositPaid
+  const balance_due = Math.max(0, total - amount_paid)
+  const status: InvoiceStatus =
+    balance_due === 0 && total > 0 ? 'paid' : amount_paid > 0 ? 'partial' : 'draft'
+
   return {
     invoice_number: params.invoiceNumber,
     job_id: params.jobId,
@@ -91,10 +119,10 @@ export function buildInvoiceFromJob(params: {
     subtotal: params.revenue,
     tip: params.tip,
     total,
-    status: 'draft',
-    payments: [],
-    amount_paid: 0,
-    balance_due: total,
+    status,
+    payments,
+    amount_paid,
+    balance_due,
     terms: params.terms ?? 'Due on receipt',
   }
 }

@@ -5,6 +5,14 @@
       "destination": "https://app.rinsehq.com/api/:path*"
     },
     {
+      "source": "/privacy",
+      "destination": "https://app.rinsehq.com/privacy"
+    },
+    {
+      "source": "/terms",
+      "destination": "https://app.rinsehq.com/terms"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

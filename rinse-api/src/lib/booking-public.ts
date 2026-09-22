@@ -24,6 +24,7 @@ export interface PublicPackage {
   base_price: number
   description?: string
   duration_minutes?: number
+  deposit_amount?: number
 }
 
 export interface PublicBusinessInfo {
@@ -33,6 +34,7 @@ export interface PublicBusinessInfo {
   address: string
   logoUrl: string
   accentColor?: string | null
+  document_locale?: string
 }
 
 export interface PublicBookingInput {
@@ -46,6 +48,18 @@ export interface PublicBookingInput {
   email?: string
   address?: string
   notes?: string
+}
+
+export interface PublicBookingResult {
+  jobId: string
+  clientId: string
+  date: string
+  startTime?: string
+  packageName: string
+  clientName: string
+  requiresDeposit?: boolean
+  depositAmount?: number
+  checkoutUrl?: string
 }
 
 function pb() {

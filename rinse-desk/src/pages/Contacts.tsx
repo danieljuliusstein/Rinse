@@ -26,11 +26,12 @@ import {
 import { EmptyNoContacts, EmptyNoMatches } from '@/components/contacts/EmptyContacts'
 import { AVATAR_TONE_KEYS } from '@/components/contacts/identifierMeta'
 import { useOptionalTour } from '@/components/tour/tour-provider'
+import { ClientCsvImportModal } from '@/components/contacts/ClientCsvImportModal'
 
 const PAGE_SIZE = 25
 
 export default function Contacts() {
-  const { clients, setClients, vehicles, jobs } = useData()
+  const { clients, setClients, vehicles, jobs, refresh } = useData()
   const { focusContactId, clearFocusContact } = useDeskNav()
   const { alert, toast } = useUi()
   const { createContact } = useCreateActions()
@@ -40,6 +41,7 @@ export default function Contacts() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
   const [groupOpen, setGroupOpen] = useState(false)
+  const [csvModalOpen, setCsvModalOpen] = useState(false)
   const [page, setPage] = useState(0)
   const [busy, setBusy] = useState(false)
   const [businessAddress, setBusinessAddress] = useState('')
@@ -349,6 +351,7 @@ export default function Contacts() {
             onNewContact={() => void createContact({ navigate: false })}
             onClearNotes={() => void bulkClearSelectionNotes()}
             onClearSelection={() => setSelected(new Set())}
+            onImportCsv={() => setCsvModalOpen(true)}
             busy={busy}
           />
           {showNoMatches ? (
@@ -401,6 +404,15 @@ export default function Contacts() {
           )}
         </>
       )}
+
+      <ClientCsvImportModal
+        isOpen={csvModalOpen}
+        onClose={() => setCsvModalOpen(false)}
+        onSuccess={(count) => {
+          toast(`Successfully imported ${count} contacts!`)
+          void refresh()
+        }}
+      />
 
       {(filterOpen || groupOpen) && (
         <button

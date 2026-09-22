@@ -37,9 +37,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No billing account yet — subscribe first' }, { status: 400 })
     }
 
+    const configuration = process.env.STRIPE_BILLING_PORTAL_CONFIGURATION?.trim()
+    if (!configuration) return NextResponse.json({ error: 'Billing management is not configured' }, { status: 503 })
+    if (org.billing_provider === 'apple') return NextResponse.json({ error: 'Manage this subscription with Apple' }, { status: 409 })
     const session = await stripe.billingPortal.sessions.create({
+      configuration,
       customer: customerId,
-      return_url: `${stripeAppOrigin(request)}/settings/billing`,
+      return_url: `${stripeAppOrigin(request)}/billing/return`,
     })
 
     return NextResponse.json({ url: session.url })

@@ -40,27 +40,8 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
   const earlyAvailable = pricing?.early.available === true
   const paidName = earlyAvailable ? EARLY_PLAN.name : STARTER_PLAN.name
 
-  const lead =
-    mode === 'vault'
-      ? 'Your jobs, clients, and invoices stay readable forever. Export anytime. Resubscribe to create or edit again — you will not be charged while canceled.'
-      : mode === 'nudge'
-        ? featureLabel
-          ? `Keep ${featureLabel} — upgrade to ${paidName} before your trial ends.`
-          : `Upgrade to ${paidName} before your trial ends to keep full access.`
-        : mode === 'free'
-          ? featureLabel
-            ? `${featureLabel} is on ${paidName}. Upgrade to unlock.`
-            : `Upgrade to ${paidName} to unlock booking, billing, and pipeline.`
-          : featureLabel
-            ? `${featureLabel} requires an active ${paidName} subscription.`
-            : `Subscribe to ${paidName} to unlock premium actions in Rinse.`
-
-  const title =
-    mode === 'vault'
-      ? 'Read-only vault'
-      : mode === 'free'
-        ? `Upgrade to ${paidName}`
-        : 'Upgrade to keep going'
+  const lead = featureLabel ? `${featureLabel} is included in Starter. Free still includes your clients, five active jobs, invoices and customer payments.` : 'Upgrade for unlimited active jobs, booking links, quotes, inventory and reports.'
+  const title = 'Upgrade to Starter'
 
   const handleBilling = () => {
     onClose()
@@ -155,7 +136,7 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
                     </AppText>
                   </View>
                   <AppText style={styles.planPrice}>
-                    {Platform.OS === 'ios' ? STARTER_PLAN.priceLabel : paidLabel}
+                    {paidLabel}
                   </AppText>
                 </View>
               </View>

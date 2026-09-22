@@ -4,6 +4,7 @@ import { connectLinkStrategy, connectStatusFromAccount } from './stripe-connect'
 describe('connectStatusFromAccount', () => {
   it('marks ready when charges and details are submitted', () => {
     const status = connectStatusFromAccount({
+      controller: { fees: { payer: 'account' }, losses: { payments: 'stripe' } },
       id: 'acct_test',
       charges_enabled: true,
       details_submitted: true,
@@ -14,6 +15,7 @@ describe('connectStatusFromAccount', () => {
 
   it('is not ready when onboarding incomplete', () => {
     const status = connectStatusFromAccount({
+      controller: { fees: { payer: 'account' }, losses: { payments: 'stripe' } },
       id: 'acct_test',
       charges_enabled: false,
       details_submitted: false,
@@ -26,6 +28,7 @@ describe('connectLinkStrategy', () => {
   it('uses login link when connect is ready', () => {
     expect(
       connectLinkStrategy({
+        payoutsEnabled: false, requirements: [],
         accountId: 'acct_test',
         chargesEnabled: true,
         detailsSubmitted: true,
@@ -37,6 +40,7 @@ describe('connectLinkStrategy', () => {
   it('uses onboarding link when connect is not ready', () => {
     expect(
       connectLinkStrategy({
+        payoutsEnabled: false, requirements: [],
         accountId: 'acct_test',
         chargesEnabled: false,
         detailsSubmitted: true,

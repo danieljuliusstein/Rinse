@@ -42,9 +42,11 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@apple/app-store-server-library": "^3.1.0",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.4.0",
+    "@rinse/core": "file:../packages/core",
     "@phosphor-icons/react": "^2.1.10",
     "@react-pdf/renderer": "^4.5.1",
     "@tailwindcss/typography": "^0.5.20",

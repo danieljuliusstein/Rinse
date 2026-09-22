@@ -145,6 +145,7 @@ function mapJob(record: Record<string, unknown>, expand?: Record<string, unknown
       record.deposit_amount != null && record.deposit_amount !== ''
         ? Number(record.deposit_amount)
         : undefined,
+    deposit_paid_at: record.deposit_paid_at ? String(record.deposit_paid_at) : undefined,
     invoice_id: record.invoice_id ? String(record.invoice_id) : undefined,
     hours_worked:
       record.hours_worked != null && record.hours_worked !== ''
@@ -631,6 +632,10 @@ export async function listPackages(): Promise<DeskPackage[]> {
       name: String((r as { name?: string }).name ?? ''),
       base_price: Number((r as { base_price?: number }).base_price ?? 0),
       active: Boolean((r as { active?: boolean }).active ?? true),
+      deposit_amount:
+        (r as { deposit_amount?: number }).deposit_amount != null
+          ? Number((r as { deposit_amount?: number }).deposit_amount)
+          : undefined,
     }))
   } catch {
     return []
@@ -808,12 +813,14 @@ export async function createPackage(input: {
   name: string
   base_price?: number
   active?: boolean
+  deposit_amount?: number
 }): Promise<DeskPackage> {
   const pb = getPocketBase()
   const created = await pb.collection('packages').create({
     name: input.name.trim(),
     base_price: input.base_price ?? 0,
     active: input.active ?? true,
+    deposit_amount: input.deposit_amount ?? 0,
     organization_id: requireOrganizationId(),
   })
   return {
@@ -821,12 +828,16 @@ export async function createPackage(input: {
     name: String((created as { name?: string }).name ?? ''),
     base_price: Number((created as { base_price?: number }).base_price ?? 0),
     active: Boolean((created as { active?: boolean }).active ?? true),
+    deposit_amount:
+      (created as { deposit_amount?: number }).deposit_amount != null
+        ? Number((created as { deposit_amount?: number }).deposit_amount)
+        : undefined,
   }
 }
 
 export async function updatePackage(
   id: string,
-  patch: Partial<Pick<DeskPackage, 'name' | 'base_price' | 'active'>>,
+  patch: Partial<Pick<DeskPackage, 'name' | 'base_price' | 'active' | 'deposit_amount'>>,
 ): Promise<DeskPackage> {
   const pb = getPocketBase()
   const updated = await pb.collection('packages').update(id, patch)
@@ -835,6 +846,10 @@ export async function updatePackage(
     name: String((updated as { name?: string }).name ?? ''),
     base_price: Number((updated as { base_price?: number }).base_price ?? 0),
     active: Boolean((updated as { active?: boolean }).active ?? true),
+    deposit_amount:
+      (updated as { deposit_amount?: number }).deposit_amount != null
+        ? Number((updated as { deposit_amount?: number }).deposit_amount)
+        : undefined,
   }
 }
 
@@ -1304,6 +1319,29 @@ export async function createInvoiceForJob(jobId: string): Promise<DeskInvoice> {
   const tip = Number((job as { tip?: unknown }).tip ?? 0)
   const total = revenue + tip
 
+  const depositStatus = String((job as { deposit_status?: unknown }).deposit_status ?? '')
+  const depositAmount = Number((job as { deposit_amount?: unknown }).deposit_amount ?? 0)
+  const depositPaidAt = (job as { deposit_paid_at?: unknown }).deposit_paid_at
+    ? String((job as { deposit_paid_at?: unknown }).deposit_paid_at)
+    : undefined
+
+  const depositPaid = depositStatus === 'paid' && depositAmount > 0 ? depositAmount : 0
+  const payments =
+    depositPaid > 0
+      ? [
+          {
+            id: `dep_${jobId}`,
+            amount: depositPaid,
+            method: 'stripe',
+            date: depositPaidAt || new Date().toISOString(),
+            note: 'Deposit paid at booking',
+          },
+        ]
+      : []
+  const amountPaid = depositPaid
+  const balanceDue = Math.max(0, total - amountPaid)
+  const status = balanceDue === 0 && total > 0 ? 'paid' : amountPaid > 0 ? 'partial' : 'draft'
+
   const body: Record<string, unknown> = {
     invoice_number: 'PENDING',
     job_id: jobId,
@@ -1311,10 +1349,10 @@ export async function createInvoiceForJob(jobId: string): Promise<DeskInvoice> {
     subtotal: revenue,
     tip,
     total,
-    status: 'draft',
-    payments: [],
-    amount_paid: 0,
-    balance_due: total,
+    status,
+    payments,
+    amount_paid: amountPaid,
+    balance_due: balanceDue,
     terms: 'Due on receipt',
     organization_id: requireOrganizationId(),
   }

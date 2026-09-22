@@ -39,7 +39,7 @@ export async function createPortalLink(input: {
   jobId?: string
   quoteId?: string
 }): Promise<PortalLinkResult> {
-  await beforeShare('client portal links')
+  if (input.scope !== 'invoice') await beforeShare('client portal links')
   return appApiJson<PortalLinkResult>('/api/portal/create', {
     method: 'POST',
     body: JSON.stringify(input),
@@ -65,7 +65,7 @@ export async function downloadInvoicePdf(
   inv: DeskInvoice,
   portalUrl?: string,
 ): Promise<void> {
-  await beforeShare('PDF export')
+  assertAppApiConfigured()
   if (!inv.job_id) throw new Error('This invoice has no linked job')
   await appApiDownloadPdf(
     '/api/pdf/invoice',
@@ -92,7 +92,7 @@ export async function emailPortalLink(input: {
   message?: string
   clientId?: string
 }): Promise<void> {
-  await beforeShare('emailing portal links')
+  assertAppApiConfigured() // API validates the stored token's scope and ownership.
   await appApiJson('/api/portal/send', {
     method: 'POST',
     body: JSON.stringify(input),

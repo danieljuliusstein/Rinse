@@ -1,3 +1,4 @@
+import { BillingCard } from './BillingCard'
 import {
   UserCog,
   RefreshCw,
@@ -49,6 +50,7 @@ export function AccountSection({
 }) {
   return (
     <div className="space-y-4">
+      <BillingCard />
       <Card>
         <CardHeader title="Signed in as" icon={<UserCog size={16} />} accent />
         <CardBody className="space-y-4">

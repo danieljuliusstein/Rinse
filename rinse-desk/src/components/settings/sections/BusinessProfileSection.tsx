@@ -1,4 +1,4 @@
-import { Building2, MapPin, FileText, Route } from 'lucide-react'
+import { Building2, MapPin, FileText, Route, Globe } from 'lucide-react'
 import { Card, CardHeader, CardBody, Field, TextInput, TextArea } from '../primitives'
 import type { DeskAppSettings } from '@/lib/settings-api'
 
@@ -150,6 +150,36 @@ export function BusinessProfileSection({
                 )
               })}
             </div>
+          </Field>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Website & embed security"
+          description="Protect your live booking widget on your website."
+          icon={<Globe size={16} />}
+        />
+        <CardBody className="space-y-4">
+          <Field
+            label="Allowed website domains"
+            htmlFor="allowed-origins"
+            hint="Enter your website address (e.g. https://sparkledetailing.com). One per line or comma-separated. Limits iframe embedding to only your approved sites."
+          >
+            <TextArea
+              id="allowed-origins"
+              rows={3}
+              value={settings.allowed_origins.join('\n')}
+              onChange={(v) =>
+                setSettings({
+                  allowed_origins: v
+                    .split(/[,\n]/)
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                })
+              }
+              placeholder="https://yourwebsite.com&#10;https://www.yourwebsite.com"
+            />
           </Field>
         </CardBody>
       </Card>

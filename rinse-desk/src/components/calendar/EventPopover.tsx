@@ -13,7 +13,7 @@ import AddressAutocompleteInput from '@/components/AddressAutocompleteInput'
 import { CategoryColorControls } from '@/components/calendar/CategoryColorControls'
 import type { CalCategory } from '@/lib/calendar-categories'
 import { geocodeAddressOnce } from '@/lib/geocode-once'
-import type { DeskClient, DeskPackage } from '@/lib/types'
+import type { DeskClient, DeskPackage, DepositStatus } from '@/lib/types'
 import type { GeocodeHit } from '@/lib/route-api'
 import { colors } from '@/theme/colors'
 
@@ -277,6 +277,10 @@ export type EventPopoverModel = {
   color: string
   statusLabel: string
   isDraft: boolean
+  revenue?: number
+  tip?: number
+  depositStatus?: DepositStatus
+  depositAmount?: number
 }
 
 type Props = {
@@ -946,6 +950,30 @@ export function EventPopover({
               ))}
             </select>
           </FieldCell>
+
+          {(model.depositStatus === 'paid' ||
+            (model.depositAmount != null && model.depositAmount > 0) ||
+            (model.tip != null && model.tip > 0)) ? (
+            <FieldCell className="flex flex-wrap items-center gap-2 bg-slate-50/70">
+              {model.depositStatus === 'paid' ||
+              (model.depositAmount != null && model.depositAmount > 0) ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100/80 text-emerald-800">
+                  Deposit: ${(model.depositAmount ?? 0).toFixed(0)} (
+                  {model.depositStatus === 'paid'
+                    ? 'Paid'
+                    : model.depositStatus === 'waived'
+                      ? 'Waived'
+                      : 'Due'}
+                  )
+                </span>
+              ) : null}
+              {model.tip != null && model.tip > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-100/80 text-purple-800">
+                  Tip: +${model.tip.toFixed(2)}
+                </span>
+              ) : null}
+            </FieldCell>
+          ) : null}
         </FieldShell>
 
         {onChangeAsBlocked ? (

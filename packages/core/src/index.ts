@@ -15,3 +15,5 @@ export * from './share-email'
 export * from './types'
 export * from './validation'
 
+
+export * from './pricing'

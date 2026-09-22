@@ -49,16 +49,6 @@ export function clearOrgSubscriptionCache(): void {
  * Clears trial so leftover trialing status cannot unlock Starter features.
  */
 export async function activateFreePlan(): Promise<OrgSubscription | null> {
-  const orgId = requireOrganizationId()
-  const pb = getPocketBase()
-  await pb.collection('organizations').update(orgId, {
-    plan: 'free',
-    subscription_status: 'none',
-    trial_ends_at: '',
-    access_mode: 'free',
-    cancel_at_period_end: false,
-    canceled_at: '',
-  })
   clearOrgSubscriptionCache()
   return fetchOrgSubscription(true)
 }

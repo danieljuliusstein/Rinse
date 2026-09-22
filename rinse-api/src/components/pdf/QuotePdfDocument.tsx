@@ -3,6 +3,11 @@ import { PdfBusinessLogo } from '@/components/pdf/PdfBusinessLogo'
 import { INVOICE_ACCENT } from '@/lib/invoice-layout'
 import type { AppSettings } from '@/lib/settings'
 import type { QuoteWithRelations } from '@/lib/types'
+import {
+  getDocumentStrings,
+  intlLocaleForDocument,
+  normalizeDocumentLocale,
+} from '@rinse/core'
 
 const styles = StyleSheet.create({
   page: {
@@ -142,12 +147,12 @@ const styles = StyleSheet.create({
   },
 })
 
-function money(n: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+function money(n: number, localeTag = 'en-US') {
+  return new Intl.NumberFormat(localeTag, { style: 'currency', currency: 'USD' }).format(n)
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
+function formatDate(dateStr: string, localeTag = 'en-US') {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString(localeTag, {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -163,7 +168,11 @@ export default function QuotePdfDocument({
   settings: AppSettings
   logoDataUri?: string | null
 }) {
-  const lineDesc = quote.package?.name ?? 'Detailing service'
+  const locale = normalizeDocumentLocale(settings.document_locale)
+  const s = getDocumentStrings(locale)
+  const localeTag = intlLocaleForDocument(locale)
+
+  const lineDesc = quote.package?.name ?? s.detailingService
   const contextParts = [quote.vehicle_type, quote.location_type].filter(Boolean).join(' · ')
 
   return (
@@ -180,26 +189,26 @@ export default function QuotePdfDocument({
             </View>
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.docLabel}>ESTIMATE</Text>
+            <Text style={styles.docLabel}>{s.estimate.toUpperCase()}</Text>
             <Text style={styles.docNumber}>{quote.quote_number}</Text>
-            <Text style={styles.muted}>Issued {formatDate(quote.date)}</Text>
+            <Text style={styles.muted}>{s.issued} {formatDate(quote.date, localeTag)}</Text>
           </View>
         </View>
 
-        <Text style={styles.label}>Prepared for</Text>
-        <Text style={styles.clientName}>{quote.client?.name ?? 'Client'}</Text>
+        <Text style={styles.label}>{s.preparedFor}</Text>
+        <Text style={styles.clientName}>{quote.client?.name ?? s.client}</Text>
         {contextParts ? <Text style={styles.muted}>{contextParts}</Text> : null}
-        <Text style={styles.muted}>Proposed date: {formatDate(quote.date)}</Text>
-        {quote.valid_until ? <Text style={styles.muted}>Valid until: {formatDate(quote.valid_until)}</Text> : null}
+        <Text style={styles.muted}>{s.proposedDate}: {formatDate(quote.date, localeTag)}</Text>
+        {quote.valid_until ? <Text style={styles.muted}>{s.validUntil}: {formatDate(quote.valid_until, localeTag)}</Text> : null}
 
         <View style={styles.table}>
           <View style={styles.tableHead}>
-            <Text style={[styles.tableHeadText, styles.colDesc]}>Description</Text>
-            <Text style={[styles.tableHeadText, styles.colAmount]}>Amount</Text>
+            <Text style={[styles.tableHeadText, styles.colDesc]}>{s.description}</Text>
+            <Text style={[styles.tableHeadText, styles.colAmount]}>{s.amount}</Text>
           </View>
           <View style={styles.tableRow}>
             <Text style={styles.colDesc}>{lineDesc}</Text>
-            <Text style={styles.colAmount}>{money(quote.subtotal)}</Text>
+            <Text style={styles.colAmount}>{money(quote.subtotal, localeTag)}</Text>
           </View>
         </View>
 
@@ -207,8 +216,8 @@ export default function QuotePdfDocument({
           <View style={styles.summaryBox}>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>{money(quote.subtotal)}</Text>
+              <Text style={styles.totalLabel}>{s.total}</Text>
+              <Text style={styles.totalValue}>{money(quote.subtotal, localeTag)}</Text>
             </View>
           </View>
         </View>

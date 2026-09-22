@@ -1,3 +1,4 @@
+import { PRIMARY_CTA } from '../shared/urls';
 import { useState, useEffect, useCallback } from "react";
 import { Menu, X } from "lucide-react";
 import rinseLogo from "../../assets/rinse-logo.svg";
@@ -7,7 +8,7 @@ import { SIGN_IN_URL } from "../shared/urls";
 
 export const SCROLL_NAV_LINKS = [
   { label: "Workflow", id: SECTIONS.workflow },
-  { label: "Reviews",  id: SECTIONS.testimonials },
+  { label: "Why Rinse",  id: SECTIONS.testimonials },
   { label: "Pricing",  id: SECTIONS.pricing },
 ] as const;
 
@@ -83,7 +84,7 @@ export function Nav({ onStartTrial }: { onStartTrial: () => void }) {
             onClick={onStartTrial}
             className="text-sm font-semibold text-white bg-neutral-900 hover:bg-neutral-800 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] px-4 py-2 rounded-xl"
           >
-            Start free trial
+            {PRIMARY_CTA}
           </button>
         </div>
 
@@ -128,7 +129,7 @@ export function Nav({ onStartTrial }: { onStartTrial: () => void }) {
             onClick={() => { onStartTrial(); setOpen(false); }}
             className="block w-full text-sm font-semibold text-white bg-neutral-900 px-4 py-2.5 rounded-xl text-center mt-2"
           >
-            Start free trial
+            {PRIMARY_CTA}
           </button>
         </div>
       )}

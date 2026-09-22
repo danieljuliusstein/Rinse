@@ -13,6 +13,7 @@ import {
   CalendarClock,
   Sliders,
   Bell,
+  Package,
   type LucideIcon,
 } from 'lucide-react'
 import { Card, CardHeader, CardBody } from '../primitives'
@@ -50,8 +51,9 @@ const GROUPS: MapGroup[] = [
       {
         id: 'billing',
         label: 'Billing & plan',
-        badge: 'Mobile only',
-        note: 'Subscription management',
+        badge: 'Open',
+        action: { type: 'section', id: 'account' },
+        note: 'Settings → Account',
         icon: CreditCard,
       },
     ],
@@ -134,6 +136,14 @@ const GROUPS: MapGroup[] = [
         note: 'Set via Business address here',
         icon: Route,
         action: { type: 'page', id: 'routes' },
+      },
+      {
+        id: 'inventory',
+        label: 'Inventory & supplies',
+        badge: 'Open',
+        note: 'Inventory tab',
+        icon: Package,
+        action: { type: 'page', id: 'inventory' },
       },
     ],
   },

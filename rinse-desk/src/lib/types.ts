@@ -25,8 +25,34 @@ export type PageId =
   | 'ai'
   | 'settings'
   | 'help'
+  | 'inventory'
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired'
+
+export interface DeskSupply {
+  id: string
+  name: string
+  unit: string
+  quantity_on_hand: number
+  reorder_threshold?: number
+  cost_per_unit?: number
+  supplier?: string
+  kind?: 'chemical' | 'consumable' | 'other'
+  notes?: string
+  image_url?: string
+  icon_key?: string
+}
+
+export interface DeskEquipment {
+  id: string
+  name: string
+  purchase_price?: number
+  purchase_date?: string
+  supplier?: string
+  notes?: string
+  status?: 'active' | 'retired'
+  icon_key?: string
+}
 
 export interface DeskClient {
   id: string
@@ -84,6 +110,7 @@ export interface DeskJob {
   route_order?: number
   deposit_status?: DepositStatus
   deposit_amount?: number
+  deposit_paid_at?: string
   invoice_id?: string
   /** Duration in hours (used by calendar resize). Defaults to 1 when timed. */
   hours_worked?: number
@@ -183,6 +210,7 @@ export interface DeskPackage {
   name: string
   base_price: number
   active: boolean
+  deposit_amount?: number
 }
 
 /** Time-off / unavailable blocks (`time_blocks`) — shared with mobile. */

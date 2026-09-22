@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import { getDocumentStrings, normalizeDocumentLocale } from '@rinse/core'
 import type { PortalPayload } from '@/lib/server/portal-data'
 
 export default function PortalPhotosFooter({ business }: { business: PortalPayload['business'] }) {
+  const s = getDocumentStrings(normalizeDocumentLocale(business.locale))
   const hasContact = !!(business.phone || business.email)
   if (!hasContact && !business.termsFooter) return null
 
@@ -15,9 +17,9 @@ export default function PortalPhotosFooter({ business }: { business: PortalPaylo
         </div>
       )}
       <p className="portal-photos-footer__legal">
-        <Link href="/terms/customers">Customer Terms</Link>
+        <Link href="/terms/customers">{s.customerTerms}</Link>
         {' · '}
-        <Link href="/privacy">Privacy Policy</Link>
+        <Link href="/privacy">{s.privacyPolicy}</Link>
       </p>
     </footer>
   )

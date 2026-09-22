@@ -44,6 +44,8 @@ migrate(
       return
     }
 
+    // Fresh installs must not allocate an automatic Founding account.
+    if (app.findAllRecords('users').length === 0) return
     let org = null
     const existingOrgs = app.findAllRecords('organizations')
     for (const candidate of existingOrgs) {
@@ -71,9 +73,9 @@ migrate(
       org = new Record(orgCollection)
       org.set('name', name)
       org.set('slug', ATLAS_SLUG)
-      org.set('plan', 'founding')
-      org.set('founding_member', true)
-      org.set('booking_enabled', true)
+      org.set('plan', 'starter')
+      org.set('founding_member', false)
+      org.set('booking_enabled', false)
       app.save(org)
       console.log('[backfill] created organization', ATLAS_SLUG)
     } else {

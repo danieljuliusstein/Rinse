@@ -28,7 +28,7 @@ describe('brand-color', () => {
   })
 
   it('returns CSS variable props', () => {
-    const vars = brandCssVars('#ff5500')
+    const vars = brandCssVars('#ff5500') as Record<string, string>
     expect(vars['--cl-accent']).toBe('#ff5500')
     expect(vars['--cl-accent-bg']).toContain('rgba')
   })

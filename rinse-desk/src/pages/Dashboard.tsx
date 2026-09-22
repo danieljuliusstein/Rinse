@@ -100,15 +100,28 @@ export default function Dashboard() {
           required: true,
           defaultValue: String(pkg.base_price),
         },
+        {
+          name: 'deposit_amount',
+          label: 'Deposit required ($)',
+          type: 'number',
+          placeholder: '0 (none)',
+          defaultValue: String(pkg.deposit_amount ?? 0),
+        },
       ],
     })
     if (!values?.name) return
+    const depositAmount = Number(values.deposit_amount) || 0
 
     if (tour?.active) {
       setPackages((prev) =>
         prev.map((p) =>
           p.id === pkg.id
-            ? { ...p, name: values.name, base_price: Number(values.base_price) || 0 }
+            ? {
+                ...p,
+                name: values.name,
+                base_price: Number(values.base_price) || 0,
+                deposit_amount: depositAmount > 0 ? depositAmount : undefined,
+              }
             : p,
         ),
       )
@@ -120,6 +133,7 @@ export default function Dashboard() {
       const updated = await api.updatePackage(pkg.id, {
         name: values.name,
         base_price: Number(values.base_price) || 0,
+        deposit_amount: depositAmount > 0 ? depositAmount : 0,
       })
       setPackages((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
       toast('Package updated')

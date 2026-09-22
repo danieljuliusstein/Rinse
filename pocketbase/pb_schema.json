@@ -17,7 +17,8 @@
       { "name": "description", "type": "text" },
       { "name": "default_supplies", "type": "json" },
       { "name": "active", "type": "bool" },
-      { "name": "duration_minutes", "type": "number" }
+      { "name": "duration_minutes", "type": "number" },
+      { "name": "deposit_amount", "type": "number" }
     ]
   },
   {
@@ -201,7 +202,10 @@
       { "name": "booking_schedule", "type": "json" },
       { "name": "travel_rate_per_mile", "type": "number" },
       { "name": "track_job_supplies", "type": "bool" },
-      { "name": "accent_color", "type": "text" }
+      { "name": "accent_color", "type": "text" },
+      { "name": "allowed_origins", "type": "json" },
+      { "name": "deposit_required", "type": "bool" },
+      { "name": "default_deposit_amount", "type": "number" }
     ]
   },
   {
@@ -295,7 +299,14 @@
         "maxSelect": 1
       },
       { "name": "created_by", "type": "text" },
-      { "name": "updated_by", "type": "text" }
+      { "name": "updated_by", "type": "text" },
+      {
+        "name": "deposit_status",
+        "type": "select",
+        "values": ["none", "due", "paid", "waived"]
+      },
+      { "name": "deposit_amount", "type": "number" },
+      { "name": "deposit_paid_at", "type": "date" }
     ]
   },
   {

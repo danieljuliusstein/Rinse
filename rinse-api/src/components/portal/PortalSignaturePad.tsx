@@ -1,14 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { DocumentLocale } from '@rinse/core'
+import { getDocumentStrings, normalizeDocumentLocale } from '@rinse/core'
 import { Button } from '@/components/ui'
 
 interface PortalSignaturePadProps {
   onSubmit: (dataUrl: string) => Promise<void>
   disabled?: boolean
+  locale?: DocumentLocale
 }
 
-export default function PortalSignaturePad({ onSubmit, disabled }: PortalSignaturePadProps) {
+export default function PortalSignaturePad({ onSubmit, disabled, locale }: PortalSignaturePadProps) {
+  const s = getDocumentStrings(normalizeDocumentLocale(locale))
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawing = useRef(false)
   const [hasStroke, setHasStroke] = useState(false)
@@ -98,11 +102,11 @@ export default function PortalSignaturePad({ onSubmit, disabled }: PortalSignatu
 
   return (
     <div className="portal-signature">
-      <p className="portal-signature__hint">Sign below to acknowledge this invoice.</p>
+      <p className="portal-signature__hint">{s.signPrompt}</p>
       <canvas
         ref={canvasRef}
         className="portal-signature__canvas"
-        aria-label="Signature pad"
+        aria-label={s.signInvoice}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endStroke}
@@ -112,7 +116,7 @@ export default function PortalSignaturePad({ onSubmit, disabled }: PortalSignatu
       {error ? <p className="portal-inline-error">{error}</p> : null}
       <div className="portal-signature__actions">
         <Button variant="ghost" type="button" onClick={clear} disabled={busy || !hasStroke}>
-          Clear
+          {s.clear}
         </Button>
         <Button
           variant="primary"
@@ -120,7 +124,7 @@ export default function PortalSignaturePad({ onSubmit, disabled }: PortalSignatu
           onClick={() => void submit()}
           disabled={disabled || busy || !hasStroke}
         >
-          {busy ? 'Saving…' : 'Sign invoice'}
+          {busy ? s.saving : s.signInvoice}
         </Button>
       </div>
     </div>

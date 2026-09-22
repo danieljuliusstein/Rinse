@@ -122,6 +122,10 @@
       "support": {
         "title": "Hilfe & Support",
         "subtitle": "Kontakt, FAQ und Fehlerbehebung"
+      },
+      "emailDomain": {
+        "title": "Send from your domain",
+        "subtitle": "SPF, DKIM, DMARC checklist"
       }
     }
   },
@@ -201,7 +205,8 @@
     "nextStep": "Weiter: {{label}}",
     "finishSetup": "Einrichtung abschließen",
     "continueSetup": "Einrichtung fortsetzen",
-    "checkingWeather": "Wetter wird geprüft…"
+    "checkingWeather": "Wetter wird geprüft…",
+    "routes": "Routes"
   },
   "quickActions": {
     "title": "Schnellaktionen",
@@ -261,7 +266,14 @@
       "invoiced": "Berechnet",
       "awaitingPayment": "Zahlung ausstehend",
       "complete": "Abgeschlossen"
-    }
+    },
+    "startRoute": "Start route",
+    "routeMapsHint": "Opens turn-by-turn in Apple Maps",
+    "routeMapsHintFromGarage": "Starts at your garage, then today’s stops in Apple Maps",
+    "routeNoStopsTitle": "Start route",
+    "routeNoStopsBody": "No stops have an address or map pin yet.",
+    "routeTruncatedTitle": "Route truncated",
+    "routeTruncatedBody": "Apple Maps supports a limited number of stops. Opening what fits; {{count}} left off."
   },
   "clients": {
     "title": "Kunden",
@@ -327,7 +339,8 @@
       "last_month": "Letzter Monat",
       "this_year": "Dieses Jahr",
       "lifetime": "Gesamt"
-    }
+    },
+    "revenuePayouts": "Revenue & Payouts"
   },
   "invoices": {
     "title": "Rechnungen",
@@ -415,5 +428,102 @@
     "call": "Anrufen",
     "text": "Nachricht",
     "email": "E-Mail"
+  },
+  "routes": {
+    "title": "Routes",
+    "subtitle": "Today’s stop order — open in Apple Maps",
+    "today": "Today · {{date}}",
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
+    "stops": "{{count}} stops",
+    "garageTitle": "Your garage",
+    "garageStartBadge": "Start",
+    "garagePinnedHint": "Always first",
+    "emptyTitle": "No stops this day",
+    "emptyBody": "Schedule jobs or pick another day to build your drive order.",
+    "moveUp": "Move stop up",
+    "moveDown": "Move stop down",
+    "reorderError": "Could not reorder stops"
+  },
+  "policies": {
+    "title": "Policies",
+    "subtitle": "Deposits, cancel window, tips",
+    "deposit": "Deposit",
+    "percent": "Percent",
+    "fixed": "Fixed $",
+    "depositAmount": "Deposit amount",
+    "depositPercent": "Deposit %",
+    "collectAtBooking": "Collect at booking",
+    "cancelSection": "Cancel / no-show",
+    "cancelWindow": "Cancel window (hours)",
+    "noShowFee": "No-show fee",
+    "noShowFeeCopy": "No-show fee copy",
+    "noShowPlaceholder": "Charged if client misses the appointment",
+    "tipsSection": "Tips on pay link",
+    "suggestTip": "Suggest tip on pay link",
+    "tipsGoTo": "Tips go to",
+    "tipsGoToPlaceholder": "Tech name or business",
+    "saved": "Saved",
+    "savedBody": "Deposit, cancel, and tip policies updated.",
+    "saveFailed": "Save failed"
+  },
+  "crmExtras": {
+    "title": "CRM extras",
+    "subtitle": "Portal, tax, SOP, reviews",
+    "portalPermissions": "Portal permissions",
+    "payOnline": "Pay online",
+    "photos": "Photos",
+    "reschedule": "Reschedule request",
+    "taxPresets": "Tax presets",
+    "presetName": "Preset name",
+    "ratePercent": "Rate %",
+    "addTaxPreset": "Add tax preset",
+    "sopTemplates": "SOP templates",
+    "sopSteps": "({{count}} steps)",
+    "templateName": "Template name",
+    "sopItems": "Items (one per line)",
+    "addSop": "Add SOP",
+    "businessReviews": "Business reviews",
+    "reviewLink": "Review link",
+    "averageRating": "Average rating",
+    "reviewCount": "Review count",
+    "saved": "Saved",
+    "savedBody": "Portal, tax, SOP, and reviews updated.",
+    "saveFailed": "Save failed"
+  },
+  "addons": {
+    "title": "Add-ons",
+    "subtitle": "Catalog extras for quotes and jobs",
+    "noAddons": "No add-ons yet. Seed examples or create your own.",
+    "seedExamples": "Seed examples",
+    "seeded": "Seeded",
+    "seededBody": "Example add-ons added.",
+    "seedFailed": "Seed failed",
+    "inactive": "inactive",
+    "name": "Name",
+    "namePlaceholder": "Pet hair",
+    "price": "Price",
+    "addAddon": "Add add-on",
+    "addFailed": "Add failed"
+  },
+  "packages": {
+    "title": "Service packages",
+    "subtitle": "Manage your offerings",
+    "addPackage": "Add package",
+    "editPackage": "Edit package",
+    "newPackage": "New package",
+    "sheetSubtitle": "Service name, price, and estimated duration",
+    "archivePackage": "Archive package?",
+    "archiveConfirm": "\"{{name}}\" will be hidden from new jobs and bookings.",
+    "archive": "Archive",
+    "archiveBtn": "Archive package",
+    "saveChanges": "Save changes",
+    "packageName": "Package name",
+    "namePlaceholder": "Full detail",
+    "basePrice": "Base price",
+    "depositRequired": "Deposit required ($)",
+    "depositPlaceholder": "0 (none)",
+    "duration": "Duration (minutes)",
+    "durationPlaceholder": "60"
   }
 }

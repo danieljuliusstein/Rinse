@@ -10,8 +10,10 @@ import {
   type AvailabilityJob,
   type AvailabilitySlot,
 } from '../booking-availability'
-import type { PublicBookingInput, PublicBusinessInfo, PublicPackage } from '../booking-public'
-export type { PublicBookingInput, PublicBusinessInfo, PublicPackage }
+import type { PublicBookingInput, PublicBusinessInfo, PublicPackage, PublicBookingResult } from '../booking-public'
+import { resolveConnectDestination } from './stripe-connect'
+import { getStripe, isStripeConfigured } from './stripe'
+export type { PublicBookingInput, PublicBusinessInfo, PublicPackage, PublicBookingResult }
 
 function orgFilter(organizationId: string, extra?: string): string {
   const orgEsc = escapeFilterValue(organizationId)
@@ -29,6 +31,9 @@ async function loadOrgSettings(pb: Awaited<ReturnType<typeof authenticateServerA
     schedule: normalizeBookingSchedule(record?.booking_schedule ?? DEFAULT_BOOKING_SCHEDULE),
     travel_rate_per_mile:
       typeof record?.travel_rate_per_mile === 'number' ? record.travel_rate_per_mile : undefined,
+    deposit_required: record?.deposit_required === true,
+    default_deposit_amount:
+      typeof record?.default_deposit_amount === 'number' ? record.default_deposit_amount : undefined,
   }
 }
 
@@ -67,6 +72,7 @@ export async function getPublicBusinessInfoForOrg(
     address: String(record.business_address ?? ''),
     logoUrl: hasLogo ? businessLogoApiUrl(orgSlug, record.updated) : '/logo.png',
     accentColor: record.accent_color ? String(record.accent_color) : null,
+    document_locale: record.document_locale ? String(record.document_locale) : 'en',
   }
 }
 
@@ -82,6 +88,8 @@ export async function listPublicPackagesForOrg(organizationId: string): Promise<
     base_price: p.base_price,
     description: p.description,
     duration_minutes: p.duration_minutes,
+    deposit_amount:
+      typeof p.deposit_amount === 'number' && p.deposit_amount > 0 ? p.deposit_amount : undefined,
   }))
 }
 
@@ -133,7 +141,11 @@ export async function getAvailabilityForOrg(
   })
 }
 
-export async function createPublicBookingForOrg(organizationId: string, input: PublicBookingInput) {
+export async function createPublicBookingForOrg(
+  organizationId: string,
+  input: PublicBookingInput,
+  options?: { origin?: string; orgSlug?: string },
+): Promise<PublicBookingResult> {
   const pb = await authenticateServerAdmin()
 
   const pkg = await pb.collection('packages').getOne<PbRecord>(input.packageId)
@@ -141,6 +153,18 @@ export async function createPublicBookingForOrg(organizationId: string, input: P
     throw new Error('Invalid package')
   }
   const packageApp = pbPackageToApp(pkg)
+
+  const orgSettings = await loadOrgSettings(pb, organizationId)
+  let depositAmount = 0
+  if (typeof packageApp.deposit_amount === 'number' && packageApp.deposit_amount > 0) {
+    depositAmount = packageApp.deposit_amount
+  } else if (
+    orgSettings.deposit_required &&
+    typeof orgSettings.default_deposit_amount === 'number' &&
+    orgSettings.default_deposit_amount > 0
+  ) {
+    depositAmount = orgSettings.default_deposit_amount
+  }
 
   const phone = input.phone.trim()
   const name = input.name.trim()
@@ -191,10 +215,16 @@ export async function createPublicBookingForOrg(organizationId: string, input: P
     notes: input.notes?.trim() ? `Web booking: ${input.notes.trim()}` : 'Web booking',
   })
 
-  const jobRecord = await pb.collection('jobs').create<PbRecord>({
+  const jobRecordPayload: Record<string, unknown> = {
     ...(payload as Record<string, unknown>),
     organization_id: organizationId,
-  })
+    deposit_status: depositAmount > 0 ? 'due' : 'none',
+  }
+  if (depositAmount > 0) {
+    jobRecordPayload.deposit_amount = depositAmount
+  }
+
+  const jobRecord = await pb.collection('jobs').create<PbRecord>(jobRecordPayload)
   const job = pbJobToApp(jobRecord)
 
   try {
@@ -217,6 +247,63 @@ export async function createPublicBookingForOrg(organizationId: string, input: P
     // leads collection may be unavailable before migration
   }
 
+  let requiresDeposit = false
+  let checkoutUrl: string | undefined = undefined
+
+  if (depositAmount > 0 && options?.origin && options?.orgSlug && isStripeConfigured()) {
+    try {
+      const connectAccountId = await resolveConnectDestination(organizationId)
+      if (connectAccountId) {
+        const stripe = getStripe()
+        if (stripe) {
+          const session = await stripe.checkout.sessions.create(
+            {
+              mode: 'payment',
+              payment_method_types: ['card'],
+              line_items: [
+                {
+                  price_data: {
+                    currency: process.env.STRIPE_PAYMENT_CURRENCY?.trim() || 'usd',
+                    product_data: {
+                      name: `Deposit: ${packageApp.name}`,
+                      description: `Booking deposit for ${client.name} on ${input.date}`,
+                    },
+                    unit_amount: Math.round(depositAmount * 100),
+                  },
+                  quantity: 1,
+                },
+              ],
+              payment_intent_data: {
+                metadata: {
+                  type: 'deposit',
+                  job_id: job.id,
+                  organization_id: organizationId,
+                  deposit_amount: String(depositAmount),
+                },
+              },
+              metadata: {
+                type: 'deposit',
+                job_id: job.id,
+                organization_id: organizationId,
+                deposit_amount: String(depositAmount),
+              },
+              success_url: `${options.origin}/book/${options.orgSlug}?confirmed=1&deposit_paid=1&job_id=${job.id}`,
+              cancel_url: `${options.origin}/book/${options.orgSlug}?deposit_cancelled=1`,
+            },
+            { stripeAccount: connectAccountId },
+          )
+
+          if (session.url) {
+            requiresDeposit = true
+            checkoutUrl = session.url
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[booking deposit checkout failed]', err)
+    }
+  }
+
   return {
     jobId: job.id,
     clientId: client.id,
@@ -224,5 +311,8 @@ export async function createPublicBookingForOrg(organizationId: string, input: P
     startTime: job.start_time,
     packageName: packageApp.name,
     clientName: client.name,
+    requiresDeposit,
+    depositAmount: depositAmount > 0 ? depositAmount : undefined,
+    checkoutUrl,
   }
 }

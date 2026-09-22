@@ -99,6 +99,9 @@ export async function createInvoiceForJob(jobId: string): Promise<Invoice> {
     revenue: Number(job.revenue ?? 0),
     tip: Number(job.tip ?? 0),
     invoiceNumber: generateInvoiceNumber(all),
+    deposit_status: job.deposit_status ? String(job.deposit_status) : undefined,
+    deposit_amount: job.deposit_amount != null ? Number(job.deposit_amount) : undefined,
+    deposit_paid_at: job.deposit_paid_at ? String(job.deposit_paid_at) : undefined,
   })
 
   const created = await pb().collection('invoices').create({

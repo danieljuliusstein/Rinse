@@ -51,10 +51,10 @@ describe('buildDashboardInsights', () => {
 
   it('reports invoice paid percentage', () => {
     const sentAt = new Date().toISOString().split('T')[0]
-    const invoices: Invoice[] = [
-      { id: 'i1', job_id: 'j1', status: 'paid', total: 100, balance_due: 0, sent_at: sentAt, created: '', updated: '' },
-      { id: 'i2', job_id: 'j2', status: 'sent', total: 100, balance_due: 100, sent_at: sentAt, created: '', updated: '' },
-    ]
+    const invoices = [
+      { id: 'i1', job_id: 'j1', status: 'paid', total: 100, balance_due: 0, sent_at: sentAt },
+      { id: 'i2', job_id: 'j2', status: 'sent', total: 100, balance_due: 100, sent_at: sentAt },
+    ] as unknown as Invoice[]
     const insights = buildDashboardInsights([], invoices, baseKpis, 0)
     expect(insights.some((i) => i.includes('invoices paid'))).toBe(true)
   })

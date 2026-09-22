@@ -19,7 +19,7 @@ export async function createPortalLink(input: {
   jobId?: string
   quoteId?: string
 }): Promise<PortalLinkResult> {
-  const gate = await checkPremiumGate('share_portal')
+  const gate = await checkPremiumGate(input.scope === 'invoice' ? 'invoice_payment' : 'share_portal')
   if (!gate.allowed) {
     throw new Error('Active subscription required')
   }
@@ -70,7 +70,7 @@ export async function sharePortalUrl(url: string, message?: string): Promise<voi
 }
 
 export async function shareInvoicePdf(jobId: string, invoice: Invoice, portalUrl?: string): Promise<void> {
-  const gate = await checkPremiumGate('export_pdf')
+  const gate = await checkPremiumGate('invoice_pdf')
   if (!gate.allowed) {
     throw new Error('Active subscription required')
   }

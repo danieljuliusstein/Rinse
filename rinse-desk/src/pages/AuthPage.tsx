@@ -118,7 +118,7 @@ export default function AuthPage() {
                 {mode === 'signup' ? 'Create your account' : 'Welcome back'}
               </h1>
               <p className="text-sm text-black/40 mt-0.5">
-                {mode === 'signup' ? `Start your free trial of ${BRAND.product}` : `Sign in to ${BRAND.product}`}
+                {mode === 'signup' ? `Start on Free with ${BRAND.product}` : `Sign in to ${BRAND.product}`}
               </p>
             </div>
           </div>

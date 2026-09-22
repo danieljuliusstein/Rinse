@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Alert, RefreshControl, ScrollView, StyleSheet } from 'react-native'
 import { useFocusEffect } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { fmt } from '@rinse/core'
 import type { Package } from '@rinse/core'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
@@ -10,6 +11,7 @@ import { createPackage, deletePackage, listAllPackages, updatePackage } from '@/
 import { colors, spacing } from '@/src/theme/colors'
 
 export default function SettingsPackagesScreen() {
+  const { t } = useTranslation()
   const [packages, setPackages] = useState<Package[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -49,7 +51,12 @@ export default function SettingsPackagesScreen() {
     setEditing(null)
   }
 
-  const handleSave = async (input: { name: string; base_price: number; duration_minutes: number }) => {
+  const handleSave = async (input: {
+    name: string
+    base_price: number
+    duration_minutes: number
+    deposit_amount?: number
+  }) => {
     setSaving(true)
     try {
       if (editing) {
@@ -60,13 +67,14 @@ export default function SettingsPackagesScreen() {
           name: input.name,
           base_price: input.base_price,
           duration_minutes: input.duration_minutes,
+          deposit_amount: input.deposit_amount,
           active: true,
         })
       }
       closeSheet()
       await load(true)
     } catch (e) {
-      Alert.alert(editing ? 'Edit package' : 'Add package', e instanceof Error ? e.message : 'Could not save package')
+      Alert.alert(editing ? t('packages.editPackage') : t('packages.addPackage'), e instanceof Error ? e.message : t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -74,21 +82,21 @@ export default function SettingsPackagesScreen() {
 
   const handleArchive = () => {
     if (!editing) return
-    Alert.alert('Archive package?', `"${editing.name}" will be hidden from new jobs and bookings.`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('packages.archivePackage'), t('packages.archiveConfirm', { name: editing.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Archive',
+        text: t('packages.archive'),
         style: 'destructive',
         onPress: () => {
           void (async () => {
             setSaving(true)
             try {
               const ok = await deletePackage(editing.id)
-              if (!ok) throw new Error('Could not archive package')
+              if (!ok) throw new Error(t('common.error'))
               closeSheet()
               await load(true)
             } catch (e) {
-              Alert.alert('Archive package', e instanceof Error ? e.message : 'Could not archive package')
+              Alert.alert(t('packages.archivePackage'), e instanceof Error ? e.message : t('common.error'))
             } finally {
               setSaving(false)
             }
@@ -99,7 +107,7 @@ export default function SettingsPackagesScreen() {
   }
 
   return (
-    <SettingsScreen title="Service packages" subtitle="Manage offerings">
+    <SettingsScreen title={t('packages.title')} subtitle={t('packages.subtitle')}>
       {loading ? (
         <ScreenLoading variant="list" />
       ) : (
@@ -107,8 +115,8 @@ export default function SettingsPackagesScreen() {
           contentContainerStyle={styles.scroll}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}
         >
-          <PrimaryButton label="Add package" onPress={openAdd} />
-          <SectionGroup title="Active packages">
+          <PrimaryButton label={t('packages.addPackage')} onPress={openAdd} />
+          <SectionGroup title={t('packages.title')}>
             {packages.filter((p) => p.active).map((pkg) => (
               <ListRow
                 key={pkg.id}
@@ -119,7 +127,7 @@ export default function SettingsPackagesScreen() {
             ))}
             {packages.filter((p) => p.active).length === 0 ? (
               <AppText variant="body" style={styles.muted}>
-                No packages yet.
+                {t('packages.subtitle')}
               </AppText>
             ) : null}
           </SectionGroup>

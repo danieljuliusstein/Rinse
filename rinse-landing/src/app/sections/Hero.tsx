@@ -1,3 +1,4 @@
+import { PRIMARY_CTA } from '../shared/urls';
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { ArrowRight, ChevronRight } from "lucide-react";
@@ -92,8 +93,8 @@ export function HeroSection({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.55 }}
         >
-          Bookings, scheduling, CRM, invoices, payments, and analytics — unified
-          in one platform built exclusively for detailing professionals.
+          Starting a detailing business? Organize your clients and jobs, send invoices,
+          and get paid without an expensive subscription. Coming to iOS with a Free plan.
         </motion.p>
 
         {/* CTAs */}
@@ -107,14 +108,14 @@ export function HeroSection({
             onClick={onStartTrial}
             className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 transition-all ease-[cubic-bezier(0.16,1,0.3,1)] text-white text-sm font-semibold px-6 py-3 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.18)] hover:shadow-[0_14px_36px_rgba(0,0,0,0.24)]"
           >
-            Start free — no card needed
+            {PRIMARY_CTA}
             <ArrowRight size={15} />
           </button>
           <button
             onClick={onOpenDemo}
             className="flex items-center gap-2 text-black/50 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] text-sm font-semibold px-6 py-3 rounded-xl border border-black/8 hover:border-black/16 bg-black/2"
           >
-            Watch 2-min demo
+            Explore Rinse
           </button>
         </motion.div>
 

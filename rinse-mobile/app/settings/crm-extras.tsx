@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Alert, ScrollView, StyleSheet } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import type { PortalPermissions, ReviewPrefs, SopTemplate, TaxPreset } from '@rinse/core'
 import { generatePocketBaseId } from '@rinse/core'
 import { SettingsScreen } from '@/src/components/SettingsScreen'
@@ -18,6 +19,7 @@ import {
 import { colors, spacing } from '@/src/theme/colors'
 
 export default function SettingsWave5ExtrasScreen() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [portal, setPortal] = useState<PortalPermissions>(DEFAULT_PORTAL_PERMISSIONS)
@@ -50,9 +52,9 @@ export default function SettingsWave5ExtrasScreen() {
         sop_templates: sops,
         review_prefs: reviews,
       })
-      Alert.alert('Saved', 'Portal, tax, SOP, and reviews updated.')
+      Alert.alert(t('crmExtras.saved'), t('crmExtras.savedBody'))
     } catch (e) {
-      Alert.alert('Save failed', e instanceof Error ? e.message : 'Could not save')
+      Alert.alert(t('crmExtras.saveFailed'), e instanceof Error ? e.message : t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -60,44 +62,44 @@ export default function SettingsWave5ExtrasScreen() {
 
   if (loading) {
     return (
-      <SettingsScreen title="CRM extras">
+      <SettingsScreen title={t('crmExtras.title')}>
         <ScreenLoading />
       </SettingsScreen>
     )
   }
 
   return (
-    <SettingsScreen title="CRM extras" subtitle="Portal, tax, SOP, reviews">
+    <SettingsScreen title={t('crmExtras.title')} subtitle={t('crmExtras.subtitle')}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <AppText variant="sectionLabel">Portal permissions</AppText>
+        <AppText variant="sectionLabel">{t('crmExtras.portalPermissions')}</AppText>
         <SettingsToggleRow
-          label="Pay online"
+          label={t('crmExtras.payOnline')}
           value={portal.pay}
           onChange={(pay) => setPortal((p) => ({ ...p, pay }))}
         />
         <SettingsToggleRow
-          label="Photos"
+          label={t('crmExtras.photos')}
           value={portal.photos}
           onChange={(photos) => setPortal((p) => ({ ...p, photos }))}
         />
         <SettingsToggleRow
-          label="Reschedule request"
+          label={t('crmExtras.reschedule')}
           value={portal.reschedule}
           onChange={(reschedule) => setPortal((p) => ({ ...p, reschedule }))}
         />
 
         <AppText variant="sectionLabel" style={styles.section}>
-          Tax presets
+          {t('crmExtras.taxPresets')}
         </AppText>
         {taxPresets.map((preset, idx) => (
           <AppText key={`${preset.name}-${idx}`} variant="body">
             {preset.name} · {preset.rate}%
           </AppText>
         ))}
-        <FormField label="Preset name" value={taxName} onChangeText={setTaxName} />
-        <FormField label="Rate %" value={taxRate} onChangeText={setTaxRate} keyboardType="decimal-pad" />
+        <FormField label={t('crmExtras.presetName')} value={taxName} onChangeText={setTaxName} />
+        <FormField label={t('crmExtras.ratePercent')} value={taxRate} onChangeText={setTaxRate} keyboardType="decimal-pad" />
         <SecondaryButton
-          label="Add tax preset"
+          label={t('crmExtras.addTaxPreset')}
           onPress={() => {
             const name = taxName.trim()
             const rate = Number(taxRate.replace(/[^0-9.]/g, '')) || 0
@@ -109,22 +111,22 @@ export default function SettingsWave5ExtrasScreen() {
         />
 
         <AppText variant="sectionLabel" style={styles.section}>
-          SOP templates
+          {t('crmExtras.sopTemplates')}
         </AppText>
         {sops.map((sop) => (
           <AppText key={sop.id} variant="body">
-            {sop.name} ({sop.items.length} steps)
+            {sop.name} {t('crmExtras.sopSteps', { count: sop.items.length })}
           </AppText>
         ))}
-        <FormField label="Template name" value={sopName} onChangeText={setSopName} />
+        <FormField label={t('crmExtras.templateName')} value={sopName} onChangeText={setSopName} />
         <FormField
-          label="Items (one per line)"
+          label={t('crmExtras.sopItems')}
           value={sopItems}
           onChangeText={setSopItems}
           multiline
         />
         <SecondaryButton
-          label="Add SOP"
+          label={t('crmExtras.addSop')}
           onPress={() => {
             const name = sopName.trim()
             if (!name) return
@@ -139,15 +141,15 @@ export default function SettingsWave5ExtrasScreen() {
         />
 
         <AppText variant="sectionLabel" style={styles.section}>
-          Business reviews
+          {t('crmExtras.businessReviews')}
         </AppText>
         <FormField
-          label="Review link"
+          label={t('crmExtras.reviewLink')}
           value={reviews.review_link}
           onChangeText={(review_link) => setReviews((r) => ({ ...r, review_link }))}
         />
         <FormField
-          label="Average rating"
+          label={t('crmExtras.averageRating')}
           value={String(reviews.review_rating_avg)}
           onChangeText={(text) =>
             setReviews((r) => ({ ...r, review_rating_avg: Number(text.replace(/[^0-9.]/g, '')) || 0 }))
@@ -155,7 +157,7 @@ export default function SettingsWave5ExtrasScreen() {
           keyboardType="decimal-pad"
         />
         <FormField
-          label="Review count"
+          label={t('crmExtras.reviewCount')}
           value={String(reviews.review_count)}
           onChangeText={(text) =>
             setReviews((r) => ({
@@ -166,7 +168,7 @@ export default function SettingsWave5ExtrasScreen() {
           keyboardType="decimal-pad"
         />
 
-        <PrimaryButton label="Save" loading={saving} onPress={() => void save()} />
+        <PrimaryButton label={t('common.save')} loading={saving} onPress={() => void save()} />
       </ScrollView>
     </SettingsScreen>
   )

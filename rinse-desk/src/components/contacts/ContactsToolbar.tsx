@@ -3,6 +3,7 @@ import {
   ChevronDown,
   Columns3,
   Eraser,
+  FileSpreadsheet,
   Plus,
   Search,
   SlidersHorizontal,
@@ -30,6 +31,7 @@ type Props = {
   groupOpen: boolean
   setGroupOpen: (b: boolean) => void
   onNewContact: () => void
+  onImportCsv?: () => void
   onClearNotes: () => void
   onClearSelection: () => void
   busy?: boolean
@@ -49,6 +51,7 @@ export function ContactsToolbar({
   groupOpen,
   setGroupOpen,
   onNewContact,
+  onImportCsv,
   onClearNotes,
   onClearSelection,
   busy,
@@ -233,6 +236,19 @@ export function ContactsToolbar({
                   </div>
                 ) : null}
               </div>
+
+              {onImportCsv && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={onImportCsv}
+                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-rinse-border bg-white text-rinse-text text-[12.5px] font-semibold hover:bg-ink-50 transition shadow-sm disabled:opacity-60"
+                  title="Import contacts from CSV"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-ink-500" strokeWidth={2} />
+                  Import CSV
+                </button>
+              )}
 
               <button
                 type="button"

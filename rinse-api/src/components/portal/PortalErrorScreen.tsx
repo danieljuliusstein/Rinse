@@ -1,6 +1,7 @@
 'use client'
 
 import { EnvelopeSimple, Phone } from '@phosphor-icons/react'
+import { getDocumentStrings, normalizeDocumentLocale } from '@rinse/core'
 import { usePortalTheme } from './usePortalTheme'
 import PortalHeader from './PortalHeader'
 import type { PortalPayload } from '@/lib/server/portal-data'
@@ -14,11 +15,9 @@ export default function PortalErrorScreen({
   type: PortalErrorType
   business?: PortalPayload['business']
 }) {
-  const title = type === 'LINK_EXPIRED' ? 'This link has expired' : 'Content unavailable'
-  const sub =
-    type === 'LINK_EXPIRED'
-      ? 'Please contact the business for a new secure link.'
-      : 'We could not load your information right now. Please try again later or contact the business.'
+  const s = getDocumentStrings(normalizeDocumentLocale(business?.locale))
+  const title = type === 'LINK_EXPIRED' ? s.linkExpired : s.contentUnavailable
+  const sub = type === 'LINK_EXPIRED' ? s.linkExpiredBody : s.contentUnavailableBody
 
   const biz = business ?? {
     name: 'Detailing',

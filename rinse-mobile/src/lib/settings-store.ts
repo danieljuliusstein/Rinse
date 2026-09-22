@@ -129,6 +129,8 @@ export interface AppSettings {
   sop_templates?: SopTemplate[]
   tech_roster?: TechRosterEntry[]
   review_prefs?: ReviewPrefs
+  deposit_required?: boolean
+  default_deposit_amount?: number
 }
 
 export const DEFAULT_INVOICE_TERMS = 'Due on receipt. Thank you for your business.'
@@ -139,6 +141,8 @@ const DEFAULTS: AppSettings = {
   business_email: '',
   business_address: '',
   invoice_terms_footer: DEFAULT_INVOICE_TERMS,
+  deposit_required: false,
+  default_deposit_amount: 0,
   notifications: {
     job_reminder: true,
     morning_reminder: true,
@@ -170,7 +174,7 @@ function notificationsFromRecord(raw: unknown): AppSettings['notifications'] {
 function logoUrlForRecord(record: Record<string, unknown>, slug: string | null): string {
   if (!pocketBaseRecordHasLogo(record.logo)) return DEFAULT_BUSINESS_LOGO_PATH
   if (!slug) return DEFAULT_BUSINESS_LOGO_PATH
-  return `${appOrigin()}${businessLogoApiUrl(slug, record.updated)}`
+  return `${appOrigin()}${businessLogoApiUrl(slug, typeof record.updated === 'string' ? record.updated : undefined)}`
 }
 
 function recordToSettings(record: Record<string, unknown>, logoUrl?: string): AppSettings {
@@ -225,6 +229,9 @@ function recordToSettings(record: Record<string, unknown>, logoUrl?: string): Ap
     sop_templates: record.sop_templates ? normalizeSopTemplates(record.sop_templates) : undefined,
     tech_roster: record.tech_roster ? normalizeTechRoster(record.tech_roster) : undefined,
     review_prefs: record.review_prefs ? normalizeReviewPrefs(record.review_prefs) : undefined,
+    deposit_required: record.deposit_required === true,
+    default_deposit_amount:
+      typeof record.default_deposit_amount === 'number' ? record.default_deposit_amount : 0,
   }
 }
 
@@ -426,6 +433,12 @@ export async function saveSettings(patch: Partial<AppSettings>): Promise<AppSett
   }
   if (next.review_prefs !== undefined) {
     payload.review_prefs = normalizeReviewPrefs(next.review_prefs)
+  }
+  if (next.deposit_required !== undefined) {
+    payload.deposit_required = next.deposit_required
+  }
+  if (next.default_deposit_amount !== undefined) {
+    payload.default_deposit_amount = next.default_deposit_amount
   }
 
   let record: Record<string, unknown>

@@ -15,23 +15,29 @@ export function pocketBaseOrigin(): string | null {
 }
 
 /** frame-ancestors for /book/* and /embed/* — customer sites that iframe the widget. */
-export function embedFrameAncestors(): string {
-  const ancestors = ["'self'"]
+export function embedFrameAncestors(tenantOrigins: string[] = []): string {
+  const ancestors = new Set<string>(["'self'"])
   const raw = process.env.BOOKING_ALLOWED_ORIGINS?.trim()
   if (raw) {
     for (const origin of raw.split(',')) {
       const trimmed = origin.trim()
-      if (trimmed) ancestors.push(trimmed)
+      if (trimmed) ancestors.add(trimmed)
     }
   }
-  // TODO: add each customer marketing-site origin (e.g. https://customer-wordpress.com) when known.
-  return ancestors.join(' ')
+  for (const origin of tenantOrigins) {
+    const trimmed = origin?.trim()
+    if (trimmed) ancestors.add(trimmed)
+  }
+  return Array.from(ancestors).join(' ')
 }
 
-export function buildContentSecurityPolicyReportOnly(pathname: string): string {
+export function buildContentSecurityPolicyReportOnly(
+  pathname: string,
+  tenantOrigins: string[] = [],
+): string {
   const pb = pocketBaseOrigin()
   const isEmbedRoute = pathname.startsWith('/book/') || pathname.startsWith('/embed/')
-  const frameAncestors = isEmbedRoute ? embedFrameAncestors() : "'self'"
+  const frameAncestors = isEmbedRoute ? embedFrameAncestors(tenantOrigins) : "'self'"
 
   const connectSrc = [
     "'self'",

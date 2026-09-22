@@ -7,7 +7,7 @@ import {
 } from '@/lib/server/escape-html'
 import { parseJsonBody } from '@/lib/server/parse-body'
 import { assertOrgAccess, requireUser } from '@/lib/server/route-guard'
-import { getAppBaseUrl, getRequestAppBaseUrl, resolveClientOrgId } from '@/lib/server/portal-tokens'
+import { getAppBaseUrl, getRequestAppBaseUrl, resolveClientOrgId, validatePortalToken } from '@/lib/server/portal-tokens'
 import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 import { portalSendBodySchema } from '@/lib/validation/api-schemas'
 import { deskCorsOptions, withDeskCors } from '@/lib/server/desk-cors'
@@ -42,7 +42,13 @@ export async function POST(request: Request) {
   })
   if (denied) return withDeskCors(denied, request)
 
-  const premiumDenied = await requirePremiumSubscription(auth.pb, orgId)
+  let invoiceOnly = false
+  try {
+    const token = new URL(portalUrl).pathname.split('/portal/')[1]
+    const saved = token ? await validatePortalToken(token) : null
+    invoiceOnly = saved?.scope === 'invoice' && saved.organization_id === orgId
+  } catch { /* invalid URL is rejected below */ }
+  const premiumDenied = invoiceOnly ? null : await requirePremiumSubscription(auth.pb, orgId)
   if (premiumDenied) return withDeskCors(premiumDenied, request)
 
   if (!resend) {

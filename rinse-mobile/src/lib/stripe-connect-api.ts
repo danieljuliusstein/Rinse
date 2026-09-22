@@ -4,6 +4,8 @@ export type StripeConnectStatus = {
   accountId: string | null
   chargesEnabled: boolean
   detailsSubmitted: boolean
+  payoutsEnabled: boolean
+  requirements: string[]
   ready: boolean
 }
 

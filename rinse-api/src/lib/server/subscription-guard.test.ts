@@ -20,7 +20,7 @@ describe('subscription-guard', () => {
     expect(isSubscriptionActive(org)).toBe(false)
   })
 
-  it('allows trialing org within window', () => {
+  it('does not grant trial access', () => {
     const future = new Date()
     future.setDate(future.getDate() + 5)
     const org = {
@@ -29,6 +29,6 @@ describe('subscription-guard', () => {
       subscription_status: 'trialing',
       trial_ends_at: future.toISOString().slice(0, 10),
     }
-    expect(isSubscriptionActive(org)).toBe(true)
+    expect(isSubscriptionActive(org)).toBe(false)
   })
 })

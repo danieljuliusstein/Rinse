@@ -5,7 +5,6 @@ import { resolveInvoiceLogoDataUri } from '@/lib/invoice-logo-server'
 import { PdfDataError, fetchInvoicePdfData } from '@/lib/server/pdf-data'
 import { parseJsonBody } from '@/lib/server/parse-body'
 import { requireUser } from '@/lib/server/route-guard'
-import { requirePremiumSubscription } from '@/lib/server/subscription-guard'
 import { pdfInvoiceBodySchema } from '@/lib/validation/api-schemas'
 import { deskCorsOptions, withDeskCors } from '@/lib/server/desk-cors'
 
@@ -17,8 +16,6 @@ export async function POST(request: Request) {
   const auth = await requireUser(request)
   if (auth instanceof Response) return withDeskCors(auth, request)
 
-  const premiumDenied = await requirePremiumSubscription(auth.pb, auth.organizationId)
-  if (premiumDenied) return withDeskCors(premiumDenied, request)
 
   const parsed = await parseJsonBody(request, pdfInvoiceBodySchema)
   if (parsed instanceof NextResponse) return withDeskCors(parsed, request)

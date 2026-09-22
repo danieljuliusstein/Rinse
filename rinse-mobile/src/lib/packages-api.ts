@@ -22,6 +22,10 @@ function mapPackage(record: Record<string, unknown>): Package {
     default_supplies: Array.isArray(record.default_supplies)
       ? (record.default_supplies as Package['default_supplies'])
       : undefined,
+    deposit_amount:
+      record.deposit_amount != null && record.deposit_amount !== ''
+        ? Number(record.deposit_amount)
+        : undefined,
     active: Boolean(record.active ?? true),
   }
 }
@@ -46,6 +50,7 @@ function toPackagePayload(input: PackageInput): Record<string, unknown> {
   if (input.description !== undefined) payload.description = input.description
   if (input.expected_return_days !== undefined) payload.expected_return_days = input.expected_return_days
   if (input.duration_minutes !== undefined) payload.duration_minutes = input.duration_minutes
+  if (input.deposit_amount !== undefined) payload.deposit_amount = input.deposit_amount
   if (input.default_supplies?.length) payload.default_supplies = input.default_supplies
   return payload
 }
@@ -57,6 +62,7 @@ function toPackagePatch(input: Partial<PackageInput>): Record<string, unknown> {
   if (input.description !== undefined) payload.description = input.description
   if (input.expected_return_days !== undefined) payload.expected_return_days = input.expected_return_days
   if (input.duration_minutes !== undefined) payload.duration_minutes = input.duration_minutes
+  if (input.deposit_amount !== undefined) payload.deposit_amount = input.deposit_amount
   if (input.default_supplies !== undefined) payload.default_supplies = input.default_supplies
   if (input.active !== undefined) payload.active = input.active
   return payload

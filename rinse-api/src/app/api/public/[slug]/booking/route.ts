@@ -5,6 +5,7 @@ import { getClientIp } from '@/lib/server/client-ip'
 import { enforceRateLimit, RATE_LIMITS } from '@/lib/server/rate-limit'
 import { rejectOversizedBody } from '@/lib/server/request-body'
 import { jsonWithCors, publicCorsHeaders } from '@/lib/server/public-cors'
+import { getAllowedOriginsForSlug } from '@/lib/server/origin-resolver'
 
 type Params = { params: Promise<{ slug: string }> }
 
@@ -28,22 +29,26 @@ function normalizePhone(phone: string): string {
   return phone.replace(/\D/g, '').slice(0, 15)
 }
 
-export async function OPTIONS(request: Request) {
-  return new Response(null, { status: 204, headers: publicCorsHeaders(request) })
+export async function OPTIONS(request: Request, { params }: Params) {
+  const { slug } = await params
+  const origins = await getAllowedOriginsForSlug(slug)
+  return new Response(null, { status: 204, headers: publicCorsHeaders(request, origins) })
 }
 
 export async function POST(request: Request, { params }: Params) {
+  const { slug } = await params
+  const org = await getOrganizationBySlug(slug)
+  const origins = org?.allowed_origins ?? []
+
   const tooLarge = rejectOversizedBody(request, 16_384)
   if (tooLarge) return tooLarge
 
   const ip = getClientIp(request)
   const ipLimited = await enforceRateLimit(`booking:ip:${ip}`, RATE_LIMITS.publicBookingIp, 'public-booking')
   if (ipLimited) {
-    return jsonWithCors(request, { error: 'Too many booking attempts. Try again later.' }, 429)
+    return jsonWithCors(request, { error: 'Too many booking attempts. Try again later.' }, 429, origins)
   }
 
-  const { slug } = await params
-  const org = await getOrganizationBySlug(slug)
   if (!org) {
     return jsonWithCors(request, { error: 'Not found' }, 404)
   }
@@ -82,11 +87,12 @@ export async function POST(request: Request, { params }: Params) {
       notes: clip(body.notes ? String(body.notes) : undefined, MAX_FIELD.notes),
     } as PublicBookingInput
 
-    const result = await createPublicBookingForOrg(org.id, input)
-    return jsonWithCors(request, { ok: true, booking: result })
+    const origin = new URL(request.url).origin
+    const result = await createPublicBookingForOrg(org.id, input, { origin, orgSlug: slug })
+    return jsonWithCors(request, { ok: true, booking: result }, 200, origins)
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Booking failed'
     const status = message.includes('no longer available') ? 409 : 400
-    return jsonWithCors(request, { error: message }, status)
+    return jsonWithCors(request, { error: message }, status, origins)
   }
 }

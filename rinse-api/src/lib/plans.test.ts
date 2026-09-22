@@ -1,18 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { LAUNCH_PRICING_ACTIVE, STARTER_PLAN } from './plans'
-
-describe('STARTER_PLAN', () => {
-  it('has list price of $29/mo', () => {
-    expect(STARTER_PLAN.listPriceLabel).toBe('$29/mo')
-  })
-
-  it('reflects launch pricing flag from env', () => {
-    if (LAUNCH_PRICING_ACTIVE) {
-      expect(STARTER_PLAN.priceLabel).toBe('$19/mo')
-      expect(STARTER_PLAN.launchNote).toContain('Launch pricing')
-    } else {
-      expect(STARTER_PLAN.priceLabel).toBe('$29/mo')
-      expect(STARTER_PLAN.launchNote).toBeUndefined()
-    }
+import { FREE_PLAN, STARTER_PLAN, EARLY_PLAN, FOUNDING_PLAN, PLAN_OPTIONS, PRICES } from './plans'
+describe('pricing policy', () => {
+  it('has exactly two public plans with the launch offer separate', () => {
+    expect(PLAN_OPTIONS.map(p => p.id)).toEqual(['free', 'starter'])
+    expect(PRICES).toEqual({ free: 0, starter: 600, early: 300, founding: 0 })
+    expect([FREE_PLAN.priceLabel, STARTER_PLAN.priceLabel, EARLY_PLAN.priceLabel, FOUNDING_PLAN.priceLabel]).toEqual(['$0', '$6/mo', '$3/mo', '$0'])
   })
 })

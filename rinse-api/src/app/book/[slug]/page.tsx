@@ -22,11 +22,19 @@ import { bookingContactSchema, type BookingContactFormValues } from '@/lib/valid
 import type { VehicleType } from '@/lib/types'
 import { VEHICLE_TYPE_OPTIONS } from '@/lib/vehicle-type-icons'
 
+import {
+  getDocumentStrings,
+  intlLocaleForDocument,
+  isRtlDocumentLocale,
+  normalizeDocumentLocale,
+} from '@rinse/core'
+
 interface PublicPackage {
   id: string
   name: string
   base_price: number
   description?: string
+  deposit_amount?: number
 }
 
 interface AvailabilitySlot {
@@ -42,6 +50,7 @@ interface PublicBusiness {
   address?: string
   logoUrl?: string
   accentColor?: string | null
+  document_locale?: string
 }
 
 function BookBrandMark({ business }: { business?: PublicBusiness | null }) {
@@ -84,32 +93,32 @@ function addDays(iso: string, days: number) {
   return d.toISOString().slice(0, 10)
 }
 
-function formatPrice(n: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+function formatPrice(n: number, localeTag = 'en-US') {
+  return new Intl.NumberFormat(localeTag, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 }
 
-function formatDateBox(iso: string): string {
-  return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', {
+function formatDateBox(iso: string, localeTag = 'en-US'): string {
+  return new Date(iso + 'T12:00:00').toLocaleDateString(localeTag, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   })
 }
 
-function formatTimeDisplay(time: string): string {
+function formatTimeDisplay(time: string, localeTag = 'en-US'): string {
   if (!time) return ''
   const [h, m] = time.split(':').map(Number)
   const dt = new Date()
   dt.setHours(h, m)
-  return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return dt.toLocaleTimeString(localeTag, { hour: 'numeric', minute: '2-digit' })
 }
 
-function formatDayChip(iso: string): { weekday: string; day: string; month: string } {
+function formatDayChip(iso: string, localeTag = 'en-US'): { weekday: string; day: string; month: string } {
   const d = new Date(iso + 'T12:00:00')
   return {
-    weekday: d.toLocaleDateString('en-US', { weekday: 'short' }),
-    day: d.toLocaleDateString('en-US', { day: 'numeric' }),
-    month: d.toLocaleDateString('en-US', { month: 'short' }),
+    weekday: d.toLocaleDateString(localeTag, { weekday: 'short' }),
+    day: d.toLocaleDateString(localeTag, { day: 'numeric' }),
+    month: d.toLocaleDateString(localeTag, { month: 'short' }),
   }
 }
 
@@ -227,22 +236,28 @@ function BookPageShell({
   children,
   footerContact,
   brandStyle,
+  locale,
 }: {
   header: ReactNode
   children: ReactNode
   footerContact?: string
   brandStyle?: React.CSSProperties
+  locale?: string
 }) {
+  const normLocale = normalizeDocumentLocale(locale)
+  const s = getDocumentStrings(normLocale)
+  const isRtl = isRtlDocumentLocale(normLocale)
+
   return (
-    <div className="book-root client-light-root" style={brandStyle}>
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="book-root client-light-root" style={brandStyle}>
       <header className="book-header">{header}</header>
       <main className="book-body">{children}</main>
       <footer className="book-footer">
         {footerContact ? <p className="book-footer-contact">{footerContact}</p> : null}
         <p className="book-legal">
-          <Link href="/terms/customers">Customer Terms</Link>
+          <Link href="/terms/customers">{s.customerTerms}</Link>
           {' · '}
-          <Link href="/privacy">Privacy policy</Link>
+          <Link href="/privacy">{s.privacyPolicy}</Link>
         </p>
       </footer>
     </div>
@@ -255,6 +270,8 @@ function BookContent() {
   const slug = String(params.slug ?? '')
   const initialDateParam = searchParams.get('date')?.trim() ?? ''
   const initialTimeParam = searchParams.get('time')?.trim() ?? ''
+  const depositPaidParam = searchParams.get('deposit_paid') === '1'
+  const depositCancelledParam = searchParams.get('deposit_cancelled') === '1'
 
   const [business, setBusiness] = useState<PublicBusiness | null>(null)
   const [step, setStep] = useState(1)
@@ -270,7 +287,9 @@ function BookContent() {
   const [vehicleType, setVehicleType] = useState<VehicleType>('sedan')
   const [address, setAddress] = useState('')
   const [showMoreOptions, setShowMoreOptions] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(
+    depositCancelledParam ? 'Deposit payment was cancelled. Please try again when ready.' : '',
+  )
   const [notFound, setNotFound] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [continueShake, setContinueShake] = useState(false)
@@ -280,7 +299,18 @@ function BookContent() {
     date: string
     startTime?: string
     customerEmail?: string
-  } | null>(null)
+    depositPaid?: boolean
+  } | null>(() => {
+    if (depositPaidParam) {
+      return {
+        packageName: 'Service Booking',
+        date: initialDateParam || new Date().toISOString().slice(0, 10),
+        startTime: initialTimeParam || undefined,
+        depositPaid: true,
+      }
+    }
+    return null
+  })
   const detailsFormRef = useRef<HTMLDivElement>(null)
 
   const { control, watch, submitWithToast } = useRinseForm<BookingContactFormValues>({
@@ -428,11 +458,16 @@ function BookContent() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Booking failed')
+      if (data.booking?.requiresDeposit && data.booking?.checkoutUrl) {
+        window.location.href = data.booking.checkoutUrl
+        return
+      }
       setConfirmed({
         packageName: data.booking.packageName,
         date: data.booking.date,
         startTime: data.booking.startTime,
         customerEmail: values.email?.trim() || undefined,
+        depositPaid: false,
       })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Booking failed')
@@ -462,6 +497,7 @@ function BookContent() {
   if (confirmed) {
     return (
       <BookPageShell
+        locale={business?.document_locale}
         header={
           <>
             <BookBrandMark business={business} />
@@ -473,6 +509,11 @@ function BookContent() {
       >
         <div className="book-success-banner">
           <CheckCircle size={32} weight="fill" className="book-success-icon" aria-hidden="true" />
+          {confirmed.depositPaid ? (
+            <p className="book-lead font-semibold" style={{ color: 'var(--book-green, #059669)' }}>
+              ✓ Deposit received. Your appointment is secured!
+            </p>
+          ) : null}
           <p>
             <strong>{confirmed.packageName}</strong> on {formatDateBox(confirmed.date)}
             {confirmed.startTime ? ` at ${formatTimeDisplay(confirmed.startTime)}` : ''}.
@@ -496,6 +537,7 @@ function BookContent() {
 
   return (
     <BookPageShell
+      locale={business?.document_locale}
       footerContact={bookFooterContact(business)}
       brandStyle={brandStyle}
       header={
@@ -545,6 +587,11 @@ function BookContent() {
                     </span>
                     <span className="book-package-right">
                       <span className="book-package-price">{formatPrice(pkg.base_price)}</span>
+                      {pkg.deposit_amount ? (
+                        <span className="text-[11px] font-medium text-emerald-600">
+                          ${pkg.deposit_amount} deposit
+                        </span>
+                      ) : null}
                       {selected ? (
                         <CheckCircle size={18} weight="fill" color="var(--book-green)" aria-hidden="true" />
                       ) : (
@@ -825,7 +872,8 @@ function BookContent() {
           <p className="book-legal-disclaimer">
             Services are provided by <strong>{business?.name || 'the Business'}</strong>, an
             independent business. Rinse provides this booking page. By confirming, you agree to the{' '}
-            <Link href="/terms/customers">Customer Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
+            <Link href="/terms/customers">{getDocumentStrings(normalizeDocumentLocale(business?.document_locale)).customerTerms}</Link> and{' '}
+            <Link href="/privacy">{getDocumentStrings(normalizeDocumentLocale(business?.document_locale)).privacyPolicy}</Link>.
           </p>
         </section>
       ) : null}

@@ -529,14 +529,23 @@ export function useCreateActions() {
       fields: [
         { name: 'name', label: 'Package name', required: true, placeholder: 'Full detail' },
         { name: 'base_price', label: 'Base price', type: 'number', required: true, defaultValue: '0' },
+        {
+          name: 'deposit_amount',
+          label: 'Deposit required ($)',
+          type: 'number',
+          placeholder: '0 (none)',
+          defaultValue: '0',
+        },
       ],
     })
     if (!values?.name) return null
+    const depositAmount = Number(values.deposit_amount) || 0
     if (tour?.active) {
       const created: DeskPackage = {
         id: `tour-pkg-${Date.now()}`,
         name: values.name,
         base_price: Number(values.base_price) || 0,
+        deposit_amount: depositAmount > 0 ? depositAmount : undefined,
         active: true,
       }
       setPackages((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)))
@@ -547,6 +556,7 @@ export function useCreateActions() {
       const created = await api.createPackage({
         name: values.name,
         base_price: Number(values.base_price) || 0,
+        deposit_amount: depositAmount > 0 ? depositAmount : undefined,
       })
       setPackages((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)))
       toast('Package created')

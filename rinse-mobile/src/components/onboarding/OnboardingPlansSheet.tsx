@@ -41,7 +41,6 @@ export function OnboardingPlansSheet({
   const iosBilling = Platform.OS === 'ios'
   const paidLabel = upgradePriceLabel(pricing)
   const earlyAvailable = pricing?.early.available === true
-  const foundingOpen = (pricing?.founding.remaining ?? 0) > 0
 
   useEffect(() => {
     if (!visible) return
@@ -53,7 +52,7 @@ export function OnboardingPlansSheet({
     confirmNativeAction({
       title: `Upgrade to ${planName}`,
       message: iosBilling
-        ? `${STARTER_PLAN.priceLabel} — billed through your Apple ID. Cancel anytime in Settings → Subscriptions.`
+        ? 'The App Store will show your eligible monthly price before you confirm. Cancel anytime in Settings → Subscriptions.'
         : `${paidLabel} — checkout opens in Safari.`,
       confirmLabel: iosBilling ? 'Subscribe' : 'Continue in Safari',
       onConfirm: onSubscribe,
@@ -132,28 +131,6 @@ export function OnboardingPlansSheet({
               </AppText>
             ))}
           </View>
-
-          {foundingOpen ? (
-            <View style={styles.planCard}>
-              <View style={styles.planHead}>
-                <AppText style={styles.planName}>{FOUNDING_PLAN.name}</AppText>
-                <AppText style={styles.planPrice}>{FOUNDING_PLAN.priceLabel}</AppText>
-              </View>
-              <AppText style={styles.planTagline}>
-                {pricing?.founding.remaining ?? 0} of {pricing?.founding.limit ?? 20} seats left —
-                claimed automatically on signup.
-              </AppText>
-            </View>
-          ) : null}
-
-          {showTrialCount ? (
-            <View style={styles.trialRow}>
-              <Sparkle size={14} color={colors.greenText} weight="fill" />
-              <AppText variant="caption" style={styles.trialText}>
-                {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'} left in Starter trial
-              </AppText>
-            </View>
-          ) : null}
 
           <View style={[styles.planCard, styles.planCardFeatured]}>
             <View style={styles.planHead}>

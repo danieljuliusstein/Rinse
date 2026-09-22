@@ -1,8 +1,10 @@
-import { Globe, Moon, Package } from 'lucide-react'
-import { Card, CardHeader, CardBody, Field, Select, Toggle, Divider } from '../primitives'
+import { CreditCard, Globe, Moon, Package } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardHeader, CardBody, Field, Select, Toggle, TextInput, Divider } from '../primitives'
 import type { DeskAppSettings } from '@/lib/settings-api'
 import { DOCUMENT_LOCALES } from '@/lib/document-locales'
 import { COMMON_TIME_ZONES, detectDeviceTimeZone } from '@/lib/quiet-hours'
+import { setDeskAppLanguage, type AppLocale } from '@/i18n'
 
 const HOUR_LABELS = Array.from({ length: 24 }, (_, h) => {
   const hr12 = h % 12 === 0 ? 12 : h % 12
@@ -29,6 +31,7 @@ export function PreferencesSection({
   settings: DeskAppSettings
   setSettings: (patch: Partial<DeskAppSettings>) => void
 }) {
+  const { i18n } = useTranslation()
   const zones = timezoneOptions(settings.timezone)
 
   return (
@@ -50,6 +53,22 @@ export function PreferencesSection({
               {zones.map((t) => (
                 <option key={t.value} value={t.value}>
                   {t.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field
+            label="App language"
+            hint="Language of the desktop operator interface."
+          >
+            <Select
+              id="app-locale"
+              value={i18n.language}
+              onChange={(v) => setDeskAppLanguage(v as AppLocale)}
+            >
+              {DOCUMENT_LOCALES.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label} · {l.englishLabel}
                 </option>
               ))}
             </Select>
@@ -161,6 +180,48 @@ export function PreferencesSection({
           <p className="text-[12px] text-ink-500">
             Travel rate ($/mile) lives under Schedule — same as the mobile app.
           </p>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Booking deposits"
+          description="Require an upfront deposit when customers book through public booking links."
+          icon={<CreditCard size={16} />}
+        />
+        <CardBody className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[13px] font-medium text-ink-900">Require deposit for online bookings</p>
+              <p className="text-[12px] text-ink-500">
+                Customers must pay via card before their booking is confirmed.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.deposit_required}
+              onChange={(v) => setSettings({ deposit_required: v })}
+            />
+          </div>
+          {settings.deposit_required && (
+            <div className="rounded-xl border border-ink-200 bg-ink-50/40 p-3.5 animate-settings-fade-rise">
+              <Field
+                label="Default deposit amount"
+                htmlFor="default-deposit"
+                hint="Used when a package does not specify its own custom deposit amount."
+              >
+                <TextInput
+                  id="default-deposit"
+                  type="number"
+                  prefix="$"
+                  value={settings.default_deposit_amount || ''}
+                  placeholder="0"
+                  onChange={(v) =>
+                    setSettings({ default_deposit_amount: Math.max(0, Number(v) || 0) })
+                  }
+                />
+              </Field>
+            </div>
+          )}
         </CardBody>
       </Card>
     </div>

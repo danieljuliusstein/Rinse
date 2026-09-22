@@ -18,7 +18,7 @@ export async function loadOrgSubscription(
       plan: String(org.plan ?? ''),
       founding_member: org.founding_member === true,
       subscription_status: String(org.subscription_status ?? 'none'),
-      trial_ends_at: org.trial_ends_at ? String(org.trial_ends_at) : undefined,
+      current_period_end: org.current_period_end ? String(org.current_period_end) : undefined,
     }
   } catch {
     return null
@@ -44,24 +44,10 @@ export async function requirePremiumSubscription(
 
 export const PRO_REQUIRED_CODE = 'pro_required'
 
-export function proRequiredJson(message = 'Pro plan required') {
+export function proRequiredJson(message = 'Starter required') {
   return NextResponse.json({ error: message, code: PRO_REQUIRED_CODE }, { status: 402 })
 }
 
-export async function requireProPlan(
-  pb: PocketBase,
-  organizationId: string
-): Promise<NextResponse | null> {
-  const premiumBlock = await requirePremiumSubscription(pb, organizationId)
-  if (premiumBlock) return premiumBlock
-
-  const org = await loadOrgSubscription(pb, organizationId)
-  if (!org) {
-    return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
-  }
-  if (org.founding_member || org.plan === 'founding') return null
-  if (org.plan !== 'pro') {
-    return proRequiredJson()
-  }
-  return null
+export async function requireProPlan(pb: PocketBase, organizationId: string): Promise<NextResponse | null> {
+  return requirePremiumSubscription(pb, organizationId)
 }

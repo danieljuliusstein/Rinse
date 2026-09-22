@@ -1,3 +1,5 @@
+import type { DocumentLocale } from '@rinse/core'
+import { getDocumentStrings, normalizeDocumentLocale } from '@rinse/core'
 import type { PortalPayload } from '@/lib/server/portal-data'
 import CurrencyAmount from '@/components/ui/CurrencyAmount'
 import {
@@ -6,7 +8,15 @@ import {
   portalQuoteBadgeClass,
 } from '@/lib/portal-display'
 
-export default function PortalQuoteCard({ quote }: { quote: NonNullable<PortalPayload['quote']> }) {
+export default function PortalQuoteCard({
+  quote,
+  locale,
+}: {
+  quote: NonNullable<PortalPayload['quote']>
+  locale?: DocumentLocale
+}) {
+  const s = getDocumentStrings(normalizeDocumentLocale(locale))
+
   return (
     <div className="portal-quote-hero">
       <div className="portal-quote-hero__header">
@@ -20,18 +30,18 @@ export default function PortalQuoteCard({ quote }: { quote: NonNullable<PortalPa
           </div>
         </div>
         <span className={portalQuoteBadgeClass(quote.status)}>
-          {quote.status === 'accepted' ? 'ACCEPTED' : quote.status.toUpperCase()}
+          {quote.status === 'accepted' ? s.statusAccepted.toUpperCase() : quote.status.toUpperCase()}
         </span>
       </div>
 
       <div className="portal-quote-meta">
         <div className="portal-meta-chip">
-          <span className="portal-meta-chip__label">Proposed</span>
+          <span className="portal-meta-chip__label">{s.proposedDate}</span>
           {formatPortalDateShort(quote.date)}
         </div>
         {quote.validUntil && (
           <div className="portal-meta-chip">
-            <span className="portal-meta-chip__label">Valid until</span>
+            <span className="portal-meta-chip__label">{s.validUntil}</span>
             {formatPortalDateShort(quote.validUntil)}
           </div>
         )}

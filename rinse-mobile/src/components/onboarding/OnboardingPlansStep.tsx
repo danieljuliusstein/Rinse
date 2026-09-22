@@ -102,7 +102,7 @@ export function OnboardingPlansStep({
         <AppText style={styles.lead}>
           {founding
             ? `You’re on ${FOUNDING_PLAN.name} (${FOUNDING_PLAN.priceLabel} lifetime).`
-            : `Start on ${FREE_PLAN.name} (${FREE_PLAN.priceLabel}), try ${STARTER_PLAN.name} free for ${STARTER_TRIAL_DAYS} days, or lock Early at ${EARLY_PLAN.priceLabel} while seats last (${STARTER_PLAN.priceLabel} after).`}
+            : `Start on ${FREE_PLAN.name} (${FREE_PLAN.priceLabel}), or upgrade deliberately to Starter. Early is at ${EARLY_PLAN.priceLabel} while seats last (${STARTER_PLAN.priceLabel} after).`}
         </AppText>
       </OnboardingShell>
 
