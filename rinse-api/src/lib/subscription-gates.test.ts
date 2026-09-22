@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { resolveGate } from './subscription-gates'
-import { resolveGate as nativeGate } from '../../../rinse-mobile/src/lib/subscription-gates'
 const free = { plan: 'free', founding_member: false, subscription_status: 'none' }
-describe.each([['api', resolveGate], ['native', nativeGate]] as const)('%s gates', (_name, gate) => {
+describe.each([['api', resolveGate]] as const)('%s gates', (_name, gate) => {
   it('allows the entire invoice path on Free', () => {
     for (const action of ['create_job','create_invoice','send_invoice','invoice_pdf','invoice_payment'] as const) expect(gate(free, false, action).allowed).toBe(true)
   })

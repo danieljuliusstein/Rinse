@@ -11,7 +11,7 @@
  * rejecting even founding_member=true organizations.
  */
 
-import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import PocketBase, { ClientResponseError } from 'pocketbase'
 import { createIntegrationAccount, deleteIntegrationAccount } from './pocketbase-integration'
 
@@ -24,7 +24,7 @@ describe('Phase 1: Job Creation Diagnostics', () => {
     accounts.push(testAccount)
   })
 
-  afterEach(async () => {
+  afterAll(async () => {
     for (const account of accounts) {
       await deleteIntegrationAccount(account)
     }

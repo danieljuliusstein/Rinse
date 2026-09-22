@@ -13,7 +13,7 @@
  * Total: 65 tests covering persistence, validation, relationships, and cascades
  */
 
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import PocketBase, { ClientResponseError } from 'pocketbase'
 import { createIntegrationAccount, deleteIntegrationAccount } from './pocketbase-integration'
 
@@ -26,7 +26,7 @@ describe('Phase 2: Complete CRUD Coverage', () => {
     accounts.push(account)
   })
 
-  afterEach(async () => {
+  afterAll(async () => {
     for (const acc of accounts) {
       await deleteIntegrationAccount(acc)
     }
@@ -66,6 +66,7 @@ describe('Phase 2: Complete CRUD Coverage', () => {
         issue_date: '2026-09-27',
         due_date: '2026-10-27',
         status: 'draft',
+        subtotal: 200,
         total: 200,
         tax: 0,
         discount: 0,
@@ -109,6 +110,7 @@ describe('Phase 2: Complete CRUD Coverage', () => {
         issue_date: '2026-09-28',
         due_date: '2026-10-28',
         status: 'draft',
+        subtotal: 150,
         total: 150,
         tax: 0,
         discount: 0,
@@ -156,6 +158,7 @@ describe('Phase 2: Complete CRUD Coverage', () => {
         issue_date: '2026-09-29',
         due_date: '2026-10-29',
         status: 'sent',
+        subtotal: 300,
         total: 300,
         tax: 0,
         discount: 0,
@@ -165,11 +168,11 @@ describe('Phase 2: Complete CRUD Coverage', () => {
 
       const paid = await account.pb.collection('invoices').update(invoice.id, {
         balance_due: 150,
-        status: 'partially_paid',
+        status: 'partial',
       })
 
       expect(paid.balance_due).toBe(150)
-      expect(paid.status).toBe('partially_paid')
+      expect(paid.status).toBe('partial')
     })
 
     it('delete invoice cascades correctly', async () => {
@@ -202,6 +205,7 @@ describe('Phase 2: Complete CRUD Coverage', () => {
         issue_date: '2026-09-30',
         due_date: '2026-10-30',
         status: 'draft',
+        subtotal: 100,
         total: 100,
         tax: 0,
         discount: 0,
@@ -229,6 +233,7 @@ describe('Phase 2: Complete CRUD Coverage', () => {
           issue_date: '2026-10-01',
           due_date: '2026-11-01',
           status: 'draft',
+          subtotal: 100,
           total: 100,
           tax: 0,
           discount: 0,
@@ -293,15 +298,15 @@ describe('Phase 2: Complete CRUD Coverage', () => {
       const quote = await account.pb.collection('quotes').create({
         job_id: job.id,
         client_id: client.id,
+        package_id: pkg.id,
         organization_id: account.organizationId,
         quote_number: 'QT-001',
-        issue_date: '2026-10-01',
+        date: '2026-10-01',
         valid_until: '2026-10-08',
         status: 'draft',
-        total: 250,
-        tax: 0,
-        discount: 0,
-        tip: 0,
+        vehicle_type: 'sedan',
+        location_type: 'mobile',
+        subtotal: 250,
       })
 
       expect(quote.id).toBeDefined()
@@ -381,6 +386,7 @@ describe('Phase 2: Complete CRUD Coverage', () => {
         model: 'Camry',
         year: 2020,
         vin: 'ABC123DEF456',
+        type: 'sedan',
         organization_id: account.organizationId,
       })
 

@@ -8,7 +8,7 @@
  * - Cross-org relation traversal is blocked
  */
 
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import PocketBase, { ClientResponseError } from 'pocketbase'
 import { createIntegrationAccount, deleteIntegrationAccount, isPocketBaseUnauthorized } from './pocketbase-integration'
 
@@ -23,7 +23,7 @@ describe('Phase 3: Cross-Tenant Authorization Matrix', () => {
     accounts.push(orgA, orgB)
   })
 
-  afterEach(async () => {
+  afterAll(async () => {
     for (const acc of accounts) {
       try {
         await deleteIntegrationAccount(acc)
@@ -253,6 +253,7 @@ describe('Phase 3: Cross-Tenant Authorization Matrix', () => {
         issue_date: '2026-10-05',
         due_date: '2026-11-05',
         status: 'draft',
+        subtotal: 100,
         total: 100,
         tax: 0,
         discount: 0,
