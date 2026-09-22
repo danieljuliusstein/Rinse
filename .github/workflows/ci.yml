@@ -57,11 +57,49 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Start disposable PocketBase
+        working-directory: .
+        run: |
+          PB_VERSION=0.39.1
+          mkdir -p .feature-pb/data
+          curl -fsSL "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip" -o /tmp/pocketbase.zip
+          unzip -q /tmp/pocketbase.zip -d .feature-pb
+          chmod +x .feature-pb/pocketbase
+          .feature-pb/pocketbase superuser create feature-admin@example.test 'FeatureVerification2026!aA1' --dir=.feature-pb/data --hooksDir=pocketbase/pb_hooks --migrationsDir=pocketbase/pb_migrations
+          .feature-pb/pocketbase serve --http=127.0.0.1:8090 --dir=.feature-pb/data --hooksDir=pocketbase/pb_hooks --migrationsDir=pocketbase/pb_migrations > /tmp/pocketbase.log 2>&1 &
+          echo $! > /tmp/pocketbase.pid
+          for attempt in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8090/api/health >/dev/null && break
+            sleep 1
+          done
+          {
+            echo "FEATURE_PB_URL=http://127.0.0.1:8090"
+            echo "PB_URL=http://127.0.0.1:8090"
+            echo "NEXT_PUBLIC_PB_URL=http://127.0.0.1:8090"
+            echo "PB_ADMIN_EMAIL=feature-admin@example.test"
+            echo "PB_ADMIN_PASSWORD=FeatureVerification2026!aA1"
+          } >> "$GITHUB_ENV"
+
       - name: Build
         run: npm run build
 
       - name: Unit tests
         run: npm test
+
+      - name: Programmatic feature verification
+        run: npm run verify:features
+
+      - name: Real PocketBase integration verification
+        run: npm run verify:features:integration
+
+      - name: Upload feature verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: rinse-feature-verification
+          path: |
+            rinse-api/test-results/feature-verification.*
+            rinse-api/test-results/mock-signals.json
+          if-no-files-found: error
 
       - name: Production dependency audit (high+)
         run: npm audit --production --audit-level=high

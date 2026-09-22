@@ -2,9 +2,6 @@
 node_modules/
 .DS_Store
 *.log
-.env
-.env.*
-!.env.example
 .vercel
 .next
 dist
@@ -12,7 +9,9 @@ dist
 ios/build
 android/build
 **/pb_data/
+.feature-pb/
 archive/*.tgz
-.vercel
-**/.env.local
+
+# Env files: ignored everywhere except templates
 .env*
+!.env.example

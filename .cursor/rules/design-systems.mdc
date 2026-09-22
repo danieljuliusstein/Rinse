@@ -10,7 +10,7 @@ Rinse has **two visual lanes**. Do not mix tokens across them.
 ## Operator light (default app)
 
 **Routes:** `/`, `/jobs`, `/clients`, `/settings`, `/invoices`, sheets, FAB  
-**Tokens:** `detailing-app/src/app/tokens.css` → `--bg-*`, `--green`, `--text-*`  
+**Tokens:** `rinse-api/src/app/tokens.css` → `--bg-*`, `--green`, `--text-*`  
 **CSS:** `globals.css`, `app-ui.css`, `light-sheet.css`  
 **Accent:** `#22c55e` via `--green` / `--green-text`
 
@@ -37,5 +37,5 @@ Portal may toggle dark via `usePortalTheme` — scoped to `.portal-root`, not op
 ## Reference
 
 - UI components & layout: `ui-styling` rule
-- Pattern owners: `detailing-app/docs/ui-css-audit.md`
+- Pattern owners: `rinse-api/docs/ui-css-audit.md`
 - Motion: `design-motion` rule + `design-references/MOTION_SPEC.md`

@@ -9,11 +9,11 @@ Always consult before CSS/UI polish or animation work.
 
 ## Reference assets
 
-- `detailing-app/design-references/invoice-fly/` — 218 ScreenDesigns replay frames (webp)
-- `detailing-app/design-references/MOTION_SPEC.md` — archetypes + spec template
-- `detailing-app/design-references/STYLE_PLAN.md` — phased polish plan (read before implementing)
-- `detailing-app/docs/ui-css-audit.md` — CSS pattern owners (extend, don't duplicate)
-- `detailing-app/src/app/tokens.css` — surfaces + motion tokens
+- `rinse-api/design-references/invoice-fly/` — 218 ScreenDesigns replay frames (webp)
+- `rinse-api/design-references/MOTION_SPEC.md` — archetypes + spec template
+- `rinse-api/design-references/STYLE_PLAN.md` — phased polish plan (read before implementing)
+- `rinse-api/docs/ui-css-audit.md` — CSS pattern owners (extend, don't duplicate)
+- `rinse-api/src/app/tokens.css` — surfaces + motion tokens
 
 ## How to read animations (user cannot paste motion)
 
@@ -29,7 +29,7 @@ ScreenDesigns replays = sequential webp frames. To understand a motion:
 `progress-fill` · `success-pop` · `tab-active` · `swipe-reveal` · `empty-enter` ·
 `counter` · `attention-pulse`
 
-Full definitions: `detailing-app/design-references/MOTION_SPEC.md`
+Full definitions: `rinse-api/design-references/MOTION_SPEC.md`
 
 ## Motion spec template (when frames aren't attached)
 

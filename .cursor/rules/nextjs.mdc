@@ -1,23 +1,23 @@
 ---
-description: Next.js conventions for apps/api (API + book/portal/admin)
+description: Next.js conventions for rinse-api (API + book/portal/admin)
 alwaysApply: true
 ---
 
-# Next.js (`apps/api`)
+# Next.js (`rinse-api`)
 
 This is **not** the Next.js from training data. APIs and conventions may differ.
 
 ## Before writing Next.js code
 
-1. Read the relevant guide in `apps/api/node_modules/next/dist/docs/`
+1. Read the relevant guide in `rinse-api/node_modules/next/dist/docs/`
 2. Heed deprecation notices in that docs tree
-3. Mirror patterns in existing `apps/api/src/app/` files
+3. Mirror patterns in existing `rinse-api/src/app/` files
 
 ## Project conventions
 
 - **Build/dev use webpack:** `next dev --webpack`, `next build --webpack` (see `package.json`)
-- **App Router:** routes in `apps/api/src/app/`
-- **API routes:** `apps/api/src/app/api/` — protect cron/backup with `verifyApiSecret` from `@/lib/server/api-auth`
+- **App Router:** routes in `rinse-api/src/app/`
+- **API routes:** `rinse-api/src/app/api/` — protect cron/backup with `verifyApiSecret` from `@/lib/server/api-auth`
 - **Client components:** `'use client'` only when needed (hooks, browser APIs, event handlers)
 - **Env:** `NEXT_PUBLIC_*` for client; secrets (`INTERNAL_API_SECRET`, `CRON_SECRET`) server-only
 - **Surface:** API + book + portal + admin (+ legal). Operator PWA UI is removed — do not add it back.
@@ -26,9 +26,9 @@ This is **not** the Next.js from training data. APIs and conventions may differ.
 
 - Pages Router (`pages/`) — this app is App Router only
 - Default Next 14/15 APIs without checking local docs
-- `detailing-website/` has its own simpler setup — rules here target `apps/api/`
+- `rinse-landing/` has its own simpler setup — rules here target `rinse-api/`
 
 ## Also see
 
-- `apps/api/AGENTS.md` (Next.js agent rules block)
-- Root `README.md` + `apps/api/docs/DEPLOY_CUTOVER.md` for deploy
+- `rinse-api/AGENTS.md` (Next.js agent rules block)
+- Root `README.md` + `rinse-api/docs/DEPLOY_CUTOVER.md` for deploy

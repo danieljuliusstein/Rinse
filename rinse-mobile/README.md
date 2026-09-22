@@ -1,16 +1,17 @@
-# Rinse Mobile (Expo) — `apps/mobile`
+# Rinse Mobile (Expo) — `rinse-mobile`
 
 Native operator app for Rinse — iOS-first.
 
 ## Monorepo layout
 
 ```
-Detailing/
-  apps/mobile/       # This app
-  apps/api/          # Next.js API + book/portal/admin → rinsehq.com
-  apps/pocketbase/   # Migrations + Fly config
+Rinse/
+  rinse-mobile/      # This app
+  rinse-api/         # Next.js API + book/portal/admin → app.rinsehq.com
+  rinse-desk/        # Desktop CRM (Vite)
+  rinse-landing/     # Marketing rinsehq.com (not the API)
+  pocketbase/        # Migrations + Fly config
   packages/core/     # @rinse/core
-  detailing-website/ # Marketing rinsehq.com (not the API)
 ```
 
 ## Prerequisites
@@ -22,10 +23,10 @@ Detailing/
 
 ## Setup
 
-`apps/mobile` is a **standalone** npm project (not an npm workspace member). Keep installs inside this folder.
+`rinse-mobile` is a **standalone** npm project (not an npm workspace member). Keep installs inside this folder.
 
 ```bash
-cd apps/mobile
+cd rinse-mobile
 cp .env.example .env
 # EXPO_PUBLIC_PB_URL + EXPO_PUBLIC_APP_API_URL=http://localhost:3000 (or rinsehq.com)
 npm install
@@ -43,7 +44,7 @@ npm run mobile
 | Variable | Purpose |
 |----------|---------|
 | `EXPO_PUBLIC_PB_URL` | PocketBase (e.g. `https://detailing-pb.fly.dev`) |
-| `EXPO_PUBLIC_APP_API_URL` | **apps/api** host — production: `https://rinsehq.com` |
+| `EXPO_PUBLIC_APP_API_URL` | **rinse-api** host — production: `https://rinsehq.com` |
 | `EXPO_PUBLIC_OFFLINE_ENABLED` | Set `0` to disable offline enqueue |
 | `EAS_PROJECT_ID` | `a603bec9-0ac7-432a-b24a-9d100f9fd884` |
 
@@ -56,7 +57,7 @@ See [docs/app-store-ship-checklist.md](docs/app-store-ship-checklist.md). Billin
 ## EAS builds
 
 ```bash
-cd apps/mobile
+cd rinse-mobile
 npx eas-cli login
 
 npx eas env:create --name EXPO_PUBLIC_PB_URL --value https://detailing-pb.fly.dev --environment production

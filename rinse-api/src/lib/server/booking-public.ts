@@ -1,3 +1,4 @@
+import PocketBase from 'pocketbase'
 import { businessLogoApiUrl, pocketBaseRecordHasLogo } from '../business-logo'
 import { authenticateServerAdmin } from './pocketbase-admin'
 import { escapeFilterValue, appJobCreateToPb, pbClientToApp, pbJobToApp, pbPackageToApp, type PbRecord } from '../api/mappers'
@@ -144,9 +145,19 @@ export async function getAvailabilityForOrg(
 export async function createPublicBookingForOrg(
   organizationId: string,
   input: PublicBookingInput,
-  options?: { origin?: string; orgSlug?: string },
+  options?:
+    | { origin?: string; orgSlug?: string }
+    | { collection: (name: string) => unknown },
 ): Promise<PublicBookingResult> {
-  const pb = await authenticateServerAdmin()
+  const pbOverride =
+    options && 'collection' in options && typeof options.collection === 'function'
+      ? options
+      : undefined
+  const bookingOptions =
+    options && !pbOverride ? (options as { origin?: string; orgSlug?: string }) : undefined
+  const pb = pbOverride
+    ? (pbOverride as unknown as PocketBase)
+    : await authenticateServerAdmin()
 
   const pkg = await pb.collection('packages').getOne<PbRecord>(input.packageId)
   if (String(pkg.organization_id) !== organizationId) {
@@ -224,7 +235,14 @@ export async function createPublicBookingForOrg(
     jobRecordPayload.deposit_amount = depositAmount
   }
 
-  const jobRecord = await pb.collection('jobs').create<PbRecord>(jobRecordPayload)
+  let jobRecord: PbRecord
+  try {
+    jobRecord = await pb.collection('jobs').create<PbRecord>(jobRecordPayload)
+  } catch (error) {
+    throw new Error(
+      `Failed to create job during public booking: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
   const job = pbJobToApp(jobRecord)
 
   try {
@@ -250,7 +268,12 @@ export async function createPublicBookingForOrg(
   let requiresDeposit = false
   let checkoutUrl: string | undefined = undefined
 
-  if (depositAmount > 0 && options?.origin && options?.orgSlug && isStripeConfigured()) {
+  if (
+    depositAmount > 0 &&
+    bookingOptions?.origin &&
+    bookingOptions?.orgSlug &&
+    isStripeConfigured()
+  ) {
     try {
       const connectAccountId = await resolveConnectDestination(organizationId)
       if (connectAccountId) {
@@ -287,8 +310,8 @@ export async function createPublicBookingForOrg(
                 organization_id: organizationId,
                 deposit_amount: String(depositAmount),
               },
-              success_url: `${options.origin}/book/${options.orgSlug}?confirmed=1&deposit_paid=1&job_id=${job.id}`,
-              cancel_url: `${options.origin}/book/${options.orgSlug}?deposit_cancelled=1`,
+              success_url: `${bookingOptions.origin}/book/${bookingOptions.orgSlug}?confirmed=1&deposit_paid=1&job_id=${job.id}`,
+              cancel_url: `${bookingOptions.origin}/book/${bookingOptions.orgSlug}?deposit_cancelled=1`,
             },
             { stripeAccount: connectAccountId },
           )

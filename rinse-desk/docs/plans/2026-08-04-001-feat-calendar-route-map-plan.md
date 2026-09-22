@@ -13,9 +13,9 @@ sources:
   - docs/research/desk-ops-reviewer-analytics-2026.json
   - docs/research/mobile-desk-parity-2026.json
   - docs/solutions/deals-board-teleport-fix.md
-  - route-optimizer-map-crm.json
-  - route-web-mobile-ux.json
-  - route-map-libs-graphics.json
+  - docs/research/route-optimizer-map-crm.json
+  - docs/research/route-web-mobile-ux.json
+  - docs/research/route-map-libs-graphics.json
 ---
 
 # Calendar Route Map - Plan
@@ -467,7 +467,7 @@ sequenceDiagram
 
 ### Sources & Research (load-bearing)
 
-- Parallel web research: MapLibre preferred for custom WebGL styles (`route-map-libs-graphics.json`); Jobber/ServiceTitan desk-vs-mobile split (`route-web-mobile-ux.json`); OSRM trip for TSP (`route-optimizer-map-crm.json`).
+- Parallel web research: MapLibre preferred for custom WebGL styles (`docs/research/route-map-libs-graphics.json`); Jobber/ServiceTitan desk-vs-mobile split (`docs/research/route-web-mobile-ux.json`); OSRM trip for TSP (`docs/research/route-optimizer-map-crm.json`).
 - Institutional: Sunday planning + sparse writeback (`docs/research/desk-ops-reviewer-analytics-2026.json`); Calendar right-rail patterns (`docs/plans/2026-08-01-001-feat-calendar-gcal-panel-plan.md`); DnD filter teleport (`docs/solutions/deals-board-teleport-fix.md`).
 - Code hooks: `src/lib/api.ts` `saveRouteOrder`; `src/lib/metrics.ts` `sortJobsByRoute`; mobile Route mode `Detailing:apps/mobile-wave5-crm/app/(tabs)/jobs/index.tsx`; drive-time `Detailing:apps/api/src/lib/server/drive-time.ts`.
 

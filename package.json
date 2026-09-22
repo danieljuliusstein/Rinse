@@ -8,6 +8,16 @@
     "desk": "npm run dev --prefix rinse-desk",
     "mobile": "npm run start --prefix rinse-mobile",
     "api": "npm run dev --prefix rinse-api",
-    "api:build": "npm run build --prefix rinse-api"
+    "api:build": "npm run build --prefix rinse-api",
+    "verify:features": "npm run verify:features --prefix rinse-api",
+    "verify:features:domain": "npm run verify:features:domain --prefix rinse-api",
+    "verify:features:persistence": "npm run verify:features:persistence --prefix rinse-api",
+    "verify:features:contracts": "npm run verify:features:contracts --prefix rinse-api",
+    "verify:features:integration": "npm run verify:features:integration --prefix rinse-api",
+    "verify:features:routes": "npm run verify:features:routes --prefix rinse-api",
+    "verify:features:parity": "npm run verify:features:parity --prefix rinse-api",
+    "verify:features:scan": "npm run verify:features:scan --prefix rinse-api",
+    "verify:features:adapters": "npm run verify:features:adapters --prefix rinse-api",
+    "verify:features:integration:local": "bash scripts/verify-features-pocketbase.sh"
   }
 }
