@@ -10,7 +10,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import PocketBase, { ClientResponseError } from 'pocketbase'
-import { createIntegrationAccount, deleteIntegrationAccount, isPocketBaseUnauthorized, hasPocketBaseIntegrationConfig } from './pocketbase-integration'
+import { createIntegrationAccount, deleteIntegrationAccount, isPocketBaseUnauthorized, hasPocketBaseIntegrationConfig, authenticateAdmin } from './pocketbase-integration'
 
 const integration = hasPocketBaseIntegrationConfig()
 
@@ -100,7 +100,7 @@ describe.skipIf(!integration)('Phase 3: Cross-Tenant Authorization Matrix', () =
       })
 
       const list = await orgA.pb.collection('packages').getFullList()
-      const names = list.map((p: any) => p.name)
+      const names = list.map((p) => p.name)
       expect(names).toContain('OwnPackage A1')
       expect(names).not.toContain('OwnPackage B1')
     })
@@ -150,7 +150,7 @@ describe.skipIf(!integration)('Phase 3: Cross-Tenant Authorization Matrix', () =
       })
 
       const list = await orgA.pb.collection('clients').getFullList()
-      const names = list.map((c: any) => c.name)
+      const names = list.map((c) => c.name)
       expect(names).toContain('ClientA1')
       expect(names).not.toContain('ClientB1')
     })
@@ -268,11 +268,309 @@ describe.skipIf(!integration)('Phase 3: Cross-Tenant Authorization Matrix', () =
     })
   })
 
-  // Add stub test for remaining collections
-  describe('Remaining Collections Authorization', () => {
-    it('quotes, vehicles, supplies, equipment, damage_docs, expenses all cross-tenant deny', async () => {
-      // TODO: Implement for each collection
-      expect(true).toBe(true)
+  describe('Quotes Collection', () => {
+    it('user B cannot read user A quote', async () => {
+      const pkgA = await orgA.pb.collection('packages').create({
+        name: 'Quote Auth Package',
+        base_price: 100,
+        active: true,
+        organization_id: orgA.organizationId,
+      })
+      const clientA = await orgA.pb.collection('clients').create({
+        name: 'Quote Auth Client',
+        phone: '555-1000',
+        organization_id: orgA.organizationId,
+      })
+      const quoteA = await orgA.pb.collection('quotes').create({
+        client_id: clientA.id,
+        package_id: pkgA.id,
+        vehicle_type: 'sedan',
+        location_type: 'mobile',
+        date: '2026-11-10',
+        organization_id: orgA.organizationId,
+        quote_number: 'QT-AUTH',
+        status: 'draft',
+        subtotal: 100,
+      })
+
+      try {
+        await orgB.pb.collection('quotes').getOne(quoteA.id)
+        throw new Error('User B should not see user A quote')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+
+    it('user A can list only own quotes', async () => {
+      const pkgA = await orgA.pb.collection('packages').create({
+        name: 'Quote List Package A',
+        base_price: 100,
+        active: true,
+        organization_id: orgA.organizationId,
+      })
+      const clientA = await orgA.pb.collection('clients').create({
+        name: 'Quote List Client A',
+        phone: '555-1001',
+        organization_id: orgA.organizationId,
+      })
+      await orgA.pb.collection('quotes').create({
+        client_id: clientA.id,
+        package_id: pkgA.id,
+        vehicle_type: 'sedan',
+        location_type: 'mobile',
+        date: '2026-11-10',
+        organization_id: orgA.organizationId,
+        quote_number: 'QT-LISTA',
+        status: 'draft',
+        subtotal: 100,
+      })
+
+      const list = await orgA.pb.collection('quotes').getFullList()
+      const numbers = list.map((q) => q.quote_number)
+      expect(numbers).toContain('QT-LISTA')
+    })
+  })
+
+  describe('Leads Collection', () => {
+    it('user B cannot read user A lead', async () => {
+      const leadA = await orgA.pb.collection('leads').create({
+        name: 'Lead Auth',
+        phone: '555-1002',
+        source: 'website',
+        stage: 'inquiry',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('leads').getOne(leadA.id)
+        throw new Error('User B should not see user A lead')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+
+    it('user B cannot update user A lead', async () => {
+      const leadA = await orgA.pb.collection('leads').create({
+        name: 'Lead Auth Update',
+        phone: '555-1003',
+        source: 'website',
+        stage: 'inquiry',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('leads').update(leadA.id, { stage: 'booked' })
+        throw new Error('User B should not update user A lead')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+  })
+
+  describe('Vehicles Collection', () => {
+    it('user B cannot read user A vehicle', async () => {
+      const clientA = await orgA.pb.collection('clients').create({
+        name: 'Vehicle Auth Client',
+        phone: '555-1004',
+        organization_id: orgA.organizationId,
+      })
+      const vehicleA = await orgA.pb.collection('vehicles').create({
+        client_id: clientA.id,
+        make: 'Chevrolet',
+        model: 'Malibu',
+        type: 'sedan',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('vehicles').getOne(vehicleA.id)
+        throw new Error('User B should not see user A vehicle')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+
+    it('user B cannot delete user A vehicle', async () => {
+      const clientA = await orgA.pb.collection('clients').create({
+        name: 'Vehicle Auth Delete Client',
+        phone: '555-1005',
+        organization_id: orgA.organizationId,
+      })
+      const vehicleA = await orgA.pb.collection('vehicles').create({
+        client_id: clientA.id,
+        make: 'GMC',
+        model: 'Yukon',
+        type: 'suv',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('vehicles').delete(vehicleA.id)
+        throw new Error('User B should not delete user A vehicle')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+  })
+
+  describe('Damage Docs Collection', () => {
+    it('user B cannot read user A damage doc', async () => {
+      const clientA = await orgA.pb.collection('clients').create({
+        name: 'Damage Auth Client',
+        phone: '555-1006',
+        organization_id: orgA.organizationId,
+      })
+      const vehicleA = await orgA.pb.collection('vehicles').create({
+        client_id: clientA.id,
+        make: 'Jeep',
+        model: 'Wrangler',
+        type: 'suv',
+        organization_id: orgA.organizationId,
+      })
+      const docA = await orgA.pb.collection('damage_docs').create({
+        vehicle_id: vehicleA.id,
+        area: 'hood',
+        date: '2026-11-11',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('damage_docs').getOne(docA.id)
+        throw new Error('User B should not see user A damage doc')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+  })
+
+  describe('Supplies Collection', () => {
+    it('user B cannot read user A supply', async () => {
+      const supplyA = await orgA.pb.collection('supplies').create({
+        name: 'Auth Supply',
+        unit: 'each',
+        quantity_on_hand: 10,
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('supplies').getOne(supplyA.id)
+        throw new Error('User B should not see user A supply')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+
+    it('user A can list only own supplies', async () => {
+      await orgA.pb.collection('supplies').create({
+        name: 'ListSupplyA',
+        unit: 'each',
+        quantity_on_hand: 5,
+        organization_id: orgA.organizationId,
+      })
+      await orgB.pb.collection('supplies').create({
+        name: 'ListSupplyB',
+        unit: 'each',
+        quantity_on_hand: 5,
+        organization_id: orgB.organizationId,
+      })
+
+      const list = await orgA.pb.collection('supplies').getFullList()
+      const names = list.map((s) => s.name)
+      expect(names).toContain('ListSupplyA')
+      expect(names).not.toContain('ListSupplyB')
+    })
+  })
+
+  describe('Equipment Collection', () => {
+    it('user B cannot read user A equipment', async () => {
+      const equipmentA = await orgA.pb.collection('equipment').create({
+        name: 'Auth Equipment',
+        purchase_price: 300,
+        status: 'active',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('equipment').getOne(equipmentA.id)
+        throw new Error('User B should not see user A equipment')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+  })
+
+  describe('Business Expenses Collection', () => {
+    it('user B cannot read user A business expense', async () => {
+      const expenseA = await orgA.pb.collection('business_expenses').create({
+        date: '2026-11-12',
+        name: 'Auth Expense',
+        amount: 50,
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('business_expenses').getOne(expenseA.id)
+        throw new Error('User B should not see user A business expense')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+  })
+
+  describe('Overhead Expenses Collection', () => {
+    it('user B cannot read user A overhead expense', async () => {
+      const expenseA = await orgA.pb.collection('overhead_expenses').create({
+        name: 'Auth Overhead',
+        amount: 75,
+        billing_cycle: 'monthly',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('overhead_expenses').getOne(expenseA.id)
+        throw new Error('User B should not see user A overhead expense')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+  })
+
+  describe('Portal Tokens Collection', () => {
+    it('user B cannot read user A portal token', async () => {
+      const clientA = await orgA.pb.collection('clients').create({
+        name: 'Portal Auth Client',
+        phone: '555-1007',
+        organization_id: orgA.organizationId,
+      })
+      const tokenA = await orgA.pb.collection('portal_tokens').create({
+        token: `portal-auth-${Date.now()}`,
+        scope: 'full',
+        client_id: clientA.id,
+        expires_at: '2026-12-31 00:00:00.000Z',
+        organization_id: orgA.organizationId,
+      })
+
+      try {
+        await orgB.pb.collection('portal_tokens').getOne(tokenA.id)
+        throw new Error('User B should not see user A portal token')
+      } catch (error) {
+        expect(isPocketBaseUnauthorized(error)).toBe(true)
+      }
+    })
+  })
+
+  describe('Superuser access', () => {
+    it('superuser can always access records across organizations', async () => {
+      const pkgA = await orgA.pb.collection('packages').create({
+        name: 'Superuser Access Package',
+        base_price: 100,
+        active: true,
+        organization_id: orgA.organizationId,
+      })
+
+      const admin = await authenticateAdmin()
+      const record = await admin.collection('packages').getOne(pkgA.id)
+      expect(record.id).toBe(pkgA.id)
     })
   })
 })
