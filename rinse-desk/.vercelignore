@@ -9,7 +9,6 @@ Untitled
 !tsconfig.json
 !vercel.json
 !src/i18n/locales/*.json
-!src/i18n/locales/*.json
 server
 docs
 AGENTS.md
