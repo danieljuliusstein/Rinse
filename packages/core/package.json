@@ -7,22 +7,12 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "peerDependencies": {
+  "dependencies": {
     "libphonenumber-js": "^1.13.8",
     "zod": "^4.4.3"
-  },
-  "peerDependenciesMeta": {
-    "libphonenumber-js": {
-      "optional": false
-    },
-    "zod": {
-      "optional": false
-    }
   },
   "devDependencies": {
-    "libphonenumber-js": "^1.13.8",
-    "typescript": "~5.8.3",
-    "zod": "^4.4.3"
+    "typescript": "~5.8.3"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
