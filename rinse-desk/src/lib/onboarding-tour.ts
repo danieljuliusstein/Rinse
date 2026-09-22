@@ -1,9 +1,13 @@
+import { getPocketBase } from './pocketbase'
+import { getOrganizationId } from './org'
 /** localStorage key — set when the user finishes or skips the desk product tour. */
 export const DESK_TOUR_DONE_KEY = 'desk.onboardingTourDone'
 
+function tourKey() { return `${DESK_TOUR_DONE_KEY}:${getOrganizationId() || 'none'}:${getPocketBase().authStore.record?.id || 'none'}` }
+
 export function readTourDone(): boolean {
   try {
-    return localStorage.getItem(DESK_TOUR_DONE_KEY) === '1'
+    return localStorage.getItem(tourKey()) === '1'
   } catch {
     return false
   }
@@ -11,7 +15,7 @@ export function readTourDone(): boolean {
 
 export function markTourDone(): void {
   try {
-    localStorage.setItem(DESK_TOUR_DONE_KEY, '1')
+    localStorage.setItem(tourKey(), '1')
   } catch {
     /* ignore */
   }
@@ -19,7 +23,7 @@ export function markTourDone(): void {
 
 export function clearTourDone(): void {
   try {
-    localStorage.removeItem(DESK_TOUR_DONE_KEY)
+    localStorage.removeItem(tourKey())
   } catch {
     /* ignore */
   }

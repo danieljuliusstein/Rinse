@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "format": "oxfmt",
     "money-parity": "npx --yes tsx scripts/money-parity-test.ts",
-    "test:money-parity": "vitest run --config vitest.money-parity.config.ts"
+    "test:money-parity": "vitest run --config vitest.money-parity.config.ts",
+    "test:onboarding": "vitest run --config vitest.onboarding.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

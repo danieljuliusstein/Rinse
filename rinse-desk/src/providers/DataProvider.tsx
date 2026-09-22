@@ -52,7 +52,7 @@ const DataContext = createContext<DataContextValue | null>(null)
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [clients, setClients] = useState<DeskClient[]>([])
   const [vehicles, setVehicles] = useState<DeskVehicle[]>([])
@@ -66,6 +66,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!user) {
+      setLoading(false)
       setClients([])
       setVehicles([])
       setJobs([])
@@ -80,6 +81,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
 
     if (!getOrganizationId()) {
+      setLoading(false)
       setError('Your account is not linked to an organization. Use the same operator login as the mobile app.')
       setClients([])
       setVehicles([])

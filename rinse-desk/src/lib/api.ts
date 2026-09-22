@@ -1,3 +1,4 @@
+import { isJobCapError, JOB_CAP_MESSAGE } from './job-allowance'
 import { ClientResponseError } from 'pocketbase'
 import { getPocketBase } from './pocketbase'
 import { escapeFilter, formatPbError, orgFilter, requireOrganizationId } from './org'
@@ -942,7 +943,7 @@ export async function updateJob(
   try {
     const updated = await pb.collection('jobs').update(id, patch, {
       expand: 'client_id,package_id',
-    })
+    }).catch((error) => { if (isJobCapError(error)) throw new Error(JOB_CAP_MESSAGE); throw error })
     return mapJob(
       updated as unknown as Record<string, unknown>,
       (updated as { expand?: Record<string, unknown> }).expand,
@@ -1116,7 +1117,7 @@ export async function createJob(input: {
       organization_id: requireOrganizationId(),
     },
     { expand: 'client_id,package_id' },
-  )
+  ).catch((error) => { if (isJobCapError(error)) throw new Error(JOB_CAP_MESSAGE); throw error })
   return mapJob(
     created as unknown as Record<string, unknown>,
     (created as { expand?: Record<string, unknown> }).expand,

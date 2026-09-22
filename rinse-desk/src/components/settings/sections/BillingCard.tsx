@@ -1,3 +1,5 @@
+import { startDesktopCheckout } from '@/lib/billing-checkout'
+import { loadDesktopSetup, requestDesktopSetup } from '@/lib/desktop-onboarding'
 import { useEffect, useState } from 'react'
 import { appApiJson } from '@/lib/app-api'
 import { fetchOrgSubscription, type OrgSubscription } from '@/lib/subscription'
@@ -7,10 +9,18 @@ export function BillingCard() {
   const [org, setOrg] = useState<OrgSubscription | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  useEffect(() => { void fetchOrgSubscription(true).then(setOrg) }, [])
+  const [canSetup, setCanSetup] = useState(false)
+  useEffect(() => {
+    let alive = true
+    void fetchOrgSubscription(true).then((value) => { if (alive) setOrg(value) })
+    void loadDesktopSetup().then((value) => { if (alive) setCanSetup(value.enabled && !value.completedAt) }).catch(() => {})
+    return () => { alive = false }
+  }, [])
   async function open(path: string) {
     setBusy(true); setError('')
-    try { const result = await appApiJson<{ url: string }>(path, { method: 'POST' }); window.location.assign(result.url) }
+    try {
+      if (path === '/api/billing/checkout') { await startDesktopCheckout(); return }
+      const result = await appApiJson<{ url: string }>(path, { method: 'POST' }); window.location.assign(result.url) }
     catch (e) { setError(e instanceof Error ? e.message : 'Billing unavailable') }
     finally { setBusy(false) }
   }
@@ -25,6 +35,7 @@ export function BillingCard() {
     </div>}
     {!paid && !founding && <p className="text-sm">Early offer: $3/month for the first 100 qualifying paying operators while continuously subscribed. Checkout confirms eligibility and the price.</p>}
     <p className="text-sm">Cancellation keeps Starter through the paid period, then returns to Free. Existing records are preserved.</p>
+    {canSetup && <button className="text-sm underline" onClick={requestDesktopSetup}>Open desktop setup</button>}
     {error && <p role="alert">{error}</p>}
   </CardBody></Card>
 }

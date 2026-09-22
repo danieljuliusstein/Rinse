@@ -13,23 +13,17 @@ export type OrgSubscription = {
   stripe_customer_id?: string
 }
 
-let cached: OrgSubscription | null = null
-let cacheAt = 0
+const cache = new Map<string, { value: OrgSubscription; at: number }>()
 const CACHE_MS = 60_000
+export function clearOrgSubscriptionCache() { cache.clear() }
 
-export function clearOrgSubscriptionCache() {
-  cached = null
-  cacheAt = 0
-}
-
-export async function fetchOrgSubscription(force = false): Promise<OrgSubscription | null> {
-  const now = Date.now()
-  if (!force && cached && now - cacheAt < CACHE_MS) return cached
-
+export async function fetchOrgSubscription(force = false, strict = false): Promise<OrgSubscription | null> {
+  const orgId = requireOrganizationId()
+  const previous = cache.get(orgId)
+  if (!force && previous && Date.now() - previous.at < CACHE_MS) return previous.value
   try {
-    const orgId = requireOrganizationId()
-    const record = await getPocketBase().collection('organizations').getOne(orgId)
-    cached = {
+    const record = await getPocketBase().collection('organizations').getOne(orgId, { requestKey: null })
+    const value: OrgSubscription = {
       billing_provider: String(record.billing_provider || ''),
       stripe_customer_id: String(record.stripe_customer_id || ''),
       plan: String(record.plan ?? ''),
@@ -37,10 +31,11 @@ export async function fetchOrgSubscription(force = false): Promise<OrgSubscripti
       subscription_status: String(record.subscription_status ?? 'none'),
       current_period_end: record.current_period_end ? String(record.current_period_end) : undefined,
     }
-    cacheAt = now
-    return cached
-  } catch {
-    return cached
+    cache.set(orgId, { value, at: Date.now() })
+    return value
+  } catch (error) {
+    if (strict) throw error
+    return null
   }
 }
 
@@ -62,7 +57,7 @@ export async function assertPremiumAccess(
   }
   if (!isSubscriptionActive(org)) {
     throw new AppApiError(
-      `Active subscription required for ${feature}. Open Settings → Billing on mobile to upgrade or restore access.`,
+      `Active subscription required for ${feature}. Open Settings → Account → Billing to manage your plan.`,
       402,
     )
   }

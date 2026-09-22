@@ -23,6 +23,7 @@ routerAdd('POST', '/api/rinse/billing', (e) => {
       if (!checkout) checkout = new Record(tx.findCollectionByNameOrId('billing_checkouts'))
       checkout.set('organization_id', org.id)
       checkout.set('provider', data.provider)
+      checkout.set('return_context', data.returnContext === 'desktop_onboarding' ? data.returnContext : '')
       checkout.set('plan', plan)
       checkout.set('state', 'pending')
       checkout.set('session_id', '')

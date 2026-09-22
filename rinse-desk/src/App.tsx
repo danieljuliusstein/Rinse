@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { BillingReturnNotice } from './components/onboarding/BillingReturnNotice'
+import { JobAllowanceBanner } from './components/onboarding/JobAllowanceBanner'
+import { DesktopOnboardingGate, type SetupDestination } from './components/onboarding/DesktopOnboardingGate'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import MoneyOverview from './pages/MoneyOverview'
 import Dashboard from './pages/Dashboard'
@@ -816,9 +819,21 @@ export function Header({
   )
 }
 
-function Shell() {
-  const [page, setPage] = useState<PageId>('dashboard')
-  const [tourOpen, setTourOpen] = useState(() => !readTourDone())
+function FirstJobLauncher() {
+  const { loading } = useData()
+  const { createEvent } = useCreateActions()
+  const launched = useRef(false)
+  useEffect(() => {
+    if (loading || launched.current) return
+    launched.current = true
+    void createEvent()
+  }, [loading, createEvent])
+  return null
+}
+
+function Shell({ initialAction = 'dashboard' }: { initialAction?: SetupDestination }) {
+  const [page, setPage] = useState<PageId>(initialAction === 'calendar' ? 'calendar' : 'dashboard')
+  const [tourOpen, setTourOpen] = useState(initialAction === 'tour')
   const [tourSession, setTourSession] = useState(0)
   const {
     loading,
@@ -915,6 +930,8 @@ function Shell() {
             Syncing…
           </div>
         )}
+        <BillingReturnNotice />
+        {['dashboard', 'calendar', 'routes'].includes(page) && <JobAllowanceBanner />}
         {pages[page]}
       </div>
     </>
@@ -922,6 +939,7 @@ function Shell() {
 
   return (
     <DeskNavProvider page={page} setPage={setPage} openOnboardingTour={openOnboardingTour}>
+      {initialAction === 'calendar' && <FirstJobLauncher />}
       {tourOpen ? (
         <TourSession key={tourSession} onExit={closeTour}>
           <div className="flex h-full w-full bg-gray-50 overflow-hidden">{shellBody}</div>
@@ -963,11 +981,9 @@ function Gate() {
   if (!user) return <AuthPage />
   if (!emailVerified) return <VerifyEmailPage />
   return (
-    <UiProvider>
-      <DataProvider>
-        <Shell />
-      </DataProvider>
-    </UiProvider>
+    <DesktopOnboardingGate key={`${user.id}:${String(user.organization_id)}`}>
+      {(destination) => <UiProvider><DataProvider><Shell initialAction={destination} /></DataProvider></UiProvider>}
+    </DesktopOnboardingGate>
   )
 }
 

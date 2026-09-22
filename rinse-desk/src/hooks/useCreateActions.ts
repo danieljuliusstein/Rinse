@@ -1,3 +1,4 @@
+import { loadJobAllowance, JOB_CAP_MESSAGE } from '@/lib/job-allowance'
 import * as api from '@/lib/api'
 import * as platform from '@/lib/platform-api'
 import { confirmUnblockDayIfNeeded } from '@/lib/confirm-unblock-day'
@@ -22,7 +23,7 @@ import { useOptionalTour } from '@/components/tour/tour-provider'
 export function useCreateActions() {
   const { clients, packages, setClients, setJobs, setLeads, setExpenses, setPackages } = useData()
   const { alert, confirm, promptChoice, promptForm, toast } = useUi()
-  const { setPage, openContact } = useDeskNav()
+  const { setPage, openContact, openSettings } = useDeskNav()
   const tour = useOptionalTour()
 
   /**
@@ -249,6 +250,18 @@ export function useCreateActions() {
     /** Skip the form when all needed fields are already provided (calendar drag-create). */
     skipForm?: boolean
   }) {
+    if (!tour?.active) {
+      try {
+        const allowance = await loadJobAllowance()
+        if (!allowance.paid && allowance.count >= allowance.limit) {
+          const action = await promptChoice({ title: 'Your Free plan is full', message: JOB_CAP_MESSAGE,
+            actions: [{ id: 'upgrade', label: 'Upgrade to Starter', primary: true }, { id: 'jobs', label: 'Manage jobs' }], cancelLabel: 'Not now' })
+          if (action === 'upgrade') openSettings('account')
+          if (action === 'jobs') setPage('calendar')
+          return null
+        }
+      } catch { /* The database remains authoritative when the usage preview is unavailable. */ }
+    }
     if (!clients.length || !packages.length) {
       await ensureClientsAndPackages('schedule a job')
       return null

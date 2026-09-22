@@ -1,0 +1,61 @@
+/** Run only against a disposable local PocketBase with current migrations/hooks. */
+import assert from 'node:assert/strict'
+import PocketBase from '../rinse-api/node_modules/pocketbase/dist/pocketbase.es.mjs'
+const url = process.env.PB_TEST_URL || 'http://127.0.0.1:18099'
+assert.match(url, /^http:\/\/(127\.0\.0\.1|localhost):/)
+const pb = new PocketBase(url); pb.autoCancellation(false)
+await pb.collection('_superusers').authWithPassword('desktop-test@example.test', 'DesktopTestPassword123')
+const suffix = Date.now().toString(36)
+const org = await pb.collection('organizations').create({ name: 'Desktop Test', slug: `desktop-${suffix}`, plan: 'free', subscription_status: 'none' })
+const settings = await pb.collection('app_settings').create({ organization_id: org.id, business_name: 'Desktop Test', onboarding_step: 2, timezone: 'America/New_York' })
+const command = (data) => pb.send('/api/rinse/desktop-onboarding', { method: 'POST', body: { orgId: org.id, ...data } })
+let state = await command({ action: 'read' })
+assert.equal(state.eligible, true)
+assert.equal(state.planChoice, '')
+await assert.rejects(() => command({ action: 'complete' }))
+await assert.rejects(() => command({ action: 'plan', choice: 'paid' }))
+await command({ action: 'plan', choice: 'free' })
+const business = { business_name: 'Ready Detail', business_phone: '', business_email: '', business_address: '', timezone: 'America/New_York' }
+await command({ action: 'business', business })
+await Promise.all(Array.from({ length: 5 }, () => command({ action: 'prepare', service: { name: 'Test detail', price: 150 }, client: { name: 'First client' } })))
+const count = async (collection) => (await pb.collection(collection).getList(1, 1, { filter: `organization_id = "${org.id}"` })).totalItems
+assert.equal(await count('packages'), 1)
+assert.equal(await count('clients'), 1)
+state = await command({ action: 'complete' })
+assert.ok(state.completedAt)
+assert.equal((await command({ action: 'read' })).completedAt, state.completedAt)
+const after = await pb.collection('app_settings').getOne(settings.id)
+assert.equal(after.onboarding_step, 2)
+assert.equal(after.onboarding_completed_at, '')
+assert.equal(after.business_name, 'Ready Detail')
+const user = await pb.collection('users').create({ email: `desktop-${suffix}@example.test`, password: 'DesktopTestPassword123', passwordConfirm: 'DesktopTestPassword123', organization_id: org.id, verified: true })
+const client = new PocketBase(url)
+await client.collection('users').authWithPassword(user.email, 'DesktopTestPassword123')
+await assert.rejects(() => client.send('/api/rinse/desktop-onboarding', { method: 'POST', body: { orgId: org.id, action: 'complete' } }))
+await assert.rejects(() => client.collection('desktop_onboarding').getList(1, 1))
+await assert.rejects(() => client.collection('organizations').update(org.id, { desktop_onboarding_candidate: false }))
+// Model existing organizations explicitly; the migration leaves their flag false.
+const old = await pb.collection('organizations').create({ name: 'Existing', slug: `existing-${suffix}`, plan: 'free' })
+await pb.collection('organizations').update(old.id, { desktop_onboarding_candidate: false })
+// Existing organizations with no settings must remain exempt, and can opt into setup.
+const oldCommand = (action) => pb.send('/api/rinse/desktop-onboarding', { method: 'POST', body: { orgId: old.id, action } })
+assert.equal((await oldCommand('read')).eligible, false)
+assert.equal((await oldCommand('start')).eligible, true)
+await pb.send('/api/rinse/desktop-onboarding', { method: 'POST', body: { orgId: old.id, action: 'plan', choice: 'free' } })
+await pb.send('/api/rinse/desktop-onboarding', { method: 'POST', body: { orgId: old.id, action: 'business', business } })
+assert.equal((await pb.collection('app_settings').getList(1, 1, { filter: `organization_id = "${old.id}"` })).totalItems, 1)
+const reservation = await pb.send('/api/rinse/billing', { method: 'POST', body: { action: 'reserve', orgId: org.id, provider: 'stripe', returnContext: 'desktop_onboarding' } })
+const again = await pb.send('/api/rinse/billing', { method: 'POST', body: { action: 'reserve', orgId: org.id, provider: 'stripe' } })
+assert.equal(reservation.return_context, 'desktop_onboarding')
+assert.equal(again.return_context, 'desktop_onboarding')
+const packages = await pb.collection('packages').getFullList({ filter: `organization_id = "${org.id}"` })
+const clients = await pb.collection('clients').getFullList({ filter: `organization_id = "${org.id}"` })
+const job = { organization_id: org.id, package_id: packages[0].id, client_id: clients[0].id, revenue: 150, status: 'scheduled', date: '2026-10-01', vehicle_type: 'sedan', location_type: 'mobile' }
+const attempts = await Promise.allSettled(Array.from({ length: 8 }, () => pb.collection('jobs').create(job)))
+if (!attempts.some((r) => r.status === 'fulfilled')) console.log(attempts[0].reason.response)
+assert.equal(attempts.filter((r) => r.status === 'fulfilled').length, 5)
+for (const plan of ['starter', 'early', 'founding']) {
+  await pb.collection('organizations').update(org.id, { plan, founding_member: plan === 'founding', subscription_status: 'active', current_period_end: '2035-01-01' })
+  await pb.collection('jobs').create(job)
+}
+console.log('PASS: persisted setup, prerequisites, concurrent idempotency, unchanged shared onboarding, access control, existing-account exemption, checkout context reuse, Free cap and paid exemptions')

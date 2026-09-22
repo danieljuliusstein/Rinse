@@ -28,13 +28,24 @@ export async function appApiFetch(path: string, init: RequestInit = {}): Promise
   }
   headers.set('Authorization', `Bearer ${authToken()}`)
 
+  const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
+  // #region agent log
+  fetch('http://127.0.0.1:7479/ingest/b8b91f35-a35e-496d-9234-45074f0471db',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'496ba6'},body:JSON.stringify({sessionId:'496ba6',runId:'pre-fix',hypothesisId:'H1',location:'rinse-desk/src/lib/app-api.ts:appApiFetch',message:'appApiFetch attempt',data:{base,path,method:init.method||'GET',urlHost:(()=>{try{return new URL(url).host}catch{return 'invalid'}})()},timestamp:Date.now()})}).catch(()=>{})
+  // #endregion
   try {
-    return await fetch(`${base}${path.startsWith('/') ? path : `/${path}`}`, {
+    const res = await fetch(url, {
       ...init,
       headers,
     })
+    // #region agent log
+    fetch('http://127.0.0.1:7479/ingest/b8b91f35-a35e-496d-9234-45074f0471db',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'496ba6'},body:JSON.stringify({sessionId:'496ba6',runId:'pre-fix',hypothesisId:'H3',location:'rinse-desk/src/lib/app-api.ts:appApiFetch:ok',message:'appApiFetch response',data:{base,path,status:res.status,ok:res.ok},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
+    return res
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Request failed'
+    // #region agent log
+    fetch('http://127.0.0.1:7479/ingest/b8b91f35-a35e-496d-9234-45074f0471db',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'496ba6'},body:JSON.stringify({sessionId:'496ba6',runId:'pre-fix',hypothesisId:'H1',location:'rinse-desk/src/lib/app-api.ts:appApiFetch:catch',message:'appApiFetch network error',data:{base,path,errorName:err instanceof Error?err.name:'unknown',errorMessage:msg},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
     throw new AppApiError(`Can't reach API at ${base}. ${msg}`, 0)
   }
 }
