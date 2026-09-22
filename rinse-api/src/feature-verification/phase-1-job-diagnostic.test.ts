@@ -13,9 +13,11 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import PocketBase, { ClientResponseError } from 'pocketbase'
-import { createIntegrationAccount, deleteIntegrationAccount } from './pocketbase-integration'
+import { createIntegrationAccount, deleteIntegrationAccount, hasPocketBaseIntegrationConfig } from './pocketbase-integration'
 
-describe('Phase 1: Job Creation Diagnostics', () => {
+const integration = hasPocketBaseIntegrationConfig()
+
+describe.skipIf(!integration)('Phase 1: Job Creation Diagnostics', () => {
   const accounts: Awaited<ReturnType<typeof createIntegrationAccount>>[] = []
   let testAccount: Awaited<ReturnType<typeof createIntegrationAccount>>
 

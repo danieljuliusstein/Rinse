@@ -10,9 +10,11 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import PocketBase, { ClientResponseError } from 'pocketbase'
-import { createIntegrationAccount, deleteIntegrationAccount, isPocketBaseUnauthorized } from './pocketbase-integration'
+import { createIntegrationAccount, deleteIntegrationAccount, isPocketBaseUnauthorized, hasPocketBaseIntegrationConfig } from './pocketbase-integration'
 
-describe('Phase 3: Cross-Tenant Authorization Matrix', () => {
+const integration = hasPocketBaseIntegrationConfig()
+
+describe.skipIf(!integration)('Phase 3: Cross-Tenant Authorization Matrix', () => {
   const accounts: Awaited<ReturnType<typeof createIntegrationAccount>>[] = []
   let orgA: Awaited<ReturnType<typeof createIntegrationAccount>>
   let orgB: Awaited<ReturnType<typeof createIntegrationAccount>>
@@ -250,13 +252,9 @@ describe('Phase 3: Cross-Tenant Authorization Matrix', () => {
         client_id: clientA.id,
         organization_id: orgA.organizationId,
         invoice_number: 'INV-SECURE',
-        issue_date: '2026-10-05',
-        due_date: '2026-11-05',
         status: 'draft',
         subtotal: 100,
         total: 100,
-        tax: 0,
-        discount: 0,
         tip: 0,
         balance_due: 100,
       })

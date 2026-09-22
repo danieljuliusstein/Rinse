@@ -96,7 +96,7 @@ describe.skipIf(!integration)('PocketBase persistence and tenant integration', (
     }
   })
 
-  it.skip('persists a public booking, linked client, job, and lead', async () => {
+  it('persists a public booking, linked client, job, and lead', async () => {
     const account = await createIntegrationAccount(`booking-${Date.now()}`)
     accounts.push(account)
     const pkgRecord = await account.pb.collection('packages').create({
