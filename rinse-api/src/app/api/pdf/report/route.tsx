@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { ClientResponseError } from 'pocketbase'
 import { renderToBuffer } from '@react-pdf/renderer'
 import ReportPdfDocument from '@/components/pdf/ReportPdfDocument'
 import { resolveInvoiceLogoDataUri } from '@/lib/invoice-logo-server'
@@ -45,6 +46,12 @@ export async function POST(request: Request) {
   } catch (err) {
     if (err instanceof PdfDataError) {
       return NextResponse.json({ error: err.message }, { status: err.status })
+    }
+    if (err instanceof ClientResponseError && (err.status === 404 || err.status === 403)) {
+      // See pdf/invoice/route.tsx — a cross-org read never reaches the
+      // explicit assertOrgRecord check; PocketBase's own tenant rule hides
+      // the record first and returns 404.
+      return NextResponse.json({ error: 'Not found' }, { status: err.status })
     }
     console.error('[api/pdf/report]', err)
     return NextResponse.json(

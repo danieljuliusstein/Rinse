@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { ClientResponseError } from 'pocketbase'
 import { renderToBuffer } from '@react-pdf/renderer'
 import InvoicePdfDocument from '@/components/pdf/InvoicePdfDocument'
 import { resolveInvoiceLogoDataUri } from '@/lib/invoice-logo-server'
@@ -56,6 +57,16 @@ export async function POST(request: Request) {
     if (err instanceof PdfDataError) {
       return withDeskCors(
         NextResponse.json({ error: err.message }, { status: err.status }),
+        request,
+      )
+    }
+    if (err instanceof ClientResponseError && (err.status === 404 || err.status === 403)) {
+      // A cross-org fetchInvoicePdfData read never reaches assertOrgRecord's
+      // explicit 403 — the tenant-scoped PocketBase client's own list/view
+      // rule already hides the record, so PocketBase itself returns 404
+      // first. Pass that status through instead of defaulting to 500.
+      return withDeskCors(
+        NextResponse.json({ error: 'Not found' }, { status: err.status }),
         request,
       )
     }
