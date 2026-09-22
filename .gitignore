@@ -9,6 +9,7 @@ dist
 ios/build
 android/build
 **/pb_data/
+.feature-pb/
 archive/*.tgz
 
 # Env files: ignored everywhere except templates
