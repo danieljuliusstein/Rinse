@@ -40,7 +40,7 @@ export async function createIntegrationAccount(runId: string): Promise<Integrati
   const organization = await admin.collection('organizations').create({
     name: `Feature Verification ${suffix}`,
     slug: `feature-verification-${suffix}`.slice(0, 48),
-    plan: 'pro',
+    plan: 'founding',
     founding_member: true,
     booking_enabled: true,
     subscription_status: 'active',
