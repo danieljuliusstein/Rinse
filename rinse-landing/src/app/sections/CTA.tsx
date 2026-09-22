@@ -1,4 +1,3 @@
-import { PRIMARY_CTA } from '../shared/urls';
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { SECTIONS } from "../shared/scroll";
 import { FadeUpWhenVisible } from "../shared/motion";
@@ -34,7 +33,7 @@ export function CTASection({
             <div className="relative">
               <div className="inline-flex items-center gap-2 text-[10px] font-mono text-[#4bac50] border border-[#4bac50]/25 bg-[#4bac50]/10 px-3 py-1.5 rounded-full mb-6">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#4bac50] animate-pulse" />
-                Coming to iOS · A Free plan will be available
+                Free 14-day trial · No credit card required
               </div>
               <h2 className="text-4xl lg:text-6xl font-bold text-neutral-900 tracking-tight mb-5">
                 Run your business
@@ -42,22 +41,22 @@ export function CTASection({
                 like the pros do.
               </h2>
               <p className="text-base lg:text-lg text-black/40 max-w-xl mx-auto mb-10 leading-relaxed">
-                Start with your clients, jobs and invoices in one place.
-                Join the waitlist and we’ll let you know when Rinse is ready for iOS.
+                Join 2,400+ detailing businesses using Rinse to book more, earn
+                more, and build something worth owning.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   onClick={onStartTrial}
                   className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] text-white text-sm font-semibold px-6 py-3 rounded-xl"
                 >
-                  {PRIMARY_CTA}
+                  Start your free trial
                   <ArrowRight size={15} />
                 </button>
                 <button
                   onClick={onBookDemo}
                   className="flex items-center gap-2 text-black/50 hover:text-neutral-900 transition-colors ease-[cubic-bezier(0.16,1,0.3,1)] text-sm font-semibold px-6 py-3"
                 >
-                  Take a walkthrough
+                  Book a 15-min demo
                   <ChevronRight size={14} />
                 </button>
               </div>

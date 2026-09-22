@@ -9,5 +9,5 @@ export const SECTIONS = {
 export function scrollToSection(id: string) {
   document
     .getElementById(id)
-    ?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }

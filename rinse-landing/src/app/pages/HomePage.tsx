@@ -15,7 +15,7 @@ export function HomePage({
   onOpenDemo,
   onBookDemo,
 }: {
-  onStartTrial: (interest?: 'free' | 'starter') => void;
+  onStartTrial: () => void;
   onOpenDemo: () => void;
   onBookDemo: () => void;
 }) {
@@ -40,8 +40,8 @@ export function HomePage({
           </FadeUpWhenVisible>
           <FadeUpWhenVisible delay={0.07} className="mb-0">
             <p className="text-base text-black/35 max-w-lg leading-relaxed">
-              Keep your first clients, scheduled jobs and invoices together.
-              Get paid through your connected Stripe account.
+              From the moment a customer books to the second the money hits your
+              account — Rinse handles every step automatically.
             </p>
           </FadeUpWhenVisible>
         </div>
