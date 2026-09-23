@@ -41,7 +41,7 @@ export function PaywallSheet({ visible, mode, featureLabel, onClose, onNotNow }:
   const paidName = earlyAvailable ? EARLY_PLAN.name : STARTER_PLAN.name
 
   const lead = featureLabel ? `${featureLabel} is included in Starter. Free still includes your clients, five active jobs, invoices and customer payments.` : 'Upgrade for unlimited active jobs, booking links, quotes, inventory and reports.'
-  const title = 'Upgrade to Starter'
+  const title = 'Upgrade to Pro'
 
   const handleBilling = () => {
     onClose()

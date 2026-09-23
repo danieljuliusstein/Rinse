@@ -18,7 +18,7 @@ exports.guardJob = (e, creating) => {
     if (old && old.getString('organization_id') !== orgId) throw new ForbiddenError('Cannot move jobs between organizations')
     if (policy.active(record.getString('status')) && !(old && policy.active(old.getString('status'))) && !policy.paid(org)) {
       const count = policy.count(tx, 'jobs', 'organization_id = {:org} && (status = "scheduled" || status = "in_progress")', { org: orgId })
-      if (count >= 5) throw new ForbiddenError('Free includes 5 active jobs. Complete or cancel a job, or upgrade to Starter.')
+      if (count >= 5) throw new ForbiddenError('Free includes 5 active jobs. Complete or cancel a job, or upgrade to Pro.')
     }
     const previousApp = e.app
     e.app = tx

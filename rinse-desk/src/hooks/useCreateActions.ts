@@ -255,7 +255,7 @@ export function useCreateActions() {
         const allowance = await loadJobAllowance()
         if (!allowance.paid && allowance.count >= allowance.limit) {
           const action = await promptChoice({ title: 'Your Free plan is full', message: JOB_CAP_MESSAGE,
-            actions: [{ id: 'upgrade', label: 'Upgrade to Starter', primary: true }, { id: 'jobs', label: 'Manage jobs' }], cancelLabel: 'Not now' })
+            actions: [{ id: 'upgrade', label: 'Upgrade to Pro', primary: true }, { id: 'jobs', label: 'Manage jobs' }], cancelLabel: 'Not now' })
           if (action === 'upgrade') openSettings('account')
           if (action === 'jobs') setPage('calendar')
           return null

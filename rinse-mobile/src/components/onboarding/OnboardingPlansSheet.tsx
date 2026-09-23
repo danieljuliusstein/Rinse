@@ -182,7 +182,7 @@ export function OnboardingPlansSheet({
                   : 'Opening checkout…'
                 : earlyAvailable
                   ? `Upgrade · ${EARLY_PLAN.priceLabel}`
-                  : 'Upgrade to Starter'
+                  : 'Upgrade to Pro'
             }
             onPress={handleSubscribePress}
             disabled={checkoutBusy || busy}

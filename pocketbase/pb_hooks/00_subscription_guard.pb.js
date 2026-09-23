@@ -24,13 +24,13 @@ onRecordCreateRequest((e) => {
 }, 'users')
 onRecordCreate((e) => {
   const org = e.app.findRecordById('organizations', e.record.getString('organization_id'))
-  if (!require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Starter required')
+  if (!require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Pro required')
   e.next()
 }, 'quotes', 'leads')
 onRecordCreateRequest((e) => {
   if (!e.hasSuperuserAuth()) {
     const org = e.app.findRecordById('organizations', e.record.getString('organization_id'))
-    if (e.record.getString('scope') !== 'invoice' && !require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Starter required')
+    if (e.record.getString('scope') !== 'invoice' && !require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Pro required')
   }
   e.next()
 }, 'portal_tokens')
@@ -38,7 +38,7 @@ onRecordCreateRequest((e) => {
 onRecordUpdateRequest((e) => {
   if (!e.hasSuperuserAuth()) {
     const org = e.app.findRecordById('organizations', e.record.getString('organization_id'))
-    if (e.record.getString('scope') !== 'invoice' && !require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Starter required')
+    if (e.record.getString('scope') !== 'invoice' && !require(__hooks + '/pricing.js').paid(org)) throw new ForbiddenError('Pro required')
   }
   e.next()
 }, 'portal_tokens')

@@ -36,7 +36,7 @@ export function formatPbError(err: unknown, fallback = 'Request failed'): string
       (typeof err.response?.message === 'string' && err.response.message) ||
       err.message ||
       ''
-    if (detail.startsWith('Free includes 5 active jobs.')) return 'Free includes 5 active jobs. Complete or cancel a job, or open Settings → Account → Billing to upgrade to Starter.'
+    if (detail.startsWith('Free includes 5 active jobs.')) return 'Free includes 5 active jobs. Complete or cancel a job, or open Settings → Account → Billing to upgrade to Pro.'
     if (err.status === 401 || err.status === 403) {
       return 'Session expired or not allowed. Sign out and sign back in.'
     }

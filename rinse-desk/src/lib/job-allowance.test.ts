@@ -44,7 +44,7 @@ describe("job allowance", () => {
       isJobCapError({
         response: {
           message:
-            "Free includes 5 active jobs. Complete or cancel a job, or upgrade to Starter.",
+            "Free includes 5 active jobs. Complete or cancel a job, or upgrade to Pro.",
         },
       }),
     ).toBe(true)

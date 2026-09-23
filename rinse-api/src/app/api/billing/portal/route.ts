@@ -13,6 +13,27 @@ function stripeErrorMessage(e: unknown): string {
   return 'Could not open billing portal'
 }
 
+function portalReturnUrl(request: Request, context?: string): string {
+  if (context === 'desktop_onboarding') {
+    const configured = process.env.DESKTOP_APP_ORIGIN?.trim()
+    if (!configured) throw new Error('Desktop checkout return is not configured')
+    const url = new URL(configured)
+    if (
+      url.username ||
+      url.password ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash ||
+      (url.protocol !== 'https:' &&
+        !(url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)))
+    ) {
+      throw new Error('Desktop checkout requires a trusted HTTPS origin (or localhost)')
+    }
+    return `${url.origin}/?desktop_billing=manage`
+  }
+  return `${stripeAppOrigin(request)}/billing/return`
+}
+
 export async function POST(request: Request) {
   try {
     if (!isStripeConfigured()) {
@@ -29,6 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 })
     }
 
+    const body = (await request.json().catch(() => ({}))) as { context?: string }
     const admin = await authenticateServerAdmin()
     const org = await admin.collection('organizations').getOne<PbRecord>(auth.organizationId)
     const customerId = String(org.stripe_customer_id ?? '').trim()
@@ -43,7 +65,7 @@ export async function POST(request: Request) {
     const session = await stripe.billingPortal.sessions.create({
       configuration,
       customer: customerId,
-      return_url: `${stripeAppOrigin(request)}/billing/return`,
+      return_url: portalReturnUrl(request, body.context),
     })
 
     return NextResponse.json({ url: session.url })

@@ -13,7 +13,7 @@ routerAdd('POST', '/api/rinse/billing', (e) => {
     let checkout = findCheckout()
     const now = Date.now()
     if (data.action === 'reserve') {
-      if (org.get('founding_member') || ['pending', 'active', 'past_due'].indexOf(org.getString('subscription_status')) >= 0) throw new BadRequestError('Manage your existing subscription before purchasing another')
+      if (org.get('founding_member') || ['pending', 'active', 'past_due', 'trialing'].indexOf(org.getString('subscription_status')) >= 0) throw new BadRequestError('Manage your existing subscription before purchasing another')
       if (checkout && checkout.getString('state') === 'pending' && checkout.getFloat('expires_at') > now) {
         if (checkout.getString('provider') !== data.provider) throw new BadRequestError('A checkout is already pending with another provider')
         result = checkout.publicExport(); return
@@ -28,7 +28,8 @@ routerAdd('POST', '/api/rinse/billing', (e) => {
       checkout.set('state', 'pending')
       checkout.set('session_id', '')
       checkout.set('generation', checkout.getFloat('generation') + 1)
-      checkout.set('expires_at', now + (data.provider === 'apple' ? 86400000 : 2100000))
+      // Stripe Checkout requires expires_at >= now+30m; keep seat longer so session can end 5m before seat expiry.
+      checkout.set('expires_at', now + (data.provider === 'apple' ? 86400000 : 2700000))
       tx.save(checkout)
       result = checkout.publicExport(); return
     }

@@ -15,5 +15,5 @@ export function billingMenuSubtitle(org: OrgSubscription | null, ..._args: unkno
  if (!org) return 'Plan and subscription'
  if (isFoundingMember(org)) return 'Founding · lifetime Starter'
  if (!hasStarterAccess(org)) return 'Free plan'
- return `${org.plan === 'early' ? 'Early · $3/mo' : 'Starter · $6/mo'}${org.cancel_at_period_end ? ' · returns to Free at period end' : ''}`
+ return `${org.plan === 'early' ? 'Early · $3/mo' : 'Pro · $6/mo'}${org.cancel_at_period_end ? ' · returns to Free at period end' : ''}`
 }

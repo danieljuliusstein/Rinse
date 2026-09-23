@@ -14,3 +14,11 @@ export async function startDesktopCheckout() {
   })
   window.location.assign(result.url)
 }
+
+export async function startDesktopBillingPortal() {
+  const result = await appApiJson<{ url: string }>("/api/billing/portal", {
+    method: "POST",
+    body: JSON.stringify({ context: "desktop_onboarding" }),
+  })
+  window.location.assign(result.url)
+}

@@ -37,7 +37,7 @@ export function hasStarterAccess(org: OrgSubscription | null, now = new Date()):
   return !!end && end > now
 }
 export const isSubscriptionActive = hasStarterAccess
-/** Former Pro capabilities are included in Starter. */
+/** Paid plan access (display name: Pro; billing id remains `starter`). */
 export const isProPlan = hasStarterAccess
 export const FREE_ACTIONS = ['create_job', 'create_invoice', 'send_invoice', 'invoice_pdf', 'invoice_payment'] as const
 export function canPerform(org: OrgSubscription | null, action: string, now = new Date()): boolean {
@@ -47,8 +47,8 @@ export function canActivateJob(org: OrgSubscription, activeCount: number, wasAct
   return !countsTowardActiveJobLimit(status) || wasActive || hasStarterAccess(org) || activeCount < FREE_ACTIVE_JOB_LIMIT
 }
 export const FREE_PLAN = { id: 'free', name: 'Free', priceLabel: '$0', tagline: 'Get organized and get paid.', features: ['Clients & vehicle profiles', 'Up to 5 active jobs', 'Basic scheduling & job notes', 'Invoices, invoice PDFs & customer payments', 'Business profile & settings'] } as const
-export const STARTER_PLAN = { id: 'starter', name: 'Starter', priceLabel: '$6/mo', listPriceLabel: '$6/mo', tagline: 'More tools as your detailing business grows.', features: ['Unlimited active jobs', 'Public booking link and website booking widget', 'Lead pipeline, quotes and full client portal', 'Inventory & supplies with low-stock alerts', 'Expenses, overhead, revenue and profit reports', 'Your logo and accent on booking and portal pages', 'Email auto-messages and editable templates', 'Receipt scan and custom report ranges', 'Priority email support'] } as const
-export const EARLY_PLAN = { id: 'early', name: 'Early', priceLabel: '$3/mo', listPriceLabel: '$6/mo', tagline: 'Starter at $3/month for the first 100 qualifying paying operators, while continuously subscribed.', features: STARTER_PLAN.features } as const
-export const FOUNDING_PLAN = { id: 'founding', name: 'Founding', priceLabel: '$0', listPriceLabel: '$6/mo', tagline: 'Lifetime Starter, personally granted by the owner.', features: ['Lifetime Starter access', 'Founding member badge'] } as const
+export const STARTER_PLAN = { id: 'starter', name: 'Pro', priceLabel: '$6/mo', listPriceLabel: '$6/mo', tagline: 'More tools as your detailing business grows.', features: ['Unlimited active jobs', 'Public booking link and website booking widget', 'Lead pipeline, quotes and full client portal', 'Inventory & supplies with low-stock alerts', 'Expenses, overhead, revenue and profit reports', 'Your logo and accent on booking and portal pages', 'Email auto-messages and editable templates', 'Receipt scan and custom report ranges', 'Priority email support'] } as const
+export const EARLY_PLAN = { id: 'early', name: 'Early', priceLabel: '$3/mo', listPriceLabel: '$6/mo', tagline: 'Pro at $3/month for the first 100 qualifying paying operators, while continuously subscribed.', features: STARTER_PLAN.features } as const
+export const FOUNDING_PLAN = { id: 'founding', name: 'Founding', priceLabel: '$0', listPriceLabel: '$6/mo', tagline: 'Lifetime Pro, personally granted by the owner.', features: ['Lifetime Pro access', 'Founding member badge'] } as const
 export const PLAN_OPTIONS = [FREE_PLAN, STARTER_PLAN] as const
-export const PLAN_LABELS: Record<string, string> = { free: 'Free', starter: 'Starter', early: 'Early', founding: 'Founding' }
+export const PLAN_LABELS: Record<string, string> = { free: 'Free', starter: 'Pro', early: 'Early', founding: 'Founding' }

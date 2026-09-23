@@ -41,9 +41,6 @@ async function handle(request: Request, writing: boolean) {
     })
   } catch (error) {
     const status = (error as { status?: number }).status
-    // #region agent log
-    fetch('http://127.0.0.1:7479/ingest/b8b91f35-a35e-496d-9234-45074f0471db',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'496ba6'},body:JSON.stringify({sessionId:'496ba6',runId:'post-fix',hypothesisId:'H6',location:'rinse-api/.../desktop/onboarding/route.ts:catch',message:'desktop onboarding handler error',data:{status:status??null,errorName:error instanceof Error?error.name:'unknown',errorMessage:error instanceof Error?error.message:String(error),pbStatus:(error as {status?:number})?.status??null,pbMessage:(error as {response?:{message?:string}})?.response?.message??null,hasAdminEmail:!!process.env.PB_ADMIN_EMAIL,pbUrlHost:(()=>{try{return new URL(process.env.PB_URL||process.env.NEXT_PUBLIC_PB_URL||'').host}catch{return 'invalid'}})()},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
     return json(
       {
         error:

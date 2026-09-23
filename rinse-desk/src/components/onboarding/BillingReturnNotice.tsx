@@ -38,7 +38,7 @@ export function BillingReturnNotice() {
       clearTimeout(timer)
     }
   }, [result, retry])
-  if (!["success", "cancel"].includes(result || "")) return null
+  if (!["success", "cancel", "manage"].includes(result || "")) return null
   return (
     <aside
       className="mx-6 mt-4 rounded-xl border border-ink-200 bg-white p-4 flex flex-wrap gap-4 items-center"
@@ -47,6 +47,8 @@ export function BillingReturnNotice() {
       <p role="status" className="text-sm flex-1">
         {result === "cancel"
           ? "Checkout was canceled. Your plan has not changed."
+          : result === "manage"
+            ? "Returned from billing management. Your current plan is shown in Settings."
           : message}
       </p>
       {result === "success" && (

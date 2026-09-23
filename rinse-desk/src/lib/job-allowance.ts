@@ -31,4 +31,4 @@ export function isJobCapError(error: unknown): boolean {
   )
 }
 export const JOB_CAP_MESSAGE =
-  "Free includes 5 active jobs. Complete or cancel a job, or open Settings → Account → Billing to upgrade to Starter."
+  "Free includes 5 active jobs. Complete or cancel a job, or open Settings → Account → Billing to upgrade to Pro."

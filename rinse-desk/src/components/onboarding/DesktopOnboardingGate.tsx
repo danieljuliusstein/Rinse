@@ -42,20 +42,11 @@ export function DesktopOnboardingGate({
   useEffect(() => {
     let alive = true
     setError("")
-    // #region agent log
-    fetch('http://127.0.0.1:7479/ingest/b8b91f35-a35e-496d-9234-45074f0471db',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'496ba6'},body:JSON.stringify({sessionId:'496ba6',runId:'pre-fix',hypothesisId:'H5',location:'DesktopOnboardingGate.tsx:useEffect',message:'loadDesktopSetup start',data:{retry},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
     void loadDesktopSetup()
       .then((value) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7479/ingest/b8b91f35-a35e-496d-9234-45074f0471db',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'496ba6'},body:JSON.stringify({sessionId:'496ba6',runId:'pre-fix',hypothesisId:'H2',location:'DesktopOnboardingGate.tsx:then',message:'loadDesktopSetup success',data:{enabled:value.enabled,eligible:value.eligible,hasCompleted:!!value.completedAt},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
         if (alive) setState(value)
       })
-      .catch((err: unknown) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7479/ingest/b8b91f35-a35e-496d-9234-45074f0471db',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'496ba6'},body:JSON.stringify({sessionId:'496ba6',runId:'pre-fix',hypothesisId:'H1',location:'DesktopOnboardingGate.tsx:catch',message:'loadDesktopSetup failed',data:{errorMessage:err instanceof Error?err.message:String(err),errorName:err instanceof Error?err.name:'unknown'},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
+      .catch(() => {
         if (alive)
           setError("Could not load setup. Check your connection and retry.")
       })
@@ -299,8 +290,8 @@ function DesktopOnboardingFlow({
                 <>
                   <p className="font-semibold">
                     {org?.plan === "founding"
-                      ? "Founding · lifetime Starter"
-                      : "Starter access"}{" "}
+                      ? `Founding · lifetime ${STARTER_PLAN.name}`
+                      : `${STARTER_PLAN.name} access`}{" "}
                     · Unlimited active jobs
                   </p>
                   <button
@@ -341,7 +332,7 @@ function DesktopOnboardingFlow({
                   </div>
                   <div className="rounded-xl border border-brand-200 p-5 space-y-4">
                     <h2 className="font-semibold">
-                      Starter ·{" "}
+                      {STARTER_PLAN.name} ·{" "}
                       {pricing
                         ? pricing.offer === "early"
                           ? pricing.early.priceLabel
@@ -364,7 +355,7 @@ function DesktopOnboardingFlow({
                       className={primary}
                       onClick={() => void run(startDesktopCheckout)}
                     >
-                      Upgrade to Starter
+                      Upgrade to {STARTER_PLAN.name}
                     </button>
                   </div>
                 </div>
