@@ -12,9 +12,9 @@ import 'leaflet/dist/leaflet.css'
 import { colors } from '@/theme/colors'
 import type { DeskJob } from '@/lib/types'
 
-/** Carto Voyager via same-origin proxy (Vite locally, Vercel rewrite in prod).
- * No Mapbox/Google tile key. `{r}` → `@2x` on retina for 512px Carto tiles. */
-const TILE_URL = '/map-tiles/carto/{z}/{x}/{y}{r}.png'
+/** OSM raster via same-origin proxy (Vite locally, Vercel rewrite in prod).
+ * Carto basemaps now watermark without an API key — do not use cartocdn. */
+const TILE_URL = '/map-tiles/osm/{z}/{x}/{y}.png'
 
 type Props = {
   jobs: DeskJob[]
@@ -161,7 +161,7 @@ export default function RouteMap({
         <AttributionControl position="bottomleft" prefix={false} />
         <TileLayer
           url={TILE_URL}
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           maxZoom={19}
           maxNativeZoom={19}
         />

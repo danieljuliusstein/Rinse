@@ -37,11 +37,11 @@
         document.getElementById('log').textContent += '\n' + m
       }
       const map = L.map('map').setView([33.749, -84.388], 12)
-      L.tileLayer('/map-tiles/carto/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('/map-tiles/osm/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '© OSM © CARTO',
+        attribution: '© OpenStreetMap',
       }).addTo(map)
-      map.whenReady(() => log('Leaflet ready — streets via /map-tiles/carto'))
+      map.whenReady(() => log('Leaflet ready — streets via /map-tiles/osm'))
     </script>
   </body>
 </html>
