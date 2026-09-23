@@ -29,6 +29,29 @@ function todayKey(now = new Date()): string {
   return isoDate(now)
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Open-Meteo is unauthenticated and unthrottled by us, and transient
+// failures (timeouts, connection resets, brief 5xx/429s) are common from
+// shared/cloud egress IPs — confirmed happening in CI. A single retry with
+// a short backoff turns a transient hiccup back into a correct result
+// instead of a silent null, both for real users (a weather-readiness
+// feature degrading on every blip is a real reliability gap) and for tests.
+async function fetchJsonWithRetry(url: string, revalidateSeconds: number): Promise<unknown | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, { next: { revalidate: revalidateSeconds } })
+      if (res.ok) return await res.json()
+    } catch {
+      // fall through to retry/return null below
+    }
+    if (attempt === 0) await sleep(400)
+  }
+  return null
+}
+
 async function geocodePlaceName(name: string): Promise<GeoCoords | null> {
   const url = new URL('https://geocoding-api.open-meteo.com/v1/search')
   url.searchParams.set('name', name)
@@ -36,18 +59,12 @@ async function geocodePlaceName(name: string): Promise<GeoCoords | null> {
   url.searchParams.set('language', 'en')
   url.searchParams.set('format', 'json')
 
-  try {
-    const res = await fetch(url.toString(), { next: { revalidate: 86400 } })
-    if (!res.ok) return null
-    const data = (await res.json()) as {
-      results?: Array<{ latitude?: number; longitude?: number }>
-    }
-    const hit = data.results?.[0]
-    if (hit?.latitude == null || hit?.longitude == null) return null
-    return { lat: hit.latitude, lon: hit.longitude }
-  } catch {
-    return null
-  }
+  const data = (await fetchJsonWithRetry(url.toString(), 86400)) as {
+    results?: Array<{ latitude?: number; longitude?: number }>
+  } | null
+  const hit = data?.results?.[0]
+  if (hit?.latitude == null || hit?.longitude == null) return null
+  return { lat: hit.latitude, lon: hit.longitude }
 }
 
 /**
@@ -103,37 +120,33 @@ export async function fetchDayForecast(
   url.searchParams.set('start_date', date)
   url.searchParams.set('end_date', date)
 
-  try {
-    const res = await fetch(url.toString(), { next: { revalidate: 1800 } })
-    if (!res.ok) return null
-    const data = (await res.json()) as {
-      daily?: {
-        time?: string[]
-        precipitation_probability_max?: Array<number | null>
-        weather_code?: Array<number | null>
-        temperature_2m_max?: Array<number | null>
-      }
+  const data = (await fetchJsonWithRetry(url.toString(), 1800)) as {
+    daily?: {
+      time?: string[]
+      precipitation_probability_max?: Array<number | null>
+      weather_code?: Array<number | null>
+      temperature_2m_max?: Array<number | null>
     }
-    const times = data.daily?.time ?? []
-    const idx = times.indexOf(date)
-    if (idx < 0) return null
+  } | null
+  if (!data) return null
 
-    const precip = data.daily?.precipitation_probability_max?.[idx]
-    const code = data.daily?.weather_code?.[idx]
-    const temp = data.daily?.temperature_2m_max?.[idx]
-    if (precip == null || code == null || temp == null) return null
+  const times = data.daily?.time ?? []
+  const idx = times.indexOf(date)
+  if (idx < 0) return null
 
-    const forecast: DayForecast = {
-      date,
-      precipChance: precip,
-      tempMaxF: temp,
-      weatherCode: code,
-    }
-    await writeForecastCache(key, day, forecast)
-    return forecast
-  } catch {
-    return null
+  const precip = data.daily?.precipitation_probability_max?.[idx]
+  const code = data.daily?.weather_code?.[idx]
+  const temp = data.daily?.temperature_2m_max?.[idx]
+  if (precip == null || code == null || temp == null) return null
+
+  const forecast: DayForecast = {
+    date,
+    precipChance: precip,
+    tempMaxF: temp,
+    weatherCode: code,
   }
+  await writeForecastCache(key, day, forecast)
+  return forecast
 }
 
 /**

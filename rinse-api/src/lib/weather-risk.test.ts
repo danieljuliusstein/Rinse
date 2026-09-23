@@ -203,7 +203,7 @@ describe('geocodeQueryCandidates', () => {
     const { geocodeQueryCandidates } = await import('./weather-risk')
     expect(geocodeQueryCandidates('1420 Peachtree St NE, Atlanta, GA 30309')).toEqual([
       'Atlanta',
-      'Atlanta GA',
+      'Atlanta, GA',
       '1420 Peachtree St NE, Atlanta, GA 30309',
     ])
   })

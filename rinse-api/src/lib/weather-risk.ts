@@ -347,11 +347,21 @@ export function geocodeQueryCandidates(address: string): string[] {
     const city = parts[parts.length - 2]
     if (city) candidates.push(city)
 
-    // "Atlanta GA" (state without comma zip)
+    // "Atlanta, GA" (state without zip, comma-joined — Open-Meteo's
+    // geocoding needs the comma to parse this as city+region. A
+    // space-joined "Atlanta GA" either returns zero results, or worse,
+    // silently matches an unrelated place in another country whose name
+    // happens to start the same way: querying "San Francisco CA"
+    // (no comma) returns "San Francisco Cajonos" in Oaxaca, Mexico
+    // (confirmed against the live API) instead of Atlanta/San
+    // Francisco/etc in the US — a wrong-but-confident 200 response, not a
+    // miss. Comma-joined is what Open-Meteo's own search actually expects
+    // (confirmed "San Francisco, CA" and "Springfield, IL" both resolve
+    // correctly with it).
     const region = parts[parts.length - 1]?.replace(/\b\d{5}(-\d{4})?\b/g, '').trim()
     if (city && region) {
       const state = region.split(/\s+/)[0]
-      if (state && state.length <= 3) candidates.push(`${city} ${state}`)
+      if (state && state.length <= 3) candidates.push(`${city}, ${state}`)
     }
   }
 
