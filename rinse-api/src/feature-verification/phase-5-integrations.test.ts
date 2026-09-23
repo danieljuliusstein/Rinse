@@ -383,9 +383,18 @@ describe.skipIf(!integration)('Phase 5: External Integrations', () => {
     process.env.VAPID_PRIVATE_KEY = vapidKeys.privateKey
     process.env.VAPID_SUBJECT = 'mailto:feature-verification@example.test'
 
+    // sendPushNotificationForOrg() reads settings via
+    // authenticateServerPocketBase()'s shared module-level singleton (see
+    // Phase 7), which needs its own PB_EMAIL/PB_PASSWORD — without it, this
+    // test only "passed" by accident when an earlier test in the same file
+    // happened to leave the singleton authenticated as superuser. Made
+    // properly self-contained here, same as Phase 7's cron tests.
+    const previousPb = { email: process.env.PB_EMAIL, password: process.env.PB_PASSWORD }
     try {
       const account = await createIntegrationAccount(`push-${Date.now()}`)
       accounts.push(account)
+      process.env.PB_EMAIL = account.email
+      process.env.PB_PASSWORD = account.password
 
       // A syntactically real push subscription (matches the browser Push
       // API's shape exactly) pointed at a real push-service host, but with
@@ -410,6 +419,9 @@ describe.skipIf(!integration)('Phase 5: External Integrations', () => {
         },
       })
 
+      const { getServerPocketBase } = await import('../lib/server/pocketbase-admin')
+      getServerPocketBase()?.authStore.clear()
+
       const { sendPushNotificationForOrg } = await import('../lib/server/push')
       const result = await sendPushNotificationForOrg(account.organizationId, {
         title: 'Feature verification',
@@ -423,6 +435,8 @@ describe.skipIf(!integration)('Phase 5: External Integrations', () => {
       expect(result.sent + result.failed).toBe(1)
       expect(result.failed).toBeGreaterThanOrEqual(0)
     } finally {
+      process.env.PB_EMAIL = previousPb.email
+      process.env.PB_PASSWORD = previousPb.password
       process.env.VAPID_PUBLIC_KEY = previous.pub
       process.env.VAPID_PRIVATE_KEY = previous.priv
       process.env.VAPID_SUBJECT = previous.subj

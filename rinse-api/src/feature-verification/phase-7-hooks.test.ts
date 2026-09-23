@@ -68,11 +68,19 @@ describe.skipIf(!integration)('Phase 7: Server Hooks and Cron', () => {
     expect(afterPaid.quantity_on_hand).toBe(8)
   })
 
-  it('subscription guard rejects create for a non-founding org with an inactive subscription', async () => {
+  it('subscription guard enforces the free tier: 5 active jobs, then blocked, for a non-paid org', async () => {
     // Everywhere else in this suite uses createIntegrationAccount(), whose
     // fixture org is always founding_member=true — which bypasses the guard.
-    // This is the one test that actually exercises the rejection path with a
-    // real non-founding, inactive-subscription organization.
+    // This is the one test that exercises a real non-paid organization.
+    //
+    // Read pocketbase/pb_hooks/pricing.js directly rather than assume: the
+    // guard is not a blanket "no writes for unpaid orgs" — clients aren't
+    // gated at all, and jobs/quotes/leads/portal_tokens are gated by
+    // paid(org) OR (for jobs specifically) a free allowance of 5
+    // simultaneously active (scheduled/in_progress) jobs, enforced by
+    // guardJob() in pricing.js. paid() only recognizes
+    // plan="founding"+founding_member, or plan in [starter, early] with an
+    // active subscription and a future current_period_end.
     const { authenticateAdmin } = await import('./pocketbase-integration')
     const admin = await authenticateAdmin()
     const suffix = `inactive-org-${Date.now()}`
@@ -101,16 +109,62 @@ describe.skipIf(!integration)('Phase 7: Server Hooks and Cron', () => {
       pb.autoCancellation(false)
       await pb.collection('users').authWithPassword(email, password)
 
-      try {
-        await pb.collection('clients').create({
-          name: 'Should Be Rejected',
-          phone: '555-9601',
+      // Clients are not gated by the subscription guard at all — confirms
+      // the guard is scoped to jobs/quotes/leads/portal_tokens, not every
+      // write.
+      const client = await pb.collection('clients').create({
+        name: 'Free Tier Client',
+        phone: '555-9601',
+        organization_id: org.id,
+      })
+      const pkg = await pb.collection('packages').create({
+        name: 'Free Tier Package',
+        base_price: 50,
+        active: true,
+        organization_id: org.id,
+      })
+
+      const jobIds: string[] = []
+      for (let i = 0; i < 5; i++) {
+        const job = await pb.collection('jobs').create({
+          date: `2026-12-1${i}`,
+          location_type: 'mobile',
+          vehicle_type: 'sedan',
+          package_id: pkg.id,
+          client_id: client.id,
+          status: 'scheduled',
+          revenue: 50,
           organization_id: org.id,
         })
-        throw new Error('Create should have been rejected by the subscription guard')
+        expect(job.id).toBeDefined()
+        jobIds.push(job.id)
+      }
+
+      const { ClientResponseError } = await import('pocketbase')
+      try {
+        await pb.collection('jobs').create({
+          date: '2026-12-20',
+          location_type: 'mobile',
+          vehicle_type: 'sedan',
+          package_id: pkg.id,
+          client_id: client.id,
+          status: 'scheduled',
+          revenue: 50,
+          organization_id: org.id,
+        })
+        throw new Error('A 6th active job should have been rejected for a non-paid org')
       } catch (error) {
-        const { ClientResponseError } = await import('pocketbase')
         expect(error instanceof ClientResponseError && error.status === 403).toBe(true)
+      } finally {
+        // Deleting the org would otherwise null out organization_id on
+        // these jobs, and guardJob()'s onRecordUpdate hook (which runs on
+        // model writes too, not just client requests) rejects a job whose
+        // organization_id just went empty — so the jobs must go first.
+        for (const jobId of jobIds) {
+          await admin.collection('jobs').delete(jobId)
+        }
+        await admin.collection('packages').delete(pkg.id)
+        await admin.collection('clients').delete(client.id)
       }
     } finally {
       await admin.collection('users').delete(user.id)

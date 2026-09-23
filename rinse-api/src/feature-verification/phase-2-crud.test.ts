@@ -2019,13 +2019,34 @@ describe.skipIf(!integration)('Phase 2: Complete CRUD Coverage', () => {
     it('update subscription fields on organization', async () => {
       // Subscription fields (status, trial_ends_at, current_period_end) live
       // on the `organizations` collection, not `app_settings` — verified
-      // against the live schema.
-      const updated = await account.pb.collection('organizations').update(account.organizationId, {
-        subscription_status: 'trialing',
+      // against the live schema. Also a real, deliberate security property:
+      // 00_subscription_guard.pb.js blocks any non-superuser write to
+      // protectedFields (billing/plan fields) on organizations — verified
+      // directly here rather than assumed, since a regular authenticated
+      // user changing their own plan/subscription_status would otherwise be
+      // a straightforward privilege-escalation bug.
+      // Real subscription_status values (verified against the live schema):
+      // none/pending/active/past_due/canceled — no 'trialing'.
+      const { ClientResponseError } = await import('pocketbase')
+      try {
+        await account.pb.collection('organizations').update(account.organizationId, {
+          subscription_status: 'pending',
+        })
+        throw new Error('A regular user should not be able to change billing fields directly')
+      } catch (error) {
+        expect(error instanceof ClientResponseError && error.status === 403).toBe(true)
+      }
+
+      // The real path: only the server (superuser context, e.g. the Stripe
+      // webhook handler) can set these.
+      const { authenticateAdmin } = await import('./pocketbase-integration')
+      const admin = await authenticateAdmin()
+      const updated = await admin.collection('organizations').update(account.organizationId, {
+        subscription_status: 'pending',
         trial_ends_at: '2026-12-31',
         current_period_end: '2026-12-31',
       })
-      expect(updated.subscription_status).toBe('trialing')
+      expect(updated.subscription_status).toBe('pending')
       expect(updated.trial_ends_at).toContain('2026-12-31')
     })
 
