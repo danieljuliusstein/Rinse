@@ -28,6 +28,15 @@
  * are reframed to test the real server-side contract mobile's offline queue
  * depends on (client-generated PocketBase IDs from @rinse/core, which IS a
  * plain, RN-free package) rather than the unimportable queue code itself.
+ *
+ * This file is excluded from rinse-api's tsconfig.json (see its "exclude").
+ * rinse-desk/src/lib/api.ts's @/lib/rinse-core alias is NOT fully erased at
+ * build time as (1) above assumed — Next's build-time typecheck follows the
+ * literal import() path below transitively and fails resolving that alias,
+ * which only rinse-desk's own tsconfig defines. Excluding this one file from
+ * the program (rather than obscuring the import path to dodge the checker)
+ * keeps the import a plain literal string, which Vite/Vitest need to
+ * correctly resolve it relative to this file at runtime.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
@@ -71,6 +80,12 @@ describe.skipIf(!integration)('Phase 6: Mobile/Desktop Parity', () => {
     // the same disposable instance and authenticated as the same account.
     expect(pbUrl).toBeTruthy()
     expect(pbUrl).not.toContain('detailing-pb.fly.dev')
+    // rinse-desk has its own @/* tsconfig alias (e.g. @/lib/rinse-core) that
+    // only its own tsconfig defines, so this whole file is excluded from
+    // rinse-api's tsconfig (see tsconfig.json) rather than type-checked
+    // against a project boundary it was never meant to satisfy — Vite/Vitest
+    // still resolve and run this literal-string import() correctly at
+    // runtime, which is all this test needs.
     const deskPocketbase = await import('../../../rinse-desk/src/lib/pocketbase')
     const resolvedDeskUrl = deskPocketbase.getPbUrl()
     expect(resolvedDeskUrl).toBe(pbUrl)

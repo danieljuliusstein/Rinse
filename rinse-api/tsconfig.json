@@ -44,6 +44,7 @@
   ],
   "exclude": [
     "node_modules",
-    "docs/damage-photos-rn"
+    "docs/damage-photos-rn",
+    "src/feature-verification/phase-6-parity.test.ts"
   ]
 }
