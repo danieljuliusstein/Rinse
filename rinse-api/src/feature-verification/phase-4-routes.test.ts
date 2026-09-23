@@ -203,16 +203,19 @@ describe.skipIf(!integration)('Phase 4: Route Handlers', () => {
     // needs email provider credentials to go further than this). Verifies
     // the parts that don't need Resend: auth is enforced, and the route
     // reports 503 (not a silent no-op) once authenticated with no provider
-    // configured, rather than mocking Resend out.
+    // configured, rather than mocking Resend out. When RESEND_API_KEY *is*
+    // configured (Phase 5), this exercises the real send instead — sent to
+    // Resend's own sandbox address so nothing lands in a real inbox.
     const account = await createIntegrationAccount(`route-invoice-send-${Date.now()}`)
     accounts.push(account)
 
     const { POST } = await import('../app/api/invoices/send/route')
+    const recipient = process.env.RESEND_API_KEY ? 'delivered@resend.dev' : 'client@example.test'
 
     const unauthenticated = await POST(
       new Request('http://test/api/invoices/send', {
         method: 'POST',
-        body: JSON.stringify({ to: 'client@example.test', invoiceNumber: 'INV-1', businessName: 'Test' }),
+        body: JSON.stringify({ to: recipient, invoiceNumber: 'INV-1', businessName: 'Test' }),
       }),
     )
     expect(unauthenticated.status).toBe(401)
@@ -223,16 +226,20 @@ describe.skipIf(!integration)('Phase 4: Route Handlers', () => {
         method: 'POST',
         headers: { authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          to: 'client@example.test',
+          to: recipient,
           invoiceNumber: 'INV-1',
           businessName: 'Test Business',
         }),
       }),
     )
-    expect([503, 400]).toContain(authenticated.status)
-    if (authenticated.status === 503) {
-      const payload = await authenticated.json()
-      expect(payload.error).toContain('RESEND_API_KEY')
+    if (process.env.RESEND_API_KEY) {
+      expect(authenticated.status).toBe(200)
+    } else {
+      expect([503, 400]).toContain(authenticated.status)
+      if (authenticated.status === 503) {
+        const payload = await authenticated.json()
+        expect(payload.error).toContain('RESEND_API_KEY')
+      }
     }
   })
 
